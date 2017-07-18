@@ -1,5 +1,5 @@
 Module m_MEF90_Materials_Types
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
    Use m_MEF90_Ctx
    Use petsc
@@ -135,8 +135,8 @@ Module m_MEF90_Materials_Types
 End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -176,8 +176,8 @@ Contains
 End Module m_MEF90_Materials_Interface2D
 
 Module m_MEF90_Materials_Interface3D
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -212,8 +212,8 @@ Contains
 End Module m_MEF90_Materials_Interface3D
 
 Module m_MEF90_Materials
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Use m_MEF90_Materials_Interface2D
@@ -261,6 +261,7 @@ Contains
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
@@ -292,6 +293,7 @@ Contains
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -353,6 +355,7 @@ Contains
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -412,22 +415,24 @@ Contains
 !!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(DM),Intent(IN)                             :: Mesh
+      Type(tDM),Intent(IN)                            :: Mesh
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       
-      Type(IS)                                        :: setIS
+      DMLabel                                  :: label
+      Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call DMGetLabel(Mesh,'Cell Sets',label,ierr);CHKERRQ(ierr)
+      Call DMLabelGetValueIS(label,setIS,ierr);CHKERRQ(ierr)
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -460,21 +465,22 @@ Contains
 !!!  
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(DM),Intent(IN)                             :: Mesh
+      Type(tDM),Intent(IN)                            :: Mesh
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       
-      Type(IS)                                        :: setIS
+      Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
@@ -609,6 +615,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw2DXMatS2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(MatS2D), Intent(IN)                     :: X
@@ -639,6 +646,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw3DXMatS3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(MatS3D), Intent(IN)                     :: X
@@ -673,6 +681,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw2DXMat2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(Mat2D), Intent(IN)                      :: X
@@ -704,6 +713,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(Mat3D), Intent(IN)                     :: X
@@ -750,28 +760,27 @@ Contains
 
       Type(MatS2D)                                :: D
       Type(Mat2D)                                 :: Pinv
-      PetscErrorCode                              :: ierr
 
       If (A%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__)
       End If
 
-if ((epsilon .dotP. epsilon) < 1.e-8) Then
-   PositivePart = 0.0_Kr
-   NegativePart = 0.0_Kr
-Else
-      Call Diagonalize(Epsilon,Pinv,D)
-      If (D%XX >= 0.0_Kr) Then
-         PositivePart = D
-      Else If (A%lambda * D%XX + (A%lambda + 2.0_Kr * A%mu) * D%YY >= 0.0_Kr ) Then
+      If ((epsilon .dotP. epsilon) < 1.e-8) Then
          PositivePart = 0.0_Kr
-         PositivePart%YY = A%lambda / (A%lambda + 2.0_Kr * A%mu) * D%XX + D%YY
+         NegativePart = 0.0_Kr
       Else
-         PositivePart = 0.0_Kr
+         Call Diagonalize(Epsilon,Pinv,D)
+         If (D%XX >= 0.0_Kr) Then
+            PositivePart = D
+         Else If (A%lambda * D%XX + (A%lambda + 2.0_Kr * A%mu) * D%YY >= 0.0_Kr ) Then
+            PositivePart = 0.0_Kr
+            PositivePart%YY = A%lambda / (A%lambda + 2.0_Kr * A%mu) * D%XX + D%YY
+         Else
+            PositivePart = 0.0_Kr
+         End If
+         PositivePart = MEF90MatRaRt(PositivePart,Pinv)
+         NegativePart = Epsilon - PositivePart
       End If
-      PositivePart = MatRaRt(PositivePart,Pinv)
-      NegativePart = Epsilon - PositivePart
-End If
    End Subroutine MasonryProjection2D
 
 #undef __FUNCT__
@@ -791,10 +800,9 @@ End If
       Type(MatS3D)                                :: D
       Type(Mat3D)                                 :: Pinv
       PetscReal                                   :: nu
-      PetscErrorCode                              :: ierr
 
       If (A%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__)
       End If
       Call Diagonalize(Epsilon,Pinv,D)
       nu = A%lambda / (A%lambda + A%mu) * 0.5_Kr
@@ -810,7 +818,7 @@ End If
       Else
          PositivePart = 0.0_Kr
       End If
-      PositivePart = MatRaRt(PositivePart,Pinv)
+      PositivePart = MEF90MatRaRt(PositivePart,Pinv)
       NegativePart = Epsilon - PositivePart
    End Subroutine MasonryProjection3D
 
@@ -828,10 +836,8 @@ End If
       Type(MEF90HookesLaw2D),Intent(IN)           :: A
       Type(MatS2D),Intent(OUT)                    :: PositivePart,NegativePart
 
-      PetscErrorCode                              :: ierr
-
       If (A%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__)
       End If
 
       If (trace(Epsilon) >= 0.0_Kr) Then
@@ -857,11 +863,8 @@ End If
       Type(MEF90HookesLaw3D),Intent(IN)           :: A
       Type(MatS3D),Intent(OUT)                    :: PositivePart,NegativePart
 
-      PetscReal                                   :: tr
-      PetscErrorCode                              :: ierr
-
       If (A%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__)
       End If
 
       If (trace(Epsilon) >= 0.0_Kr) Then
