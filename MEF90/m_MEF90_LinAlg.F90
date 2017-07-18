@@ -1,30 +1,6 @@
-Module m_MEF90_LinAlg_class
-   implicit none
-   private
-   public :: mef90Vect
-   public :: mef90Mat 
-   public :: mef90Tens4OS
-
-!!!
-!!!  
-!!!  m_MEF90_LinAlg_class: Starting a OO implementation of the basic classes in m_MEF90_LinAlg
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   type, abstract :: mef90Vect
-   end type
-   type, abstract :: mef90Mat
-   end type
-   type, abstract :: mef90Tens4OS
-   end type
-End module m_MEF90_LinAlg_class
-
-Module m_MEF90_LinAlg
-#include "finclude/petscdef.h"
-   Use m_MEF90_LinAlg_class
+ Module m_MEF90_LinAlg
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
-   Use m_MEF90_Utils
    Use petsc
    
    IMPLICIT NONE
@@ -213,7 +189,7 @@ Module m_MEF90_LinAlg
       Module Procedure HydrostaticPart2D,HydrostaticPart2DS,HydrostaticPart3D,HydrostaticPart3DS
    End Interface
 
-   Interface MatRaRt
+   Interface MEF90MatRaRt
       Module Procedure RaRtMat2D,RaRtMatS2D,RaRtMat3D,RaRtMatS3D
    End Interface
 
@@ -951,12 +927,11 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function Tens4OS2DXMat2D(T1,M1)
       Type(Tens4OS2D),Intent(IN)                  :: T1
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D)                                :: Tens4OS2DXMat2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Tens4OS2DXMat2D = T1 * symmetrize(M1)
    End Function Tens4OS2DXMat2D
@@ -969,11 +944,11 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function Tens4OS3DXMat3D(T1,M1)
       Type(Tens4OS3D),Intent(IN)                  :: T1
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D)                                :: Tens4OS3DXMat3D
-      PetscInt                                    :: ierr
       
       Tens4OS3DXMat3D =  T1 * symmetrize(M1)
    End Function Tens4OS3DXMat3D
@@ -1288,8 +1263,6 @@ Contains
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat2DDotMatS2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Mat2DDotMatS2D = symmetrize(M1) .DotP. M2
    End Function Mat2DDotMatS2D
@@ -1306,8 +1279,6 @@ Contains
       Type(MatS2D),Intent(IN)                     :: M1
       Type(Mat2D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS2DDotMat2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       MatS2DDotMat2D = M1 .DotP. symmetrize(M2)
    End Function MatS2DDotMat2D
@@ -1324,8 +1295,6 @@ Contains
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat3DDotMatS3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Mat3DDotMatS3D = symmetrize(M1) .DotP. M2
    End Function Mat3DDotMatS3D
@@ -1342,8 +1311,6 @@ Contains
       Type(MatS3D),Intent(IN)                     :: M1
       Type(Mat3D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS3DDotMat3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       MatS3DDotMat3D = M1 .DotP. symmetrize(M2)
    End Function MatS3DDotMat3D
@@ -2911,9 +2878,8 @@ Contains
       Type(MatS2D),Dimension(2),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A,Pt
+      PetscReal,Dimension(n,n)                    :: A
       Integer                                     :: i
-      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2935,9 +2901,8 @@ Contains
       Type(MatS3D),Dimension(3),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A,Pt      
+      PetscReal,Dimension(n,n)                    :: A
       Integer                                     :: i
-      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2965,9 +2930,7 @@ Contains
       Type(MatS3D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A,Pt      
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -3001,15 +2964,12 @@ Contains
       Type(MatS2D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A,Pt      
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A     
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
       PetscInt,Dimension(5*n+3)                   :: iwork
       PetscInt                                    :: info
-      PetscErrorCode                              :: ierr
 
       A = M
       Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
@@ -3017,7 +2977,7 @@ Contains
          Write(*,*) 'DSYEVD failed with info=',info
          Write(*,*) 'A: ', A
          Write(*,*) 'ppleValues: ',ppleValues
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"DSYEVD failed: "//__FUNCT__,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"DSYEVD failed: "//__FUNCT__)
       End If
 
       MatDiag=0.0_Kr
