@@ -1,12 +1,12 @@
 all: TestMaterials TestMEF90Ctx 
 runall: runTestMaterials runTestMEF90Ctx 
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
-include ${MEF90_DIR}/m_HeatXfer/Makefile.include
-include ${MEF90_DIR}/m_DefMech/Makefile.include
+#include ${MEF90_DIR}/m_HeatXfer/Makefile.include
+#include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<

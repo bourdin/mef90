@@ -1,5 +1,5 @@
 Module m_MEF90_Ctx_Type
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
    Use,Intrinsic :: iso_c_binding
    Implicit none
@@ -33,7 +33,7 @@ Module m_MEF90_Ctx_Type
 End Module m_MEF90_Ctx_Type
 
 Module m_MEF90_Ctx
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use, Intrinsic :: iso_c_binding
    Use m_MEF90_Parameters
    Use m_MEF90_Ctx_Type
@@ -97,6 +97,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90CtxInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)                   :: ierr
    
@@ -143,6 +144,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
       PetscBag                                        :: bag
       Type(MEF90CtxGlobalOptions_Type),pointer        :: data
@@ -159,6 +161,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                        :: bag
       Character(len=*),intent(IN)                     :: prefix,name
@@ -189,6 +192,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
          MPI_Comm,Intent(IN)                          :: comm
          Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
@@ -223,6 +227,7 @@ Contains
                MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
             End If
          End If
+         Call MEF90GetFilePrefix(MEF90Ctx%inputmesh,MEF90Ctx%prefix)
 
          Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
          Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
@@ -259,6 +264,7 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -267,7 +273,7 @@ Contains
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (GlobalOptions%dryrun) Then
-         Call PetscOptionsLeft(ierr);CHKERRQ(ierr)
+         Call PetscOptionsLeft(PETSC_NULL_OPTIONS,ierr);CHKERRQ(ierr)
       End If
       Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
    End Subroutine MEF90CtxDestroy
@@ -280,13 +286,14 @@ Contains
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90CtxGetTime(MEF90Ctx,t,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       PetscReal,Dimension(:),Pointer                  :: t
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscReal                                       :: dt
-      Integer                                         :: i,n
+      Integer                                         :: i
       Real                                            :: dummyR
       Character(len=1)                                :: dummyS
       Integer                                         :: exoerr
@@ -329,8 +336,6 @@ Contains
          t = [ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
-
-
       Case (MEF90TimeInterpolation_exo)
          Select case(GlobalOptions%FileFormat)
          Case (MEF90FileFormat_EXOSingle)
@@ -343,7 +348,7 @@ Contains
                   Call MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr)
                Else
                   Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
-                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr)
+                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
                End If
             Else
                Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
@@ -359,7 +364,7 @@ Contains
                Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
             Else
                Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
-               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr)
+               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
             End If
          End Select
       End Select

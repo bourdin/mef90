@@ -1,5 +1,5 @@
 Module m_MEF90_Materials_Types
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
    Use m_MEF90_Ctx
    Use petsc
@@ -210,8 +210,8 @@ Module m_MEF90_Materials_Types
 End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -253,8 +253,8 @@ Contains
 End Module m_MEF90_Materials_Interface2D
 
 Module m_MEF90_Materials_Interface3D
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -290,8 +290,8 @@ Contains
 End Module m_MEF90_Materials_Interface3D
 
 Module m_MEF90_Materials
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Use m_MEF90_Materials_Interface2D
@@ -339,6 +339,7 @@ Contains
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
@@ -370,6 +371,7 @@ Contains
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -449,6 +451,7 @@ Contains
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -526,22 +529,24 @@ Contains
 !!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(DM),Intent(IN)                             :: Mesh
+      Type(tDM),Intent(IN)                            :: Mesh
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-
-      Type(IS)                                        :: setIS
+      
+      DMLabel                                  :: label
+      Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr)
+      Call DMGetLabel(Mesh,'Cell Sets',label,ierr);CHKERRQ(ierr)
+      Call DMLabelGetValueIS(label,setIS,ierr);CHKERRQ(ierr)
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -574,22 +579,23 @@ Contains
 !!!
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(DM),Intent(IN)                             :: Mesh
+      Type(tDM),Intent(IN)                            :: Mesh
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-
-      Type(IS)                                        :: setIS
+      
+      Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr)
+      Call DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -1022,6 +1028,7 @@ Contains
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw2DXMat2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(Mat2D), Intent(IN)                      :: X
@@ -1053,6 +1060,7 @@ Contains
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(Mat3D), Intent(IN)                      :: X
@@ -1082,5 +1090,4 @@ Contains
             ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw3DXMat3D
-
 End Module m_MEF90_Materials

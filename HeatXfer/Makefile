@@ -32,8 +32,8 @@ testTransient3D:
 	make -s testHeatXfer PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-include ${PETSC_DIR}/conf/rules
-include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
