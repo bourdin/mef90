@@ -1,7 +1,7 @@
 !!! TODO
 !!! - Add a validation of the shortID and names
 Module m_MEF90_Elements
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
    Use m_MEF90_Utils
    Use m_MEF90_Parameters
@@ -571,8 +571,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet_ByName"
    Subroutine Element2D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -587,8 +587,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet_ByName"
    Subroutine Element2D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -603,8 +603,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet_ByName"
    Subroutine Element2D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -619,8 +619,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByName"
    Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -635,8 +635,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet_ByName"
    Subroutine Element3D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -651,8 +651,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet_ByName"
    Subroutine Element3D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
@@ -667,8 +667,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet_ByShortID"
    Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -679,8 +679,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet_ByShortID"
    Subroutine Element2D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -691,8 +691,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet_ByShortID"
    Subroutine Element2D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -703,8 +703,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByShortID"
    Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -715,8 +715,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet_ByShortID"
    Subroutine Element3D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -727,8 +727,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet_ByShortID"
    Subroutine Element3D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
@@ -739,8 +739,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
    Subroutine Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -779,8 +779,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Vect_InitSet"
    Subroutine Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -819,8 +819,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Elast_InitSet"
    Subroutine Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -859,8 +859,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet"
    Subroutine Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -899,8 +899,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Vect_InitSet"
    Subroutine Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -939,8 +939,8 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Elast_InitSet"
    Subroutine Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(DM),intent(IN)                              :: mesh
-      Type(IS),intent(IN)                              :: cellIS
+      Type(tDM),intent(IN)                             :: mesh
+      Type(tIS),intent(IN)                             :: cellIS
       Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Type(MEF90Element_Type),intent(IN)               :: elemType
@@ -2512,7 +2512,7 @@ Contains
 #define __FUNCT__ "Element2D_Scal_View"
    Subroutine Element2D_Scal_View(dElem,viewer,ierr)
       Type(MEF90Element2D_Scal)              :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
@@ -2565,7 +2565,7 @@ Contains
 #define __FUNCT__ "Element2D_Vect_View"
    Subroutine Element2D_Vect_View(dElem,viewer,ierr)
       Type(MEF90Element2D_Vect)              :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
@@ -2634,7 +2634,7 @@ Contains
    
    Subroutine Element2D_Elast_View(dElem,viewer,ierr)
       Type(MEF90Element2D_Elast)             :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
@@ -2698,7 +2698,7 @@ Contains
 #define __FUNCT__ "Element3D_Scal_View"
    Subroutine Element3D_Scal_View(dElem,viewer,ierr)
       Type(MEF90Element3D_Scal)              :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
@@ -2757,7 +2757,7 @@ Contains
 #define __FUNCT__ "Element3D_View"
    Subroutine Element3D_Vect_View(dElem,viewer,ierr)
       Type(MEF90Element3D_Vect)              :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
@@ -2861,7 +2861,7 @@ Contains
    
    Subroutine Element3D_Elast_View(dElem,viewer,ierr)
       Type(MEF90Element3D_Elast)             :: dElem
-      Type(PetscViewer)                      :: viewer
+      Type(tPetscViewer)                     :: viewer
       PetscErrorCode,Intent(OUT)             :: ierr
       
       PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
