@@ -11,7 +11,8 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
+      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: inputmesh      
+      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
       Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
    End Type MEF90Ctx_Type
@@ -205,27 +206,12 @@ Contains
       
          MEF90Ctx%comm = comm
          Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr);CHKERRQ(ierr)
-         If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
-            Call PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-inputmesh',MEF90Ctx%inputmesh,flg,ierr);CHKERRQ(ierr)
+         If (.NOT. flg) Then
+            Call PetscPrintf(PETSC_COMM_WORLD,"no input mesh given (-inputmesh)\n",ierr);CHKERRQ(ierr)
             Call PetscFinalize(ierr)
             STOP
-         End If
-         If (hasPrefix .AND. hasResult) Then
-            Call PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr);CHKERRQ(ierr)
-            Call PetscFinalize(ierr)
-            STOP
-         End If
-         If (hasPrefix) Then
-            !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
-            MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
-            MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
-         Else
-            If (.NOT. hasResult) Then
-               MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
-            End If
+            !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
          End If
          Call MEF90GetFilePrefix(MEF90Ctx%inputmesh,MEF90Ctx%prefix)
 
