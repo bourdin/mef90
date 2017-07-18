@@ -39,8 +39,8 @@ Program  TestMEF90Ctx
 
    Call DMView(dm,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
-   !Call MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
-   !Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
+   Call MEF90CtxOpenEXO(MEF90Ctx,dm,ierr)
+   Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
 
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    
