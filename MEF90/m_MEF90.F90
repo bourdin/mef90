@@ -1,20 +1,20 @@
 Module m_MEF90
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 #include "../mef90version.h"
    Use petsc
    Use m_MEF90_Ctx
-   Use m_MEF90_DiffusionInterface
-   Use m_MEF90_ElasticityInterface
-   Use m_MEF90_GradDamageInterface
-   Use m_MEF90_Elements 
-   Use m_MEF90_EXO  
    Use m_MEF90_LinAlg
    Use m_MEF90_Parameters
-   Use m_MEF90_MassMatrixInterface
    Use m_MEF90_Materials
    Use m_MEF90_MPI
-   Use m_MEF90_Norm
    Use m_MEF90_Utils
+   !Use m_MEF90_DiffusionInterface
+   !Use m_MEF90_ElasticityInterface
+   !Use m_MEF90_GradDamageInterface
+   !Use m_MEF90_Elements 
+   !Use m_MEF90_EXO  
+   !Use m_MEF90_MassMatrixInterface
+   !Use m_MEF90_Norm
 
    Implicit NONE
    Public :: MEF90Initialize
@@ -35,7 +35,7 @@ Contains
 
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
        
-      Call PetscLogBegin(ierr);CHKERRQ(ierr)
+      !Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: hg changeset ",MEF90_HGVER,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# Copyright (c) 1998-2014 B. Bourdin <bourdin@lsu.edu>\n"
@@ -73,7 +73,7 @@ Contains
       
       !!! Individual modules runtime initialization should be called here
       Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
-      Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
+      !Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
       Call MEF90CtxInitialize_Private(ierr);CHKERRQ(ierr)
    End Subroutine MEF90Initialize
    

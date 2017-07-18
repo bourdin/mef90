@@ -1,5 +1,5 @@
 Module m_MEF90_MPI
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
    Use petsc
    Implicit None

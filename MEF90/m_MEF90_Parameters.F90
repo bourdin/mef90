@@ -1,5 +1,5 @@
 Module m_MEF90_Parameters
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 #include "../mef90version.h"
 
    Use petsc
