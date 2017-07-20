@@ -8,6 +8,22 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 #include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 #include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+TestDMPlexComputeGeometryTri.o: ${MEF90_DIR}/Tests/TestDMPlexComputeGeometryTri.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestDMPlexComputeGeometryTri: TestDMPlexComputeGeometryTri.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
+TestDMPlexComputeGeometryQuad.o: ${MEF90_DIR}/Tests/TestDMPlexComputeGeometryQuad.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestDMPlexComputeGeometryQuad: TestDMPlexComputeGeometryQuad.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
@@ -173,6 +189,10 @@ TestInelasticStrainCell: TestInelasticStrainCell.o
 	-@echo " $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@${RM} $<
+
+ExodusBuild: ExodusBuild.o  chkopts
+	${CLINKER} -o ExodusBuild ExodusBuild.o ${PETSC_LIB}
+	${RM} ExodusBuild.o
 
 
 runTestMaterials: TestMaterials
