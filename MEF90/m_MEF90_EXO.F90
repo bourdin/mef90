@@ -3,7 +3,7 @@ Module m_MEF90_EXO
    Use m_MEF90_Parameters
    Use m_MEF90_Ctx
    Use m_MEF90_Utils
-   !Use m_MEF90_Elements
+   Use m_MEF90_Elements
    Use petsc
    IMPLICIT NONE
 #include "../mef90version.h"
@@ -15,9 +15,9 @@ Module m_MEF90_EXO
 !   Public :: MEF90CtxOpenEXO
    Public :: MEF90CtxCloseEXO
    Public :: MEF90EXOFormat
-   !Public :: EXOGetCellSetElementType_Scal      
-   !Public :: EXOGetCellSetElementType_Vect      
-   !Public :: EXOGetCellSetElementType_Elast      
+   Public :: EXOGetCellSetElementType_Scal      
+   Public :: EXOGetCellSetElementType_Vect      
+   Public :: EXOGetCellSetElementType_Elast      
    Public :: EXOWriteCase
 
 Contains
@@ -79,16 +79,6 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxOpenEXO"
-=======
-#define __FUNCT__ "MEF90EXOCtxOpenEXO"
->>>>>>> f87946a (Updated m_MEF90_Materials, started work on elements)
-=======
-!#undef __FUNCT__
-!#define __FUNCT__ "MEF90CtxOpenEXO"
->>>>>>> 7aedf22 (Updated geometry initialization)
-=======
-#define __FUNCT__ "MEF90EXOCtxOpenEXO"
->>>>>>> f87946a (Updated m_MEF90_Materials, started work on elements)
 !!!
 !!!  
 !!!  MEF90CtxOpenEXO:
@@ -152,7 +142,6 @@ Contains
 !      End If
 !   102 Format(A,'.gen')
 !   End Subroutine MEF90CtxOpenEXO
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCloseEXO"
