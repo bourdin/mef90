@@ -18,16 +18,16 @@ def GMSHImporter(filename):
                15:1   # vertex
               }
     elemType = {1:"BAR2",       #2 node line
-    		2:"TRI3",       #3 node triangle
+            2:"TRI3",       #3 node triangle
                 3:"QUAD4",      #4 node quad
-    		4:"TETRA4",     #4 node tet
+            4:"TETRA4",     #4 node tet
                 5:"HEX8",       #8 node hexahedron
                 8:"BAR3",       #3 node line
-    		9:"TRI6",       #6 node triangle
+            9:"TRI6",       #6 node triangle
                 10:"QUAD9",     #9 node quad
-    		11:"TETRA10",   #10 node tet
+            11:"TETRA10",   #10 node tet
                 12:"HEX27",     #27 node hexahedron
-    		15:""           #vertex
+            15:""           #vertex
                 }
     
     # Opening and reading mesh file
@@ -115,10 +115,9 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
     #coordinates
     if numDim == 3:
         e.put_coord_names(["x","y","z"])    #name of each coordinate
-        e.put_coords(X,Y,Z)                 #actual coordinates
     else:
         e.put_coord_names(["x","y"])    #name of each coordinate
-        e.put_coords(X,Y)                 #actual coordinates
+    e.put_coords(X,Y,Z)                 #actual coordinates
 
     #block info and connectivity
     for setID in cellSets.keys():
@@ -154,14 +153,14 @@ def reorder(celltype,connect):
 
 
 #------Main Function
-def Main():
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("meshFile", help = "The name of the mesh file to be parsed.", type = str)
+    parser.add_argument("gmeshFile", help = "The name of the mesh file to be parsed.", type = str)
     parser.add_argument("exoFile", help = "The name of the exodus file to be written.", type = str)
     args = parser.parse_args()
-    (coord,vertexSet,cellSet) = GMSHImporter(args.meshFile)
+    (coord,vertexSet,cellSet) = GMSHImporter(args.gmeshFile)
     exoWriter(coord,vertexSet,cellSet,args.exoFile)
 
 if __name__ == '__main__':
-    Main()
+    main()
 
