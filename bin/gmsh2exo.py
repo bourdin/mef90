@@ -105,7 +105,7 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
 
     numElem = 0
     for k in cellSets.keys():       #finding number of elements
-        numElem += len(cellSets[k])
+        numElem += len(cellSets[k]['connect'])/cellSets[k]['numVPE']
 
     filename = exoFile           #this is the file specified when function is called
 
