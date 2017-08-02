@@ -81,7 +81,7 @@ def getExodusVersion():
   Parse the exodusII.h header file and return the version number or 0 if not
   found.
   """
-  for line in open("/opt/HPC/petsc-master/Darwin-gcc7.1-g/include/exodusII.h"):
+  for line in open(os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"include/exodusII.h")):
     fields = line.split()
     if (len(fields) == 3 and
         fields[0] == '#define' and
@@ -90,9 +90,9 @@ def getExodusVersion():
   return 0
 
 if os.uname()[0] == 'Darwin':
-  EXODUS_SO = "/opt/HPC/petsc-master/Darwin-gcc7.1-g/lib/libexodus.dylib"
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib/libexodus.dylib")
 else:
-  EXODUS_SO = "/opt/HPC/petsc-master/Darwin-gcc7.1-g/lib/libexodus.so"
+  EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib/libexodus.so")
 EXODUS_LIB = cdll.LoadLibrary(EXODUS_SO)
 
 MAX_STR_LENGTH       = 32      # match exodus default

@@ -34,7 +34,7 @@ print "number of vertex sets: {0}".format(nVSets)
 
 print "removing first 4 vertices from mesh"
 X,Y,Z=e.get_coords()
-eout.put_coord_names(["x","y","z"])
+eout.put_coord_names(["x","y","z"][0:dim])
 eout.put_coords(X[4:],Y[4:],Z[4:])
 
 
