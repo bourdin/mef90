@@ -98,7 +98,7 @@ eout = exo.exodus(fout,'w',numDims=dim,title=title,numNodes=nVertices,numElems=n
 ### Write coordinates
 ###
 X,Y,Z=e.get_coords()
-eout.put_coord_names(["x","y","z"])
+eout.put_coord_names(["x","y","z"][0:dim])
 fixedX = np.empty(nVertices,dtype=exo.c_double)
 fixedY = np.empty(nVertices,dtype=exo.c_double)
 fixedZ = np.empty(nVertices,dtype=exo.c_double)

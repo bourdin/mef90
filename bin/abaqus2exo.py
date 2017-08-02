@@ -201,7 +201,7 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
     #setting up exo file for writing
     e=exo.exodus(filename, mode='w',title='title',numDims=numDims,numNodes=len(X), 
                   numElems=numElem,numBlocks=len(cellSets),numNodeSets=len(vertexSets),numSideSets=0)
-    e.put_coord_names(["x","y","z"])    #name of each coordinate
+    e.put_coord_names(["x","y","z"][0:numDims])    #name of each coordinate
     e.put_coords(X,Y,Z)                 #actual coordinates
     
     elemIDs = {}
