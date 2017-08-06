@@ -90,9 +90,12 @@ def getExodusVersion():
   return 0
 
 if os.uname()[0] == 'Darwin':
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.dylib")
   EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib/libexodus.dylib")
 else:
+  NETCDF_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib","libnetcdf.so")
   EXODUS_SO = os.path.join(os.getenv("PETSC_DIR"),os.getenv("PETSC_ARCH"),"lib/libexodus.so")
+NETCDF_LIB = cdll.LoadLibrary(NETCDF_SO)
 EXODUS_LIB = cdll.LoadLibrary(EXODUS_SO)
 
 MAX_STR_LENGTH       = 32      # match exodus default
