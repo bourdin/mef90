@@ -18,16 +18,16 @@ def GMSHImporter(filename):
                15:1   # vertex
               }
     elemType = {1:"BAR2",       #2 node line
-            2:"TRI3",       #3 node triangle
+                2:"TRI3",       #3 node triangle
                 3:"QUAD4",      #4 node quad
-            4:"TETRA4",     #4 node tet
+                4:"TETRA4",     #4 node tet
                 5:"HEX8",       #8 node hexahedron
                 8:"BAR3",       #3 node line
-            9:"TRI6",       #6 node triangle
+                9:"TRI6",       #6 node triangle
                 10:"QUAD9",     #9 node quad
-            11:"TETRA10",   #10 node tet
+                11:"TETRA10",   #10 node tet
                 12:"HEX27",     #27 node hexahedron
-            15:""           #vertex
+                15:""           #vertex
                 }
     
     # Opening and reading mesh file
@@ -38,7 +38,6 @@ def GMSHImporter(filename):
     for n in range(3):                          #skipping to the coordinates
         f.readline()
     nVert = int(f.readline())                   #number of vertices
-    print 'Number of vertices: {0}'.format(nVert)
 
     #creating and filling list of coordinates from mesh file
     coord = []
@@ -58,7 +57,6 @@ def GMSHImporter(filename):
 
     #finding number of cells in mesh file
     nCell = int(f.readline())
-    print 'Number of cells: {0}'.format(nCell)
     
     #creating and filling vertexSet and cellSet dictionaries
     vertexSet = {}
@@ -79,7 +77,11 @@ def GMSHImporter(filename):
                 cellSet[tag] = {}           #creating new tag if doesn't exist
                 cellSet[tag]['connect'] = []
             cellConnect = tmp[-elemDim[cellType]:]
-            cellSet[tag]['connect'] += reorder(cellType,cellConnect)  #reordering and adding to array        #adding connectivity table to tag
+            cellConnect = reorder(cellType,cellConnect)
+            if elemType[cellType] == 'TRI3':
+                locCoord = (coord[cellConnect[0]-1],coord[cellConnect[1]-1],coord[cellConnect[2]-1])
+                cellConnect = FixOrientation(cellConnect,locCoord)
+            cellSet[tag]['connect'] += cellConnect  #reordering and adding to array        #adding connectivity table to tag
             cellSet[tag]['numVPE']  = elemDim[cellType]     #adding number of vertex per element to tag
             cellSet[tag]['elemType'] = elemType[cellType]   #adding element type to tag
                         
@@ -89,8 +91,14 @@ def GMSHImporter(filename):
         return -1
     return coord,vertexSet,cellSet
 
-
-
+def FixOrientation(connect,coord):
+    e0 = (coord[1][0] - coord[0][0],coord[1][1] - coord[0][1])
+    e1 = (coord[2][0] - coord[0][0],coord[2][1] - coord[0][1])
+    det = e0[0] * e1[1] - e0[1]*e1[0]
+    if det <= 0.:
+        return (connect[0],connect[2],connect[1])
+    else:
+        return connect
 
 #------Function for writing to exo format
 def exoWriter(coords,vertexSets,cellSets,exoFile):
@@ -101,7 +109,6 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
         numDim = 2
     else:                       #otherwise we assume we have a three dimensional case
         numDim = 3
-    print 'numDim: ',numDim
 
     numElem = 0
     for k in cellSets.keys():       #finding number of elements
@@ -151,13 +158,65 @@ def reorder(celltype,connect):
         reordered = connect
     return reordered                    #returns fixed connect table
 
+def confirm(prompt=None, resp=False):
+    """prompts for yes or no response from the user. Returns True for yes and
+    False for no.
+
+    'resp' should be set to the default value assumed by the caller when
+    user simply types ENTER.
+
+    >>> confirm(prompt='Create Directory?', resp=True)
+    Create Directory? [y]|n: 
+    True
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y: 
+    False
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y: y
+    True
+
+    """
+    
+    if prompt is None:
+        prompt = 'Confirm'
+
+    if resp:
+        prompt = '%s [%s]|%s: ' % (prompt, 'y', 'n')
+    else:
+        prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
+        
+    while True:
+        ans = raw_input(prompt)
+        if not ans:
+            return resp
+        if ans not in ['y', 'Y', 'n', 'N']:
+            print 'please enter y or n.'
+            continue
+        if ans == 'y' or ans == 'Y':
+            return True
+        if ans == 'n' or ans == 'N':
+            return False
+
 
 #------Main Function
 def main():
+    import os
     parser = argparse.ArgumentParser()
     parser.add_argument("gmeshFile", help = "The name of the mesh file to be parsed.", type = str)
     parser.add_argument("exoFile", help = "The name of the exodus file to be written.", type = str)
+    parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
     args = parser.parse_args()
+
+    if  os.path.exists(args.exoFile):
+        if args.force:
+            os.remove(args.exoFile)
+        else:
+            if confirm("ExodusII file {0} already exists. Overwrite?".format(args.exoFile)):
+                os.remove(args.exoFile)
+            else:
+                print '\n\t{0} was NOT generated from {1}\n'.format(args.exoFile,args.gmeshFile)
+                return -1
+
     (coord,vertexSet,cellSet) = GMSHImporter(args.gmeshFile)
     exoWriter(coord,vertexSet,cellSet,args.exoFile)
 
