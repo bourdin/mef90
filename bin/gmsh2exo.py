@@ -29,7 +29,7 @@ def GMSHImporter(filename):
                 12:"HEX27",     #27 node hexahedron
                 15:""           #vertex
                 }
-    
+
     # Opening and reading mesh file
     f = open(filename, 'r') 
     if not f.readline() == '$MeshFormat\n':     #checking if mesh file
@@ -102,6 +102,10 @@ def FixOrientation(connect,coord):
 
 #------Function for writing to exo format
 def exoWriter(coords,vertexSets,cellSets,exoFile):
+    cell1D = ("BAR","BAR2","BEAM2","BAR3","BEAM3")
+    cell2D = ("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3","TRI6","TRISHELL6","QUAD","QUAD4","SHELL","SHELL4","QUAD9","SHELL9")
+    cell3D = ("TETRA","TETRA4","TETRA10","HEX","HEX8","HEX27")
+
     X = coords[:,0]         #set of all X coords
     Y = coords[:,1]         #set of all Y coords
     Z = coords[:,2]         #set of all Z coords
@@ -127,7 +131,26 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
     e.put_coords(X,Y,Z)                 #actual coordinates
 
     #block info and connectivity
+    ###
+    ### Sort cell sets in order to write boundary cell sets last
+    ###
+    blocksOrder = []
+    if numDim == 2:
+        cellCoDim0 = cell2D
+        cellCoDim1 = cell1D
+    else:
+        cellCoDim0 = cell3D
+        cellCoDim1 = cell2D
+
     for setID in cellSets.keys():
+        if cellSets[setID]['elemType'].upper() in cellCoDim0:
+            blocksOrder.append(setID)
+    for setID in cellSets.keys():
+        if cellSets[setID]['elemType'].upper() in cellCoDim1:
+            blocksOrder.append(setID)
+
+    #for setID in cellSets.keys():
+    for setID in blocksOrder:
             ###---setID, elemType, num elems, num nodes per elem, num attributes per elem
             e.put_elem_blk_info(setID,cellSets[setID]['elemType'],len(cellSets[setID]['connect'])/cellSets[setID]['numVPE'],cellSets[setID]['numVPE'],0)
             ###---setID, connectivity table
