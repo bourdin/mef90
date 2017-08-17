@@ -28,7 +28,7 @@ cs0001:
         type: NONE
     displacementbc: no,no,no
     damageBC: no
-cs0020:
+cs0002:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
@@ -43,9 +43,8 @@ cs0020:
         type: NONE
     displacementbc: yes,yes,no
     boundaryDisplacement: 0,.5,0
-    damageBC: yes
-    boundaryDamage: 0.
-cs0030:
+    damageBC: no
+cs0003:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
@@ -60,7 +59,6 @@ cs0030:
         type: NONE
     displacementbc: yes,yes,no
     boundaryDisplacement: 0,0.,0
-    damageBC: yes
-    boundaryDamage: 0.
+    damageBC: no
 
 
