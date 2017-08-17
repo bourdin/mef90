@@ -95,7 +95,7 @@ def main():
     for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
         print "writing step",step+1,t
         exoout.put_time(step+1,t)
-        U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.ampl)
+        U = scalingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu)
         X,Y,Z=exoout.get_coords()
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])
         exoout.put_node_variable_values("Displacement_Y",step+1,U[1,:])

@@ -1,0 +1,36 @@
+verbose: 1
+time:
+    interpolation: exo
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  damage:
+    atol: 1.0e-3
+boundaryDisplacement:
+  scaling: file
+temperature:
+  offset: 0
+plasticStrain:
+  offset: 0
+cs0001:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
+    linearThermalExpansion: 0,0,0
+    fracturetoughness: 1.
+    residualstiffness: 0.
+    internalLength: .02
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+cs0020:
+    displacementBC: no,no,no
+    damageBC: yes
+    boundaryDamage: 1.
+cs0040:
+    displacementBC: 1,1,1
+    damageBC: 1
+    boundaryDamage: 0.
