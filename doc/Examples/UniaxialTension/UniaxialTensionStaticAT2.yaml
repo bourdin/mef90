@@ -10,7 +10,7 @@ temperature:
     offset: 0
 time:
     min: 0
-    max: 10
+    max: 5
     numstep: 1
 cs0001:
     hookesLaw:  
