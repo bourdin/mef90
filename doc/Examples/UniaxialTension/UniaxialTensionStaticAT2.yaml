@@ -10,7 +10,7 @@ temperature:
     offset: 0
 time:
     min: 0
-    max: 5
+    max: 3
     numstep: 1
 cs0001:
     hookesLaw:  
@@ -22,7 +22,7 @@ cs0001:
     internallength: .02
     residualstiffness: 0.
     damage:
-        type: AT1
+        type: AT2
     plasticity:
         type: NONE
     displacementbc: no,no,no
