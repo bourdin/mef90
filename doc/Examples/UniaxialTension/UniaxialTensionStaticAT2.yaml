@@ -18,8 +18,8 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio:  0.
         PlaneStress: 0
-    FractureToughness: 0.8
-    internallength: .02
+    FractureToughness: 0.857
+    internallength: .03
     residualstiffness: 0.
     damage:
         type: AT2
