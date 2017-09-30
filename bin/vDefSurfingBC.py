@@ -66,7 +66,9 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
                 r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
                 z = Z[v-1]-Xc[2]
                 U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
+                #U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * ( 1. - 2.*nu + (np.sin(theta * .5)) **2) * np.cos(theta * .5) 
                 U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+                #U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * ( 2. - 2.*nu - (np.cos(theta * .5)) **2) * np.sin(theta * .5)
                 U[2,v-1] = 0.0
         
     for set in vslist:
