@@ -3,10 +3,10 @@ from visit import *
 def parse(args=None):
     import argparse
     ### Get options from the command line
-    parser = argparse.ArgumentParser(description='Compute the value of G_theta')
+    parser = argparse.ArgumentParser(description='Compute the value of J')
     parser.add_argument('-i','--inputfile',help='rootdir and prefix of the file')
-    #parser.add_argument("--time_min",type=int,help="first time step",default=0)
-    #parser.add_argument("--time_max",type=int,help="last time step",default=1)
+    parser.add_argument("--step_min",type=int,help="first time step",default=None)
+    parser.add_argument("--step_max",type=int,help="last time step",default=None)
     parser.add_argument("--E",type=float,help="Youngs modulus",default=1.)
     parser.add_argument("--nu",type=float,help="Poisson Ratio",default=0.)
     parser.add_argument('--bb',type=float,nargs=4,default=[-1,-1,2,2],help='bounding box of the layered area (xmin ymin lx ly)')
@@ -85,6 +85,12 @@ def plot(opts):
     DefineScalarExpression("C11","EnergyDensity - <Stress_XX> * dUx[0] - <Stress_XY> * dUy[0]")
     DefineScalarExpression("C21","              - <Stress_XY> * dUx[0] - <Stress_YY> * dUy[0]")
 
+    #DefineScalarExpression("C11","EnergyDensity - <Stress_XY> * dUx[0] - <Stress_YY> * dUy[0]")
+    #DefineScalarExpression("C21","              - <Stress_XX> * dUx[0] - <Stress_XY> * dUy[0]")
+
+    DefineScalarExpression("C11","<Stress_XX>")
+    DefineScalarExpression("C21","<Stress_YY>")
+
     opts.bb = opts.bb
     AddPlot("Pseudocolor","Damage")
     DrawPlots()
@@ -98,8 +104,15 @@ def plot(opts):
     BB = opts.bb
     nintx = opts.nint[0]
     ninty = opts.nint[1]
-    print 'options ',opts
-    for s in range(0,TimeSliderGetNStates(),1):
+    if opts.step_max:
+        laststep = opts.step_max
+    else:
+        laststep = TimeSliderGetNStates()
+    if opts.step_min:
+        firststep = opts.step_min
+    else:
+        firststep = 0
+    for s in range(firststep,laststep,1):
         SetActiveWindow(1)
         SetTimeSliderState(s)
         Query("Time")
