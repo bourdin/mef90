@@ -62,8 +62,8 @@ def main():
     fig = plt.figure(figsize=options.size)
     
     if options.relative:
-      energies[:,4] -= energies[tmin,4]
-      energies[:,5] -= energies[tmin,4]
+      energies[:,-2] -= energies[tmin,-2]
+      energies[:,-1] -= energies[tmin,-1]
     ### plot
     plt.plot(energies[:,1],energies[:,2],'o-',label='Elastic energy')
     plt.plot(energies[:,1],energies[:,-2],'o-',label='Surface energy',lw = 2)

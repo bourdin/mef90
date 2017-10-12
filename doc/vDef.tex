@@ -268,12 +268,14 @@ In the deep backtracking, the exploration loop (lines 5-10) is moved into the al
 
 \section{General limitations.}
 \begin{itemize}
-\item \vDef is based on PETSc-3.3~\cite{petsc-efficient,petsc-user-ref,petsc-web-page}. Unstructured meshes are handled using \texttt{Sieve}~\cite{Knepley-Karpeev-2009a}. A new version based on PETSc' \texttt{DMcomplex} is under development. PETSc-specific options are not described in this manual.
+\item \vDef is based on PETSc-3.3~\cite{petsc-efficient,petsc-user-ref,petsc-web-page}. Unstructured meshes are handled using \texttt{Sieve}~\cite{Knepley-Karpeev-2009a}. A new version based on PETSc' \texttt{DMplex} is under development. PETSc-specific options are not described in this manual.
 \item \vDef only supports the \href{http://sourceforge.net/projects/exodusii/}{exodusII} file format. \href{http://cubit.sandia.gov}{Cubit}, or \href{http://www.csimsoft.com/trelis.jsp}{Trelis} can generate such files. \href{https://wci.llnl.gov/codes/visit/}{VisIt}, \href{http://paraview.org}{ParaView}, or \href{http://www.ceisoftware.com}{EnSight} can open such files.
 \item \vDef can handle linear and quadratic simplicial finite elements. Due to limitations of the exodus file formal, mixing element types is not supported at this point.
 \item \vDef can import element blocks of co-dimension 0 and 1, and node sets. \emph{Node sets may not overlap}.
 \item Boundary conditions can be specified on cell or vertex sets. Passing boundary conditions on vertex sets is slightly more efficient, but ensuring that vertex sets are disjoint can be difficult.
 \item Boundary condition handling is \emph{additive}. If a cell or vertex belong to several sets, the type of boundary conditions is given by performing a logical \verb+OR+ on the boundary conditions type of its parent entities. 
+\item Element blocks but be numbered in order of increasing co-dimension (\emph{i.e.} surface elements before line elemets in 2D, volume elements before surface elements in 3D). Failure to do so will lead the following PETSc error message:\\
+\verb+[0]PETSC ERROR: Invalid argument: Input array to small for restrictClosure()!+.
 %\item may lead to inconsistent results. In general, the loading applied will be the one specified in the set written last in the exodus file. There may be boundary effects for parallel computations.
 %\item Work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
 \end{itemize}
