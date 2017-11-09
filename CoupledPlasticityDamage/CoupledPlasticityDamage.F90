@@ -590,6 +590,15 @@ Program CoupledPlasticityDamage
                      End Do SecantMthd
                      Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
                   Else
+
+                     !!! Evaluate once the jacobian of the displacement during the plastic projection procedure
+                     If (AltProjIter > 1) Then
+                        Call SNESSetLagJacobian(snesDisp,-1,ierr);CHKERRQ(ierr)
+                     Else 
+                        Call SNESSetLagJacobian(snesDisp,1,ierr);CHKERRQ(ierr)
+                     End If 
+
+
                      Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                      Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                      If (snesDispConvergedReason < 0) Then
