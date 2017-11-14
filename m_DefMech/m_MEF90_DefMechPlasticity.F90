@@ -49,6 +49,10 @@ contains
 
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
 
+#define FHG_GREEN MEF90_APPEND(fhg_Green,MEF90_DIM)D
+
+#define FHG_GURSON MEF90_APPEND(fhg_Gurson,MEF90_DIM)D
+
 #undef __FUNCT__
 #define __FUNCT__ "FHG_NONE"
 !!!
@@ -432,6 +436,75 @@ contains
 
 
 #undef __FUNCT__
+#define __FUNCT__ "FHG_GREEN"
+
+!!!
+!!!  
+!!!  fhg: Green
+!!!  
+!!!  (c) 2017 Stella Brach, Caltech <brach@caltech.edu>, 
+!!!           Blaise Bourdin, LSU, <bourdin@lsu.edu>
+!!!
+!!!
+
+   subroutine FHG_GREEN(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      type(c_ptr),intent(in),value              :: myctx
+
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS
+
+      !!! Casting x into a MEF90_MATS
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
+      g(1) = 0
+      h(1) = 0
+   end subroutine FHG_GREEN
+
+
+!!!
+!!!  
+!!!  fhg: Gurson
+!!!  
+!!!  (c) 2017 Stella Brach, Caltech <brach@caltech.edu>, 
+!!!           Blaise Bourdin, LSU, <bourdin@lsu.edu>
+!!!
+!!!
+
+   subroutine FHG_GURSON(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      type(c_ptr),intent(in),value              :: myctx
+
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS
+
+      !!! Casting x into a MEF90_MATS
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
+      g(1) = 0
+      h(1) = 0
+   end subroutine FHG_GURSON
+
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticStrainUpdate"
 !!!
 !!!  
@@ -584,6 +657,22 @@ contains
                      snlp_n    = SIZEOFMEF90_MATS
                      snlp_m    = 0
                      snlp_p    = 2
+                     snlp_ctx  = c_loc(PlasticityCtx)
+
+                  case(MEF90DefMech_plasticityTypeGreen)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_GREEN)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 0
+                     snlp_p    = 2
+                     snlp_ctx  = c_loc(PlasticityCtx)
+
+                  case(MEF90DefMech_plasticityTypeGurson)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_GURSON)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 1
+                     snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
                   case(MEF90DefMech_plasticityTypeNONE)
