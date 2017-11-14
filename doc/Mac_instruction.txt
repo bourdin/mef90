@@ -4,7 +4,10 @@ This assumes that Xcode and the command line tools, and Xquartz are installed
 Install Homebrew with
 /usr/bin/ruby -e "$(curl –fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-brew install valgrind boost cmake gcc mercurial wget mpich
+brew install boost cmake gcc mercurial wget mpich
+brew install hdf5 --with-mpi
+the homebrew maintainers arre gradually removing user options, so it may become necessary to build hdf5 with petsc too
+
 
 ### get mef90 and snlp from bitbucket
 mkdir ~/Development
@@ -17,17 +20,17 @@ wget http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p7.tar.gz
 tar zxvf petsc-3.3-p7.tar.gz
 
 ### set some environment variables 
-export MEF90_DIR=$HOME/Development/mef90-sieve
-export SNLP_DIR=$HOME/Development/snlp-$PETSC_ARCH
 export PETSC_DIR=$HOME/Development/petsc-3.3-p7
 export PETSC_ARCH=mef90-gcc-O
+export MEF90_DIR=$HOME/Development/mef90-sieve
+export SNLP_DIR=$HOME/Development/snlp-$PETSC_ARCH
 
 ### Add the three previous commands to the end of ~/.bashrc 
 ### (do that only once, although it won't hurt if you do it multiple times)
-echo export MEF90_DIR=$HOME/Development/mef90-sieve >> ~/.bashrc
-echo export SNLP_DIR=$HOME/Development/snlp-$PETSC_ARCH  >> ~/.bashrc
 echo export PETSC_DIR=$HOME/Development/petsc-3.3-p7 >> ~/.bashrc
 echo export PETSC_ARCH=mef90-gcc-O >> ~/.bashrc
+echo export MEF90_DIR=$HOME/Development/mef90-sieve >> ~/.bashrc
+echo export SNLP_DIR=$HOME/Development/snlp-$PETSC_ARCH  >> ~/.bashrc
 
 ### Apply several patches to PETSc 3.3
 cd $PETSC_DIR; for d in $MEF90_DIR/patches/[0-1]*; do patch -p1 < $d; done
@@ -36,27 +39,29 @@ cd $PETSC_DIR/config/BuildSystem; for d in $MEF90_DIR/patches/b0*; do patch -p1 
 
 
 ### Configure PETSc 3.3 for mef90
-./configure                               \
-   COPTFLAGS='-O3 -march=native'          \
-   CXXOPTFLAGS='-O3 -march=native'        \
-   FOPTFLAGS='-O3 -march=native'          \
-   --download-chaco=1                     \
-   --download-exodusii=1                  \
-   --download-hypre=1                     \
-   --download-ml=1                        \
-   --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz      \
-   --download-yaml=1                      \
-   --with-boost=1                         \
-   --with-clanguage=C++                   \
-   --with-cmake=cmake                     \
-   --with-debugging=0                     \
-   --with-fortran-datatypes=1             \
-   --with-shared-libraries=1              \
-   --with-sieve                           \
-   --with-sieve-memory-logging            \
-   --with-x11=1                           \
-   --with-clib-autodetect=0               \
-   --with-fortranlib-autodetect=0
+./configure                           \
+   COPTFLAGS='-O3 -march=native'      \
+   CXXOPTFLAGS='-O3 -march=native'    \
+   FOPTFLAGS='-O3 -march=native'      \
+    --download-chaco=1                \
+    --download-exodusii=1             \
+    --download-hypre=1                \
+    --download-ml=1                   \
+    --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz      \
+    --download-yaml=1                 \
+    --with-boost=1                    \
+    --with-boost-dir=/usr/local       \
+    --with-clanguage=C++              \
+    --with-cmake=cmake                \
+    --with-debugging=0                \
+    --with-fortran-datatypes=1        \
+    --with-hdf5=1                     \
+    --with-hdf5-dir=/usr/local        \
+    --with-shared-libraries=1         \
+    --with-sieve                      \
+    --with-x11=1                      \
+    --with-clib-autodetect=0          \
+    --with-fortranlib-autodetect=0
 
 make PETSC_DIR=$HOME/Development/petsc-3.3-p7 PETSC_ARCH=mef90-gcc-O all
 
