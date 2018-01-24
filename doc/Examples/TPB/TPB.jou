@@ -1,0 +1,68 @@
+reset
+#{mm=1e-3}
+#{mm = 1./90}
+#{l = 90*mm}
+#{w = 20*mm}
+#{h=8*mm}
+#{L = 80*mm}
+#{a = 2*mm}
+#{lc = 2*mm}
+#{epsc = .001*mm}
+#{theta = 45}
+#{hf = .5*mm}
+#{hf = 5e-4}
+#{hc = 4*mm}
+#{hstr = tostring(hf)}
+
+create vertex x 0 y {a} z 0
+create vertex x {a/tan(theta)} y 0 z 0
+create vertex x {l/2} y 0 z 0
+create vertex x {l/2} y {w} z 0
+create vertex x {-l/2} y {w} z 0
+create vertex x {-l/2} y 0 z 0
+create vertex x {-a/tan(theta)} y 0 z 0
+
+create surface vertex all
+
+webcut body all plane xplane offset {-2*a/tan(theta)}
+webcut body all plane xplane offset {2*a/tan(theta)}
+
+create vertex x 0 y {w} z 0
+create vertex x {L/2} y 0 z 0
+create vertex x {-L/2} y 0 z 0
+
+split curve 18 at vertex 16
+split curve 15 at vertex 17
+split curve 13 at vertex 18
+
+imprint all
+merge all
+
+block 1 surface 5
+block 2 surface 3 4
+block 30 curve 1 7
+block 40 curve 20 21
+
+nodeset 400 vertex 16
+nodeset 401 vertex 17
+nodeset 402 vertex 18
+
+draw block all
+hardcopy "TPB.png" png
+
+surface all scheme trimesh
+surface 5 size {hf}
+mesh surface 5
+
+curve 3 5 size {hc}
+surface 4 sizing function type bias start curve 14 finish curve 3
+surface 3 sizing function type bias start curve 8 finish curve 5
+mesh surface 3 4
+
+smooth surface all
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("TPB-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+

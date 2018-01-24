@@ -1,0 +1,77 @@
+reset
+##{mm=1e-3}
+#{mm = 1./90}
+#{l = 90*mm}
+#{w = 20*mm}
+#{h = 8*mm}
+#{L = 80*mm}
+#{a = 4*mm}
+#{lc = 2*mm}
+#{epsc = .001*mm}
+#{theta = PI/4}
+
+#{ell = 0.3*mm}
+#{hf = ell/6}
+#{hf = 5e-4}
+#{hc = .5*mm}
+#{Ri = a}
+#{Ro = 2*a}
+#{hstr = tostring(hf)}
+
+
+create vertex x 0 y {a} z 0
+create vertex x {a/tan(theta)} y 0 z 0
+create vertex x {l/2} y 0 z 0
+create vertex x {l/2} y {w} z 0
+create vertex x {-l/2} y {w} z 0
+create vertex x {-l/2} y 0 z 0
+create vertex x {-a/tan(theta)} y 0 z 0
+
+create surface vertex all
+
+create surface circle radius {Ri} zplane 
+create surface circle radius {Ro} zplane 
+move surface 2  3 y {a}
+webcut body 1 sweep surface 2 vector 0 0 1 through_all 
+webcut body 1 sweep surface 3 vector 0 0 1 through_all 
+delete body 2 3
+
+imprint all 
+merge all
+
+
+create vertex x 0 y {w} z 0
+create vertex x {L/2} y 0 z 0
+create vertex x {-L/2} y 0 z 0
+
+split curve 4 at vertex 18
+split curve 17 at vertex 19
+split curve 18 at vertex 20
+
+block 1 surface 5
+block 2 surface 6 7
+block 30 curve 14 15
+
+nodeset 400 vertex 21
+nodeset 401 vertex 22
+nodeset 402 vertex 23
+
+draw block all
+hardcopy "TPB-Nucleation.png" png
+
+surface 5 size {hf}
+surface 6 size {hc}
+surface 7 sizing function type bias start curve 10 finish curve 16
+
+surface all scheme trimesh
+mesh surface 5 6
+mesh surface 7
+
+smooth surface all
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("TPB-Nucleation-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+
