@@ -2,8 +2,8 @@
 verbose: 1
 time:
     min: 0
-    max: 10
-    numstep: 51
+    max: 5
+    numstep: 101
     interpolation: linear
 heatxfer:
     mode: null
@@ -15,12 +15,12 @@ defmech:
     atol: 1.0e-3
   sor:
     omega: 1.4
+  pclag: 5
 disp:
   snes:
-    lag_jacobian: 5
     type: ksponly
   pc:
-    type: ml
+    type: bjacobi
 cs0001:
     hookesLaw:  
         type: isotropic
