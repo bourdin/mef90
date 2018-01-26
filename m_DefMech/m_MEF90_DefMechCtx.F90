@@ -95,8 +95,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
       PetscBool                              :: Has_damageBC
-      PetscBool                              :: IsCrackPressureActivated
-      PetscBool                              :: IsWorkControlledActivated
+      PetscBool                              :: CrackVolumeControlled
+      PetscBool                              :: WorkControlled
       PetscReal                              :: boundaryDamage
    End Type MEF90DefMechCellSetOptions_Type
 
@@ -784,7 +784,7 @@ Contains
 !!!  
 !!!  PetscBagRegisterMEF90DefMechCtxCellSetOptions:
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-18 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
@@ -813,8 +813,8 @@ Contains
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%IsCrackPressureActivated,default%IsCrackPressureActivated,'IsCrackPressureActivated','Is Crack Pressure activated in this block (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%IsWorkControlledActivated,default%IsWorkControlledActivated,'IsWorkControlledActivated','Is Crack Pressure activated in this block (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%CrackVolumeControlled,default%CrackVolumeControlled,'CrackVolumeControlled','Crack Pressure controlled by the crack volume in this block (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%WorkControlled,default%WorkControlled,'WorkControlled','Force magnitude controlled by its workin this block (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 

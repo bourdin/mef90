@@ -28,7 +28,7 @@ Contains
 !!!  
 !!!  MEF90Initialize:
 !!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2014-18 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90Initialize(ierr)
       PetscInt,Intent(OUT)                               :: ierr
@@ -38,7 +38,9 @@ Contains
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: hg changeset ",MEF90_HGVER,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "# Copyright (c) 1998-2014 B. Bourdin <bourdin@lsu.edu>\n"
+      Write(IOBuffer,*) "# Copyright (c) 1998-2018 B. Bourdin <bourdin@lsu.edu> and co-authors\n"
+      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# See CONTRIBUTORS.txt for a list of contributors\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# PETSC_ARCH=", PETSC_ARCH ,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
