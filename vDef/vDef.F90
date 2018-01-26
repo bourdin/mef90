@@ -164,8 +164,8 @@ Integer :: i
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
-                                                         PETSC_FALSE,                             & ! IsCrackPressureActivated
-                                                         PETSC_FALSE,                             & ! IsWorkControlledActivated
+                                                         PETSC_FALSE,                             & ! CrackVolumeControlled
+                                                         PETSC_FALSE,                             & ! WorkControlled
                                                          0._Kr)                                     ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: vDefDefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC

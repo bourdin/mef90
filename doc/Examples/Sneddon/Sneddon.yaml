@@ -34,7 +34,7 @@ cs0001:
     plasticity:
         type: NONE 
     Crackpressure: 1.
-    IsCrackPressureActivated: yes
+    CrackVolumeControlled: yes
 cs0002:
     displacementBC: 1,1,0
     boundaryDisplacement:  0,0,0 
