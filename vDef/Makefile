@@ -34,6 +34,17 @@ vDef.o: ${BASE_DIR}/vDef.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
+vDefP:${MEF90_DIR}/bin/${PETSC_ARCH}/vDefP
+	-@echo "      $@"
+
+${MEF90_DIR}/bin/${PETSC_ARCH}/vDefP: vDefP.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+	-@echo "      $@"
+	-@${FLINKER} -o $@ vDefP.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
+
+vDefP.o: ${BASE_DIR}/vDefP.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
 testvDef:
 	@echo ;echo "Testing vDef with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
@@ -46,8 +57,8 @@ MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:
 	make -C ${MEF90_DIR} m_HeatXfer
-m_DEFMECH:
-	make -C ${MEF90_DIR} m_DEFMECH
+m_DefMech:
+	make -C ${MEF90_DIR} m_DefMech
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
 

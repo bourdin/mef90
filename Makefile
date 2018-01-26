@@ -44,7 +44,7 @@ CoupledPlasticityDamage: MEF90 m_DefMech m_HeatXfer chkpaths
 
 vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef
+	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP
 
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
