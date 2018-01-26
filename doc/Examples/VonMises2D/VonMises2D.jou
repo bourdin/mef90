@@ -15,7 +15,7 @@ block 3 curve 4
 nodeset 100 vertex 3
 draw block all
 block 1 element type tri3
-block 2 element type bar2
-block 3 element type bar2
+block 20 element type bar2
+block 30 element type bar2
 export mesh "VonMises2D.gen" dimension 2 block all overwrite
-exit
+#exit

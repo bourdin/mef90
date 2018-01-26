@@ -1,0 +1,50 @@
+verbose: 1
+time:
+    min: 0.0
+    max: 30.0
+    numstep: 300
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+  plasticStrain:
+    atol: 1e-4
+  damage:
+    atol: 1e-4
+temperature:
+    offset: 0
+plasticStrain:
+    offset: 4
+stress:
+    offset: 10
+cs0001:
+    fracturetoughness: 2.184
+    residualstiffness: 1e-6
+    internalLength: 0.1
+    damage:
+        type: AT1Elastic
+    plasticity:
+        type: VonMisesPlaneTheory
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.0
+        PoissonRatio:  0.3
+    yieldStress: 1.0
+    DuctileCouplingPower: 2
+cs0002:
+    displacementBC: 1,0,0
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: 1
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+cs0003:
+    displacementBC: 1,0,0
+    boundaryDisplacement: 1.,0.,0.
+    damageBC: 1
+    boundaryDamage: 0.
+    DuctileCouplingPower: 2
+vs0100:
+    displacementBC: 0,1,0 
+    boundaryDisplacement: 0.,0.,0. 
+    damageBC: 0 
+    boundaryDamage: 0. 
