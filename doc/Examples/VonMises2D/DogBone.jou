@@ -1,0 +1,49 @@
+reset 
+set info on
+
+##{mm=1e-3}
+#{mm = 1./75}
+#{w = 75*mm}
+#{h = 25*mm}
+#{a = h/5} # depth of the notch
+#{b = w/3} # width of the notch
+
+#{ell = 7.5/2*mm}
+#{hf = ell/8}
+#{hstr = tostring(hf)}
+
+
+create surface rectangle width {w} height {h} zplane
+
+create vertex x {-b/2} y {h/2} z 0
+create vertex x 0 y {h/2-a} z 0
+create vertex x {b/2} y {h/2} z 0
+create surface circle vertex 5 6 7
+webcut body 1 tool body 2
+delete body 2 3
+
+create vertex x {b/2} y {-h/2} z 0
+create vertex x 0 y {-h/2+a} z 0
+create vertex x {-b/2} y {-h/2} z 0
+create surface circle vertex 12 13 14
+webcut body 1 tool body 4
+delete body 4 5
+
+block 1 surface all
+block 20 curve 2
+block 30 curve 4
+nodeset 100 vertex 3
+
+draw block all nodeset all
+hardcopy "DogBone.png" png
+
+surface all scheme tridelaunay
+tridelaunay point placement gq
+surface all size {hf}
+mesh surface all
+smooth surface all scheme laplacian
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("DogBone-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
