@@ -182,8 +182,8 @@ Program CoupledPlasticityDamage
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
                                                          PETSC_FALSE,                             & ! Has Damage BC
-                                                         PETSC_FALSE,                             & ! IsCrackPressureActivated
-                                                         PETSC_FALSE,                             & ! IsWorkControlledActivated
+                                                         PETSC_FALSE,                             & ! CrackVolumeControlled
+                                                         PETSC_FALSE,                             & ! WorkControlled
                                                          0._Kr)                                     ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: vDefDefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
@@ -221,7 +221,7 @@ Program CoupledPlasticityDamage
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90Initialize(ierr)
-   Call PetscPrintf(PETSC_COMM_WORLD," # vDucDef: numerical implementation of variational models of Ductile Defect Mechanics\n",ierr);CHKERRQ(ierr)
+   Call PetscPrintf(PETSC_COMM_WORLD," # vDefP: numerical implementation of variational models of Ductile Defect Mechanics\n",ierr);CHKERRQ(ierr)
    
    
    !!! Get all MEF90-wide options
@@ -363,8 +363,8 @@ Program CoupledPlasticityDamage
    Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Do set = 1,size(setID)
       Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-      ActivatedCrackPressureBlocksList(set) = cellSetOptions%IsCrackPressureActivated
-      ActivatedWorkControlledBlocksList(set) = cellSetOptions%IsWorkControlledActivated
+      ActivatedCrackPressureBlocksList(set) = cellSetOptions%CrackVolumeControlled
+      ActivatedWorkControlledBlocksList(set) = cellSetOptions%WorkControlled
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do
    Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
