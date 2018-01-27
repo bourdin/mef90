@@ -1,0 +1,84 @@
+verbose: 1
+time:
+    min: 000
+    max: 100
+    numstep: 101
+    interpolation: linear
+boundaryDisplacement:
+  scaling: linear
+boundaryTemp:
+  scaling: linear
+defmech:
+  mode: quasistatic
+  damage:
+    atol: 1.0e-3
+  sor:
+    omega: 1.4
+  pclag: 5
+disp:
+  snes:
+    type: ksponly
+  pc:
+    type: bjacobi
+heatxfer:
+    mode: NULL
+temperature:
+    offset: 0
+cs0001:
+    # center layer
+    hookeslaw: 
+        type: isotropic
+        YoungsModulus: 1
+        PoissonRatio: .2
+        PlaneStress: 1
+    FractureToughness: 1
+    internallength: .25
+    residualstiffness: 0.
+    LinearThermalExpansion: 0,0,0
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+    boundaryTemp: 1.
+cs0002:
+    # outer layer
+    hookeslaw: 
+        type: isotropic
+        YoungsModulus: .5
+        PoissonRatio: .2
+        PlaneStress: 1
+    FractureToughness: 1
+    internallength: .25
+    residualstiffness: 0.
+    LinearThermalExpansion: 0,0,0
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+    boundaryTemp: 1.
+cs0030:
+  # top edge
+    displacementbc: no,no,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+cs0040:
+    # bottom edge
+    displacementbc: no,yes,no
+    boundaryDisplacement: 0,0,0
+    damageBC: no
+cs0050:
+    # left edge
+    displacementbc: yes,no,no
+    boundaryDisplacement: -1,0,0
+    damageBC: yes
+    boundaryDamage: 0.
+cs0060:
+    # left edge
+    displacementbc: yes,no,no
+    boundaryDisplacement: 1,0,0
+    damageBC: yes
+    boundaryDamage: 0.

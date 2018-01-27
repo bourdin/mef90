@@ -1,0 +1,59 @@
+reset 
+set info on
+
+##{m=1}
+#{w = 80*m}
+#{t1 = 1*m}
+#{t2 = 5*m}
+
+#{ell = t1/2}
+#{hf = ell/4}
+#{ratio = 10}
+#{hc = hf * ratio}
+#{hstr = tostring(hf)}
+
+
+create surface rectangle width {w} height {t1} zplane
+move surface 1 y {t1/2}
+create surface rectangle width {w} height {t2} zplane
+move surface 2 y {t1+t2/2}
+
+imprint all 
+merge all
+
+block 1 surface 1
+block 2 surface 2
+block 30 curve 5
+block 40 curve 3
+block 50 curve 6 2
+block 60 curve 8 4
+nodeset 100 vertex 6
+
+draw block all nodeset all
+hardcopy "TriLayerThermal.png" png
+
+surface all scheme tridelaunay
+tridelaunay point placement gq
+surface 1 size {hf}
+mesh surface 1
+curve 5 size {hc}
+mesh curve 5
+surface 2 sizing function type bias start curve 1 finish curve 5
+mesh surface 2
+
+smooth surface all scheme laplacian
+
+block 1 to 9 element type tri3
+block 10 to 99 element type bar2
+#{filename = Quote("TriLayerThermal-"//hstr//"-tri3.gen")}
+export mesh {filename} dimension 2 block all overwrite
+
+quality volume all shape global list verbose errors
+
+
+
+
+
+
+
+
