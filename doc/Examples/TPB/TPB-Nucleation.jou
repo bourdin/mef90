@@ -8,6 +8,7 @@ set info on
 #{h=8*mm}
 #{L = 80*mm}
 #{a = 4.5*mm}
+
 #{epsc = .001*mm}
 #{theta = PI/4}
 
@@ -54,7 +55,7 @@ nodeset 401 vertex 24
 nodeset 402 vertex 25
 
 draw block all nodeset all
-hardcopy "TPB-Crack.png" png
+hardcopy "TPB-Nucleation.png" png
 
 surface all scheme trimesh
 surface 4 size {hf}
