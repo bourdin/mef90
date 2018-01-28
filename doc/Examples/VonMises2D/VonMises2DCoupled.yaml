@@ -31,13 +31,13 @@ cs0001:
         PoissonRatio:  0.3
     yieldStress: 1.0
     DuctileCouplingPower: 2
-cs0002:
+cs0020:
     displacementBC: 1,0,0
     boundaryDisplacement: 0.,0.,0.
     damageBC: 1
     boundaryDamage: 0.
     DuctileCouplingPower: 2
-cs0003:
+cs0030:
     displacementBC: 1,0,0
     boundaryDisplacement: 1.,0.,0.
     damageBC: 1
