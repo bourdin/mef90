@@ -19,7 +19,7 @@ block 1 surface 15
 block 20 curve 43
 block 30 curve 7 16 44
 draw block all
-hardcopy "BC1.png" png 
+hardcopy "BC.png" png 
 
 
 mesh surface 15
@@ -27,9 +27,9 @@ smooth surface 15
 block 1 to 9 element type tri3
 block 10 to 99 element type bar2
 draw block all
-hardcopy "BC2.png" png 
+hardcopy "BC_mesh.png" png 
 
-#{filename = Quote("BC1-"//hstr//"-tri3.gen")}
+#{filename = Quote("BC-"//hstr//"-tri3.gen")}
 export mesh {filename} dimension 2 block all overwrite
 
 delete block 20 30
@@ -39,5 +39,11 @@ mesh surface 7 10 12 16 17
 smooth surface all
 block 1 to 9 element type tri3
 block 10 to 99 element type bar2
-#{filename = Quote("BC2-"//hstr//"-tri3.gen")}
+#{filename = Quote("BCExtended-"//hstr//"-tri3.gen")}
 export mesh {filename} dimension 2 block all overwrite
+
+draw block all
+hardcopy "BCExtended_mesh.png" png 
+delete mesh
+draw block all
+hardcopy "BCExtended.png" png 
