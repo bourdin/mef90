@@ -172,11 +172,11 @@ def exo2exo(fin,fout):
     e.close()
 
 if __name__ == '__main__':
-    fin = sys.argv[-2]
-    fout = sys.argv[-1]
     if not os.path.isfile(fin) or not (len(sys.argv) == 3):
         print "usage: {0} <input filename> <output filename>".format(sys.argv[0])
         exit
+    fin = sys.argv[-2]
+    fout = sys.argv[-1]
     if os.path.exists(fout):
         if confirm("ExodusII file {0} already exists. Overwrite?".format(fout)):
             os.remove(fout)
