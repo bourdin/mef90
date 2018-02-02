@@ -254,11 +254,18 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
     
     print("\n")
     elemIDs = {}
+    usedID = [0,]
     for i in range(len(elemNames)):
-        CSID = i+1
-        elemIDs[elemNames[i]] = CSID
-        print("Assigning ID {0:4d} to ELSET {1}. \tmef90/vDef name will be cs{0:04}".format(CSID,elemNames[i]))
-        #e.put_elem_blk_name(elemIDs[elemNames[i]],elemNames[i])
+        try:
+            setFixedID = int(elemNames[i])
+            if setFixedID in usedID:
+                setFixedID =  max(usedID)+1    
+            usedID.append(setFixedID)
+        except ValueError:
+            setFixedID =  max(usedID)+1
+            usedID.append(setFixedID)
+        elemIDs[elemNames[i]] = setFixedID
+        print("Assigning ID {0:4d} to ELSET {1}. \tmef90/vDef name will be cs{0:04}".format(elemIDs[elemNames[i]],elemNames[i]))
     #block info and connectivity
     for setID in cellSets.keys():
         ###---setID, elemType, num elems, num nodes per elem, num attributes per elem
@@ -271,10 +278,18 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
         e.put_elem_blk_name(elemIDs[elemNames[i]],elemNames[i])
     
     nodeIDs = {}
+    usedID = [0,]
     for i in range(len(nodeNames)):
-        NSID = i+100
-        nodeIDs[nodeNames[i]] = NSID
-        print("Assigning ID {0:4d} to NSET {1}. \tmef90/vDef name will be vs{0:04}".format(NSID,nodeNames[i]))
+        try:
+            setFixedID = int(nodeNames[i])
+            if setFixedID in usedID:
+                setFixedID =  max(usedID)+1    
+            usedID.append(setFixedID)
+        except ValueError:
+            setFixedID =  max(usedID)+1
+            usedID.append(setFixedID)
+        nodeIDs[nodeNames[i]] = setFixedID
+        print("Assigning ID {0:4d} to NSET {1}. \tmef90/vDef name will be vs{0:04}".format(nodeIDs[nodeNames[i]],nodeNames[i]))
 
     #node set info
     for setID in vertexSets.keys():

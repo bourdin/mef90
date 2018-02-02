@@ -178,7 +178,6 @@ def exo2exo(fin,fout):
     ### Write node sets
     ###
     setIDs = e.get_node_set_ids()
-    maxID = 0
     usedID = [0,]
     for set in setIDs:
         setName = e.get_node_set_name(set)
