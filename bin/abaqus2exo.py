@@ -4,8 +4,50 @@ import exodus as exo
 import argparse
 import time
 
+def confirm(prompt=None, resp=False):
+    """prompts for yes or no response from the user. Returns True for yes and
+    False for no.
+
+    'resp' should be set to the default value assumed by the caller when
+    user simply types ENTER.
+
+    >>> confirm(prompt='Create Directory?', resp=True)
+    Create Directory? [y]|n: 
+    True
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y: 
+    False
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y: y
+    True
+
+    """
+    
+    if prompt is None:
+        prompt = 'Confirm'
+
+    if resp:
+        prompt = '%s [%s]|%s: ' % (prompt, 'y', 'n')
+    else:
+        prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
+        
+    while True:
+        ans = raw_input(prompt)
+        if not ans:
+            return resp
+        if ans not in ['y', 'Y', 'n', 'N']:
+            print 'please enter y or n.'
+            continue
+        if ans == 'y' or ans == 'Y':
+            return True
+        if ans == 'n' or ans == 'N':
+            return False
+
+
+
 #--------Function for parsing mesh file
 def ABAQUSImporter(filename):
+    import sys
     elemDim = {
                "S3R":3,      # 3 node triangle
                "S4R":4,      # 4 node quad
@@ -14,13 +56,18 @@ def ABAQUSImporter(filename):
                "C3D4":4,     # 4 node tet
                "STRI3":3,    # 3 node triangle
                "B21":2,      # 2 node line
+               "T2D2":2,     # 2 node line
                "CPE3":3,     # 3 node triangle
                "CPE6":6,     # 6 node triangle
                "CPE6S":6,    # 6 node triangle
                "CPE4":4,     # 4 node quad
                "CPE4S":4,    # 4 node quad
+               "CPE4R":4,    # 4 node quad
                "CPE8":8,     # 8 node quad
                "CPE8S":8,    # 8 node quad
+               "CPS4":4,     # 4 node quad
+               "CPS4S":4,    # 4 node quad
+               "CPS4R":4,    # 4 node quad
                "C3D4":4,     # 4 node tet
                "C3D10":10,   # 10 node tet
                "C3D10S":10,  # 10 node tet
@@ -37,11 +84,16 @@ def ABAQUSImporter(filename):
                 "C3D4":"TETRA4",    # 4 node tet
                 "STRI3":"TRI3",     # 3 node triangle
                 "B21":"BAR2",       # 2 node line
+                "T2D2":"BAR2",      # 2 node line
                 "CPE3":"TRI3",      # 3 node triangle
                 "CPE6":"TRI6",      # 6 node triangle
                 "CPE6S":"TRI6",     # 6 node triangle
                 "CPE4":"QUAD4",     # 4 node quad
                 "CPE4S":"QUAD4",    # 4 node quad
+                "CPE4R":"QUAD4",    # 4 node quad
+                "CPS4":"QUAD4",     # 4 node quad
+                "CPS4S":"QUAD4",    # 4 node quad
+                "CPS4R":"QUAD4",    # 4 node quad
                 "CPE8":"QUAD8",     # 8 node quad
                 "CPE8S":"QUAD8",    # 8 node quad
                 "C3D4":"TETRA4",    # 4 node tet
@@ -61,18 +113,14 @@ def ABAQUSImporter(filename):
     nodeNames = {}
     while line != '':
         if line.startswith('*NODE'):
-            print line
+            sys.stdout.write( "Parsed {0} \n".format(line.strip()))
             (coord,nodeID,line,f,order) = readCoords(f,line)
         elif line.startswith('*ELEM'):
-            print line
-            start_time = time.time()
+            sys.stdout.write( "Parsed {0} \n".format(line.strip()))
             (cellSet,elemNames,line,f) = readElems(f,line,nodeID,elemDim,elemType,cellSet,order)
-            print "Elset Parse Time: %s" % (time.time()-start_time)
         elif line.startswith('*NSET'):
-            print line
-            start_time = time.time()
+            sys.stdout.write( "Parsed {0} \n".format(line.strip()))
             (vertexSet,nodeNames,line,f) = readNodes(f,line,nodeID,vertexSet,nodeNames,order)
-            print "Nset Parse Time: %s" % (time.time()-start_time)
         else:
             line = f.readline()
     return coord,vertexSet,cellSet,elemNames,nodeNames
@@ -204,9 +252,13 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
     e.put_coord_names(["x","y","z"][0:numDims])    #name of each coordinate
     e.put_coords(X,Y,Z)                 #actual coordinates
     
+    print("\n")
     elemIDs = {}
     for i in range(len(elemNames)):
-        elemIDs[elemNames[i]] = i
+        CSID = i+1
+        elemIDs[elemNames[i]] = CSID
+        print("Assigning ID {0:4d} to ELSET {1}. \tmef90/vDef name will be cs{0:04}".format(CSID,elemNames[i]))
+        #e.put_elem_blk_name(elemIDs[elemNames[i]],elemNames[i])
     #block info and connectivity
     for setID in cellSets.keys():
         ###---setID, elemType, num elems, num nodes per elem, num attributes per elem
@@ -216,11 +268,13 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
 
     ###---assign string names of sets to index
     for i in range(len(elemNames)):
-        e.put_elem_blk_name(i,elemNames[i])
+        e.put_elem_blk_name(elemIDs[elemNames[i]],elemNames[i])
     
     nodeIDs = {}
     for i in range(len(nodeNames)):
-        nodeIDs[nodeNames[i]] = i
+        NSID = i+100
+        nodeIDs[nodeNames[i]] = NSID
+        print("Assigning ID {0:4d} to NSET {1}. \tmef90/vDef name will be vs{0:04}".format(NSID,nodeNames[i]))
 
     #node set info
     for setID in vertexSets.keys():
@@ -230,18 +284,27 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames,numDims):
         e.put_node_set(nodeIDs[setID],vertexSets[setID])
 
     for i in range(len(nodeNames)):
-        e.put_node_set_name(i,nodeNames[i])
+        e.put_node_set_name(nodeIDs[nodeNames[i]],nodeNames[i])
     e.close()
 
 
 #------Main Function
 def Main():
+    import sys
+    import os
     parser = argparse.ArgumentParser()
     parser.add_argument("abaqusFile", help = "The name of the ABAQUS file to be parsed.", type = str)
     parser.add_argument("exoFile", help = "The name of the exodus file to be written.", type = str)
     parser.add_argument("--dim",type=int,help="mesh dimension",default=3)
     parser.add_argument("--time_min",type=float,help="first time step",default=0.)
     args = parser.parse_args()
+    if os.path.exists(args.exoFile):
+        if confirm("ExodusII file {0} already exists. Overwrite?".format(args.exoFile)):
+            os.remove(args.exoFile)
+        else:
+            print "bye!"
+            sys.exit(-1)
+    
     (coord,vertexSet,cellSet,elemNames,nodeNames) = ABAQUSImporter(args.abaqusFile)
     exoWriter(coord,vertexSet,cellSet,args.exoFile,elemNames,nodeNames,args.dim)
 
