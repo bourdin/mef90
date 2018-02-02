@@ -46,6 +46,9 @@ def confirm(prompt=None, resp=False):
 
 
 def exo2exo(fin,fout):
+    import warnings
+    warnings.filterwarnings('ignore','.*buffer.*',)
+
     cell1D = ("BAR","BAR2","BEAM2","BAR3","BEAM3")
     cell2D = ("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3","TRI6","TRISHELL6","QUAD","QUAD4","SHELL","SHELL4","QUAD9","SHELL9")
     cell3D = ("TETRA","TETRA4","TETRA10","HEX","HEX8","HEX27")
@@ -117,10 +120,12 @@ def exo2exo(fin,fout):
     vertexReordering = np.array(range(maxV),dtype=int)
     for v in range(len(listedVertices)):
         if not listedVertices[v]:
-            print "\tvertex {0} is missing".format(v)
+            print "\tvertex {0} is missing.".format(v)
             vertexReordering[v:] = vertexReordering[v:]-1
             vertexReordering[v]  = -1
             numMissing += 1
+    if numMissing > 0:
+        print ("{0} vertices are not referenced in the input file. Was the mesh renumbered?".format(numMissing))
 
     ### Create fixed file
     title     = "{0} fixed by {1}".format(e.title(),sys.argv[0])[:exo.MAX_LINE_LENGTH]
@@ -143,31 +148,59 @@ def exo2exo(fin,fout):
 
     ### Write cell sets
     ###
+    maxID = 0
+    usedID = [0,]
     for set in blocksOrder:
         setID = e.get_elem_blk_ids()[set]
         setName = e.get_elem_blk_name(setID)
+        try:
+            setFixedID = int(setName)
+            if setFixedID in usedID:
+                setFixedID =  max(usedID)+1    
+            usedID.append(setFixedID)
+        except ValueError:
+            setFixedID =  max(usedID)+1
+            usedID.append(setFixedID)
         cellType,numCells,numVertexPerCell,numAttr = e.elem_blk_info(setID)
-        print "Cell set {0} {1} {2}".format(set,setID,setName)
+        print('Assigning ID {0:4d} to cell set "{1}". \tmef90/vDef name will be cs{0:04}'.format(setFixedID,setName))
         print "\tNumber of cells: {0}".format(numCells)
         print "\tCell type: {0}".format(cellType)
         print "\tNumber of vertex per cell: {0}".format(numVertexPerCell)
 
-        eout.put_elem_blk_info(setID,cellType,numCells,numVertexPerCell,1)
-        eout.put_elem_blk_name(setID,setID)
+        eout.put_elem_blk_info(setFixedID,cellType,numCells,numVertexPerCell,1)
+        eout.put_elem_blk_name(setFixedID,setName)
 
         connect = np.array(e.get_elem_connectivity(setID)[0],dtype=exo.c_int)
         for i in range(len(connect)):
             connect[i] = 1+vertexReordering[connect[i]-1]
-        eout.put_elem_connectivity(setID,connect)
+        eout.put_elem_connectivity(setFixedID,connect)
 
     ### Write node sets
     ###
-    setID = e.get_node_set_ids()
-    for set in setID:
+    setIDs = e.get_node_set_ids()
+    maxID = 0
+    usedID = [0,]
+    for set in setIDs:
+        setName = e.get_node_set_name(set)
+        try:
+            setFixedID = int(setName)
+            if setFixedID in usedID:
+                setFixedID =  max(usedID)+1    
+            usedID.append(setFixedID)
+        except ValueError:
+            setFixedID =  max(usedID)+1
+            usedID.append(setFixedID)
+
+        print('Assigning ID {0:4d} to vertex set "{1}". \tmef90/vDef name will be vs{0:04}'.format(setFixedID,setName))
         num_ns_nodes, num_ns_dist_facts = e.get_node_set_params(set)
-        print("Node set {0}: \n\tnumber of nodes: {1}".format(set,num_ns_nodes))
-        eout.put_node_set_params(set,num_ns_nodes, num_ns_dist_facts)
-        eout.put_node_set(set,e.get_node_set_nodes(set))
+
+        if num_ns_nodes == 0:
+            print("\tset is empty and will NOT be written to output file")
+        else:
+            print("\tnumber of nodes: {1}".format(set,num_ns_nodes,setName))
+            eout.put_node_set_params(setFixedID,num_ns_nodes, num_ns_dist_facts)
+            eout.put_node_set(setFixedID,e.get_node_set_nodes(set))
+            eout.put_node_set_name(setFixedID,setName)
     eout.close()
     e.close()
 
