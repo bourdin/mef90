@@ -11,7 +11,7 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
+      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
       Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
    End Type MEF90Ctx_Type
@@ -37,6 +37,7 @@ Module m_MEF90_Ctx
    Use, Intrinsic :: iso_c_binding
    Use m_MEF90_Parameters
    Use m_MEF90_Ctx_Type
+   Use m_MEF90_Utils
    Implicit none
 
    !Private  
@@ -195,17 +196,32 @@ Contains
          PetscInt,Intent(OUT)                         :: ierr
        
          Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
-         Character(len=MEF90_MXSTRLEN)                :: IOBuffer
-         PetscBool                                    :: flg
+         Character(len=MEF90_MXSTRLEN)                :: IOBuffer,tmpPrefix
+         PetscBool                                    :: hasPrefix,hasGeometry,hasResult
       
          MEF90Ctx%comm = comm
          Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',MEF90Ctx%prefix,flg,ierr);CHKERRQ(ierr)
-         If (.NOT. flg) Then
-            Call PetscPrintf(PETSC_COMM_WORLD,"no file prefix given (-prefix)\n",ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr);CHKERRQ(ierr)
+         If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
+            Call PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr);CHKERRQ(ierr)
             Call PetscFinalize(ierr)
             STOP
-            !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n",ierr)
+         End If
+         If (hasPrefix .AND. hasResult) Then
+            Call PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr);CHKERRQ(ierr)
+            Call PetscFinalize(ierr)
+            STOP
+         End If
+         If (hasPrefix) Then
+            !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
+            MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
+            MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
+         Else
+            If (.NOT. hasResult) Then
+               MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
+            End If
          End If
 
          Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
@@ -215,9 +231,11 @@ Contains
          If (GlobalOptions%verbose > 0) Then
             Write(IOBuffer,*) 'MEF90 Global Context: \n'
             Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,100) trim(MEF90Ctx%prefix)
+            Write(IOBuffer,100) trim(MEF90Ctx%geometryFile)
             Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,102) trim(MEF90Ctx%prefix)//'.log'
+            Write(IOBuffer,101) trim(MEF90Ctx%resultFile)
+            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,102) trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
             Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
             Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
             Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
@@ -228,8 +246,9 @@ Contains
             MEF90Ctx%IOComm = PETSC_COMM_SELF
          End If   
          MEF90Ctx%fileexounit = 0
-      100 Format('  prefix:       ',(A),'\n')
-      102 Format('  log file:     ',(A),'\n')
+      100 Format('  geometry file:       ',(A),'\n')
+      101 Format('  result file:         ',(A),'\n')
+      102 Format('  log file:            ',(A),'\n')
    End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__

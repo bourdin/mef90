@@ -51,7 +51,7 @@ Contains
       If (MEF90_MyRank == 0) Then
          cpu_ws = 8
          io_ws = 8
-         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         filename = Trim(MEF90Ctx%geometryFile)
          exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
@@ -101,13 +101,12 @@ Contains
       Select Case (GlobalOptions%FileFormat)
       Case (MEF90FileFormat_EXOSplit)
          IOComm = PETSC_COMM_SELF
-         Write(filename,100) trim(MEF90Ctx%prefix),MEF90Ctx%rank
+         Write(filename,100) trim(MEF90FilePrefix(MEF90Ctx%resultfile)),MEF90Ctx%rank,trim(MEF90FileExtension(MEF90Ctx%resultfile))
       Case (MEF90FileFormat_EXOSingle)   
-         IOComm = PETSC_COMM_WORLD
-         Write(filename,101) trim(MEF90Ctx%prefix)
+         IOComm = MEF90Ctx%comm
+         filename = MEF90Ctx%resultFile
       End Select
-   100 Format(A,'-',I4.4,'.gen')
-   101 Format(A,'_out.gen')
+   100 Format(A,'-',I4.4,'.',A)
       Call MPI_Comm_Rank(IOComm,IORank,ierr)
    
       !!! Open output file or create it and format it depending on loading type
@@ -125,8 +124,7 @@ Contains
             Case (MEF90FileFormat_EXOSplit)
                Call DMmeshViewExodusSplit(mesh,MEF90Ctx%fileExoUnit,ierr)
             Case (MEF90FileFormat_EXOSingle)
-               Write(filename,102) trim(MEF90Ctx%prefix)
-               exoUnitIN = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+               exoUnitIN = EXOPEN(MEF90Ctx%geometryfile,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
                Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,exoErr)
                Call EXCLOS(exoUnitIN,exoErr)
             End Select
@@ -134,7 +132,6 @@ Contains
             MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
          EndIf
       End If
-   102 Format(A,'.gen')
    End Subroutine MEF90CtxOpenEXO
 
 #undef __FUNCT__
@@ -159,21 +156,14 @@ Contains
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-   
-      !!! Get name of output file
       Select Case (GlobalOptions%FileFormat)
       Case (MEF90FileFormat_EXOSplit)
          IOComm = PETSC_COMM_SELF
-         Write(filename,100) trim(MEF90Ctx%prefix),MEF90Ctx%rank
       Case (MEF90FileFormat_EXOSingle)   
          IOComm = PETSC_COMM_WORLD
-         Write(filename,101) trim(MEF90Ctx%prefix)
       End Select
-   100 Format(A,'-',I4.4,'.gen')
-   101 Format(A,'_out.gen')
-      Call MPI_Comm_Rank(IOComm,IORank,ierr)
-   
-      !!! Open output file or create it and format it depending on loading type
+      Call MPI_Comm_Rank(IOComm,IORank,ierr)   
+
       If (IORank == 0) Then
          Call EXCLOS(MEF90Ctx%fileExoUnit,exoErr)
          MEF90Ctx%fileExoUnit = 0
@@ -202,7 +192,7 @@ Contains
       If (MEF90Ctx%rank == 0) Then
          cpu_ws = 8
          io_ws = 8
-         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
@@ -256,7 +246,7 @@ Contains
       If (MEF90Ctx%rank == 0) Then
          cpu_ws = 8
          io_ws = 8
-         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
@@ -310,7 +300,7 @@ Contains
       If (MEF90Ctx%rank == 0) Then
          cpu_ws = 8
          io_ws = 8
-         filename = Trim(MEF90Ctx%prefix)//'.gen'
+         filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
