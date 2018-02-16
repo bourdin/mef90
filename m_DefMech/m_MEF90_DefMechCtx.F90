@@ -425,7 +425,7 @@ Contains
       !!! 
       !!! Create energy viewers
       !!!      
-      Write(filename,100) trim(MEF90Ctx%prefix)
+      filename = trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.ener'
       Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
       Call PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            cohesive energy surface energy  total energy   dissipation plastic \n",ierr);CHKERRQ(ierr)
       Call PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
@@ -435,7 +435,7 @@ Contains
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
       Do set = 1, numSet
-         Write(filename,101) trim(MEF90Ctx%prefix),set
+         Write(filename,101) trim(MEF90FilePrefix(MEF90Ctx%resultFile)),set
          Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
          Write(IOBuffer,102) set
          Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
@@ -443,7 +443,6 @@ Contains
          Call PetscViewerFlush(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-100 Format(A,'.ener')
 101 Format(A,'-',I4.4,'.enerblk')
 102 Format("# cell set ",I4,"\n")
       Nullify(DefMechCtx%force)

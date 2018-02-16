@@ -286,7 +286,56 @@ Contains
          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
       End If
    End Subroutine MEF90AskReal
- 
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90FilePrefix"
+   function MEF90FilePrefix(s)
+      character(len=*),intent(IN)   :: s
+      character(len=MEF90_MXSTRLEN) :: MEF90FilePrefix
+
+      character(len=MEF90_MXSTRLEN) :: sChop
+      integer                       :: i,l
+
+      l = len(s)
+      if (l > MEF90_MXSTRLEN) then
+         !write(*,*) 'Warning, choping input string'
+         sChop = s(1:MEF90_MXSTRLEN)
+      else 
+         sChop = s
+      end if
+      i = index(sChop,'.',.TRUE.)
+      if (i ==  0) then
+         MEF90FilePrefix = sChop
+      else
+         MEF90FilePrefix = sChop(1:i-1)
+      end if
+   end function MEF90FilePrefix
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90FileExtension"
+   function MEF90FileExtension(s)
+      character(len=*),intent(IN)   :: s
+      character(len=MEF90_MXSTRLEN) :: MEF90FileExtension
+
+      character(len=MEF90_MXSTRLEN) :: sChop
+      integer                       :: i,l
+
+      l = len(s)
+      if (l > MEF90_MXSTRLEN) then
+         !write(*,*) 'Warning, choping input string'
+         sChop = s(1:MEF90_MXSTRLEN)
+      else 
+         sChop = s
+      end if
+      i = index(sChop,'.',.TRUE.)
+      if (i ==  0) then
+         MEF90FileExtension = ''
+      else
+         MEF90FileExtension = sChop(i+1:)
+      end if
+   end function MEF90FileExtension
+
 
 !!! 
 !!! This should not be needed anywhere anymore
