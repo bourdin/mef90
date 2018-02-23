@@ -644,7 +644,9 @@ Program vDef
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
    !!Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
-   Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
+      Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+   End If
    Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    Call MEF90Finalize(ierr)
