@@ -1,4 +1,4 @@
-mef90 / vDef: A reference implementation ofr the variational approach to fracture,
+mef90 / vDef: A reference implementation of the variational approach to fracture,
 as described in:
 
 * Francfort, G. and Marigo, J.-J. (1998). Revisiting brittle fracture as an energy minimization problem. J. Mech. Phys. Solids., 46(8):1319–1342.
