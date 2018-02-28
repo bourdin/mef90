@@ -1,0 +1,47 @@
+# Use an official Python runtime as a parent image
+FROM centos
+
+# Set the working directory to /app
+WORKDIR /opt/HPC
+ADD . /opt/HPC
+
+# install development tools
+RUN yum install -y git mercurial patch make cmake gcc-c++ m4 valgrind-devel mpich-3.2-devel boost-devel lapack-devel valgrind-devel
+RUN cat mef90.sh >> /etc/skel/.bashrc
+RUN useradd -m -U mef90
+RUN chown -R mef90:mef90 /opt/HPC
+USER mef90
+
+## Define environment variable
+ENV PETSC_DIR  /opt/HPC/petsc-3.3-p7
+ENV PETSC_ARCH gcc-mef90-O
+ENV MEF90_DIR  /opt/HPC/mef90
+ENV SNLP_DIR   /opt/HPC/snlp-gcc-mef90-O
+ENV MPI_DIR    /usr/lib64/mpich-3.2
+ENV PATH="${MPI_DIR}/bin:${PETSC_DIR}/bin:${PETSC_DIR}/${PETSC_ARCH}/bin:${MEF90_DIR}/#bin:${MEF90_DIR}/bin/${PETSC_ARCH}:${PATH}"
+ENV PYTHONPATH="${MEF90_DIR}/python:${PYTHONPATH}"
+
+# Download dependencies
+RUN curl  http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p7.tar.gz | tar zxvf -
+RUN hg clone https://bitbucket.org/bourdin/mef90-sieve mef90
+RUN hg clone https://bitbucket.org/bourdin/mef90-tutorial-files
+RUN git clone https://bourdin@bitbucket.org/bourdin/snlp.git
+
+# Build PETSc
+RUN cd $PETSC_DIR; \
+    for d in $MEF90_DIR/patches/[0-1]*; do patch -p1 < $d; done; \
+    for d in $MEF90_DIR/patches/f[0-1]*; do patch -p1 < $d; done; \
+    cd $PETSC_DIR/config/BuildSystem; \
+    for d in $MEF90_DIR/patches/b0*; do patch -p1 < $d; done;
+RUN cd $PETSC_DIR; ./configure COPTFLAGS='-O3 -march=native’ CXXOPTFLAGS='-O3 -march=native’  FOPTFLAGS='-O3 -march=native'  --download-chaco=1 --download-exodusii=1 --download-hypre=1 --download-ml=1 --download-netcdf=ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz --download-yaml=1 --with-boost=1 --with-clanguage=C++ --with-cmake=cmake --with-debugging=0 --with-fortran-datatypes=1 --with-mpi-dir=/usr/lib64/mpich-3.2 --with-shared-libraries=1 --with-sieve --with-x11=1
+RUN mkdir -p /opt/HPC/petsc-3.3-p7/$PETSC_ARCH/cbind/include; mkdir -p /opt/HPC/petsc-3.3-p7/$PETSC_ARCH/forbind/include
+RUN cd $PETSC_DIR; make PETSC_DIR=/opt/HPC/petsc-3.3-p7 PETSC_ARCH=$PETSC_ARCH all
+RUN gcc -shared -L $PETSC_DIR/$PETSC_ARCH/lib -lnetcdf -o $PETSC_DIR/$PETSC_ARCH/lib/libexodus.so $PETSC_DIR/externalpackages/exodusii-5.22b/cbind/src/*.o
+
+# Build mef90
+RUN cd /opt/HPC/snlp; make; make install
+RUN cd $MEF90_DIR; make vDef
+
+# cleanup
+RUN rm /opt/HPC/Dockerfile /opt/HPC/mef90.sh
+WORKDIR /home/mef90
