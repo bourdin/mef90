@@ -1,0 +1,77 @@
+diff --git a/src/dm/impls/mesh/f90-custom/zmeshf90.c b/src/dm/impls/mesh/f90-custom/zmeshf90.c
+--- a/src/dm/impls/mesh/f90-custom/zmeshf90.c
++++ b/src/dm/impls/mesh/f90-custom/zmeshf90.c
+@@ -9,6 +9,8 @@
+ #define dmmeshrestoreelementsf90_    DMMESHRESTOREELEMENTSF90
+ #define dmmeshgetconef90_            DMMESHGETCONEF90
+ #define dmmeshrestoreconef90_        DMMESHRESTORECONEF90
++#define dmmeshgetsupportf90_         DMMESHGETSUPPORTF90
++#define dmmeshrestoresupportf90_     DMMESHRESTORESUPPORTF90
+ #elif !defined(PETSC_HAVE_FORTRAN_UNDERSCORE)
+ #define dmmeshgetcoordinatesf90_     dmmeshgetcoordinatesf90
+ #define dmmeshrestorecoordinatesf90_ dmmeshrestorecoordinatesf90
+@@ -16,6 +18,8 @@
+ #define dmmeshrestoreelementsf90_    dmmeshrestoreelementsf90
+ #define dmmeshgetconef90_            dmmeshgetconef90
+ #define dmmeshrestoreconef90_        dmmeshrestoreconef90
++#define dmmeshgetsupportf90_         dmmeshgetsupportf90
++#define dmmeshrestoresupportf90_     dmmeshrestoresupportf90
+ #endif
+ 
+ EXTERN_C_BEGIN
+@@ -60,15 +64,16 @@
+ {
+   *__ierr = F90Array1dDestroy(ptr,PETSC_INT PETSC_F90_2PTR_PARAM(ptrd));if (*__ierr) return;
+ }
+-
+-#if 0
+-void PETSC_STDCALL dmmeshrestoreclosuref90_(DM dm,F90Array1d *ptr,int *__ierr PETSC_F90_2PTR_PROTO(ptrd))
++void PETSC_STDCALL dmmeshgetsupportf90_(DM *dm,PetscInt *p,F90Array1d *ptr,int *__ierr PETSC_F90_2PTR_PROTO(ptrd))
+ {
+-  PetscReal *c;
+-  *__ierr = F90Array1dAccess(ptr,PETSC_REAL,(void**)&c PETSC_F90_2PTR_PARAM(ptrd));if (*__ierr) return;
+-  *__ierr = F90Array1dDestroy(ptr,PETSC_REAL PETSC_F90_2PTR_PARAM(ptrd));if (*__ierr) return;
+-  *__ierr = PetscFree(c);
++  const PetscInt *v;
++  PetscInt        n;
++  *__ierr = DMMeshGetSupportSize(*dm,*p,&n); if (*__ierr) return;
++  *__ierr = DMMeshGetSupport(*dm,*p,&v); if (*__ierr) return;
++  *__ierr = F90Array1dCreate((void *)v,PETSC_INT,1,n,ptr PETSC_F90_2PTR_PARAM(ptrd));
++}
++void PETSC_STDCALL dmmeshrestoresupportf90_(DM *dm,PetscInt *p,F90Array1d *ptr,int *__ierr PETSC_F90_2PTR_PROTO(ptrd))
++{
++  *__ierr = F90Array1dDestroy(ptr,PETSC_INT PETSC_F90_2PTR_PARAM(ptrd));if (*__ierr) return;
+ }
+-#endif
+-
+ EXTERN_C_END
+diff --git a/include/finclude/ftn-custom/petscdmmesh.h90 b/include/finclude/ftn-custom/petscdmmesh.h90
+--- a/include/finclude/ftn-custom/petscdmmesh.h90
++++ b/include/finclude/ftn-custom/petscdmmesh.h90
+@@ -76,6 +76,26 @@
+       End Interface
+ 
+       Interface
++        Subroutine DMMeshGetSupportF90(m,p,array,ierr)
++          USE_DMMESH_HIDE
++          PetscInt, pointer :: array(:)
++          PetscInt p
++          PetscErrorCode ierr
++          DM_HIDE m
++        End Subroutine
++      End Interface
++
++      Interface
++        Subroutine DMMeshRestoreSupportF90(m,p,array,ierr)
++          USE_DMMESH_HIDE
++          PetscInt, pointer :: array(:)
++          PetscInt p
++          PetscErrorCode ierr
++          DM_HIDE m
++        End Subroutine
++      End Interface
++
++      Interface
+         Subroutine SectionGetArrayF90(m,name,array,ierr)
+           USE_DMMESH_HIDE
+           CHARACTER*80 name
