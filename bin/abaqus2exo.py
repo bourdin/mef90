@@ -245,7 +245,7 @@ def exoWriter(coords,vertexSets,cellSets,filename,elemNames,nodeNames):
     cell3D = ("TETRA","TETRA4","TETRA10","HEX","HEX8","HEX27")
     X = coords[:,0]         #set of all X coords
     Y = coords[:,1]         #set of all Y coords
-    if len(coords[1])>2:
+    if len(coords[1])>2 and max(coords[1]) == min(coords[1]):
        Z = coords[:,2]         #set of all Z coords
        numDim = 3
     else:                       #otherwise we assume we have a three dimensional case
