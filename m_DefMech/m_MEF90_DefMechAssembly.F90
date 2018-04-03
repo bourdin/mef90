@@ -1162,8 +1162,6 @@ Contains
       Procedure(MEF90DefMechOperatorLoc),pointer         :: localOperatorFunction
       Procedure(MEF90DefMechRHSLoc),pointer              :: localRHSFunction
       
-!write(*,*) __FUNCT__
-!call SNESSolve(MEF90DefMechCtx%snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr);
       localOperatorFunction =>MEF90DefMechOperatorNull      
       Call SNESGetDM(snesDisplacement,mesh,ierr);CHKERRQ(ierr)
 
@@ -1518,7 +1516,6 @@ Contains
       
       Procedure(MEF90DefMechBilinearFormLoc),pointer     :: localAssemblyFunction
       
-write(*,*) __FUNCT__
       localAssemblyFunction =>MEF90DefMechBilinearFormNull      
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesDispl,mesh,ierr);CHKERRQ(ierr)
