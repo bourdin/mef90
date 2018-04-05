@@ -41,7 +41,7 @@ cs0001:
     plasticity:
         type: none
     unilateralContact:
-        type: masonry
+        type: hydrostaticdeviatoric
     displacementbc: no,no,no
     damageBC: no
 cs0020:

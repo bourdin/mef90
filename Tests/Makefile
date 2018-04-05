@@ -16,6 +16,14 @@ TestLinAlg: TestLinAlg.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
+YAMLValidator.o: ${MEF90_DIR}/Tests/YAMLValidator.F90 
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
+
+YAMLValidator: YAMLValidator.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 TestMaterials: TestMaterials.o
 	-@echo " $@"
 	${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
