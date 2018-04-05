@@ -1,0 +1,126 @@
+# MEF90 global options
+verbose: 1
+boundaryDisplacement_scaling: linear
+defmech:
+    irrevthres: 0.
+    mode: quasistatic
+heatxfer:
+    mode: null
+temperature:
+    offset: 0
+time:
+    min: 0
+    max: 10
+    numstep: 51
+cs0001:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+        PlaneStress: 0
+    FractureToughness: 1.
+    internallength: .05
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+cs0002:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+        PlaneStress: 0
+    FractureToughness: 1.
+    internallength: .05
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+cs0003:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+        PlaneStress: 0
+    FractureToughness: 1.
+    internallength: .05
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+cs0004:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+        PlaneStress: 0
+    FractureToughness: 1.
+    internallength: .05
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+cs0005:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+        PlaneStress: 0
+    FractureToughness: 1.
+    internallength: .05
+    residualstiffness: 0.
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,no,no
+    damageBC: no
+cs0006:
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: no,yes,no
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: yes
+    boundaryDamage: 0.
+cs0007:
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    displacementbc: yes,no,no
+    boundaryDisplacement: -.5,0,0.
+    damageBC: yes
+    boundaryDamage: 0.
+cs0008:
+    damage:
+        type: AT1
+    plasticity:
+	type: NONE
+    displacementbc: yes,no,no
+    boundaryDisplacement: .5,0,0.
+    damageBC: yes
+    boundaryDamage: 0.
+cs0009:
+    damage:
+	type: AT1
+    plasticity:
+	type: NONE
+    displacementbc: no,yes,no
+    boundaryDisplacement: 0.,0.,0.
+    damageBC: yes
+    boundaryDamage: 0.
+

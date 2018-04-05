@@ -1,0 +1,30 @@
+verbose: 0
+time:
+    min: 0
+    max: 15
+    numstep: 21
+heatxfer:
+  mode: null
+defmech:
+  mode: quasistatic
+temperature:
+    offset: 0
+cs0001:
+    fracturetoughness: 1
+    residualstiffness: 0.
+    internalLength: .5
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE 
+cs0010:
+    displacementBC: 1,1,1
+    boundaryDisplacement: -.5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
+cs0020:
+    displacementBC: 1,1,1
+    boundaryDisplacement: .5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
+
