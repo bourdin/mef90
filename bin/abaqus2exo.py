@@ -3,6 +3,7 @@ import numpy as np
 import exodus as exo
 import argparse
 import time
+import io
 
 def confirm(prompt=None, resp=False):
     """prompts for yes or no response from the user. Returns True for yes and
@@ -108,7 +109,7 @@ def ABAQUSImporter(filename):
                 }
 
     # Opening and reading abaqus file
-    f = open(filename, 'r') 
+    f = io.open(filename, 'r') 
     line = ' '
     cellSet = {}
     vertexSet = {}

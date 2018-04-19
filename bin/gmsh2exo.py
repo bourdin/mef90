@@ -2,7 +2,7 @@
 import numpy as np
 import exodus as exo
 import argparse
-
+import io
 #--------Function for parsing mesh file
 def GMSHImporter(filename):
     elemDim = {1:2,   # 2 node line
@@ -31,7 +31,7 @@ def GMSHImporter(filename):
                 }
 
     # Opening and reading mesh file
-    f = open(filename, 'r') 
+    f = io.open(filename, 'r') 
     if not f.readline() == '$MeshFormat\n':     #checking if mesh file
         print "Unknown file format"
         return -1
