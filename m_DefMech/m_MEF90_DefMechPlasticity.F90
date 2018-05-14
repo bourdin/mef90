@@ -29,6 +29,19 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       logical(Kind = Kr)          :: isPlaneStress
       real(Kind = Kr)             :: cumulatedDissipatedPlasticEnergy
       logical(Kind = Kr)          :: isLinearIsotropicHardening
+      real(Kind = Kr)             :: CoeffF
+      real(Kind = Kr)             :: CoeffG
+      real(Kind = Kr)             :: CoeffH
+      real(Kind = Kr)             :: CoeffM
+      real(Kind = Kr)             :: CoeffN
+      real(Kind = Kr)             :: CoeffL
+      real(Kind = Kr)             :: YieldTau0
+      real(Kind = Kr)             :: residualYieldTau0
+      real(Kind = Kr)             :: phi1
+      real(Kind = Kr)             :: phi2
+      real(Kind = Kr)             :: Phi  
+      real(Kind = Kr)             :: delta
+      logical(Kind = Kr)          :: isNoPlCoupling
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -49,9 +62,12 @@ contains
 
 #define FHG_TRESCA MEF90_APPEND(fhg_Tresca,MEF90_DIM)D
 
+#define FHG_HILLPLANETHEORY MEF90_APPEND(fhg_HillPlaneTheory,MEF90_DIM)D
+
 #define FHG_GREEN MEF90_APPEND(fhg_Green,MEF90_DIM)D
 
 #define FHG_GURSON MEF90_APPEND(fhg_Gurson,MEF90_DIM)D
+
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_NONE"
@@ -163,6 +179,7 @@ contains
       real(Kind = Kr)                           :: lambda,mu,E,nu
       type(MatS3D)                              :: Strain,PlasticStrainFlow,Stress
 
+
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
@@ -200,6 +217,7 @@ contains
          Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
          Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
          Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
+      
       else
          !!! If plane strain
          Strain      = 0.0_Kr
@@ -218,12 +236,20 @@ contains
          Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
          Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
          Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ+ Trace(xMatS))
+
       endif
       
-      f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
-      g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
+      if ( myctx_ptr%isNoPlCoupling .eqv. .true.) then
+         f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
+         g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - myctx_ptr%YieldStress
+
+      else  
+         f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
+         g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress
+      endif
 
    end subroutine FHG_VONMISESPLANETHEORY
+
 
 
 #undef __FUNCT__
@@ -435,6 +461,149 @@ contains
    end subroutine FHG_TRESCA
 
 
+
+#undef __FUNCT__
+#define __FUNCT__ "FHG_HILLPLANETHEORY"
+!!!
+!!!  
+!!!  fhg: HillPlaneTheory
+!!!  
+!!!  (c) 2017 Stella Brach, Caltech <brach@caltech.edu>
+!!!
+!!!
+
+   subroutine FHG_HILLPLANETHEORY(x,f,h,g,myctx) bind(c)
+      use,intrinsic :: iso_c_binding
+      use m_MEF90
+
+      real(kind=c_double)                       :: x(*)
+      real(kind=c_double)                       :: f(*)
+      real(kind=c_double)                       :: h(*)
+      real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: StiffnessA         !! Stiffness = a(alpha)/b(alpha)
+      real(Kind = Kr)                           :: StiffnessB
+      real(Kind = Kr)                           :: M1111c,M1122c,M1133c,M1123c,M1113c,M1112c,M2222c,M2233c,M2223c,M2213c,M2212c,M3333c,M3323c,M3313c,M3312c,M2323c,M2313c,M2312c,M1313c,M1312c,M1212c       
+      real(Kind = Kr)                           :: M2211c,M3311c,M3322c,M2311c,M2322c,M2333c,M1311c,M1322c,M1333c,M1323c,M1211c,M1222c,M1233c,M1223c,M1213c 
+
+      type(c_ptr),intent(in),value              :: myctx
+      type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
+      type(MEF90_MATS)                          :: xMatS
+      real(Kind = Kr)                           :: lambda,mu,E,nu
+      type(MatS3D)                              :: Strain,PlasticStrainFlow,Stress
+      type(MatS3D)                              :: MatrixS
+
+      xMatS = x(1:SIZEOFMEF90_MATS)
+      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      call c_f_pointer(myctx,myctx_ptr)
+
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
+         StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
+      endif
+
+      E     = myctx_ptr%HookesLaw%YoungsModulus
+      nu    = myctx_ptr%HookesLaw%PoissonRatio
+      mu    = E / (1.0_Kr + nu) * .5_Kr
+      lambda  = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
+
+      if ( myctx_ptr%isPlaneStress .eqv. .true.) then
+         !!! If plane stress
+         Strain      = 0.0_Kr
+         Strain%XX   = myctx_ptr%InelasticStrain%XX
+         Strain%YY   = myctx_ptr%InelasticStrain%YY
+         Strain%XY   = myctx_ptr%InelasticStrain%XY
+         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
+         
+         PlasticStrainFlow    = 0.0_Kr
+         PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
+         PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
+         PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
+         PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
+         
+         Stress    = 0.0_Kr
+         Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
+         Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
+         Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
+         Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
+      else
+         !!! If plane strain
+         Strain      = 0.0_Kr
+         Strain%XX   = myctx_ptr%InelasticStrain%XX
+         Strain%YY   = myctx_ptr%InelasticStrain%YY
+         Strain%XY   = myctx_ptr%InelasticStrain%XY
+   
+         PlasticStrainFlow    = 0.0_Kr
+         PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
+         PlasticStrainFlow%YY = xMatS%YY-myctx_ptr%PlasticStrainOld%YY
+         PlasticStrainFlow%XY = xMatS%XY-myctx_ptr%PlasticStrainOld%XY
+         PlasticStrainFlow%ZZ = -( PlasticStrainFlow%XX + PlasticStrainFlow%YY )
+   
+         Stress    = 0.0_Kr
+         Stress%XX = lambda*(Trace(Strain)) + 2*mu*(Strain%XX-xMatS%XX)
+         Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
+         Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
+         Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ+ Trace(xMatS))
+      endif
+
+      !!! Hill orthotropic coefficients, from external to crystal reference through BungeEuler transformation
+      M1111c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2))** 4 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi)* sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2* sin(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffM + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffL
+      M1122c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) *cos(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) **2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%phi2) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi2) *myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffM + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M1133c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) *sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi1) * myctx_ptr%CoeffL
+      M1123c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffL
+      M1113c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 3 * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 3 * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) ** 3 * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffL
+      M1112c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 3 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 3 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) ** 3 * cos(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffM + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M2222c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 4 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffG + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * cos(myctx_ptr%phi2) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffM + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffL
+      M2233c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffG + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) * cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) * sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi1) * myctx_ptr%CoeffL
+      M2223c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 3 * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 3 * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi2) ** 3 * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffL
+      M2213c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi2) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffL
+      M2212c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 3 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 3 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * cos(myctx_ptr%phi2) ** 3 * sin(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffM + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M3333c       = sin(myctx_ptr%phi1) ** 4 * sin(myctx_ptr%Phi) ** 4 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 4 * cos(myctx_ptr%phi1) ** 2 * myctx_ptr%CoeffH - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffG + cos(myctx_ptr%phi1) ** 4 * sin(myctx_ptr%Phi) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffF + cos(myctx_ptr%Phi) ** 4 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffN + sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffM + sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 4 * cos(myctx_ptr%phi1) ** 2 * myctx_ptr%CoeffL
+      M3323c       = sin(myctx_ptr%phi1) ** 3 * sin(myctx_ptr%Phi) ** 3 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * myctx_ptr%CoeffH - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - cos(myctx_ptr%phi1) ** 3 * sin(myctx_ptr%Phi) ** 3 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + cos(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) - cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * cos(myctx_ptr%Phi) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffN + sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * cos(myctx_ptr%Phi) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffM + sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi1) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M3313c       = sin(myctx_ptr%phi1) ** 3 * sin(myctx_ptr%Phi) ** 3 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * myctx_ptr%CoeffH - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG - cos(myctx_ptr%phi1) ** 3 * sin(myctx_ptr%Phi) ** 3 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + cos(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%Phi) * sin(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) - cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * cos(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffN + sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * cos(myctx_ptr%Phi) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffM + sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi1) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M3312c       = sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG + cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + cos(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) - cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffN + sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%Phi) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffM - sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi1) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M2323c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffM + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffL
+      M2313c       = sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG + cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + cos(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffM + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M2312c       = (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG - (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * cos(myctx_ptr%phi2) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffN + (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffM - (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * myctx_ptr%CoeffL
+      M1313c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%Phi) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffM + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) ** 2 * sin(myctx_ptr%Phi) ** 2 * myctx_ptr%CoeffL
+      M1312c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * sin(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 3 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%phi2) * cos(myctx_ptr%Phi) * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%Phi) * sin(myctx_ptr%Phi) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffM - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * cos(myctx_ptr%phi1) * sin(myctx_ptr%Phi) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffL
+      M1212c       = (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (myctx_ptr%CoeffH + myctx_ptr%CoeffG) - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * myctx_ptr%CoeffH - (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-cos(myctx_ptr%phi1) * sin(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffG + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffH) - (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) * sin(myctx_ptr%Phi) ** 2 * sin(myctx_ptr%phi2) * cos(myctx_ptr%phi2) * myctx_ptr%CoeffF + sin(myctx_ptr%Phi) ** 4 * sin(myctx_ptr%phi2) ** 2 * cos(myctx_ptr%phi2) ** 2 * (myctx_ptr%CoeffF + myctx_ptr%CoeffG) + (sin(myctx_ptr%phi1) * cos(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffN + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * sin(myctx_ptr%Phi) ** 2 * cos(myctx_ptr%phi2) ** 2 * myctx_ptr%CoeffM + (cos(myctx_ptr%phi1) * cos(myctx_ptr%phi2) - sin(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * sin(myctx_ptr%phi2)) ** 2 * (-sin(myctx_ptr%phi1) * sin(myctx_ptr%phi2) + cos(myctx_ptr%phi1) * cos(myctx_ptr%Phi) * cos(myctx_ptr%phi2)) ** 2 * myctx_ptr%CoeffL
+     
+      !!! Major symmetries
+      M2211c       = M1122c
+      M3311c       = M1133c
+      M3322c       = M2233c
+      M2311c       = M1123c
+      M2322c       = M2223c
+      M2333c       = M3323c
+      M1311c       = M1113c
+      M1322c       = M2213c
+      M1333c       = M3311c
+      M1323c       = M2313c
+      M1211c       = M1112c
+      M1222c       = M2212c
+      M1233c       = M3312c
+      M1223c       = M2312c
+      M1213c       = M1312c
+
+      !!! MatrixS
+      MatrixS      = 0.0_Kr
+      MatrixS%XX   = M1111c*Stress%XX + 2*(M1122c*Stress%YY+M1133c*Stress%ZZ+M1112c*Stress%XY)
+      MatrixS%YY   = M2222c*Stress%YY + 2*(M2211c*Stress%XX+M2233c*Stress%ZZ+M2212c*Stress%XY)  
+      MatrixS%ZZ   = M3333c*Stress%ZZ + 2*(M3311c*Stress%XX+M3322c*Stress%YY+M3312c*Stress%XY)   
+      MatrixS%YZ   = 2*(M2311c*Stress%XX+M2322c*Stress%YY+M2333c*Stress%ZZ+M2312c*Stress%XY) 
+      MatrixS%XZ   = 2*(M1311c*Stress%XX+M1322c*Stress%YY+M1333c*Stress%ZZ+M1312c*Stress%XY) 
+      MatrixS%XY   = M1212c*Stress%XY + 2*(M1211c*Stress%XX+M1222c*Stress%YY+M1233c*Stress%ZZ)
+     
+      f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
+      g(1) = StiffnessA * sqrt( (3.0/2.0)* ( Stress  .DotP.  MatrixS ))  - ( (1.0_Kr-myctx_ptr%residualYieldTau0)*StiffnessB + myctx_ptr%residualYieldTau0 )*myctx_ptr%YieldTau0
+
+   end subroutine FHG_HILLPLANETHEORY
+
+
 #undef __FUNCT__
 #define __FUNCT__ "FHG_GREEN"
 
@@ -455,19 +624,37 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
+      real(Kind = Kr)                           :: StiffnessA
+      
       type(c_ptr),intent(in),value              :: myctx
-
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
+      type(MEF90_MATS)                          :: Stress
 
       !!! Casting x into a MEF90_MATS
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
 
-      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
-      g(1) = 0
-      h(1) = 0
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
+      endif
+
+      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA    
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )  
+
+      if ( myctx_ptr%Damage == 0.0_Kr) then
+         !!! If porosity equals zero, Green reduces to von Mises. A residual damage term is added in order to avoid instability on plastic admissibility
+         g(1) = sqrt((1.0_Kr/2.0_Kr)*(deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress))+(myctx_ptr%delta*Trace(Stress))**2)-myctx_ptr%YieldStress
+      else
+         !!! If porosity is greater than zero, the Green criterion holds and no plastic admissibility has to be considered        
+         g(1) = sqrt((1.0_Kr/2.0_Kr)*(deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress))+(myctx_ptr%Damage*Trace(Stress))**2)-myctx_ptr%YieldStress
+      endif
+
+
    end subroutine FHG_GREEN
 
 
@@ -488,20 +675,39 @@ contains
       real(kind=c_double)                       :: f(*)
       real(kind=c_double)                       :: h(*)
       real(kind=c_double)                       :: g(*)
+      real(kind = Kr)                           :: StiffnessA
+      
       type(c_ptr),intent(in),value              :: myctx
-
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
+      type(MEF90_MATS)                          :: Stress
+
 
       !!! Casting x into a MEF90_MATS
       xMatS = x(1:SIZEOFMEF90_MATS)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx,myctx_ptr)
 
-      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) 
-      g(1) = 0
-      h(1) = 0
+      !!! Select which softening young model
+      if (myctx_ptr%CoefficientLinSoft==0) then
+         StiffnessA = (1.0_Kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+      else 
+         StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
+      endif
+
+      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
+      f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
+
+      if ( myctx_ptr%Damage == 0.0_Kr) then
+          !!! If porosity equals zero, Gurson reduces to von Mises. A residual damage term is added in order to avoid instability on plastic admissibility
+          g(1) = (3.0_Kr/2.0_Kr)*(deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress))+2.0_Kr*(myctx_ptr%delta)*((myctx_ptr%YieldStress)**2)*cosh(Trace(Stress)/(2.0_Kr*myctx_ptr%YieldStress))-((myctx_ptr%YieldStress)**2)*(1.0_Kr+(myctx_ptr%delta)**2)
+      else
+          !!! If porosity is greater than zero, the Gurson criterion holds and no plastic admissibility has to be considered 
+          g(1) = (3.0_Kr/2.0_Kr)*(deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress))+2.0_Kr*(myctx_ptr%Damage)*((myctx_ptr%YieldStress)**2)*cosh(Trace(Stress)/(2.0_Kr*myctx_ptr%YieldStress))-((myctx_ptr%YieldStress)**2)*(1.0_Kr+(myctx_ptr%Damage)**2)
+      endif
+   
    end subroutine FHG_GURSON
+
 
 
 #undef __FUNCT__
@@ -510,7 +716,7 @@ contains
 !!!  
 !!!  MEF90DefMechPlasticStrainUpdate:
 !!!  
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
+!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com, (c) 2017 Stella Brach : brach.ste@gmail.com
 !!!
 
    Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
@@ -537,7 +743,6 @@ contains
 
       type(MEF90DefMechPlasticityCtx),target             :: PlasticityCtx
       type(c_ptr)                                        :: snlp_ctx
-
 
       PetscInt                                           :: dim,set,cell,QuadratureOrder
       Type(IS)                                           :: cellSetGlobalIS,setIS
@@ -659,19 +864,27 @@ contains
                      snlp_p    = 2
                      snlp_ctx  = c_loc(PlasticityCtx)
 
+                  case(MEF90DefMech_plasticityTypeHillPlaneTheory)
+                     snlp_Dfhg = c_null_funptr
+                     snlp_fhg  = c_funloc(FHG_HILLPLANETHEORY)
+                     snlp_n    = SIZEOFMEF90_MATS
+                     snlp_m    = 0
+                     snlp_p    = 1
+                     snlp_ctx  = c_loc(PlasticityCtx)  
+
                   case(MEF90DefMech_plasticityTypeGreen)
                      snlp_Dfhg = c_null_funptr
                      snlp_fhg  = c_funloc(FHG_GREEN)
                      snlp_n    = SIZEOFMEF90_MATS
-                     snlp_m    = 0
-                     snlp_p    = 2
+                     snlp_m    = 1
+                     snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
                   case(MEF90DefMech_plasticityTypeGurson)
                      snlp_Dfhg = c_null_funptr
                      snlp_fhg  = c_funloc(FHG_GURSON)
                      snlp_n    = SIZEOFMEF90_MATS
-                     snlp_m    = 1
+                     snlp_m    = 0
                      snlp_p    = 1
                      snlp_ctx  = c_loc(PlasticityCtx)
 
@@ -703,6 +916,20 @@ contains
                PlasticityCtx%CoefficientCapModelD = matpropSet%CoefficientCapModelD
                PlasticityCtx%residualYieldStress = matpropSet%residualYieldStress
                PlasticityCtx%isLinearIsotropicHardening = matpropSet%isLinearIsotropicHardening
+               PlasticityCtx%CoeffF = matpropSet%CoeffF
+               PlasticityCtx%CoeffG = matpropSet%CoeffG
+               PlasticityCtx%CoeffH = matpropSet%CoeffH
+               PlasticityCtx%CoeffM = matpropSet%CoeffM
+               PlasticityCtx%CoeffN = matpropSet%CoeffN
+               PlasticityCtx%CoeffL = matpropSet%CoeffL
+               PlasticityCtx%YieldTau0 = matpropSet%YieldTau0
+               PlasticityCtx%residualYieldTau0 = matpropSet%residualYieldTau0
+               PlasticityCtx%phi1 = matpropSet%phi1
+               PlasticityCtx%phi2 = matpropSet%phi2
+               PlasticityCtx%Phi = matpropSet%Phi
+
+
+
 
 
 #if MEF90_DIM == 2

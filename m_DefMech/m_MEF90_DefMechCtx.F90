@@ -255,10 +255,12 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_plasticityTypeCapModel,               &
                      MEF90DefMech_plasticityTypeDruckerPragerCapModel,  &
                      MEF90DefMech_plasticityTypeVonMises1D,             &
+                     MEF90DefMech_plasticityTypeHillPlaneTheory,        &
                      MEF90DefMech_PlasticityTypeGreen,                  &
                      MEF90DefMech_PlasticityTypeGurson
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(12),protected   :: MEF90DefMech_plasticityTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_plasticityTypeList
+
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,                     &
@@ -318,18 +320,19 @@ Contains
       MEF90DefMech_damageTypeList(8) = '_MEF90DefMech_damageType'
       MEF90DefMech_damageTypeList(9) = ''
 
-      MEF90DefMech_plasticityTypeList(1)  = 'None'
-      MEF90DefMech_plasticityTypeList(2)  = 'Tresca'
-      MEF90DefMech_plasticityTypeList(3)  = 'VonMises'
-      MEF90DefMech_plasticityTypeList(4)  = 'VonMisesPlaneTheory'
-      MEF90DefMech_plasticityTypeList(5)  = 'CapModel'
-      MEF90DefMech_plasticityTypeList(6)  = 'DruckerPragerCapModel'
-      MEF90DefMech_plasticityTypeList(7)  = 'VonMises1D'
-      MEF90DefMech_plasticityTypeList(8)  = 'Green'
-      MEF90DefMech_plasticityTypeList(9)  = 'Gurson'
-      MEF90DefMech_plasticityTypeList(10) = 'MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(11) = '_MEF90DefMech_plasticityType'
-      MEF90DefMech_plasticityTypeList(12) = ''
+      MEF90DefMech_plasticityTypeList(1) = 'None'
+      MEF90DefMech_plasticityTypeList(2) = 'Tresca'
+      MEF90DefMech_plasticityTypeList(3) = 'VonMises'
+      MEF90DefMech_plasticityTypeList(4) = 'VonMisesPlaneTheory'
+      MEF90DefMech_plasticityTypeList(5) = 'CapModel'
+      MEF90DefMech_plasticityTypeList(6) = 'DruckerPragerCapModel'
+      MEF90DefMech_plasticityTypeList(7) = 'VonMises1D'
+      MEF90DefMech_plasticityTypeList(8) = 'HillPlaneTheory'
+      MEF90DefMech_plasticityTypeList(9)  = 'Green'
+      MEF90DefMech_plasticityTypeList(10) = 'Gurson'
+      MEF90DefMech_plasticityTypeList(11) = 'MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(12) = '_MEF90DefMech_plasticityType'
+      MEF90DefMech_plasticityTypeList(13) = ''
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
       MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'
