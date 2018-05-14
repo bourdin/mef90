@@ -38,13 +38,9 @@ WorkControlled: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
 	-@make -C objs/${PETSC_ARCH} -f ../../WorkControlled/Makefile WorkControlled
 
-CoupledPlasticityDamage: MEF90 m_DefMech m_HeatXfer chkpaths
-	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C objs/${PETSC_ARCH} -f ../../CoupledPlasticityDamage/Makefile CoupledPlasticityDamage
-
 vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP
+	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP vDefUpa
 
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
