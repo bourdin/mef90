@@ -35,12 +35,13 @@ Program CoupledPlasticityDamage
 
    Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
-   Type(Vec)                                          :: residualDisp
+   Type(Vec)                                          :: residualDisp,displacementOld
+   PetscReal                                          :: displacementMaxChange
    Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,damageOld
    PetscInt                                           :: AltMinIter
-   PetscReal                                          :: damageMaxChange,CrackPressureMaxChange
+   PetscReal                                          :: damageMaxChange
 
    Type(SNES)                                         :: snesTemp
    SNESConvergedReason                                :: snesTempConvergedReason
@@ -63,35 +64,21 @@ Program CoupledPlasticityDamage
    
    PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax
    
-   PetscBool                                          :: BTActive = Petsc_False
-   !PetscInt                                           :: BTStep,BTminStep,BTMaxSTep,BTDirection
-
    !!! plastic variables
    PetscReal,Dimension(:),Pointer                     :: plasticDissipationSet
    PetscReal,Dimension(:),Pointer                     :: plasticDissipation
    Type(Vec)                                          :: plasticStrainOld
-   PetscInt                                           :: AltProjIter
+   PetscInt                                           :: InnerLoopIter
    PetscReal                                          :: PlasticStrainMaxChange,RelativeAbsoluteplasticStrainATol
    Type(Vec)                                          :: plasticstrainerror
    Type(Vec)                                          :: plasticStrainPrevious
    Type(Vec)                                          :: localVec
-
-   !!! WorkControlled and CrackPressure variables
-   PetscReal                                          :: WorkControlledRescaling,ErrorEstimationWorkControlled
-   PetscBool,Dimension(:),Pointer                     :: ActivatedWorkControlledBlocksList,ActivatedCrackPressureBlocksList
-   PetscReal,Dimension(:),Pointer                     :: CrackVolumeSet,WorkControlled
 
    !!! cumulatedDissipatedPlasticEnergy
    Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
    Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyVariation
 
    Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
-
-   !!! Secant method for sneddon
-   PetscReal,Dimension(3)                              :: CrackPressureSave,CrackVolumeSave
-   PetscInt                                            :: CrackVolumeIter,I1,I2,I3
-   PetscReal                                           :: InjectedVolumeRelativeError=1
-   Type(Vec)                                           :: CrackPressureMask
 
 
    !!! Initialize MEF90
@@ -148,6 +135,8 @@ Program CoupledPlasticityDamage
    Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%displacement,residualDisp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDisp,"residualDisp",ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%displacement,displacementOld,ierr);CHKERRQ(ierr)
+   Call PetscObjectSetName(displacementOld,"displacementOld",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residualDisp,ierr)
    Call VecDuplicate(MEF90DefMechCtx%damage,residualDamage,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
@@ -200,8 +189,6 @@ Program CoupledPlasticityDamage
    heatFluxWorkSet = 0.0_Kr
    Allocate(plasticDissipationSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
    plasticDissipationSet = 0.0_Kr
-   Allocate(CrackVolumeSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   CrackVolumeSet = 0.0_Kr
 
    
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
@@ -216,9 +203,6 @@ Program CoupledPlasticityDamage
    totalMechanicalEnergy = 0.0_Kr
    Allocate(plasticDissipation(MEF90GlobalOptions%timeNumStep))
    plasticDissipation = 0.0_Kr
-   Allocate(WorkControlled(MEF90GlobalOptions%timeNumStep))
-   WorkControlled = 0.0_Kr
-
    
    !!!
    !!! Try to figure out if the file was formatted
@@ -231,23 +215,6 @@ Program CoupledPlasticityDamage
       Call MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
    End If
    
-   !!! Create logical list of blocks where crack pressure or work control is activated
-   Allocate(ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   Allocate(ActivatedWorkControlledBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   Call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-   Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-   Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Do set = 1,size(setID)
-      Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-      ActivatedCrackPressureBlocksList(set) = cellSetOptions%CrackVolumeControlled
-      ActivatedWorkControlledBlocksList(set) = cellSetOptions%WorkControlled
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-   End Do
-   Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-
-   Call VecDuplicate(MEF90DefMechCtx%CrackPressure,CrackPressureMask,ierr);CHKERRQ(ierr)
-
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
@@ -281,15 +248,6 @@ Program CoupledPlasticityDamage
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMMatS,localVec,ierr);CHKERRQ(ierr)
          End IF
 
-         If (MEF90DefMechGlobalOptions%crackPressureOffset > 0) Then
-            Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-            Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%crackPressureOffset,ierr);CHKERRQ(ierr)
-            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
-            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%crackPressure,ierr);CHKERRQ(ierr)
-            Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
-         End If
-
          Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
          Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
@@ -299,7 +257,6 @@ Program CoupledPlasticityDamage
       End If
       step = MEF90GlobalOptions%timeSkip + 1
       mainloopQS: Do
-         BTActive = PETSC_FALSE
          !!! Solve for temperature
          Select Case (MEF90HeatXferGlobalOptions%mode)
          Case (MEF90HeatXFer_ModeSteadyState) 
@@ -404,94 +361,31 @@ Program CoupledPlasticityDamage
             Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
             Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)            
 
-            Call VecCopy(MEF90DefMechCtx%CrackPressure,CrackPressureMask,ierr);CHKERRQ(ierr)
-
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
 
-               If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-                  Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
-                  Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
-               End If 
-               AltProj: Do AltProjIter = 1, MEF90DefMechGlobalOptions%maxit 
-                  Write(IObuffer,308) AltProjIter
-                  !Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-
-                  !!! Solve for displacement, possibly using a Volume pressure equilibrium loop based on secant method
-
-                  !!! CrackPressure Block independent of alternate proj because exit if convergence
-                  If (any(ActivatedCrackPressureBlocksList)) Then
-                     !! Initialization Variable Secant Method
-                     CrackPressureSave = [0.0_Kr, 1.0_Kr, 2.0_Kr]
-                     CrackVolumeSave   = [0.0_Kr, 1.0_Kr, 2.0_Kr]
-                     If (step > 1) Then
-                        CrackVolumeSave   = time(step-1) * CrackVolumeSave
-                     End If
-
-                     SecantMthd: Do CrackVolumeIter=1,5
-                        I1=MOD(CrackVolumeIter+2,3)+1
-                        I2=MOD(CrackVolumeIter,3)+1
-                        I3=MOD(CrackVolumeIter+1,3)+1
-
-                        If (CrackVolumeSave(I2) .EQ. CrackVolumeSave(I1)) Then
-                           Write(*,*) "[WARNING] dividing by zero in the secant method, premature exit"
-                           EXIT
-                        End If
-
-                        CrackPressureSave(I3) = CrackPressureSave(I2) - ( CrackVolumeSave(I2) - time(step)   )*( CrackPressureSave(I2) - CrackPressureSave(I1) )/( CrackVolumeSave(I2) - CrackVolumeSave(I1) )
-
-                        Call VecCopy(CrackPressureMask,MEF90DefMechCtx%CrackPressure,ierr);CHKERRQ(ierr)
-                        Call VecScale(MEF90DefMechCtx%CrackPressure,CrackPressureSave(I3),ierr);CHKERRQ(ierr)
-
-                        !!! Solve displacement SNES
-                        Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                        Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-                        If (snesDispConvergedReason < 0) Then
-                           Write(IOBuffer,400) "displacement",snesDispConvergedReason
-                           Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                        End If
-                        !!!! Calculate the injected volume
-                        CrackVolumeSet = 0.0_Kr
-                        Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
-                        CrackVolumeSave(I3) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
-
-                        InjectedVolumeRelativeError = abs( time(step) - CrackVolumeSave(I3) )/( 1.0_Kr+time(step) )
-
-                        !!!! Condition to exit loop for the secant method
-                        If (InjectedVolumeRelativeError .LE. MEF90DefMechGlobalOptions%InjectedVolumeAtol ) Then
-                           EXIT
-                        End IF
-                     End Do SecantMthd
-                     Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
-                  Else
-
-                     !!! Evaluate once the jacobian of the displacement during the plastic projection procedure
-                     If (AltProjIter > 1) Then
-                        Call SNESSetLagJacobian(snesDisp,-1,ierr);CHKERRQ(ierr)
-                     Else 
-                        Call SNESSetLagJacobian(snesDisp,1,ierr);CHKERRQ(ierr)
-                     End If 
-
-
-                     Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                     Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-                     If (snesDispConvergedReason < 0) Then
-                        Write(IOBuffer,400) "displacement",snesDispConvergedReason
-                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                     End If
-                     !!! WorkControlled Block
-                     If (any(ActivatedWorkControlledBlocksList)) Then
-                        forceWorkSet = 0.0_Kr
-                        Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
-                        WorkControlled(step) = sum(forceWorkSet,MASK=ActivatedWorkControlledBlocksList)
-                        WorkControlledRescaling = sqrt(time(step)/WorkControlled(step))
-                        Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling,ierr);CHKERRQ(ierr)
-                        
-                        ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
-                     End If
-                  End If
+               !If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+               !   Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
+               !   Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
+               !End If 
+               Call VecCopy(MEF90DefMechCtx%displacement,displacementOld,ierr);CHKERRQ(ierr)
+               Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+               Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+               If (snesDispConvergedReason < 0) Then
+                  Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               End If
+               InnerLoop: Do InnerLoopIter = 1, MEF90DefMechGlobalOptions%maxit 
+                  Write(IObuffer,308) InnerLoopIter
+                  !!! Since u does not change in this loop, the Jacobian for alpha is constant
+                  !!! so we only evaluate at the first iteration
+                  If (InnerLoopIter > 1) Then
+                     Call SNESSetLagJacobian(snesDamage,-1,ierr);CHKERRQ(ierr)
+                  Else 
+                     Call SNESSetLagJacobian(snesDamage,1,ierr);CHKERRQ(ierr)
+                  End If 
 
                   !!! Solve PlasticProjection
                   !!! Save the PlasticStrainPrevious, add damage in DefMechPlasticStrainUpdate, error on the norm PlasticStrain
@@ -502,35 +396,44 @@ Program CoupledPlasticityDamage
                   Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%displacement,plasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
                   Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
+                  Write(IOBuffer,210) InnerLoopIter,PlasticStrainMaxChange
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                  !!! not sure about this...
                   Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,RelativeAbsoluteplasticStrainATol,ierr);CHKERRQ(ierr)
                   RelativeAbsoluteplasticStrainATol=(1.0_Kr+RelativeAbsoluteplasticStrainATol)*MEF90DefMechGlobalOptions%plasticStrainATol
+
                   Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
-                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationWorkControlled <= 1E-4 )) Then
-                     If ( ErrorEstimationWorkControlled /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationWorkControlled
-                     If ( PlasticStrainMaxChange /= 0 ) Write(IOBuffer,300) AltProjIter,PlasticStrainMaxChange
+
+                  !!! Minimization with respect to alpha
+                  Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+                  Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+                  Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
+                  If (snesDamageConvergedReason < 0) Then
+                     Write(IOBuffer,400) "damage",snesDamageConvergedReason
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                  End If
+                  Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
+                  Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
+                  Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+                  Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+                  Write(IOBuffer,209) InnerLoopIter,alphamin,alphamax,damageMaxChange
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                  Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+
+                  If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol)) Then
                      EXIT
                   End If
-               End Do AltProj
+               End Do InnerLoop
 
-               Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-               Call SNESSolve(snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-               Call SNESGetConvergedReason(snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
-               If (snesDamageConvergedReason < 0) Then
-                  Write(IOBuffer,400) "damage field",snesDamageConvergedReason
-                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               End If
+               !!! Test on displacement change. It would probably make more sense to check the change on constrain.
+               Call VecAxPy(displacementOld,-1.0_Kr,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+               Call VecNorm(displacementOld,NORM_INFINITY,displacementMaxChange,ierr);CHKERRQ(ierr)
+               Write(IOBuffer,211) displacementMaxChange
+               Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
 
-
-               Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
-               Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
-               Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-               Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
-               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                !!! Conditions to exit the loop in alpha
-               If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol ) Then
+               If (displacementMaxChange <= MEF90DefMechGlobalOptions%damageATol ) Then
                   EXIT
                End If
 
@@ -543,14 +446,12 @@ Program CoupledPlasticityDamage
                Write(IOBuffer,412) MEF90DefMechGlobalOptions%maxit
                Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
             End If
-            
 
             !!! Compute energies
             elasticEnergySet  = 0.0_Kr
             forceWorkSet      = 0.0_Kr
             surfaceEnergySet  = 0.0_Kr
             cohesiveEnergySet = 0.0_Kr
-            CrackVolumeSet = 0.0_Kr
             plasticDissipationSet = 0.0_Kr
 
 
@@ -634,6 +535,7 @@ Program CoupledPlasticityDamage
    Case (MEF90DefMech_ModeQuasiStatic)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
+      Call VecDestroy(displacementOld,ierr);CHKERRQ(ierr)
    End Select
    
    Select Case (MEF90HeatXferGlobalOptions%mode)
@@ -650,7 +552,6 @@ Program CoupledPlasticityDamage
    Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   Call VecDestroy(CrackPressureMask,ierr);CHKERRQ(ierr)
 
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
@@ -662,7 +563,6 @@ Program CoupledPlasticityDamage
    DeAllocate(thermalEnergySet)
    DeAllocate(heatFluxWorkSet)
    DeAllocate(plasticDissipationSet)
-   DeAllocate(ActivatedCrackPressureBlocksList)
    
    DeAllocate(elasticEnergy)
    DeAllocate(forceWork)
@@ -687,12 +587,11 @@ Program CoupledPlasticityDamage
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5," plastic dissipation: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5,"\n")
-208 Format("   Alt. Min. step ",I5," \n")
-209 Format("      alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
-300 Format("   plastic strain ProjIter",I5, " max change ", ES12.5, "\n")
-301 Format("   CrackPressure Iter",I5, " error ", ES12.5, "\n")
-302 Format("      Pressure line search converged in ",I2, " iterations, volume ", ES12.5, ", pressure " , ES12.5,"\n" )
-308 Format("   Alt. Proj. step ",I5," ")
+208 Format("   Alt. Min. step  ",I5," \n")
+209 Format("         Inner loop ",I4": alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+210 Format("         Inner loop ",I4": plastic strain max change ", ES12.5,"\n")
+211 Format("      displacement max change ", ES12.5,"\n")
+308 Format("   p-alpha loop  ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 412 Format(" [ERROR]: Alternate minimizations algorithm did NOT converge in ", I5, "iterations.\n")

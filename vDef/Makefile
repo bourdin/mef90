@@ -41,11 +41,22 @@ vDef.o: ${BASE_DIR}/vDef.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEATX
 vDefP:${MEF90_DIR}/bin/${PETSC_ARCH}/vDefP
 	-@echo "      $@"
 
+vDefUpa:${MEF90_DIR}/bin/${PETSC_ARCH}/vDefUpa
+	-@echo "      $@"
+
 ${MEF90_DIR}/bin/${PETSC_ARCH}/vDefP: vDefP.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDefP.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
 vDefP.o: ${BASE_DIR}/vDefP.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+${MEF90_DIR}/bin/${PETSC_ARCH}/vDefUpa: vDefUpa.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+	-@echo "      $@"
+	-@${FLINKER} -o $@ vDefUpa.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
+
+vDefUpa.o: ${BASE_DIR}/vDefUpa.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
