@@ -39,8 +39,21 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
+      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix 
+      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix 
+      PetscReal                     :: CoeffH                                           ! coefficient H Hill matrix
+      PetscReal                     :: CoeffM                                           ! coefficient M Hill matrix
+      PetscReal                     :: CoeffN                                           ! coefficient N Hill matrix
+      PetscReal                     :: CoeffL                                           ! coefficient L Hill matrix
+      PetscReal                     :: YieldTau0                                        ! Hill yield stress
+      PetscReal                     :: residualYieldTau0                                ! Hill residual yield stress
+      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1
+      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2
+      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
+      PetscReal                     :: delta                                            ! residual Gurson and Green
       PetscReal                     :: cohesiveStiffness
       PetscBool                     :: isLinearIsotropicHardening
+      PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -63,8 +76,21 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
+      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix 
+      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix 
+      PetscReal                     :: CoeffH                                           ! coefficient H Hill matrix
+      PetscReal                     :: CoeffM                                           ! coefficient M Hill matrix
+      PetscReal                     :: CoeffN                                           ! coefficient N Hill matrix
+      PetscReal                     :: CoeffL                                           ! coefficient L Hill matrix
+      PetscReal                     :: YieldTau0                                        ! Hill yield stress
+      PetscReal                     :: residualYieldTau0                                ! Hill residual yield stress
+      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1
+      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2
+      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
+      PetscReal                     :: delta                                            ! residual Gurson and Green
       PetscReal                     :: cohesiveStiffness          
       PetscBool                     :: isLinearIsotropicHardening
+      PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -99,8 +125,21 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! C2 in CapModel
       1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
+      0.3_Kr,                                                                          & ! coefficient F Hill matrix
+      0.3_Kr,                                                                          & ! coefficient G Hill matrix
+      0.3_Kr,                                                                          & ! coefficient H Hill matrix
+      1.0_Kr,                                                                          & ! coefficient M Hill matrix
+      1.0_Kr,                                                                          & ! coefficient N Hill matrix
+      1.0_Kr,                                                                          & ! coefficient L Hill matrix
+      1.0_Kr,                                                                          & ! Hill yield stress
+      0.0_Kr,                                                                          & ! Hill residual yield stress
+      0.0_Kr,                                                                          & ! Bunge Euler angle phi1
+      0.0_Kr,                                                                          & ! Bunge Euler angle phi2
+      0.0_Kr,                                                                          & ! Bunge Euler angle Phi
+      0.0001_Kr,                                                                       & ! Residual Gurson and Green
       0.0_Kr,                                                                          & ! cohesive stiffness
-      .FALSE.,                                                                          & ! isLinearIsotropicHardening
+      .FALSE.,                                                                         & ! isLinearIsotropicHardening
+      .FALSE.,                                                                         & ! isNoPlCoupling
       "MEF90Mathium2D")  
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
@@ -129,8 +168,21 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! C2 in CapModel
       1.0_Kr,                                                                          & ! CD in CapModel
       -0.5_Kr,                                                                         & ! k  in DruckerPrager
+      0.3_Kr,                                                                          & ! coefficient F Hill matrix
+      0.3_Kr,                                                                          & ! coefficient G Hill matrix
+      0.3_Kr,                                                                          & ! coefficient H Hill matrix
+      1.0_Kr,                                                                          & ! coefficient M Hill matrix
+      1.0_Kr,                                                                          & ! coefficient N Hill matrix
+      1.0_Kr,                                                                          & ! coefficient L Hill matrix
+      1.0_Kr,                                                                          & ! Hill yield stress
+      0.0_Kr,                                                                          & ! Hill residual yield stress
+      0.0_Kr,                                                                          & ! Bunge Euler angle phi1
+      0.0_Kr,                                                                          & ! Bunge Euler angle phi2
+      0.0_Kr,                                                                          & ! Bunge Euler angle Phi
+      0.0001_Kr,                                                                       & ! Residual Gurson and Green
       0.0_Kr,                                                                          & ! cohesive stiffness
-      .FALSE.,                                                                          & ! isLinearIsotropicHardening
+      .FALSE.,                                                                         & ! isLinearIsotropicHardening
+      .FALSE.,                                                                         & ! isNoPlCoupling
       "MEF90Mathium3D")  
 End Module m_MEF90_Materials_Types
 
@@ -336,12 +388,23 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
-
-
+      Call PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
+     
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
-
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -394,12 +457,24 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
       Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
-
+      Call PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
+      Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
+ 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
 
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
-
+      Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
