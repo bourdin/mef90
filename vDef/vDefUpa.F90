@@ -358,18 +358,15 @@ Program CoupledPlasticityDamage
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
             Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
 
-            Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
             Call SNESSetLagPreconditioner(snesDisp,1,ierr);CHKERRQ(ierr)            
-
             AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit 
                Write(IObuffer,208) AltMinIter
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
 
-               !If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-               !   Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
-               !   Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
-               !End If 
+               If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                  Call SNESSetLagPreconditioner(snesDamage,-2,ierr);CHKERRQ(ierr)
+               End If 
                Call VecCopy(MEF90DefMechCtx%displacement,displacementOld,ierr);CHKERRQ(ierr)
                Call SNESSolve(snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                Call SNESGetConvergedReason(snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -377,14 +374,18 @@ Program CoupledPlasticityDamage
                   Write(IOBuffer,400) "displacement",snesDispConvergedReason
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                End If
+
+               Call SNESSetLagPreconditioner(snesDamage,1,ierr);CHKERRQ(ierr)
+               Call SNESSetLagJacobian(snesDamage,1,ierr);CHKERRQ(ierr)
                InnerLoop: Do InnerLoopIter = 1, MEF90DefMechGlobalOptions%maxit 
                   Write(IObuffer,308) InnerLoopIter
                   !!! Since u does not change in this loop, the Jacobian for alpha is constant
                   !!! so we only evaluate at the first iteration
                   If (InnerLoopIter > 1) Then
                      Call SNESSetLagJacobian(snesDamage,-1,ierr);CHKERRQ(ierr)
-                  Else 
-                     Call SNESSetLagJacobian(snesDamage,1,ierr);CHKERRQ(ierr)
+                  End If 
+                  If (mod(InnerLoopIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                     Call SNESSetLagPreconditioner(snesDisp,-2,ierr);CHKERRQ(ierr)
                   End If 
 
                   !!! Solve PlasticProjection
@@ -417,7 +418,7 @@ Program CoupledPlasticityDamage
                   Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
                   Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
                   Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
-                  Write(IOBuffer,209) InnerLoopIter,alphamin,alphamax,damageMaxChange
+                  Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
                   Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                   Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
 
@@ -588,9 +589,9 @@ Program CoupledPlasticityDamage
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5," plastic dissipation: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5, " plastic dissipation: ",ES12.5,"\n")
 208 Format("   Alt. Min. step  ",I5," \n")
-209 Format("         Inner loop ",I4": alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
-210 Format("         Inner loop ",I4": plastic strain max change ", ES12.5,"\n")
-211 Format("      displacement max change ", ES12.5,"\n")
+209 Format(".  Damage min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+210 Format("      Inner loop ",I4": plastic strain max change ", ES12.5)
+211 Format("      Displacement max change ", ES12.5,"\n")
 308 Format("   p-alpha loop  ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
