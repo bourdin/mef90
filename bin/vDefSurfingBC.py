@@ -114,7 +114,7 @@ def main():
     exoin  = exo.exodus(options.inputfile,mode='r')
     exoout = exoin.copy(options.outputfile)
     exoin.close()
-    exoformat(exoout)
+    exoformat(exoout,options.plasticity)
     
     dim = exoout.num_dimensions()
     step = 0
