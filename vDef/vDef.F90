@@ -213,8 +213,8 @@ Program vDef
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
-      step = 1
-      stepold = 1
+      step = MEF90GlobalOptions%timeSkip+1
+      stepold = step+1
       mainloopQS: Do
          BTActive = PETSC_FALSE
          !!! Solve for temperature
@@ -346,7 +346,6 @@ Program vDef
                   Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,-2,ierr);CHKERRQ(ierr)
                End If 
 
-!Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
                Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
                Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                !!! Over relaxation on u, skipping the first alternate minimization step
