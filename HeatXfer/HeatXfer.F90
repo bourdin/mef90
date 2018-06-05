@@ -24,7 +24,7 @@ Program HeatXfer
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                         MEF90HeatXFer_ModeSteadyState, & ! mode
+                                                         MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          1,                   & ! tempOffset
                                                          0.,                  & ! initialTemperature
@@ -114,7 +114,7 @@ Program HeatXfer
 
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
-   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
+   If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
       Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
    Else
       Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
@@ -150,14 +150,14 @@ Program HeatXfer
       Write(IOBuffer,100) step,time(step)
       Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-      Select Case (MEF90HeatXferGlobalOptions%mode)
-      Case (MEF90HeatXFer_ModeSteadyState) 
+      Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+      Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
          !!! Update fields
          Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
          !!! Solve SNES
          Call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr);
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
-      Case (MEF90HeatXFer_ModeTransient)
+      Case (MEF90HeatXFer_timeSteppingTypeTransient)
          If (step > 1) Then
             !!! Update fields
             Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
@@ -199,7 +199,7 @@ Program HeatXfer
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
    !!! Clean up and exit nicely
-   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
+   If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
    Else
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
@@ -210,8 +210,9 @@ Program HeatXfer
    DeAllocate(time)
    DeAllocate(energy)
    DeAllocate(work)
-   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
    Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerFlush(logViewer,ierr);CHKERRQ(ierr)
    Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)

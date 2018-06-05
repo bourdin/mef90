@@ -5,23 +5,27 @@ time:
     numstep: 101
     interpolation: linear
 boundaryDisplacement:
-  scaling: linear
+    scaling: linear
 boundaryTemp:
-  scaling: linear
-defmech:
-  mode: quasistatic
-  damage:
-    atol: 1.0e-3
-  sor:
-    omega: 1.4
-  pclag: 5
-disp:
-  snes:
-    type: ksponly
-  pc:
-    type: bjacobi
+    scaling: linear
+timestepping:
+        type: quasistatic
 heatxfer:
-    mode: NULL
+    timestepping:
+        type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.4
+    pclag: 5
+disp:
+    snes:
+        type: ksponly
+    pc:
+        type: bjacobi
 temperature:
     offset: 0
 cs0001:

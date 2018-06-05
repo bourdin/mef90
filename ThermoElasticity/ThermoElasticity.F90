@@ -14,20 +14,22 @@ Program ThermoElasticity
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                             & ! verbose
-                                                         PETSC_FALSE,                   & ! dryrun
+                                                         PETSC_FALSE,                   & ! validate
                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
                                                          0.0_Kr,                        & ! timeMin
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
-                                                         1.0_Kr)                         ! frequency
+                                                         0,                             & ! timeSkip
+                                                         1.0_Kr,                        & ! frequency
+                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
 
 
    !!! Defect mechanics contexts
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
+                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
@@ -57,9 +59,9 @@ Program ThermoElasticity
                                                          1,                       & ! cumulatedDissipatedPlasticEnergyOffset
                                                          1.0e-3                   ) ! InjectedVolumeAtol
 
-
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
+                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
@@ -116,7 +118,7 @@ Program ThermoElasticity
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                         MEF90HeatXFer_ModeSteadyState, & ! mode
+                                                         MEF90HeatXfer_timeSteppingTypeSteadyState, & ! mode
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          1,                   & ! tempOffset
                                                          0.,                  & ! initialTemperature
@@ -232,7 +234,7 @@ Program ThermoElasticity
 
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
-   If (MEF90HeatXferGlobalOptions%mode == MEF90HeatXFer_ModeSteadyState) Then
+   If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXfer_timeSteppingTypeSteadyState) Then
       Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
    Else
       Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
@@ -266,14 +268,14 @@ Program ThermoElasticity
    !!!
    !!! Actual computations / time stepping
    !!!
-   If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+   If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_timeSteppingTypeQuasiStatic) Then
       Do step = 1,MEF90GlobalOptions%timeNumStep
          Write(IOBuffer,100) step,time(step)
          Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
          !!! Solve for temperature
-         Select Case (MEF90HeatXferGlobalOptions%mode)
-         Case (MEF90HeatXFer_ModeSteadyState) 
+         Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+         Case (MEF90HeatXfer_timeSteppingTypeSteadyState) 
             !!! Update fields
             Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
             !!! Solve SNES
@@ -295,7 +297,7 @@ Program ThermoElasticity
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
-         Case (MEF90HeatXFer_ModeTransient)
+         Case (MEF90HeatXfer_timeSteppingTypeTransient)
             If (step > 1) Then
                !!! Update fields
                Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
@@ -335,8 +337,8 @@ Program ThermoElasticity
          End Select
 
          !!! Solve for displacement
-         Select case(MEF90DefMechGlobalOptions%mode)
-         Case (MEF90DefMech_ModeQuasiStatic)
+         Select case(MEF90DefMechGlobalOptions%timeSteppingType)
+         Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
             !!! Update fields
             Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
             Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
@@ -376,16 +378,16 @@ Program ThermoElasticity
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 
    !!! Clean up and exit nicely
-   Select case(MEF90DefMechGlobalOptions%mode)
-   Case (MEF90DefMech_ModeQuasiStatic)
+   Select case(MEF90DefMechGlobalOptions%timeSTeppingType)
+   Case (MEF90DefMech_timeSTeppingTypeQuasiStatic)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
    End Select
    
-   Select Case (MEF90HeatXferGlobalOptions%mode)
-   Case (MEF90HeatXFer_ModeSteadyState) 
+   Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+   Case (MEF90HeatXfer_timeSteppingTypeSteadyState) 
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
-   Case (MEF90HeatXFer_ModeTransient) 
+   Case (MEF90HeatXfer_timeSteppingTypeTransient) 
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End Select
 
@@ -404,7 +406,7 @@ Program ThermoElasticity
    Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
 
-   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
    Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
    Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)

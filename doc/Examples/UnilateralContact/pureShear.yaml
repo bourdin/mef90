@@ -1,13 +1,18 @@
 ### global options
 verbose: 1
 boundaryDisplacement_scaling: linear
-defmech:
-    irrevthres: 0.
-    mode: quasistatic
-    damage:
-        atol: 1.e-3
 heatxfer:
-    mode: null
+    timestepping:
+        type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.4
+    pclag: 5
+    irrevthres: 0.
 temperature:
     offset: 0
 disp:

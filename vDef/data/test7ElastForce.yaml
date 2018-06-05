@@ -4,9 +4,11 @@ time:
     max: 1
     numstep: 2
 heatxfer:
-  mode: null
+  timestepping:
+    type: null
 defmech:
-  mode: quasistatic
+  timestepping:
+    type: quasistatic
 temperature:
     offset: 0
 cs0001:

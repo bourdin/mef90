@@ -34,7 +34,7 @@ Module m_MEF90_HeatXferCtx_Type
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
-      PetscEnum                        :: mode
+      PetscEnum                        :: timeSteppingType
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
       PetscReal                        :: initialTemperature
@@ -182,11 +182,11 @@ Module m_MEF90_HeatXferCtx
    PetscSizeT,protected   :: sizeofMEF90HeatXferVertexSetOptions
    
    Enum,bind(c)
-      enumerator  :: MEF90HeatXfer_ModeNULL = 0,    &
-                     MEF90HeatXFer_ModeSteadyState, &
-                     MEF90HeatXFer_ModeTransient
+      enumerator  :: MEF90HeatXfer_timeSteppingTypeNULL = 0,    &
+                     MEF90HeatXFer_timeSteppingTypeSteadyState, &
+                     MEF90HeatXFer_timeSteppingTypeTransient
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: MEF90HeatXFer_ModeList
+   Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: MEF90HeatXFer_timeSteppingTypeList
    
 Contains
 #undef __FUNCT__
@@ -212,12 +212,12 @@ Contains
       sizeofMEF90HeatXferCellSetOptions = size(transfer(HeatXferCellSetOptions,dummychar))*sizeofchar
       sizeofMEF90HeatXferVertexSetOptions = size(transfer(HeatXferVertexSetOptions,dummychar))*sizeofchar
 
-      MEF90HeatXFer_ModeList(1) = 'null'
-      MEF90HeatXFer_ModeList(2) = 'SteadyState'
-      MEF90HeatXFer_ModeList(3) = 'Transient'
-      MEF90HeatXFer_ModeList(4) = 'MEF90_HeatXFer_Mode'
-      MEF90HeatXFer_ModeList(5) = '_MEF90_HeatXFer_Mode'
-      MEF90HeatXFer_ModeList(6) = ''
+      MEF90HeatXFer_timeSteppingTypeList(1) = 'null'
+      MEF90HeatXFer_timeSteppingTypeList(2) = 'SteadyState'
+      MEF90HeatXFer_timeSteppingTypeList(3) = 'Transient'
+      MEF90HeatXFer_timeSteppingTypeList(4) = 'MEF90_HeatXFer_timeSteppingType'
+      MEF90HeatXFer_timeSteppingTypeList(5) = '_MEF90_HeatXFer_timeSteppingType'
+      MEF90HeatXFer_timeSteppingTypeList(6) = ''
    End Subroutine MEF90HeatXferCtxInitialize_Private
    
 #undef __FUNCT__
@@ -337,7 +337,7 @@ Contains
       Call PetscBagSetName(bag,trim(name),"HeatXferGlobalOptions MEF90 Heat transfer global options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%mode,MEF90HeatXFer_ModeList,default%mode,'heatxfer_mode','Type of heat transfer computation',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,HeatXferGlobalOptions%timeSteppingType,MEF90HeatXFer_timeSteppingTypeList,default%timeSteppingType,'heatxfer_timeStepping_type','Type of heat transfer computation',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'heatxfer_addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,HeatXferGlobalOptions%tempOffset,default%tempOffset,'temp_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,HeatXferGlobalOptions%initialTemperature,default%initialTemperature,'heatxfer_initialTemp','[K] (T): Initial Temperature' ,ierr);CHKERRQ(ierr)

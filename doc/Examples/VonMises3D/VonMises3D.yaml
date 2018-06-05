@@ -6,13 +6,16 @@ time:
     max: 2.5
     numstep: 50
 heatxfer:
-  mode: null
+    timestepping:
+        type: null
 defmech:
-  mode: quasistatic
-  plasticStrain:
-    atol: 1e-4
-  damage:
-    atol: 1e-4
+    timestepping:
+        type: quasistatic
+    irrevthres: 0.
+    plasticStrain:
+        atol: 1e-4
+    damage:
+        atol: 1e-4
 temperature:
     offset: 0
 plasticStrain:

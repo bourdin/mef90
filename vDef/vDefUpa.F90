@@ -152,15 +152,15 @@ Program CoupledPlasticityDamage
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
 
    !!! Create sections, vectors, and solvers for HeatXfer Context
-   If (MEF90HeatXferGlobalOptions%mode /= MEF90HeatXfer_ModeNULL) Then
+   If (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) Then
       Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
       Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
       Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
-      Select Case(MEF90HeatXferGlobalOptions%mode)
-      Case (MEF90HeatXFer_ModeSteadyState)
+      Select Case(MEF90HeatXferGlobalOptions%timeSteppingType)
+      Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
          Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
-      Case (MEF90HeatXFer_ModeTransient)
+      Case (MEF90HeatXfer_timeSteppingTypeTransient)
          Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
          tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
          tsTempInitialTime = time(1)
@@ -258,8 +258,8 @@ Program CoupledPlasticityDamage
       step = MEF90GlobalOptions%timeSkip + 1
       mainloopQS: Do
          !!! Solve for temperature
-         Select Case (MEF90HeatXferGlobalOptions%mode)
-         Case (MEF90HeatXFer_ModeSteadyState) 
+         Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+         Case (MEF90HeatXfer_timeSteppingTypeSteadyState) 
             Write(IOBuffer,100) step,time(step)
             Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
@@ -291,7 +291,7 @@ Program CoupledPlasticityDamage
 
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
-         Case (MEF90HeatXFer_ModeTransient)
+         Case (MEF90HeatXfer_timeSteppingTypeTransient)
             If (step > 1) Then
                Write(IOBuffer,110) step,time(step)
                Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -336,17 +336,17 @@ Program CoupledPlasticityDamage
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             !!! Save results
             Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
-         Case (MEF90HeatXfer_ModeNULL)
+         Case (MEF90HeatXfer_timeSteppingTypeNULL)
             Continue
          Case default
-            Write(IOBuffer,*) "Implemented HeatXfer mode: ", MEF90HeatXferGlobalOptions%mode, "\n"
+            Write(IOBuffer,*) "Implemented HeatXfer mode: ", MEF90HeatXferGlobalOptions%timeSteppingType, "\n"
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
          
          !!! Solve for displacement and damage
-         Select case(MEF90DefMechGlobalOptions%mode)
-         Case (MEF90DefMech_ModeQuasiStatic)
+         Select case(MEF90DefMechGlobalOptions%timeSteppingType)
+         Case (MEF90DefMech_timeSTeppingTypeQuasiStatic)
             Write(IOBuffer,200) step,time(step) 
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             damageMaxChange = 1.0D+20
@@ -496,10 +496,10 @@ Program CoupledPlasticityDamage
 
 
 
-         Case (MEF90DefMech_ModeNULL)
+         Case (MEF90DefMech_timeSteppingTypeNULL)
             Continue
          Case default
-            Write(IOBuffer,*) "Implemented DefMech mode: ", MEF90DefMechGlobalOptions%mode, "\n"
+            Write(IOBuffer,*) "Implemented DefMech time stepping type: ", MEF90DefMechGlobalOptions%timeSteppingType, "\n"
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
@@ -532,17 +532,17 @@ Program CoupledPlasticityDamage
       End Do MainloopQS
    End If
    !!! Clean up and exit nicely
-   Select case(MEF90DefMechGlobalOptions%mode)
-   Case (MEF90DefMech_ModeQuasiStatic)
+   Select case(MEF90DefMechGlobalOptions%timeSteppingType)
+   Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
       Call SNESDestroy(snesDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
       Call VecDestroy(displacementOld,ierr);CHKERRQ(ierr)
    End Select
    
-   Select Case (MEF90HeatXferGlobalOptions%mode)
-   Case (MEF90HeatXFer_ModeSteadyState) 
+   Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+   Case (MEF90HeatXfer_timeSteppingTypeSteadyState) 
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
-   Case (MEF90HeatXFer_ModeTransient) 
+   Case (MEF90HeatXfer_timeSteppingTypeTransient) 
       Call TSDestroy(tsTemp,ierr);CHKERRQ(ierr)
    End Select
 

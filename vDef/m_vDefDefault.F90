@@ -21,7 +21,8 @@ module m_vDefDefault
                                                          MEF90FileFormat_EXOSingle)       ! fileFormat
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
+                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
@@ -38,7 +39,7 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          MEF90Scaling_Linear,     & ! CrackPressureScaling
-                                                         1e-4,                    & ! damage_atol
+                                                         1e-3,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
                                                          1.0_Kr,                  & ! SOROmega
@@ -52,7 +53,8 @@ module m_vDefDefault
                                                          1.0e-3                   ) ! InjectedVolumeAtol
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
+                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
@@ -104,7 +106,7 @@ module m_vDefDefault
                                                          0.0_Kr)                                    ! boundary Damage
 
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: vDefHeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                         MEF90HeatXFer_ModeSteadyState, & ! mode
+                                                         MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          1,                   & ! tempOffset
                                                          0.,                  & ! initialTemperature

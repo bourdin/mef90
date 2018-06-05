@@ -71,6 +71,18 @@ Program HookeLaw
       Write(*,*) i, norm(epsilon2D),norm(epsilon3D)
    End Do
 
+   epsilon3D%XX = 1.0_Kr
+   epsilon3D%YY = 1.0_Kr
+   epsilon3D%ZZ = 1.0_Kr
+   epsilon3D%YZ = 0.0_Kr
+   epsilon3D%XZ = 0.0_Kr
+   epsilon3D%XY = 0.0_Kr
+   write(*,*) HookeLaw3D
+   sigma3D = HookeLaw3D * epsilon3D
+   write(*,*) 'epsilon', epsilon3D
+   write(*,*) 'sigma  ', sigma3D
+
+
    Call PetscRandomDestroy(RdmCtx,ierr);CHKERRQ(ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize()

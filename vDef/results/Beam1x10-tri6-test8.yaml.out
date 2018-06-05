@@ -1,4 +1,7 @@
  
+ 
+ 
+ 
 Heat transfer: solving steady state step    1, t= 0.00000E+00 
  
 Thermal energies:  
@@ -11,10 +14,10 @@ Mechanics: step    1, t= 0.00000E+00
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
-cell set    1  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set    1  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
  
 Heat transfer: solving steady state step    2, t= 7.50000E-01 
  
@@ -25,13 +28,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  2.81250E+02 fluxes work:  0.00000E+00 total:  2.81250E+02 
  
 Mechanics: step    2, t= 7.50000E-01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.99896E-06, max change  1.99896E-06 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  2.18337E-06, max change  2.18337E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.54181E-02 work:  0.00000E+00 surface:  5.98635E-12 total:  2.54181E-02 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.54181E-02 work:  0.00000E+00 surface:  5.98635E-12 total:  2.54181E-02 
+cell set    1  elastic energy:  2.79582E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  9.29036E-12 total:  2.79582E-02 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.79582E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  9.29036E-12 total:  2.79582E-02 
  
 Heat transfer: solving steady state step    3, t= 1.50000E+00 
  
@@ -42,13 +45,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.12500E+03 fluxes work:  0.00000E+00 total:  1.12500E+03 
  
 Mechanics: step    3, t= 1.50000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  7.99749E-06, max change  5.99853E-06 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  8.73455E-06, max change  6.55118E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  1.01673E-01 work:  0.00000E+00 surface:  9.57673E-11 total:  1.01673E-01 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  1.01673E-01 work:  0.00000E+00 surface:  9.57673E-11 total:  1.01673E-01 
+cell set    1  elastic energy:  1.11833E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.48679E-10 total:  1.11833E-01 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  1.11833E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.48679E-10 total:  1.11833E-01 
  
 Heat transfer: solving steady state step    4, t= 2.25000E+00 
  
@@ -59,13 +62,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  2.53125E+03 fluxes work:  0.00000E+00 total:  2.53125E+03 
  
 Mechanics: step    4, t= 2.25000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.79947E-05, max change  9.99723E-06 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.96549E-05, max change  1.09203E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.28763E-01 work:  0.00000E+00 surface:  4.84829E-10 total:  2.28763E-01 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.28763E-01 work:  0.00000E+00 surface:  4.84829E-10 total:  2.28763E-01 
+cell set    1  elastic energy:  2.51624E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  7.52358E-10 total:  2.51624E-01 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.51624E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  7.52358E-10 total:  2.51624E-01 
  
 Heat transfer: solving steady state step    5, t= 3.00000E+00 
  
@@ -76,13 +79,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  4.50000E+03 fluxes work:  0.00000E+00 total:  4.50000E+03 
  
 Mechanics: step    5, t= 3.00000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  3.19911E-05, max change  1.39964E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  3.49421E-05, max change  1.52872E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  4.06690E-01 work:  0.00000E+00 surface:  1.53228E-09 total:  4.06690E-01 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  4.06690E-01 work:  0.00000E+00 surface:  1.53228E-09 total:  4.06690E-01 
+cell set    1  elastic energy:  4.47331E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.37773E-09 total:  4.47331E-01 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  4.47331E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.37773E-09 total:  4.47331E-01 
  
 Heat transfer: solving steady state step    6, t= 3.75000E+00 
  
@@ -93,13 +96,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  7.03125E+03 fluxes work:  0.00000E+00 total:  7.03125E+03 
  
 Mechanics: step    6, t= 3.75000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  4.99863E-05, max change  1.79951E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  5.45975E-05, max change  1.96554E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  6.35453E-01 work:  0.00000E+00 surface:  3.74073E-09 total:  6.35453E-01 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  6.35453E-01 work:  0.00000E+00 surface:  3.74073E-09 total:  6.35453E-01 
+cell set    1  elastic energy:  6.98955E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  5.80469E-09 total:  6.98955E-01 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  6.98955E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  5.80469E-09 total:  6.98955E-01 
  
 Heat transfer: solving steady state step    7, t= 4.50000E+00 
  
@@ -110,13 +113,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.01250E+04 fluxes work:  0.00000E+00 total:  1.01250E+04 
  
 Mechanics: step    7, t= 4.50000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  7.19815E-05, max change  2.19952E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  7.86216E-05, max change  2.40241E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  9.15053E-01 work:  0.00000E+00 surface:  7.75647E-09 total:  9.15053E-01 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  9.15053E-01 work:  0.00000E+00 surface:  7.75647E-09 total:  9.15053E-01 
+cell set    1  elastic energy:  1.00650E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.20360E-08 total:  1.00650E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  1.00650E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.20360E-08 total:  1.00650E+00 
  
 Heat transfer: solving steady state step    8, t= 5.25000E+00 
  
@@ -127,13 +130,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.37813E+04 fluxes work:  0.00000E+00 total:  1.37813E+04 
  
 Mechanics: step    8, t= 5.25000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.79773E-05, max change  2.59958E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.07016E-04, max change  2.83939E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  1.24549E+00 work:  0.00000E+00 surface:  1.43692E-08 total:  1.24549E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  1.24549E+00 work:  0.00000E+00 surface:  1.43692E-08 total:  1.24549E+00 
+cell set    1  elastic energy:  1.36995E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.22970E-08 total:  1.36995E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  1.36995E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.22970E-08 total:  1.36995E+00 
  
 Heat transfer: solving steady state step    9, t= 6.00000E+00 
  
@@ -144,13 +147,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.80000E+04 fluxes work:  0.00000E+00 total:  1.80000E+04 
  
 Mechanics: step    9, t= 6.00000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.27975E-04, max change  2.99980E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.39780E-04, max change  3.27647E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  1.62676E+00 work:  0.00000E+00 surface:  2.45124E-08 total:  1.62676E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  1.62676E+00 work:  0.00000E+00 surface:  2.45124E-08 total:  1.62676E+00 
+cell set    1  elastic energy:  1.78933E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.80357E-08 total:  1.78933E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  1.78933E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  3.80357E-08 total:  1.78933E+00 
  
 Heat transfer: solving steady state step   10, t= 6.75000E+00 
  
@@ -161,13 +164,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  2.27813E+04 fluxes work:  0.00000E+00 total:  2.27813E+04 
  
 Mechanics: step   10, t= 6.75000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.61975E-04, max change  3.39999E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.76917E-04, max change  3.71371E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.05887E+00 work:  0.00000E+00 surface:  3.92625E-08 total:  2.05887E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.05887E+00 work:  0.00000E+00 surface:  3.92625E-08 total:  2.05887E+00 
+cell set    1  elastic energy:  2.26462E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  6.09226E-08 total:  2.26462E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.26462E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  6.09226E-08 total:  2.26462E+00 
  
 Heat transfer: solving steady state step   11, t= 7.50000E+00 
  
@@ -178,31 +181,33 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  2.81250E+04 fluxes work:  0.00000E+00 total:  2.81250E+04 
  
 Mechanics: step   11, t= 7.50000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.99979E-04, max change  3.80043E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  3.60767E-04, max change  3.60767E-04 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  3.62350E-04, max change  1.58368E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.54181E+00 work:  0.00000E+00 surface:  5.98397E-08 total:  2.54181E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.54181E+00 work:  0.00000E+00 surface:  5.98397E-08 total:  2.54181E+00 
+cell set    1  elastic energy:  2.79582E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.95532E-06 total:  2.79582E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.79582E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.95532E-06 total:  2.79582E+00 
  
 Heat transfer: solving steady state step   12, t= 8.25000E+00 
  
 Thermal energies:  
-cell set    1 thermal energy:  3.40312E+04 fluxes work:  0.00000E+00 total:  3.40312E+04 
+cell set    1 thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
-======= Total thermal energy:  3.40312E+04 fluxes work:  0.00000E+00 total:  3.40312E+04 
+======= Total thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
  
 Mechanics: step   12, t= 8.25000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.39631E-03, max change  1.39631E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.41900E-03, max change  2.28405E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  3.36381E-03, max change  3.10237E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  3.50582E-03, max change  1.42752E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  3.51293E-03, max change  7.19534E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.07556E+00 work:  0.00000E+00 surface:  3.48206E-05 total:  3.07559E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.07556E+00 work:  0.00000E+00 surface:  3.48206E-05 total:  3.07559E+00 
+cell set    1  elastic energy:  3.38272E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.09253E-04 total:  3.38293E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.38272E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  2.09253E-04 total:  3.38293E+00 
  
 Heat transfer: solving steady state step   13, t= 9.00000E+00 
  
@@ -213,48 +218,45 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  4.05000E+04 fluxes work:  0.00000E+00 total:  4.05000E+04 
  
 Mechanics: step   13, t= 9.00000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  7.31532E-03, max change  6.32507E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  7.87894E-03, max change  8.22994E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  7.93978E-03, max change  1.67836E-04 
-   Alt. Min. step     4 alpha min / max 0.00000E+00 /  7.94620E-03, max change  3.65409E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  6.97710E-02, max change  6.97710E-02 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.04354E-01, max change  3.45834E-02 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.74684E-01, max change  7.03299E-02 
+   Alt. Min. step     4 alpha min / max 0.00000E+00 /  3.17142E-01, max change  1.42458E-01 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  5.54301E-01, max change  2.37160E-01 
+   Alt. Min. step     6 alpha min / max 0.00000E+00 /  8.27610E-01, max change  2.73312E-01 
+   Alt. Min. step     7 alpha min / max 0.00000E+00 /  9.73389E-01, max change  2.70300E-01 
+   Alt. Min. step     8 alpha min / max 0.00000E+00 /  9.97326E-01, max change  4.20776E-01 
+   Alt. Min. step     9 alpha min / max 0.00000E+00 /  9.99381E-01, max change  3.01096E-01 
+   Alt. Min. step    10 alpha min / max 0.00000E+00 /  9.99596E-01, max change  7.33269E-02 
+   Alt. Min. step    11 alpha min / max 0.00000E+00 /  9.99469E-01, max change  2.07530E-03 
+   Alt. Min. step    12 alpha min / max 0.00000E+00 /  9.99414E-01, max change  5.45841E-04 
+   Alt. Min. step    13 alpha min / max 0.00000E+00 /  9.99403E-01, max change  1.96744E-04 
+   Alt. Min. step    14 alpha min / max 0.00000E+00 /  9.99398E-01, max change  7.50660E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.65799E+00 work:  0.00000E+00 surface:  2.15118E-03 total:  3.66014E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.65799E+00 work:  0.00000E+00 surface:  2.15118E-03 total:  3.66014E+00 
+cell set    1  elastic energy:  2.86620E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09129E+00 total:  1.11996E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.86620E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09129E+00 total:  1.11996E+00 
  
 Heat transfer: solving steady state step   14, t= 9.75000E+00 
  
 Thermal energies:  
-cell set    1 thermal energy:  4.75312E+04 fluxes work:  0.00000E+00 total:  4.75312E+04 
+cell set    1 thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
-======= Total thermal energy:  4.75312E+04 fluxes work:  0.00000E+00 total:  4.75312E+04 
+======= Total thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
  
 Mechanics: step   14, t= 9.75000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.26122E-01, max change  1.26122E-01 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.82697E-01, max change  5.65758E-02 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  2.92315E-01, max change  1.09618E-01 
-   Alt. Min. step     4 alpha min / max 0.00000E+00 /  4.89284E-01, max change  1.96969E-01 
-   Alt. Min. step     5 alpha min / max 0.00000E+00 /  7.49265E-01, max change  2.59981E-01 
-   Alt. Min. step     6 alpha min / max 0.00000E+00 /  9.39875E-01, max change  2.53915E-01 
-   Alt. Min. step     7 alpha min / max 0.00000E+00 /  9.92779E-01, max change  4.30325E-01 
-   Alt. Min. step     8 alpha min / max 0.00000E+00 /  9.98559E-01, max change  3.99230E-01 
-   Alt. Min. step     9 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.79856E-01 
-   Alt. Min. step    10 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.72582E-03 
-   Alt. Min. step    11 alpha min / max 0.00000E+00 /  9.99789E-01, max change  6.07533E-03 
-   Alt. Min. step    12 alpha min / max 0.00000E+00 /  9.99594E-01, max change  3.06206E-03 
-   Alt. Min. step    13 alpha min / max 0.00000E+00 /  9.99518E-01, max change  1.27334E-03 
-   Alt. Min. step    14 alpha min / max 0.00000E+00 /  9.99486E-01, max change  4.99580E-04 
-   Alt. Min. step    15 alpha min / max 0.00000E+00 /  9.99473E-01, max change  1.92531E-04 
-   Alt. Min. step    16 alpha min / max 0.00000E+00 /  9.99468E-01, max change  7.38153E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  7.42290E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  3.35996E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  6.40542E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.91372E-02 work:  0.00000E+00 surface:  1.09253E+00 total:  1.12167E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.91372E-02 work:  0.00000E+00 surface:  1.09253E+00 total:  1.12167E+00 
+cell set    1  elastic energy:  2.91788E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09541E+00 total:  1.12459E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.91788E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09541E+00 total:  1.12459E+00 
  
 Heat transfer: solving steady state step   15, t= 1.05000E+01 
  
@@ -265,34 +267,34 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  5.51250E+04 fluxes work:  0.00000E+00 total:  5.51250E+04 
  
 Mechanics: step   15, t= 1.05000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  6.86999E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.11059E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  5.14210E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  7.10184E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  2.85000E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  4.90660E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.96914E-02 work:  0.00000E+00 surface:  1.09634E+00 total:  1.12603E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.96914E-02 work:  0.00000E+00 surface:  1.09634E+00 total:  1.12603E+00 
+cell set    1  elastic energy:  2.96703E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09928E+00 total:  1.12895E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  2.96703E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.09928E+00 total:  1.12895E+00 
  
 Heat transfer: solving steady state step   16, t= 1.12500E+01 
  
 Thermal energies:  
-cell set    1 thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
+cell set    1 thermal energy:  6.32813E+04 fluxes work:  0.00000E+00 total:  6.32813E+04 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
-======= Total thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
+======= Total thermal energy:  6.32813E+04 fluxes work:  0.00000E+00 total:  6.32813E+04 
  
 Mechanics: step   16, t= 1.12500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  6.60096E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.23440E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.63900E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  6.78636E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  2.29945E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  3.45702E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.02264E-02 work:  0.00000E+00 surface:  1.09994E+00 total:  1.13016E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.02264E-02 work:  0.00000E+00 surface:  1.09994E+00 total:  1.13016E+00 
+cell set    1  elastic energy:  3.01402E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10293E+00 total:  1.13307E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.01402E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10293E+00 total:  1.13307E+00 
  
 Heat transfer: solving steady state step   17, t= 1.20000E+01 
  
@@ -303,34 +305,34 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  7.20000E+04 fluxes work:  0.00000E+00 total:  7.20000E+04 
  
 Mechanics: step   17, t= 1.20000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  6.33095E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.26880E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.19454E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  6.46869E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.96660E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  2.53058E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.07439E-02 work:  0.00000E+00 surface:  1.10335E+00 total:  1.13410E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.07439E-02 work:  0.00000E+00 surface:  1.10335E+00 total:  1.13410E+00 
+cell set    1  elastic energy:  3.05946E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10640E+00 total:  1.13699E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.05946E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10640E+00 total:  1.13699E+00 
  
 Heat transfer: solving steady state step   18, t= 1.27500E+01 
  
 Thermal energies:  
-cell set    1 thermal energy:  8.12812E+04 fluxes work:  0.00000E+00 total:  8.12812E+04 
+cell set    1 thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
-======= Total thermal energy:  8.12812E+04 fluxes work:  0.00000E+00 total:  8.12812E+04 
+======= Total thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
  
 Mechanics: step   18, t= 1.27500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  6.05945E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.24459E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.51335E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  6.15047E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.76175E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.72100E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.12477E-02 work:  0.00000E+00 surface:  1.10661E+00 total:  1.13786E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.12477E-02 work:  0.00000E+00 surface:  1.10661E+00 total:  1.13786E+00 
+cell set    1  elastic energy:  3.10419E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10969E+00 total:  1.14073E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.10419E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.10969E+00 total:  1.14073E+00 
  
 Heat transfer: solving steady state step   19, t= 1.35000E+01 
  
@@ -341,15 +343,15 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  9.11250E+04 fluxes work:  0.00000E+00 total:  9.11250E+04 
  
 Mechanics: step   19, t= 1.35000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  5.78730E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.17036E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.68255E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  5.83437E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.66704E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.27744E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.17439E-02 work:  0.00000E+00 surface:  1.10971E+00 total:  1.14146E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.17439E-02 work:  0.00000E+00 surface:  1.10971E+00 total:  1.14146E+00 
+cell set    1  elastic energy:  3.14920E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11281E+00 total:  1.14430E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.14920E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11281E+00 total:  1.14430E+00 
  
 Heat transfer: solving steady state step   20, t= 1.42500E+01 
  
@@ -360,15 +362,15 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.01531E+05 fluxes work:  0.00000E+00 total:  1.01531E+05 
  
 Mechanics: step   20, t= 1.42500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  5.51609E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.06273E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.66029E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  5.52450E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.54848E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  8.31713E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.22398E-02 work:  0.00000E+00 surface:  1.11268E+00 total:  1.14492E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.22398E-02 work:  0.00000E+00 surface:  1.11268E+00 total:  1.14492E+00 
+cell set    1  elastic energy:  3.19544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11578E+00 total:  1.14773E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.19544E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11578E+00 total:  1.14773E+00 
  
 Heat transfer: solving steady state step   21, t= 1.50000E+01 
  
@@ -379,12 +381,13 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 ======= Total thermal energy:  1.12500E+05 fluxes work:  0.00000E+00 total:  1.12500E+05 
  
 Mechanics: step   21, t= 1.50000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99468E-01, max change  5.24772E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99468E-01, max change  2.91894E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99468E-01, max change  3.50113E-05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.99398E-01, max change  5.22554E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  9.99398E-01, max change  1.42499E-04 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  9.99398E-01, max change  7.81635E-06 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.27436E-02 work:  0.00000E+00 surface:  1.11550E+00 total:  1.14825E+00 
-cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.27436E-02 work:  0.00000E+00 surface:  1.11550E+00 total:  1.14825E+00 
+cell set    1  elastic energy:  3.24386E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11860E+00 total:  1.15103E+00 
+cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+======= Total: elastic energy:  3.24386E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.11860E+00 total:  1.15103E+00 
+ Total number of alternate minimizations:          53  

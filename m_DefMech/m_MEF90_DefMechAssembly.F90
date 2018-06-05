@@ -1161,7 +1161,7 @@ Contains
       
       Procedure(MEF90DefMechOperatorLoc),pointer         :: localOperatorFunction
       Procedure(MEF90DefMechRHSLoc),pointer              :: localRHSFunction
-      
+    
       localOperatorFunction =>MEF90DefMechOperatorNull      
       Call SNESGetDM(snesDisplacement,mesh,ierr);CHKERRQ(ierr)
 

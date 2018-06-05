@@ -1,17 +1,28 @@
 ### global options
 verbose: 1
 boundaryDisplacement_scaling: linear
-defmech:
-    irrevthres: 0.
-    mode: quasistatic
 heatxfer:
-    mode: null
+    timestepping:
+        type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.4
+    pclag: 5
 temperature:
     offset: 0
 time:
     min: 0
     max: 5
     numstep: 21
+disp:
+    snes:
+        type: ksponly
+    pc:
+        type: bjacobi
 cs0001:
     hookesLaw:  
         type: isotropic
