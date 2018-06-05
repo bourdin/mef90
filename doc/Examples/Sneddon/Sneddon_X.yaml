@@ -8,10 +8,13 @@ time:
     min: 0.01
     max: 1.6
     numstep: 300
-heatxfer:
-  mode: null
 defmech:
-  mode: quasistatic
+    irrevthres: 0.
+    timestepping:
+        type: quasistatic
+heatxfer:
+    timestepping:
+        type: null
 temperature:
     offset: 0
 CrackPressure:

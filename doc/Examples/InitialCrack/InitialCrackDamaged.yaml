@@ -3,9 +3,11 @@ verbose: 1
 boundaryDisplacement_scaling: linear
 defmech:
     irrevthres: 0.
-    mode: quasistatic
+    timestepping:
+        type: quasistatic
 heatxfer:
-    mode: null
+    timestepping:
+        type: null
 temperature:
     offset: 0
 time:

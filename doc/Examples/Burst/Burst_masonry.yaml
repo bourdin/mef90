@@ -4,10 +4,13 @@ time:
     min: 0.0
     max: 200.0
     numstep: 101
-heatxfer:
-  mode: null
 defmech:
-mode: quasistatic
+    irrevthres: 0.
+    timestepping:
+        type: quasistatic
+heatxfer:
+    timestepping:
+        type: null
 damage:
    atol: 1e-4
 disp:

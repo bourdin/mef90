@@ -11,11 +11,11 @@ boundaryTemp:
   scaling: linear
 defmech:
     irrevthres: 0.
-    mode: quasistatic
-    damage:
-      atol: 1e-3
+    timestepping:
+        type: quasistatic
 heatxfer:
-    mode: steadystate
+    timestepping:
+        type: steadystate
 time:
     min: 000
     max: 100

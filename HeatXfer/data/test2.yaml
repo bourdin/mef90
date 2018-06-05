@@ -1,5 +1,6 @@
 heatxfer:
-  mode: steadystate 
+  timestepping:
+    type: steadystate 
 verbose: 1
 time:
   numstep: 3

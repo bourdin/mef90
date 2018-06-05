@@ -2,8 +2,9 @@
  
  
  MEF90 Global Context:  
-  prefix:       data/CubeNG_Z-tetra10 
-  log file:     data/CubeNG_Z-tetra10.log 
+  geometry file:       data/CubeNG_Z-tetra10.gen 
+  result file:         data/CubeNG_Z-tetra10_out.gen 
+  log file:            data/CubeNG_Z-tetra10_out.log 
 PetscBag Object:  MEF90Ctx MEF90 Global options object
   verbose = 1 ; Verbosity: level
   dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
@@ -11,12 +12,12 @@ PetscBag Object:  MEF90Ctx MEF90 Global options object
   time_min = 0 ; Time: min
   time_max = 1 ; Time: max
   time_numstep = 3 ; Time: number of time steps
-  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
+  time_skip = 0 ; Time: number of time steps
   time_frequency = 1 ; Time: frequency   (1+t) cos(2 k Pi t)
+  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
  
- EXO file data/CubeNG_Z-tetra10_out.gen does not seem to exist. Creating it. 
 PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
-  heatxfer_mode = SteadyState; (MEF90_HeatXFer_Mode) Type of heat transfer computation
+  heatxfer_timeStepping_type = SteadyState; (MEF90_HeatXFer_timeSteppingType) Type of heat transfer computation
   heatxfer_addNullSpace =  FALSE; Add null space to SNES
   temp_Offset = 1 ; Position of temperature field in EXO file
   heatxfer_initialTemp = 0 ; [K] (T): Initial Temperature
@@ -89,8 +90,22 @@ PetscBag Object:  Cell set    1 MatProp3D object: material properties
   CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  CoeffF = 0.3 ; [unit-less] (F) coefficient F in the Hill yield criterion
+  CoeffG = 0.3 ; [unit-less] (G) coefficient G in the Hill yield criterion
+  CoeffH = 0.3 ; [unit-less] (H) coefficient H in the Hill yield criterion
+  CoeffM = 1 ; [unit-less] (M) coefficient M in the Hill yield criterion
+  CoeffN = 1 ; [unit-less] (N) coefficient N in the Hill yield criterion
+  CoeffL = 1 ; [unit-less] (L) coefficient L in the Hill yield criterion
+  YieldTau0 = 1 ; [N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion
+  residualYieldTau0 = 0 ; [unit-less] residual stress threshold in the Hill yield criterion
+  phi1 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  phi2 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  Phi = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
+  isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
 Registering materials properties for cell set   10: cs0010_ 
 PetscBag Object:  Cell set   10 MatProp3D object: material properties
@@ -113,8 +128,22 @@ PetscBag Object:  Cell set   10 MatProp3D object: material properties
   CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  CoeffF = 0.3 ; [unit-less] (F) coefficient F in the Hill yield criterion
+  CoeffG = 0.3 ; [unit-less] (G) coefficient G in the Hill yield criterion
+  CoeffH = 0.3 ; [unit-less] (H) coefficient H in the Hill yield criterion
+  CoeffM = 1 ; [unit-less] (M) coefficient M in the Hill yield criterion
+  CoeffN = 1 ; [unit-less] (N) coefficient N in the Hill yield criterion
+  CoeffL = 1 ; [unit-less] (L) coefficient L in the Hill yield criterion
+  YieldTau0 = 1 ; [N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion
+  residualYieldTau0 = 0 ; [unit-less] residual stress threshold in the Hill yield criterion
+  phi1 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  phi2 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  Phi = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
+  isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
 Registering materials properties for cell set   20: cs0020_ 
 PetscBag Object:  Cell set   20 MatProp3D object: material properties
@@ -137,8 +166,22 @@ PetscBag Object:  Cell set   20 MatProp3D object: material properties
   CoefficientCapModel2 = 1 ; C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientCapModelD = 1 ; CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0
   CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  CoeffF = 0.3 ; [unit-less] (F) coefficient F in the Hill yield criterion
+  CoeffG = 0.3 ; [unit-less] (G) coefficient G in the Hill yield criterion
+  CoeffH = 0.3 ; [unit-less] (H) coefficient H in the Hill yield criterion
+  CoeffM = 1 ; [unit-less] (M) coefficient M in the Hill yield criterion
+  CoeffN = 1 ; [unit-less] (N) coefficient N in the Hill yield criterion
+  CoeffL = 1 ; [unit-less] (L) coefficient L in the Hill yield criterion
+  YieldTau0 = 1 ; [N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion
+  residualYieldTau0 = 0 ; [unit-less] residual stress threshold in the Hill yield criterion
+  phi1 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  phi2 = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  Phi = 0 ; [radians] Bunge-Euler angle in the Hill yield criterion
+  delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
+  isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
 Time values array: 
  0:   0.0000e+00   5.0000e-01   1.0000e+00
@@ -161,3 +204,7 @@ cell set    1 thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 total:  5.0
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  5.00000E-01 fluxes work:  0.00000E+00 total:  5.00000E-01 
+WARNING! There are options you set that were not used!
+WARNING! could be spelling mistake, etc!
+Option left: name:-cs0030_flux value: 0.
+Option left: name:-cs0030_tempBC value: no

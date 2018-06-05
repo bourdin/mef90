@@ -269,12 +269,12 @@ Program WorkControlled
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
    
    !!! Create sections, vectors, and solvers for HeatXfer Context
-   If (MEF90HeatXferGlobalOptions%mode /= MEF90HeatXfer_ModeNULL) Then
+   If (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_ModeNULL) Then
       Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
       Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
       Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
-      Select Case(MEF90HeatXferGlobalOptions%mode)
+      Select Case(MEF90HeatXferGlobalOptions%timeSteppingType)
       Case (MEF90HeatXFer_ModeSteadyState)
          Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
       Case (MEF90HeatXFer_ModeTransient)
@@ -336,7 +336,7 @@ Program WorkControlled
       mainloopQS: Do
          BTActive = PETSC_FALSE
          !!! Solve for temperature
-         Select Case (MEF90HeatXferGlobalOptions%mode)
+         Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
          Case (MEF90HeatXFer_ModeSteadyState) 
             Write(IOBuffer,100) step,time(step)
             Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -417,14 +417,14 @@ Program WorkControlled
          Case (MEF90HeatXfer_ModeNULL)
             Continue
          Case default
-            Write(IOBuffer,*) "Implemented HeatXfer mode: ", MEF90HeatXferGlobalOptions%mode, "\n"
+            Write(IOBuffer,*) "Implemented HeatXfer mode: ", MEF90HeatXferGlobalOptions%timeSteppingType, "\n"
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             STOP
          End Select
          
          !!! Solve for displacement and damage
-         Select case(MEF90DefMechGlobalOptions%mode)
-         Case (MEF90DefMech_ModeQuasiStatic)
+         Select case(MEF90DefMechGlobalOptions%timeSteppingType)
+         Case (MEF90HeatXfer_timeSteppingTypeNULL)
             Write(IOBuffer,200) step,time(step) 
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             damageMaxChange = 1.0D+20
@@ -594,7 +594,7 @@ Program WorkControlled
       Call VecDestroy(residualDisp,ierr);CHKERRQ(ierr)
    End Select
    
-   Select Case (MEF90HeatXferGlobalOptions%mode)
+   Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
    Case (MEF90HeatXFer_ModeSteadyState) 
       Call SNESDestroy(snesTemp,ierr);CHKERRQ(ierr)
    Case (MEF90HeatXFer_ModeTransient) 

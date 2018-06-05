@@ -6,21 +6,23 @@ time:
     numstep: 101
     interpolation: linear
 heatxfer:
-    mode: null
+    timestepping:
+        type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.4
+    pclag: 5
 temperature:
     offset: 0
-defmech:
-  mode: quasistatic
-  damage:
-    atol: 1.0e-3
-  sor:
-    omega: 1.4
-  pclag: 5
 disp:
-  snes:
-    type: ksponly
-  pc:
-    type: bjacobi
+    snes:
+        type: ksponly
+    pc:
+        type: bjacobi
 cs0001:
     hookesLaw:  
         type: isotropic

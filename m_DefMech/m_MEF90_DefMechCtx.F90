@@ -49,7 +49,8 @@ Module m_MEF90_DefMechCtx_Type
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
-      PetscInt                               :: mode
+      PetscInt                               :: timeSteppingType
+      PetscInt                               :: solverType
       PetscBool                              :: addDisplacementNullSpace
       !!! Position of vertex-based vecs in exo file
       PetscInt                               :: displacementOffset
@@ -224,11 +225,18 @@ Module m_MEF90_DefMechCtx
    PetscSizeT,protected   :: sizeofMEF90DefMechVertexSetOptions
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_ModeNULL = 0,    &
-                     MEF90DefMech_ModeQuasiStatic, &
-                     MEF90DefMech_ModeGradientFlow
+      enumerator  :: MEF90DefMech_SolverTypeAltMin = 0, &
+                     MEF90DefMech_SolverTypeQuasiNewton1, &
+                     MEF90DefMech_SolverTypeQuasiNewton2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_ModeList
+   Character(len = MEF90_MXSTRLEN),Dimension(7),protected   :: MEF90DefMech_SolverTypeList
+
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0,    &
+                     MEF90DefMech_TimeSteppingTypeQuasiStatic, &
+                     MEF90DefMech_TimeSteppingTypeGradientFlow
+   End Enum
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_TimeSteppingTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
@@ -296,12 +304,20 @@ Contains
       sizeofMEF90DefMechCellSetOptions = size(transfer(DefMechCellSetOptions,dummychar))*sizeofchar
       sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
 
-      MEF90DefMech_ModeList(1) = 'Null'
-      MEF90DefMech_ModeList(2) = 'QuasiStatic'
-      MEF90DefMech_ModeList(3) = 'GradientFlow'
-      MEF90DefMech_ModeList(4) = 'MEF90DefMech_Mode'
-      MEF90DefMech_ModeList(5) = '_MEF90DefMech_Mode'
-      MEF90DefMech_ModeList(6) = ''
+      MEF90DefMech_SolverTypeList(1) = 'Null'
+      MEF90DefMech_SolverTypeList(2) = 'AltMin'
+      MEF90DefMech_SolverTypeList(3) = 'QuasiNewton1'
+      MEF90DefMech_SolverTypeList(4) = 'QuasiNewton12'
+      MEF90DefMech_SolverTypeList(5) = 'MEF90DefMech_SolverType'
+      MEF90DefMech_SolverTypeList(6) = '_MEF90DefMech_SolverType'
+      MEF90DefMech_SolverTypeList(7) = ''
+      
+      MEF90DefMech_TimeSteppingTypeList(1) = 'Null'
+      MEF90DefMech_TimeSteppingTypeList(2) = 'QuasiStatic'
+      MEF90DefMech_TimeSteppingTypeList(3) = 'GradientFlow'
+      MEF90DefMech_TimeSteppingTypeList(4) = 'MEF90DefMech_TimeSteppingType'
+      MEF90DefMech_TimeSteppingTypeList(5) = '_MEF90DefMech_TimeSteppingType'
+      MEF90DefMech_TimeSteppingTypeList(6) = ''
       
       MEF90DefMech_BTTypeList(1) = 'Null'
       MEF90DefMech_BTTypeList(2) = 'Backward'
@@ -742,7 +758,8 @@ Contains
       Call PetscBagSetName(bag,trim(name),"DefMechGlobalOptions MEF90 Defect Mechanics global options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%mode,MEF90DefMech_ModeList,default%mode,'DefMech_mode','Type of defect mechanics computation',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'disp_addNullSpace','Add null space to SNES',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%displacementOffset,default%displacementOffset,'displacement_Offset','Position of displacement field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%damageOffset,default%damageOffset,'damage_Offset','Position of damage field in EXO file',ierr);CHKERRQ(ierr)

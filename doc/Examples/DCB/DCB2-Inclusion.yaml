@@ -4,11 +4,11 @@ boundaryDisplacement_scaling: linear
 Force_scaling: linear
 defmech:
     irrevthres: 0.
-    mode: quasistatic
-    damage:
-        atol: 1e-3
+    timestepping:
+        type: quasistatic
 heatxfer:
-    mode: null
+    timestepping:
+        type: null
 temperature:
     offset: 0
 time:

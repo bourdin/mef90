@@ -8,11 +8,11 @@ stress:
     offset: 6
 defmech:
     irrevthres: 0.
-    mode: quasistatic
-    damage:
-      atol: 1e-3
+    timestepping:
+        type: quasistatic
 heatxfer:
-    mode: transient
+    timestepping:
+        type: transient
     initialTemp: 0
 temp:
   ts_monitor:

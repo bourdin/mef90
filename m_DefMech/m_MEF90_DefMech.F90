@@ -1297,7 +1297,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 
       Call MatSetFromOptions(matDisp,ierr);CHKERRQ(ierr)
 
-      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+      If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_TimeSteppingTypeQuasiStatic) Then
          Call SNESCreate(PETSC_COMM_WORLD,snesDisp,ierr);CHKERRQ(ierr)
          Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
@@ -1374,7 +1374,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call MatSetFromOptions(matDamage,ierr);CHKERRQ(ierr)
 
-      If (MEF90DefMechGlobalOptions%mode == MEF90DefMech_ModeQuasiStatic) Then
+      If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_TimeSteppingTypeQuasiStatic) Then
          Call SNESCreate(PETSC_COMM_WORLD,snesDamage,ierr);CHKERRQ(ierr)
          Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)

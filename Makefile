@@ -40,7 +40,7 @@ WorkControlled: MEF90 m_DefMech m_HeatXfer chkpaths
 
 vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP vDefUpa
+	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT
 
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
