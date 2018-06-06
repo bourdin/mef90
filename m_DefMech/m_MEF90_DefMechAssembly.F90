@@ -1162,26 +1162,22 @@ Contains
       Procedure(MEF90DefMechOperatorLoc),pointer         :: localOperatorFunction
       Procedure(MEF90DefMechRHSLoc),pointer              :: localRHSFunction
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
-      PetscInt                                           :: snesIter
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
     
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If ( (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton1) .OR. (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton2)) Then
-         Call SNESGetIterationNumber(snesDisplacement,snesIter,ierr)
-         If (snesIter > 0) Then
-            Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-            Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-            Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-            Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
-            Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
-            Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-            Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
-            Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
-         End If
+         Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+         Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+         Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+         Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
+         Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
+         Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+         Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
+         Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+         Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
        End If
 
       localOperatorFunction =>MEF90DefMechOperatorNull      
@@ -1539,26 +1535,22 @@ Contains
       
       Procedure(MEF90DefMechBilinearFormLoc),pointer     :: localAssemblyFunction
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
-      PetscInt                                           :: snesIter
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
     
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton2) Then
-         Call SNESGetIterationNumber(snesDisplacement,snesIter,ierr)
-         If (snesIter > 0) Then
-            Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-            Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
-            Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-            Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
-            Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
-            Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-            Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
-            Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
-            Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
-         End If
+         Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+         Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+         Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+         Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
+         Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
+         Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+         Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
+         Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+         Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
        End If
       
       localAssemblyFunction =>MEF90DefMechBilinearFormNull      
