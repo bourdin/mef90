@@ -229,7 +229,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_SolverTypeQuasiNewton1, &
                      MEF90DefMech_SolverTypeQuasiNewton2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(7),protected   :: MEF90DefMech_SolverTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_SolverTypeList
 
    Enum,bind(c)
       enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0,    &
@@ -304,13 +304,12 @@ Contains
       sizeofMEF90DefMechCellSetOptions = size(transfer(DefMechCellSetOptions,dummychar))*sizeofchar
       sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
 
-      MEF90DefMech_SolverTypeList(1) = 'Null'
-      MEF90DefMech_SolverTypeList(2) = 'AltMin'
-      MEF90DefMech_SolverTypeList(3) = 'QuasiNewton1'
-      MEF90DefMech_SolverTypeList(4) = 'QuasiNewton12'
-      MEF90DefMech_SolverTypeList(5) = 'MEF90DefMech_SolverType'
-      MEF90DefMech_SolverTypeList(6) = '_MEF90DefMech_SolverType'
-      MEF90DefMech_SolverTypeList(7) = ''
+      MEF90DefMech_SolverTypeList(1) = 'AltMin'
+      MEF90DefMech_SolverTypeList(2) = 'QuasiNewton1'
+      MEF90DefMech_SolverTypeList(3) = 'QuasiNewton2'
+      MEF90DefMech_SolverTypeList(4) = 'MEF90DefMech_SolverType'
+      MEF90DefMech_SolverTypeList(5) = '_MEF90DefMech_SolverType'
+      MEF90DefMech_SolverTypeList(6) = ''
       
       MEF90DefMech_TimeSteppingTypeList(1) = 'Null'
       MEF90DefMech_TimeSteppingTypeList(2) = 'QuasiStatic'

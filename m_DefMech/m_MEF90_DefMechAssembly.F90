@@ -1119,7 +1119,7 @@ Contains
 !!!  MEF90DefMechOperatorDisplacement: Build the operator. When called in SNES, the solution time should always match the target time, 
 !!!                                    so there is no need for interpolation of the forcees, external, and boundary values
 !!!  
-!!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
+!!!  (c) 2012-18 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!
 
    Subroutine MEF90DefMechOperatorDisplacement(snesDisplacement,displacement,residual,MEF90DefMechCtx,ierr)
@@ -1161,7 +1161,29 @@ Contains
       
       Procedure(MEF90DefMechOperatorLoc),pointer         :: localOperatorFunction
       Procedure(MEF90DefMechRHSLoc),pointer              :: localRHSFunction
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
+      PetscInt                                           :: snesIter
+      Type(Vec)                                          :: damageOld
+      PetscReal                                          :: damageMin,damageMax,damageMaxChange
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
     
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If ( (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton1) .OR. (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton2)) Then
+         Call SNESGetIterationNumber(snesDisplacement,snesIter,ierr)
+         If (snesIter > 0) Then
+            Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+            Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+            Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
+            Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
+            Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+            Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
+            Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
+         End If
+       End If
+
       localOperatorFunction =>MEF90DefMechOperatorNull      
       Call SNESGetDM(snesDisplacement,mesh,ierr);CHKERRQ(ierr)
 
@@ -1470,6 +1492,7 @@ Contains
       Call SectionRealDestroy(boundaryDisplacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
+209 Format("    Oper:  alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
    End Subroutine MEF90DefMechOperatorDisplacement
 
 #undef __FUNCT__
@@ -1481,8 +1504,8 @@ Contains
 !!!  (c) 2012-16 Blaise Bourdin bourdin@lsu.edu,Erwan Tanne erwan.tanne@gmail.com
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,displacement,A,M,flg,MEF90DefMechCtx,ierr)
-      Type(SNES),Intent(IN)                              :: snesDispl
+   Subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement,displacement,A,M,flg,MEF90DefMechCtx,ierr)
+      Type(SNES),Intent(IN)                              :: snesDisplacement
       Type(Vec),Intent(IN)                               :: displacement
       Type(Mat),Intent(INOUT)                            :: A,M
       MatStructure,Intent(INOUT)                         :: flg
@@ -1515,10 +1538,32 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
       
       Procedure(MEF90DefMechBilinearFormLoc),pointer     :: localAssemblyFunction
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
+      PetscInt                                           :: snesIter
+      Type(Vec)                                          :: damageOld
+      PetscReal                                          :: damageMin,damageMax,damageMaxChange
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+    
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      If (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton2) Then
+         Call SNESGetIterationNumber(snesDisplacement,snesIter,ierr)
+         If (snesIter > 0) Then
+            Call VecDuplicate(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
+            Call SNESSolve(MEF90DefMechCtx%SNESdamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+            Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMin,ierr);CHKERRQ(ierr)
+            Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,damageMax,ierr);CHKERRQ(ierr)
+            Call VecAxPy(damageOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+            Call VecNorm(damageOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,209) damageMin,damageMax,damageMaxChange
+            Call PetscPrintf(MEF90DefMechCtx%MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
+         End If
+       End If
       
       localAssemblyFunction =>MEF90DefMechBilinearFormNull      
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
-      Call SNESGetDM(snesDispl,mesh,ierr);CHKERRQ(ierr)
+      Call SNESGetDM(snesDisplacement,mesh,ierr);CHKERRQ(ierr)
       
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,displacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,displacement,ierr);CHKERRQ(ierr) 
@@ -1700,6 +1745,7 @@ Contains
       Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
       flg = SAME_NONZERO_PATTERN
+209 Format("    Bilin: alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
    End Subroutine MEF90DefMechBilinearFormDisplacement
 
 #undef __FUNCT__

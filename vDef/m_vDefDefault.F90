@@ -21,8 +21,8 @@ module m_vDefDefault
                                                          MEF90FileFormat_EXOSingle)       ! fileFormat
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset

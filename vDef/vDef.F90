@@ -153,15 +153,15 @@ Program vDef
       Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
       Select Case(MEF90HeatXferGlobalOptions%timeSteppingType)
-      Case (MEF90HeatXFer_timeSteppingTypeSteadyState)
-         Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
-      Case (MEF90HeatXFer_timeSteppingTypeTransient)
-         Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
-         tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
-         tsTempInitialTime = time(1)
-         Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
-         Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
-         Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
+         Case (MEF90HeatXFer_timeSteppingTypeSteadyState)
+            Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
+         Case (MEF90HeatXFer_timeSteppingTypeTransient)
+            Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
+            tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
+            tsTempInitialTime = time(1)
+            Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+            Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
+            Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
       End Select
 
       !!! Link the temperature field in the DefMechContext with that of the HeatXfer
@@ -312,94 +312,102 @@ Program vDef
                Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
                Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
 
-               Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
-               Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,1,ierr);CHKERRQ(ierr)
-               AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
-                  AltMinStep = altminstep + 1
-                  Write(IObuffer,208) AltMinIter
-                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+               Select case(MEF90DefMechGlobalOptions%SolverType)
+                  Case(MEF90DefMech_SolverTypeAltMin)
+                     Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
+                     Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,1,ierr);CHKERRQ(ierr)
 
-                  !!! Solve SNES
-                  If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-                     Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,-2,ierr);CHKERRQ(ierr)
-                     Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,-2,ierr);CHKERRQ(ierr)
-                  End If 
+                     AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
+                        AltMinStep = altminstep + 1
+                        Write(IObuffer,208) AltMinIter
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-                  Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
-                  Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                  !!! Over relaxation on u, skipping the first alternate minimization step
-                  If (AltMinIter > 1) Then
-                     SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
-                     Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
-                  EndIf
+                        !!! Solve SNES
+                        If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                           Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,-2,ierr);CHKERRQ(ierr)
+                           Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,-2,ierr);CHKERRQ(ierr)
+                        End If 
 
-                  Call SNESGetConvergedReason(MEF90DefMechCtx%snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
-                  If (snesDispConvergedReason < 0) Then  
-                     Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                        Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
+                        Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+                        !!! Over relaxation on u, skipping the first alternate minimization step
+                        If (AltMinIter > 1) Then
+                           SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
+                           Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
+                        EndIf
+
+                        Call SNESGetConvergedReason(MEF90DefMechCtx%snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
+                        If (snesDispConvergedReason < 0) Then  
+                           Write(IOBuffer,400) "displacement",snesDispConvergedReason
+                           Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                        End If
+                        Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
+                        Call SNESSolve(MEF90DefMechCtx%snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+                        Call SNESGetConvergedReason(MEF90DefMechCtx%snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
+                        If (snesDamageConvergedReason < 0) Then
+                           Write(IOBuffer,400) "damage field",snesDamageConvergedReason
+                           Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+                        End If
+
+                        !!! Over relaxation of the damage variable
+                        If (AltMinIter > 1) Then
+                           If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then
+                              mySOROmega = MEF90DefMechGlobalOptions%SOROmega
+                              !!! LIMITED SOR
+                              Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                              Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                              Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                              Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                              Call VecGetArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                              Do iDof = 1, size(damageArray)
+                                 If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
+                                    mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                                 Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
+                                    mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                                 End If
+                              End Do
+                              Call MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+                              Call VecRestoreArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                              Call VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                              Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                              Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                              Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
+                           Else If (MEF90DefMechGlobalOptions%SOROmega < -1.0_Kr) Then
+                              !!! PROJECTED SOR
+                              SOROmega = -MEF90DefMechGlobalOptions%SOROmega
+                              Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
+                              Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
+                              Call VecPointwiseMax(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageLB,ierr);CHKERRQ(ierr)
+                              Call VecPointwiseMin(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageUB,ierr);CHKERRQ(ierr)
+                           EndIf
+                        End If
+
+                        Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
+                        Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
+                        Call VecAxPy(damageAltMinOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+                        ! damageAltMinOld = damageAltMinOld - damage
+                        Call VecNorm(damageAltMinOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
+                        Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
+                        Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
+                        Call VecCopy(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
+                        Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+                        Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+
+                        If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
+                           EXIT
+                        End If
+                        If (mod(AltMinIter,25) == 0) Then
+                           Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
+                        End If
+                     End Do AltMin
+                  Case(MEF90DefMech_SolverTypeQuasiNewton1,MEF90DefMech_SolverTypeQuasiNewton2)
+                     Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
+                  Case default
+                     Write(IOBuffer,*) "Unimplemented DefMech solver type: ", MEF90DefMechGlobalOptions%SolverType, "\n"
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                  End If
-                  Call VecCopy(MEF90DefMechCtx%damage,damageAltMinOld,ierr);CHKERRQ(ierr)
-                  Call SNESSolve(MEF90DefMechCtx%snesDamage,PETSC_NULL_OBJECT,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-                  Call SNESGetConvergedReason(MEF90DefMechCtx%snesDamage,snesDamageConvergedReason,ierr);CHKERRQ(ierr)
-                  If (snesDamageConvergedReason < 0) Then
-                     Write(IOBuffer,400) "damage field",snesDamageConvergedReason
-                     Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                  End If
-
-                  !!! Over relaxation of the damage variable
-                  If (AltMinIter > 1) Then
-                     If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then
-                        mySOROmega = MEF90DefMechGlobalOptions%SOROmega
-                        !!! LIMITED SOR
-                        Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
-                        Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
-                        Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                        Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                        Call VecGetArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
-                        Do iDof = 1, size(damageArray)
-                           If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
-                              mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                           Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
-                              mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                           End If
-                        End Do
-                        Call MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
-                        Call VecRestoreArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
-                        Call VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                        Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                        Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
-                        Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
-                     Else If (MEF90DefMechGlobalOptions%SOROmega < -1.0_Kr) Then
-                        !!! PROJECTED SOR
-                        SOROmega = -MEF90DefMechGlobalOptions%SOROmega
-                        Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
-                        Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
-                        Call VecPointwiseMax(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageLB,ierr);CHKERRQ(ierr)
-                        Call VecPointwiseMin(MEF90DefMechCtx%damage,MEF90DefMechCtx%damage,damageUB,ierr);CHKERRQ(ierr)
-                     EndIf
-                  End If
-
-                  Call VecMin(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMin,ierr);CHKERRQ(ierr)
-                  Call VecMax(MEF90DefMechCtx%damage,PETSC_NULL_INTEGER,alphaMax,ierr);CHKERRQ(ierr)
-                  Call VecAxPy(damageAltMinOld,-1.0_Kr,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-                  ! damageAltMinOld = damageAltMinOld - damage
-                  Call VecNorm(damageAltMinOld,NORM_INFINITY,damageMaxChange,ierr);CHKERRQ(ierr)
-                  Write(IOBuffer,209) alphamin,alphamax,damageMaxChange
-                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-
-                  Call VecCopy(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                  Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-                  Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-
-                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
-                     EXIT
-                  End If
-                  If (mod(AltMinIter,25) == 0) Then
-                     Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
-                  End If
-               End Do AltMin
-
-               Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+                     STOP
+               End Select
 
                !!! Compute energies
                elasticEnergySet  = 0.0_Kr
