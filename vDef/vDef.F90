@@ -33,7 +33,6 @@ Program vDef
    PetscReal,Dimension(:),Pointer                     :: elasticEnergySet,surfaceEnergySet,forceWorkSet,cohesiveEnergySet
    PetscReal,Dimension(:),Pointer                     :: elasticEnergy,surfaceEnergy,forceWork,cohesiveEnergy,totalMechanicalEnergy
 
-   !Type(SNES)                                         :: snesDisp
    SNESConvergedReason                                :: snesDispConvergedReason
    Type(Vec)                                          :: residualDisp
    Type(Vec)                                          :: damageAltMinOld,displacementAltMinOld
@@ -42,7 +41,6 @@ Program vDef
    PetscInt                                           :: iDof
    PetscReal                                          :: SOROmega,mySOROmega
    Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
-   !Type(SNES)                                         :: snesDamage
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,localVec
    PetscInt                                           :: AltMinIter
@@ -140,7 +138,6 @@ Program vDef
    !!!cumulatedDissipatedPlasticEnergy Vectors
    Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   !Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
    
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
@@ -211,7 +208,15 @@ Program vDef
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
       step = MEF90GlobalOptions%timeSkip+1
+
       mainloopQS: Do
+         MEF90DefMechCtx%analysisTime = time(step)
+         If (step > 1) Then
+            MEF90DefMechCtx%timeStep = time(step) - time(step-1)
+         Else 
+            MEF90DefMechCtx%timeStep = 0.0_Kr
+         End If
+
          !!! Solve for temperature
          Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
             Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
@@ -299,19 +304,23 @@ Program vDef
                STOP
          End Select
          
+         !!! Update previous time step fields:
+         Call VecCopy(MEF90DefMechCtx%displacement,MEF90DefMechCtx%displacementPreviousStep,ierr);CHKERRQ(ierr)
+         Call VecCopy(MEF90DefMechCtx%damage,MEF90DefMechCtx%damagePreviousStep,ierr);CHKERRQ(ierr)
+
          !!! Solve for displacement and damage
+         Write(IOBuffer,200) step,time(step) 
+         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+         damageMaxChange = 1.0D+20
+         Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
+
+         !!! Update fields
+         Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
+         Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
+         Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
+
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
             Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
-               Write(IOBuffer,200) step,time(step) 
-               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-               damageMaxChange = 1.0D+20
-               Call MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,MEF90DefMechCtx%damage,ierr);CHKERRQ(ierr)
-
-               !!! Update fields
-               Call MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr)
-               Call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement,MEF90DefMechCtx,ierr)
-               Call MEF90DefMechUpdateboundaryDamage(MEF90DefMechCtx%damage,MEF90DefMechCtx,ierr)
-
                Select case(MEF90DefMechGlobalOptions%SolverType)
                   Case(MEF90DefMech_SolverTypeAltMin)
                      Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
@@ -408,43 +417,6 @@ Program vDef
                      Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                      STOP
                End Select
-
-               !!! Compute energies
-               elasticEnergySet  = 0.0_Kr
-               forceWorkSet      = 0.0_Kr
-               surfaceEnergySet  = 0.0_Kr
-               cohesiveEnergySet = 0.0_Kr
-               Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
-               elasticEnergy(step)  = sum(elasticEnergySet)
-               forceWork(step)      = sum(forceWorkSet)
-               surfaceEnergy(step)  = sum(surfaceEnergySet)
-               cohesiveEnergy(step) = sum(cohesiveEnergySet)
-               totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
-               !!!
-               !!! Print and save energies
-               !!!
-               Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-               Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-               Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-               Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
-               Do set = 1, size(setID)
-                  Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
-                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-                  Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
-                  Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
-                  Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
-               End Do
-               Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-               Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-               Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
-               Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
-
-               Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
-               Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
-               Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
             Case (MEF90DefMech_TimeSteppingTypeNULL)
                Continue
             Case default
@@ -453,6 +425,42 @@ Program vDef
                STOP
          End Select
 
+         !!! Compute energies
+         elasticEnergySet  = 0.0_Kr
+         forceWorkSet      = 0.0_Kr
+         surfaceEnergySet  = 0.0_Kr
+         cohesiveEnergySet = 0.0_Kr
+         Call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,elasticEnergySet,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechWork(MEF90DefMechCtx%displacement,MEF90DefMechCtx,forceWorkSet,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechSurfaceEnergy(MEF90DefMechCtx%damage,MEF90DefMechCtx,surfaceEnergySet,ierr);CHKERRQ(ierr)
+         Call MEF90DefMechCohesiveEnergy(MEF90DefMechCtx%displacement,MEF90DefMechCtx,cohesiveEnergySet,ierr);CHKERRQ(ierr)
+         elasticEnergy(step)  = sum(elasticEnergySet)
+         forceWork(step)      = sum(forceWorkSet)
+         surfaceEnergy(step)  = sum(surfaceEnergySet)
+         cohesiveEnergy(step) = sum(cohesiveEnergySet)
+         totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
+         !!!
+         !!! Print and save energies
+         !!!
+         Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+         Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+         Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+         Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
+         Do set = 1, size(setID)
+            Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
+            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+            Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
+            Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
+         End Do
+         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
+         Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
+
+         Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
+         Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
+         Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
          !!!
          !!! Save results and boundary Values
          !!!
@@ -465,8 +473,7 @@ Program vDef
          !!!
          Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
          Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
-         Call PetscViewerFlush(logViewer,ierr);CHKERRQ(ierr)
-         !Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+         Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
 
          If (step == MEF90GlobalOptions%timeNumStep) Then
             EXIT
@@ -527,11 +534,11 @@ Program vDef
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
    Call DMDestroy(Mesh,ierr);CHKERRQ(ierr)
 
-   !!Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90Ctx%prefix)//'.log',logViewer, ierr);CHKERRQ(ierr)
    If (.NOT. MEF90GlobalOptions%dryrun) Then
+      Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
       Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    End If
-   Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)

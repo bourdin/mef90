@@ -1113,6 +1113,41 @@ Contains
    End Subroutine MEF90DefMechRHSDisplacementLoc
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechOperatorDisplacementDampingLoc"
+!!!
+!!!  
+!!!  MEF90DefMechOperatorDisplacementDampingLoc: Contribution of the damping term \int delta (u-u_{n-1}) 
+!!!                                              in an element
+!!!  
+!!!  (c) 2018 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90DefMechOperatorDisplacementDampingLoc(residualLoc,xDof,xpreviousStepDof,delta,elemDisplacement)
+      PetscReal,Dimension(:),Pointer                     :: residualLoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,xpreviousStepDof
+      PetscReal                                          :: delta
+      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+      
+      Type(MEF90_VECT)                                   :: contrElem
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numGauss
+      PetscErrorCode                                     :: ierr
+
+      numDofDisplacement = size(elemDisplacement%BF,1)
+      numGauss = size(elemDisplacement%BF,2)
+      Do iGauss = 1,numGauss
+         contrElem = 0.0_Kr
+         Do iDoF1 = 1,numDofDisplacement
+            contrElem = contrElem + (xDof(iDof1) - xpreviousStepDof(iDoF1)) * elemDisplacement%BF(iDoF1,iGauss) 
+         End Do
+         Do iDoF2 = 1,numDofDisplacement
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * &
+                                 delta * ( contrElem * elemDisplacement%BF(iDoF2,iGauss) )
+         End Do
+      End Do
+      ! All flops logged
+   End Subroutine MEF90DefMechOperatorDisplacementDampingLoc
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacement"
 !!!
 !!!  
@@ -1130,13 +1165,13 @@ Contains
       PetscErrorCode,Intent(OUT)                         :: ierr
    
       Type(DM)                                           :: mesh
-      Type(SectionReal)                                  :: displacementSec,residualSec
+      Type(SectionReal)                                  :: displacementSec,displacementPreviousStepSec,residualSec
       Type(SectionReal)                                  :: plasticStrainSec,temperatureSec,damageSec
       Type(SectionReal)                                  :: cumulatedDissipatedPlasticEnergySec
       Type(SectionReal)                                  :: boundaryDisplacementSec,forceSec,pressureForceSec,CrackPressureSec
       PetscReal,Dimension(:),Pointer                     :: displacementPtr,residualPtr
       PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementPtr
-      PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementDof,displacementDof,damageDof,temperatureDof,residualLoc
+      PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementDof,displacementDof,displacementPreviousStepDof,damageDof,temperatureDof,residualLoc
       PetscReal,Dimension(:),Pointer                     :: pressureForceLoc,CrackPressureLoc
       PetscReal                                          :: pressureForceCell,CrackPressureCell
       PetscReal,Dimension(:),Pointer                     :: forceLoc
@@ -1186,9 +1221,14 @@ Contains
       !!! Get Section and scatter associated with each field
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,displacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,displacement,ierr);CHKERRQ(ierr) 
+      If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,displacementpreviousStepSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(displacementpreviousStepSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,MEF90DefMechCtx%displacementpreviousStep,ierr);CHKERRQ(ierr) 
+      EndIf
+
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,boundaryDisplacementSec,ierr);CHKERRQ(ierr)
-      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(boundaryDisplacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,MEF90DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
+      Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,residualSec,ierr);CHKERRQ(ierr)
 
 
       Call SectionRealSet(residualSec,0.0_Kr,ierr);CHKERRQ(ierr)
@@ -1306,6 +1346,11 @@ Contains
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(residualLoc(ElemDisplacementType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
+            If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+               Allocate(displacementPreviousStepDof(ElemDisplacementType%numDof))
+            Else
+               Nullify(displacementpreviousStepDof)
+            End If
             If (matpropSet%cohesiveStiffness /= 0.0_Kr) Then
                Allocate(boundaryDisplacementDof(ElemDisplacementType%numDof))
             Else
@@ -1363,6 +1408,10 @@ Contains
                residualLoc = 0.0_Kr
                Call localOperatorFunction   (residualLoc,displacementDof,nullPtr,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell),CrackPressureCell)
                Call localRHSFunction        (residualLoc,displacementDof,forceCell,pressureForceCell,matpropSet,elemDisplacement(cell),damageDof,elemDamage(cell),CrackPressureCell)
+               If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+                  Call SectionRealRestrictClosure(displacementpreviousStepSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementpreviousStepDof,ierr);CHKERRQ(ierr)
+                  call MEF90DefMechOperatorDisplacementDampingLoc(residualLoc,displacementDof,displacementpreviousStepDof,globalOptions%dampingCoefficientDisplacement / MEF90DefMechCtx%timeStep,elemDisplacement(cell))
+               End If
                Call SectionRealUpdateClosure(residualSec,MEF90DefMechCtx%DMVect,cellID(cell),residualLoc,ADD_VALUES,ierr);CHKERRQ(iErr)
 
                If (Associated(MEF90DefMechCtx%force)) Then
@@ -1381,6 +1430,9 @@ Contains
             End Do
 
             DeAllocate(displacementDof)
+            If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+               DeAllocate(displacementPreviousStepDof)
+            End If
             If (matpropSet%cohesiveStiffness /= 0.0_Kr) Then
                DeAllocate(boundaryDisplacementDof)
             End If
@@ -1488,6 +1540,9 @@ Contains
       Call SectionRealDestroy(boundaryDisplacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
+      If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+         Call SectionRealDestroy(displacementPreviousStepSec,ierr);CHKERRQ(ierr)
+      End If
 209 Format("    Oper:  alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
    End Subroutine MEF90DefMechOperatorDisplacement
 
@@ -1658,6 +1713,9 @@ Contains
                   
                Aloc = 0.0_Kr
                Call localAssemblyFunction(Aloc,displacementDof,nullPtr,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
+               If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+                  Call MEF90_MassMatrixAssembleLoc(Aloc,globalOptions%dampingCoefficientDisplacement / MEF90DefMechCtx%timeStep,elemDisplacement(cell))
+               End If
                Call DMmeshAssembleMatrix(A,mesh,displacementSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
@@ -1674,6 +1732,7 @@ Contains
             Call MEF90Element_Destroy(elemDamage,ierr)
             DeAllocate(Aloc)    
          End If 
+
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
@@ -3957,6 +4016,44 @@ Contains
    End Subroutine MEF90DefMechOperatorDamageAT2UnilateralPHDLoc
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechOperatorDamageDampingLoc"
+!!!
+!!!  
+!!!  MEF90DefMechOperatorDamageDampingLoc: Contribution of the damping term \int delta (u-u_{n-1}) 
+!!!                                              in an element
+!!!  
+!!!  (c) 2018 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90DefMechOperatorDamageDampingLoc(residualLoc,xDof,xpreviousStepDof,delta,elemDamage)
+      PetscReal,Dimension(:),Pointer                     :: residualLoc
+      PetscReal,Dimension(:),Pointer                     :: xDof,xpreviousStepDof
+      PetscReal                                          :: delta
+      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+      
+      PetscReal                                          :: contrElem
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numGauss
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDofDamage = size(elemDamage%BF,1)
+      numGauss = size(elemDamage%BF,2)
+      Do iGauss = 1,numGauss
+         contrElem = 0.0_Kr
+         Do iDoF1 = 1,numDofDamage
+            contrElem = contrElem + (xDof(iDof1) - xpreviousStepDof(iDoF1)) * elemDamage%BF(iDoF1,iGauss) 
+         End Do
+         Do iDoF2 = 1,numDofDamage
+            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * &
+                                 delta * ( contrElem * elemDamage%BF(iDoF2,iGauss) )
+         End Do
+      End Do
+      flops = 7 * numDofDamage * numGauss
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechOperatorDamageDampingLoc
+
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
 !!!
 !!!  
@@ -3975,12 +4072,12 @@ Contains
    
       Type(DM)                                           :: mesh
       Type(SectionReal)                                  :: displacementSec,residualSec
-      Type(SectionReal)                                  :: plasticStrainSec,temperatureSec,damageSec
+      Type(SectionReal)                                  :: plasticStrainSec,temperatureSec,damageSec,damagePreviousStepSec
       Type(SectionReal)                                  :: boundaryDamageSec,forceSec,pressureForceSec
       Type(SectionReal)                                  :: CrackPressureSec,cumulatedDissipatedPlasticEnergySec
       PetscReal,Dimension(:),Pointer                     :: damagePtr,residualPtr
       PetscReal,Dimension(:),Pointer                     :: boundaryDamagePtr
-      PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof,residualLoc
+      PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,damagePreviousStepDof,temperatureDof,residualLoc
       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc
       PetscReal,Dimension(:),Pointer                     :: CrackPressureLoc,cumulatedDissipatedPlasticEnergyLoc
       Type(MEF90_MATS)                                   :: plasticStrainCell
@@ -3999,6 +4096,7 @@ Contains
       PetscInt                                           :: nVal
       PetscReal,Dimension(:),Pointer                     :: nullPtr
       
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Procedure(MEF90DefMechOperatorLoc),pointer         :: localOperatorFunction
       
       localOperatorFunction =>MEF90DefMechOperatorNull
@@ -4007,8 +4105,14 @@ Contains
       !!! Get Section and scatter associated with each field
 
 
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       Call SectionRealDuplicate(MEF90DefMechCtx%DMVectSec,displacementSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(displacementSec,MEF90DefMechCtx%DMVectScatter,SCATTER_REVERSE,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr) 
+
+      If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+         Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damagepreviousStepSec,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(damagepreviousStepSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%damagepreviousStep,ierr);CHKERRQ(ierr) 
+      EndIf
       
       Call SectionRealDuplicate(MEF90DefMechCtx%DMScalSec,damageSec,ierr);CHKERRQ(ierr)
       Call SectionRealToVec(damageSec,MEF90DefMechCtx%DMScalScatter,SCATTER_REVERSE,damage,ierr);CHKERRQ(ierr) 
@@ -4126,6 +4230,11 @@ Contains
             Allocate(residualLoc(ElemDamageType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
             Allocate(damageDof(ElemDamageType%numDof))
+            If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+               Allocate(damagePreviousStepDof(ElemDamageType%numDof))
+            Else
+               Nullify(damagepreviousStepDof)
+            End If
             If (Associated(MEF90DefMechCtx%temperature)) Then
                Allocate(temperatureDof(ElemDamageType%numDof))
             End If
@@ -4158,6 +4267,10 @@ Contains
                   
                residualLoc = 0.0_Kr
                Call localOperatorFunction   (residualLoc,damageDof,displacementDof,nullPtr,nullPtr,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell),CrackPressureCell)
+               If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+                  Call SectionRealRestrictClosure(damagepreviousStepSec,MEF90DefMechCtx%DMScal,cellID(cell),elemDamageType%numDof,damagepreviousStepDof,ierr);CHKERRQ(ierr)
+                  call MEF90DefMechOperatorDamageDampingLoc(residualLoc,damageDof,damagepreviousStepDof,globalOptions%dampingCoefficientDamage / MEF90DefMechCtx%timeStep,elemDamage(cell))
+               End If
                Call SectionRealUpdateClosure(residualSec,MEF90DefMechCtx%DMScal,cellID(cell),residualLoc,ADD_VALUES,ierr);CHKERRQ(iErr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
@@ -4173,6 +4286,9 @@ Contains
             End Do
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
+            If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+               DeAllocate(damagePreviousStepDof)
+            End If
             If (Associated(MEF90DefMechCtx%temperature)) Then
                DeAllocate(temperatureDof)
             End If
@@ -4261,6 +4377,9 @@ Contains
       End If
 
       Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
+      If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+         Call SectionRealDestroy(damagePreviousStepSec,ierr);CHKERRQ(ierr)
+      End If
       Call SectionRealDestroy(boundaryDamageSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(residualSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
@@ -4307,8 +4426,10 @@ Contains
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
       
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Procedure(MEF90DefMechBilinearFormLoc),pointer     :: localAssemblyFunction
       
+      Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       localAssemblyFunction =>MEF90DefMechBilinearFormNull
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call SNESGetDM(snesDamage,mesh,ierr);CHKERRQ(ierr)
@@ -4442,6 +4563,9 @@ Contains
                   
                Aloc = 0.0_Kr
                Call localAssemblyFunction(Aloc,damageDof,displacementDof,nullPtr,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
+               If (globalOptions%dampingCoefficientDamage * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
+                  Call MEF90_MassMatrixAssembleLoc(Aloc,globalOptions%dampingCoefficientDamage / MEF90DefMechCtx%timeStep,elemDamage(cell))
+               End If
                Call DMmeshAssembleMatrix(A,mesh,damageSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then

@@ -1361,6 +1361,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       Type(Vec)                                          :: residualDamage
       Type(KSP)                                          :: kspDamage
       Type(PC)                                           :: pcDamage
+      SNESLineSearch                                     :: lsDamage
       PetscReal                                          :: atol,rtol,dtol
       PetscInt                                           :: dim
       Type(Vec)                                          :: LB,UB
@@ -1379,7 +1380,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
          Call SNESSetOptionsPrefix(snesDamage,'damage_',ierr);CHKERRQ(ierr)
-         !Call SNESSetType(snesDamage,SNESKSPONLY,ierr);CHKERRQ(ierr)
+         Call SNESGetSNESLineSearch(snesDamage,lsDamage,ierr);CHKERRQ(ierr)
+         Call SNESLineSearchSetType(lsDamage,SNESLINESEARCHL2,ierr);CHKERRQ(ierr)
          
          !!! Set default bounds for the damage field
          Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)

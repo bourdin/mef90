@@ -10,10 +10,12 @@ Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
 
    Private   
    Public :: MEF90_MassMatrixAssembleSet   
+   Public :: MEF90_MassMatrixAssembleLoc   
 
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MassMatrixAssembleSet"
+
    Subroutine MEF90_MassMatrixAssembleSet(M,mesh,cellIS,scaling,elem,elemType,ierr)
       Type(Mat),Intent(IN)                            :: M
       Type(DM),Intent(IN)                             :: mesh
@@ -54,6 +56,36 @@ Contains
       End If 
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
-      
    End Subroutine MEF90_MassMatrixAssembleSet   
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_MassMatrixAssembleLoc"
+!!!
+!!!  
+!!!  MEF90_MassMatrixAssembleLoc:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Subroutine MEF90_MassMatrixAssembleLoc(ALoc,scaling,elem)
+      PetscReal,Dimension(:,:),Pointer                   :: Aloc
+      PetscReal,Intent(IN)                               :: scaling
+      Type(MEF90_ELEMENTTYPE),Intent(IN)                 :: elem
+
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDof,numGauss
+      PetscLogDouble                                     :: flops
+      PetscErrorCode                                     :: ierr
+
+      numDof = size(elem%BF,1)
+      numGauss = size(elem%BF,2)
+      Do iGauss = 1,numGauss
+         Do iDoF1 = 1,numDof
+            Do iDoF2 = 1,numDof
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elem%Gauss_C(iGauss) * (elem%BF(iDoF1,iGauss) * elem%BF(iDoF2,iGauss))
+            End Do
+         End Do
+      End Do
+      !!! All flops accounted for for non-scalar element types
+   End Subroutine MEF90_MassMatrixAssembleLoc
+
 End Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
