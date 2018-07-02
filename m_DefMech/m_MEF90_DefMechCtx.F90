@@ -5,9 +5,10 @@ Module m_MEF90_DefMechCtx_Type
    Implicit none
    
    Type MEF90DefMechCtx_Type
+      PetscReal                              :: analysisTime,timeStep
       !!!  vertex based vec
-      Type(Vec),pointer                      :: displacement
-      Type(Vec),pointer                      :: damage
+      Type(Vec),pointer                      :: displacement,displacementPreviousStep
+      Type(Vec),pointer                      :: damage,damagePreviousStep
       Type(Vec),pointer                      :: boundaryDisplacement
       Type(Vec),pointer                      :: boundaryDamage
       Type(Vec),Pointer                      :: temperature
@@ -82,6 +83,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: plasticStrainATol
       PetscInt                               :: cumulatedDissipatedPlasticEnergyOffset
       PetscReal                              :: InjectedVolumeATol
+      PetscReal                              :: dampingCoefficientDisplacement
+      PetscReal                              :: dampingCoefficientDamage      
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -232,11 +235,10 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_SolverTypeList
 
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0,    &
-                     MEF90DefMech_TimeSteppingTypeQuasiStatic, &
-                     MEF90DefMech_TimeSteppingTypeGradientFlow
+      enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0,     &
+                     MEF90DefMech_TimeSteppingTypeQuasiStatic
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_TimeSteppingTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_TimeSteppingTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
@@ -246,14 +248,17 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_BTTypeList
    
    Enum,bind(c)
-      enumerator  :: MEF90DefMech_damageTypeAT1 = 0,     &
-                     MEF90DefMech_damageTypeAT2,         &
-                     MEF90DefMech_damageTypeLinSoft,     &
-                     MEf90DefMech_damageTypeAT1Elastic,  &
-                     MEf90DefMech_damageTypeAT2Elastic,  &
-                     MEF90DefMech_damageTypeLinSoftElastic
+      enumerator  :: MEF90DefMech_damageTypeAT1 = 0,        &
+                     MEF90DefMech_damageTypeAT2,            &
+                     MEF90DefMech_damageTypeLinSoft,        &
+                     MEF90DefMech_damageTypeKKL,            &
+                     MEf90DefMech_damageTypeAT1Elastic,     &
+                     MEf90DefMech_damageTypeAT2Elastic,     &
+                     MEF90DefMech_damageTypeLinSoftElastic, &
+                     MEF90DefMech_damageTypeKKLElastic
+
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_damageTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(11),protected   :: MEF90DefMech_damageTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_plasticityTypeNone = 0,               &
@@ -313,10 +318,9 @@ Contains
       
       MEF90DefMech_TimeSteppingTypeList(1) = 'Null'
       MEF90DefMech_TimeSteppingTypeList(2) = 'QuasiStatic'
-      MEF90DefMech_TimeSteppingTypeList(3) = 'GradientFlow'
-      MEF90DefMech_TimeSteppingTypeList(4) = 'MEF90DefMech_TimeSteppingType'
-      MEF90DefMech_TimeSteppingTypeList(5) = '_MEF90DefMech_TimeSteppingType'
-      MEF90DefMech_TimeSteppingTypeList(6) = ''
+      MEF90DefMech_TimeSteppingTypeList(3) = 'MEF90DefMech_TimeSteppingType'
+      MEF90DefMech_TimeSteppingTypeList(4) = '_MEF90DefMech_TimeSteppingType'
+      MEF90DefMech_TimeSteppingTypeList(5) = ''
       
       MEF90DefMech_BTTypeList(1) = 'Null'
       MEF90DefMech_BTTypeList(2) = 'Backward'
@@ -325,15 +329,17 @@ Contains
       MEF90DefMech_BTTypeList(5) = '_MEF90DefMech_BTType'
       MEF90DefMech_BTTypeList(6) = ''
       
-      MEF90DefMech_damageTypeList(1) = 'AT1'
-      MEF90DefMech_damageTypeList(2) = 'AT2'
-      MEF90DefMech_damageTypeList(3) = 'LinSoft'
-      MEF90DefMech_damageTypeList(4) = 'AT1Elastic'
-      MEF90DefMech_damageTypeList(5) = 'AT2Elastic'
-      MEF90DefMech_damageTypeList(6) = 'LinSoftElastic'
-      MEF90DefMech_damageTypeList(7) = 'MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(8) = '_MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(9) = ''
+      MEF90DefMech_damageTypeList(1)  = 'AT1'
+      MEF90DefMech_damageTypeList(2)  = 'AT2'
+      MEF90DefMech_damageTypeList(3)  = 'LinSoft'
+      MEF90DefMech_damageTypeList(4)  = 'KKL'
+      MEF90DefMech_damageTypeList(5)  = 'AT1Elastic'
+      MEF90DefMech_damageTypeList(6)  = 'AT2Elastic'
+      MEF90DefMech_damageTypeList(7)  = 'LinSoftElastic'
+      MEF90DefMech_damageTypeList(8)  = 'KKLElastic'
+      MEF90DefMech_damageTypeList(9)  = 'MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(10) = '_MEF90DefMech_damageType'
+      MEF90DefMech_damageTypeList(11) = ''
 
       MEF90DefMech_plasticityTypeList(1) = 'None'
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
@@ -463,13 +469,17 @@ Contains
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 101 Format(A,'-',I4.4,'.enerblk')
 102 Format("# cell set ",I4,"\n")
+      DefMechCtx%analysisTime = 0.0_Kr
+      DefMechCtx%timeStep = 0.0_Kr
       Nullify(DefMechCtx%force)
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
+      Nullify(DefMechCtx%displacementPreviousStep)
       Nullify(DefMechCtx%Damage)
+      Nullify(DefMechCtx%damagePreviousStep)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
       Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
@@ -541,6 +551,11 @@ Contains
       Call PetscObjectSetName(DefMechCtx%Displacement,"Displacement",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%Displacement,0.0_Kr,ierr);CHKERRQ(ierr)
 
+      Allocate(DefMechCtx%displacementPreviousStep,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%displacementPreviousStep,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%displacementPreviousStep,"displacementPreviousStep",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%displacementPreviousStep,0.0_Kr,ierr);CHKERRQ(ierr)
+
       Allocate(DefMechCtx%boundaryDisplacement,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
@@ -581,6 +596,11 @@ Contains
       Call PetscObjectSetName(DefMechCtx%damage,"damage",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%damage,0.0_Kr,ierr);CHKERRQ(ierr)
 
+      Allocate(DefMechCtx%damagePreviousStep,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%damagePreviousStep,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%damagePreviousStep,"damagePreviousStep",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%damagePreviousStep,0.0_Kr,ierr);CHKERRQ(ierr)
+
       Allocate(DefMechCtx%boundaryDamage,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%DMScal,DefMechCtx%boundaryDamage,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%boundaryDamage,"boundaryDamage",ierr);CHKERRQ(ierr)
@@ -610,6 +630,12 @@ Contains
          Nullify(DefMechCtx%Displacement)
       End If   
 
+      If (Associated(DefMechCtx%displacementPreviousStep)) Then 
+         Call VecDestroy(DefMechCtx%displacementPreviousStep,ierr);CHKERRQ(ierr)
+         DeAllocate(DefMechCtx%displacementPreviousStep)
+         Nullify(DefMechCtx%displacementPreviousStep)
+      End If   
+
       If (Associated(DefMechCtx%boundaryDisplacement)) Then 
          Call VecDestroy(DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
          DeAllocate(DefMechCtx%boundaryDisplacement)
@@ -626,6 +652,12 @@ Contains
          Call VecDestroy(DefMechCtx%damage,ierr);CHKERRQ(ierr)
          DeAllocate(DefMechCtx%damage)
          Nullify(DefMechCtx%damage)
+      End If
+   
+      If (Associated(DefMechCtx%damagePreviousStep)) Then 
+         Call VecDestroy(DefMechCtx%damagePreviousStep,ierr);CHKERRQ(ierr)
+         DeAllocate(DefMechCtx%damagePreviousStep)
+         Nullify(DefMechCtx%damagePreviousStep)
       End If
    
       If (Associated(DefMechCtx%force)) Then 
@@ -704,13 +736,18 @@ Contains
       End Do
       DeAllocate(DefMechCtx%setEnergyViewer)
 
-      Nullify(DefMechCtx%force)
+      !!! 
+      !!! We only nullify the Vecs since they may be shared with other contexts. 
+      !!!
+      Nullify(DefMechCtx%force) 
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
+      Nullify(DefMechCtx%displacementPreviousStep)
       Nullify(DefMechCtx%Damage)
+      Nullify(DefMechCtx%damagePreviousStep)
       Nullify(DefMechCtx%temperature)
       Nullify(DefMechCtx%plasticStrain)
       Nullify(DefMechCtx%cumulatedDissipatedPlasticEnergy)
@@ -794,6 +831,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
       
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%InjectedVolumeATol,default%InjectedVolumeATol,'defmech_InjectedVolume_atol','Absolute tolerance on injected volume error',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%dampingCoefficientDisplacement,default%dampingCoefficientDisplacement,'defmech_dampingCoefficient_displacement','Damping coefficient on displacement field (0 for minimization, 1 for semi-implicit gradient flow)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechGlobalOptions%dampingCoefficientDamage,default%dampingCoefficientDamage,'defmech_dampingCoefficient_damage','Damping coefficient on damage field (0 for minimization, 1 for semi-implicit gradient flow)',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions
 
 #undef __FUNCT__

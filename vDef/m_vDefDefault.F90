@@ -50,7 +50,9 @@ module m_vDefDefault
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1,                       & ! cumulatedDissipatedPlasticEnergyOffset
-                                                         1.0e-3                   ) ! InjectedVolumeAtol
+                                                         1.0e-3,                  & ! InjectedVolumeAtol
+                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
+                                                         0.0_Kr)                    ! dampingCoefficientDamage
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
@@ -82,7 +84,10 @@ module m_vDefDefault
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1,                       & ! cumulatedDissipatedPlasticEnergyOffset
-                                                         1.0e-3                   ) ! InjectedVolumeAtol
+                                                         1.0e-3,                  & ! InjectedVolumeAtol
+                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
+                                                         0.0_Kr)                    ! dampingCoefficientDamage
+
    
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden

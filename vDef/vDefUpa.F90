@@ -84,7 +84,7 @@ Program CoupledPlasticityDamage
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90Initialize(ierr)
-   Call PetscPrintf(PETSC_COMM_WORLD," # vDefP: numerical implementation of variational models of Ductile Defect Mechanics\n",ierr);CHKERRQ(ierr)
+   Call PetscPrintf(PETSC_COMM_WORLD," # vDefUpa: numerical implementation of variational models of Ductile Defect Mechanics\n",ierr);CHKERRQ(ierr)
    
    
    !!! Get all MEF90-wide options
