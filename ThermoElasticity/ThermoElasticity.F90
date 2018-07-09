@@ -28,8 +28,8 @@ Program ThermoElasticity
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
@@ -46,7 +46,7 @@ Program ThermoElasticity
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          MEF90Scaling_Linear,     & ! CrackPressureScaling
-                                                         1e-4,                    & ! damage_atol
+                                                         1e-3,                    & ! damage_atol
                                                          1000,                    & ! maxit
                                                          10,                      & ! PCLag
                                                          1.0_Kr,                  & ! SOROmega
@@ -57,7 +57,9 @@ Program ThermoElasticity
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1,                       & ! cumulatedDissipatedPlasticEnergyOffset
-                                                         1.0e-3                   ) ! InjectedVolumeAtol
+                                                         1.0e-3,                  & ! InjectedVolumeAtol
+                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
+                                                         0.0_Kr)                    ! dampingCoefficientDamage
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
@@ -89,9 +91,9 @@ Program ThermoElasticity
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1,                       & ! cumulatedDissipatedPlasticEnergyOffset
-                                                         1.0e-3                   ) ! InjectedVolumeAtol
-
-
+                                                         1.0e-3,                  & ! InjectedVolumeAtol
+                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
+                                                         0.0_Kr)                    ! dampingCoefficientDamage
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden

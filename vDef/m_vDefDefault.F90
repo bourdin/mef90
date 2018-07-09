@@ -88,7 +88,6 @@ module m_vDefDefault
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr)                    ! dampingCoefficientDamage
 
-   
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                      & ! elemTypeShortIDDispl will be overriden
                                                          -1,                                      & ! elemTypeShortIDDamage will be overriden
