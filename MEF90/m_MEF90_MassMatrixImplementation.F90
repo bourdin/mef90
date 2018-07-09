@@ -72,16 +72,15 @@ Contains
       PetscReal,Intent(IN)                               :: scaling
       Type(MEF90_ELEMENTTYPE),Intent(IN)                 :: elem
 
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDof,numGauss
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDof
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
       numDof = size(elem%BF,1)
-      numGauss = size(elem%BF,2)
-      Do iGauss = 1,numGauss
+      Do iGauss = 1,size(elem%Gauss_C)
          Do iDoF1 = 1,numDof
             Do iDoF2 = 1,numDof
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elem%Gauss_C(iGauss) * (elem%BF(iDoF1,iGauss) * elem%BF(iDoF2,iGauss))
+               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + scaling * elem%Gauss_C(iGauss) * (elem%BF(iDoF1,iGauss) * elem%BF(iDoF2,iGauss)) 
             End Do
          End Do
       End Do

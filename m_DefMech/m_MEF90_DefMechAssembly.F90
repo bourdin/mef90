@@ -132,7 +132,7 @@ Contains
 
       numDofDisplacement = size(elemDisplacement%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      Aloc = 0.0_Kr
+      !Aloc = 0.0_Kr
       Do iGauss = 1,numGauss
          Do iDoF1 = 1,numDofDisplacement
             sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss) 
@@ -175,7 +175,7 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -224,7 +224,7 @@ Contains
       numDofDisplacement = size(elemDisplacement%BF,1)
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       k = matprop%CoefficientLinSoft
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
@@ -275,7 +275,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
@@ -340,7 +340,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
@@ -401,7 +401,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
          inelasticStrainTrace = 0.0_Kr
          If (Associated(temperatureDof)) Then
@@ -465,7 +465,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      ALoc = 0.0_Kr
+      !ALoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -597,7 +597,7 @@ Contains
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDisplacement%BF,2)
 
-      residualLoc = 0.0_Kr
+      !residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
          stiffness = 0.0_Kr
          Do iDoF1 = 1,numDofDamage
@@ -1141,10 +1141,10 @@ Contains
          End Do
          Do iDoF2 = 1,numDofDisplacement
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDisplacement%Gauss_C(iGauss) * &
-                                 delta * ( contrElem * elemDisplacement%BF(iDoF2,iGauss) )
+                                 delta * ( contrElem .DotP. elemDisplacement%BF(iDoF2,iGauss) )
          End Do
       End Do
-      ! All flops logged
+      !All flops logged
    End Subroutine MEF90DefMechOperatorDisplacementDampingLoc
 
 #undef __FUNCT__
@@ -1406,12 +1406,12 @@ Contains
                End If
                   
                residualLoc = 0.0_Kr
-               Call localOperatorFunction   (residualLoc,displacementDof,nullPtr,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell),CrackPressureCell)
-               Call localRHSFunction        (residualLoc,displacementDof,forceCell,pressureForceCell,matpropSet,elemDisplacement(cell),damageDof,elemDamage(cell),CrackPressureCell)
                If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
                   Call SectionRealRestrictClosure(displacementpreviousStepSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementpreviousStepDof,ierr);CHKERRQ(ierr)
                   call MEF90DefMechOperatorDisplacementDampingLoc(residualLoc,displacementDof,displacementpreviousStepDof,globalOptions%dampingCoefficientDisplacement / MEF90DefMechCtx%timeStep,elemDisplacement(cell))
                End If
+               Call localOperatorFunction   (residualLoc,displacementDof,nullPtr,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell),CrackPressureCell)
+               Call localRHSFunction        (residualLoc,displacementDof,forceCell,pressureForceCell,matpropSet,elemDisplacement(cell),damageDof,elemDamage(cell),CrackPressureCell)
                Call SectionRealUpdateClosure(residualSec,MEF90DefMechCtx%DMVect,cellID(cell),residualLoc,ADD_VALUES,ierr);CHKERRQ(iErr)
 
                If (Associated(MEF90DefMechCtx%force)) Then
@@ -1591,7 +1591,7 @@ Contains
       Procedure(MEF90DefMechBilinearFormLoc),pointer     :: localAssemblyFunction
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Type(Vec)                                          :: damageOld
-      PetscReal                                          :: damageMin,damageMax,damageMaxChange
+      PetscReal                                          :: damageMin,damageMax,damageMaxChange,cohesiveStiffness
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
     
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -1712,10 +1712,10 @@ Contains
                End If
                   
                Aloc = 0.0_Kr
-               Call localAssemblyFunction(Aloc,displacementDof,nullPtr,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
                If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
                   Call MEF90_MassMatrixAssembleLoc(Aloc,globalOptions%dampingCoefficientDisplacement / MEF90DefMechCtx%timeStep,elemDisplacement(cell))
                End If
+               Call localAssemblyFunction(Aloc,displacementDof,nullPtr,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
                Call DMmeshAssembleMatrix(A,mesh,displacementSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
 
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
@@ -1723,6 +1723,7 @@ Contains
                   Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
                End If
             End Do
+
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
             If (Associated(MEF90DefMechCtx%temperature)) Then
