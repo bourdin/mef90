@@ -169,6 +169,8 @@ The algorithm is based on the decreasing total energy using alternate minimizati
 
 Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contributions such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
 
+\textcolor{red}{Unilateral contact models are being reimplemented and may not work at the moment}.
+
 \subsection{Amor-Marigo-Maurini model (Hydrostatic deviatoric)}
 
 Properties of such model can be found in \cite{Amor-Marigo-Maurini-2009}.
@@ -325,7 +327,23 @@ cs0001:
 \label{tab:PETSctoYAML}
 \end{table}
 
+YAML parsing is fragile.  Most erros in the YAML file will lead to a deadloop in the parser. A simple script \verb+$\MEF90_DIR/Tests/YAMLValidator+ can be used to test-parse a yaml file:
+\begin{boxedverbatim}
+YAMLValidator -options_file_yaml <yaml file>
+\end{boxedverbatim}
+If the parsing is successsful, the petsc options version of the yaml file will be displayed.
+
+The most common errors leading to an unparseable YAML file are
+\begin{compactenum}
+    \item tabulation signs,
+    \item windows line ending,
+    \item inconsistent indentation.
+\end{compactenum}
+
 \section{General options}
+
+vDef can handle input and result files in two different ways: through the \verb+-prefix+ option or the \verb+-geometry+ \verb+-reult+ option pair.
+
 \begin{boxedverbatim}
 -prefix : File name prefix
 -verbose <1>: Verbosity: level 
@@ -335,8 +353,9 @@ cs0001:
 \end{boxedverbatim}
 Notes: 
 \begin{compactenum}
-\item File names are not user configurable. \vDef will look for an input mesh is named \verb+<prefix>.gen+, results will be saved as \verb+<prefix>_out.gen+ or \verb+<prefix>-\%4i.gen+ if output in split files exodus files is chosen), energies will be saved in  \verb+<prefix>.ener+ for the entire domain and \verb+<prefix>-\%4i.enerblk+ for each cell set.
-\item If \verb+ -file_format EXOSplit+ is selected (not recommended), each core will save its own part of the geometry in a separate file. Continuity at the subdomain interfaces is not preserved (no ghost points or interface matching informations are saved).
+    \item  If \verb+-prefix <prefix>+ is specified, vDef will look for an input mesh is named \verb+<prefix>.gen+, results will be saved as \verb+<prefix>_out.gen+ or \verb+<prefix>-\%4i.gen+ if output in split files exodus files is chosen), energies will be saved in  \verb+<prefix>_out.ener+ for the entire domain and \verb+<prefix>_out-\%4i.enerblk+ for each cell set.
+    \item If \verb+-geometry <geom.gen> -result <res.gen>+ is given, vDef will look for an input mesh is named \verb+<geom.gen>+, results will be saved as \verb+<result.gen>, energies will be saved in  \verb+<result>.ener+ for the entire domain and \verb+<result>-\%4i.enerblk+ for each cell set.
+    \item If \verb+ -file_format EXOSplit+ is selected (not recommended), each core will save its own part of the geometry in a separate file. Continuity at the subdomain interfaces is not preserved (no ghost points or interface matching informations are saved).
 \end{compactenum}
 
 \subsection{Ordering of tensors}
@@ -464,7 +483,7 @@ damage and the plasticity
 \subsection{Heat transfer options}
 \subsubsection{Global options}
 \small{\begin{boxedverbatim}
--heatxfer_mode <SteadyState>:   Type of heat transfer computation 
+-heatxfer_timestepping_type <SteadyState>:   Type of heat transfer computation 
                                 choose one of null SteadyState Transient
 -heatxfer_addNullSpace <FALSE>: Add null space to SNES 
 -temp_Offset <1>:               Position of temperature field in EXO file 
@@ -505,8 +524,17 @@ Notes:
 \subsection{Gradient damage options and unilateral contact}
 \subsubsection{Global options}
 \small{\begin{boxedverbatim}
--DefMech_mode <QuasiStatic>: Type of defect mechanics computation. 
-                             Choose one of Null QuasiStatic GradientFlow
+-defmechech_timestepping_type <QuasiStatic>: Type of defect mechanics computation. 
+                             Choose one of Null QuasiStatic 
+-defmech_dampingcoefficient_damage <0.>: damping coeffifient on damage
+-defmech_dampingcoefficient_displacement <0.>: damping coeffifient on displacement
+-defmech_pclag <5>: How often the preconditioner is recomputed 
+-defmech_damage_atol <0.0001>: Absolute tolerance on damage error 
+-defmech_maxit <1000>: Maximum number of alternate minimizations for damage 
+-defmech_irrevThres <0>: Threshold above which irreversibility is enforced 
+                        (0 for monotonicity, .99 for equality) 
+-defmech_solver_type <AltMin>: global solution strategy. 
+                               one of AltMin, quasiNewton1, quasiNewton2
 -disp_addNullSpace <TRUE>: Add null space to SNES 
 -displacement_Offset <3>: Position of displacement field in EXO file 
 -damage_Offset <2>: Position of damage field in EXO file 
@@ -526,10 +554,6 @@ Notes:
                                  Choose one of constant linear file null
 -pressureForce_Offset <3>: Position of pressure force field in EXO file 
 
--defmech_damage_atol <0.0001>: Absolute tolerance on damage error 
--defmech_maxit <1000>: Maximum number of alternate minimizations for damage 
--defmech_irrevThres <0>: Threshold above which irreversibility is enforced 
-                        (0 for monotonicity, .99 for equality) 
 
 -BT_Type <Null>: Backtracking type.
                  Choose one of Null Backward Forward
@@ -651,7 +675,7 @@ It is well known that crack propagation in a standard shaped double cantilever b
 
 
 \section{Surfing}
-We consider a rectangular domain occupying a domain $\Omega = [\L/2,L/2] \times [-H/2,H2]$ with a preexisting crack $[-L/2,x_c] \times \{0\}$.
+We consider a rectangular domain occupying a domain $\Omega = [L/2,L/2] \times [-H/2,H2]$ with a preexisting crack $[-L/2,x_c] \times \{0\}$.
 A \emph{surfing boundary condition} can be used to estimate effective fracture properties of heterogeneous materials~\cite{Hossein-Hsueh-EtAl-2014a} or as a verification numerical simulation for a brittle fracture simulator. 
 It is a translating plane-stress Mode-I asymptotic far field boundary displacement is applied on the boundary of the domain. 
 On $\partial \Omega$, and given a rate of loading $V$, one the boundary displacement $u(x,y,t) = U(x-Vt,y)$,  is given by (see~\cite{Zehnder-2012a})
