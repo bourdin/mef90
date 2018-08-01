@@ -217,7 +217,6 @@ contains
          Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
          Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
          Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ + Trace(xMatS) )
-      
       else
          !!! If plane strain
          Strain      = 0.0_Kr
@@ -236,13 +235,11 @@ contains
          Stress%YY = lambda*(Trace(Strain)) + 2*mu*(Strain%YY-xMatS%YY)
          Stress%XY = 2*mu*(Strain%XY-xMatS%XY)
          Stress%ZZ = lambda*(Trace(Strain)) + 2*mu*(Strain%ZZ+ Trace(xMatS))
-
       endif
       
       if ( myctx_ptr%isNoPlCoupling .eqv. .true.) then
          f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
          g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - myctx_ptr%YieldStress
-
       else  
          f(1) = ( PlasticStrainFlow .DotP. PlasticStrainFlow )
          g(1) = StiffnessA * sqrt( (3.0/2.0)*( deviatoricPart(Stress) .dotP. deviatoricPart(Stress) ) ) - ( (1.0_Kr-myctx_ptr%residualYieldStress)*StiffnessB + myctx_ptr%residualYieldStress )*myctx_ptr%YieldStress

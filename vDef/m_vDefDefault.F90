@@ -17,7 +17,7 @@ module m_vDefDefault
                                                          1.0_Kr,                        & ! timeMax
                                                          11,                            & ! timeNumStep
                                                          0,                             & ! timeSkip
-                                                         1.0_Kr,                        & ! frequency
+                                                         1,                             & ! numCycle
                                                          MEF90FileFormat_EXOSingle)       ! fileFormat
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
