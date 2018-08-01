@@ -27,7 +27,7 @@ Module m_MEF90_Ctx_Type
       PetscReal                                       :: timeMax
       PetscInt                                        :: timeNumStep
       PetscInt                                        :: timeSkip
-      PetscReal                                       :: timeFrequency
+      PetscReal                                       :: timeNumCycle
       PetscEnum                                       :: fileFormat
    End Type MEF90CtxGlobalOptions_Type
 End Module m_MEF90_Ctx_Type
@@ -70,7 +70,7 @@ Module m_MEF90_Ctx
    
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
-                     MEF90TimeInterpolation_cycling,     &
+                     MEF90TimeInterpolation_Vcycle,     &
                      MEF90TimeInterpolation_quadratic,   &
                      MEF90TimeInterpolation_exo
    End Enum
@@ -127,7 +127,7 @@ Contains
       MEF90FileFormatList(5) = '' 
       
       MEF90TimeInterpolationList(1) = 'linear'
-      MEF90TimeInterpolationList(2) = 'cycling'
+      MEF90TimeInterpolationList(2) = 'Vcycle'
       MEF90TimeInterpolationList(3) = 'quadratic'
       MEF90TimeInterpolationList(4) = 'exo'
       MEF90TimeInterpolationList(5) = 'MEF90TimeInterpolation'
@@ -177,7 +177,7 @@ Contains
       Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeFrequency,default%timeFrequency,'time_frequency','Time: frequency   (1+t) cos(2 k Pi t)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
@@ -291,6 +291,7 @@ Contains
       Character(len=1)                                :: dummyS
       Integer                                         :: exoerr
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
+      Integer                                         :: j,CycleLength 
 
       i = 0 ! silence gfortran silly warning
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -304,14 +305,19 @@ Contains
          t = [ ( GlobalOptions%timeMin + Real(i) * dt , i = 0,GlobalOptions%timeNumStep-1 ) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
-      Case (MEF90TimeInterpolation_cycling)
+      Case (MEF90TimeInterpolation_Vcycle)
+         cycleLength = GlobalOptions%timeNumStep / GlobalOptions%timeNumCycle
          Allocate(t(GlobalOptions%timeNumStep))
          dt = 0.0_Kr
          If (GlobalOptions%timeNumStep > 1) Then
-            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / Real(GlobalOptions%timeNumStep-1.0_Kr)
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) * GlobalOptions%timeNumCycle / Real((GlobalOptions%timeNumStep-1))
          End If
-         t = [ ( (1.0_Kr + (GlobalOptions%timeMin + Real(i) * dt )) * (1.0_Kr - cos( 2.0_Kr*PETSC_PI*GlobalOptions%timeFrequency * (GlobalOptions%timeMin + Real(i) * dt ))), i = 0,GlobalOptions%timeNumStep-1) ]
-         t(GlobalOptions%timeNumStep) = ( (1.0_Kr + (GlobalOptions%timeMax ))*( 1.0_Kr - cos(  2.0_Kr*PETSC_PI*GlobalOptions%timeFrequency * GlobalOptions%timeMax ) ))
+         Do i = 1, GlobalOptions%timeNumCycle
+            Do j = 1, cycleLength 
+               t((i-1)*cycleLength+j) = min( GlobalOptions%timeMin + 2.0_Kr * Real(j-1) * dt, 2.0_Kr * GlobalOptions%timeMax - GlobalOptions%timeMin - 2.0_Kr * Real(j-1) * dt )
+            End Do
+         End Do
+         t(cycleLength*GlobalOptions%timeNumCycle+1:GlobalOptions%timeNumStep) = t(cycleLength*GlobalOptions%timeNumCycle)
 
       Case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation

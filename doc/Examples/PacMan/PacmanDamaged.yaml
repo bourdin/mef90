@@ -27,7 +27,7 @@ cs0001:
         type: AT1
     plasticity:
         type: NONE
-cs0020:
+cs0030:
     displacementBC: no,no,no
     damageBC: yes
     boundaryDamage: 1.
