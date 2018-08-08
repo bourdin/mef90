@@ -147,17 +147,19 @@ Program HeatXfer
    !!! Actual computations / time stepping
    !!!
    Do step = 1,MEF90GlobalOptions%timeNumStep
-      Write(IOBuffer,100) step,time(step)
-      Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
 
       Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
       Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
+         Write(IOBuffer,100) step,time(step)
+         Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
          !!! Update fields
          Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
          !!! Solve SNES
          Call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr);
          Call SNESSolve(snesTemp,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
       Case (MEF90HeatXFer_timeSteppingTypeTransient)
+         Write(IOBuffer,200) step,time(step)
+         Call PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
          If (step > 1) Then
             !!! Update fields
             Call MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr)
@@ -196,6 +198,7 @@ Program HeatXfer
       Call MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
+200 Format("Solving transient step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
    !!! Clean up and exit nicely

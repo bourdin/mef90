@@ -296,7 +296,6 @@ Contains
       PetscReal,Dimension(:),Pointer                  :: energy,work
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Type(Vec)                                       :: fluxVec,externalTemperatureVec
       Type(SectionReal)                               :: temperatureSec,fluxSec,externalTemperatureSec
       Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
       PetscInt,dimension(:),Pointer                   :: setID,SetIdx
