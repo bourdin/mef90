@@ -30,6 +30,7 @@ Contains
 !!!  
 !!!  (c) 2014-18 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90Initialize(ierr)
       PetscInt,Intent(OUT)                               :: ierr
 
@@ -72,7 +73,7 @@ Contains
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# or ""FreeBSD"") license. See the LICENSE file in the root of the software distribution\n\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      
+
       !!! Individual modules runtime initialization should be called here
       Call MEF90MPIInitialize_Private(ierr);CHKERRQ(ierr)
       Call MEF90MaterialsInitialize_Private(ierr);CHKERRQ(ierr)
@@ -88,6 +89,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90Finalize(ierr)
       PetscInt,Intent(OUT)                   :: ierr
       

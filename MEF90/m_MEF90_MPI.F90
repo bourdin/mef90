@@ -34,10 +34,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MPIInitialize_Private"
    Subroutine MEF90MPIInitialize_Private(ierr)
-      PetscErrorCode,Intent(OUT)       :: ierr
-      PetscInt,Dimension(:),Pointer    :: BlkCounts,Offsets,DataTypes
-      PetscInt                         :: NumBlk
-      
+      PetscErrorCode,Intent(OUT)            :: ierr
+      PetscInt,Dimension(:),Pointer         :: BlkCounts,Offsets,DataTypes
+      PetscInt                              :: NumBlk
+#ifdef PETSC_USE_DEBUG
+      Character(len=MEF90_MXSTRLEN)         :: IOBuffer
+      Character(len=MPI_MAX_PROCESSOR_NAME) :: procName
+      Integer                               :: procNameLength
+#endif      
       Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
       Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
 
@@ -87,6 +91,14 @@ Contains
       
       Call MPI_COMM_RANK(MPI_COMM_WORLD,MEF90_MyRank,ierr)
       Call MPI_COMM_SIZE(MPI_COMM_WORLD,MEF90_NumProcs,ierr)
+
+#ifdef PETSC_USE_DEBUG
+      call MPI_Get_processor_name(procName,procNameLength,ierr)
+      Write(IOBuffer,100) MEF90_MyRank,MEF90_NumProcs,trim(procName)
+      Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+      Call PetscSynchronizedFLush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
+#endif
+100 format(' # Task ',I6,'/',I6,' running on processor ',A,'\n')
    End Subroutine MEF90MPIInitialize_Private
    
 !!!
