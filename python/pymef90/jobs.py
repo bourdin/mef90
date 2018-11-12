@@ -106,16 +106,17 @@ def PrepareJob(Geometry,Parameters,debug=False):
     ### Find the meshes location
     ### Try  absolute path then submission directory, then script directory
     ### 
-    for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
-        if debug:
-            print 'searching for meshdir in %s'%root
-        if os.path.isdir(os.path.join(root,Parameters['meshdir'])):
-            Parameters['meshdir'] = os.path.join(root,Parameters['meshdir'])
-            break
+    if 'meshdir' in Parameters.keys():
+        for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
+            if debug:
+                print 'searching for meshdir in %s'%root
+            if os.path.isdir(os.path.join(root,Parameters['meshdir'])):
+                Parameters['meshdir'] = os.path.join(root,Parameters['meshdir'])
+                break
 
-    if not os.path.isdir(Parameters['meshdir']):
-        print 'meshdir %s does not exist, giving up'%Parameters['meshdir']
-        sys.exit(-1)
+        if not os.path.isdir(Parameters['meshdir']):
+            print 'meshdir %s does not exist, giving up'%Parameters['meshdir']
+            sys.exit(-1)
 
         
     Parameters['MEF90_DIR'] = os.getenv("MEF90_DIR")
