@@ -18,7 +18,7 @@ RUN useradd -m -U mef90
 RUN chown -R mef90:mef90 /opt/HPC
 
 # Install gmsh
-RUN curl http://gmsh.info/bin/Linux/gmsh-4.0.4-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
+RUN curl http://gmsh.info/bin/Linux/gmsh-3.0.6-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
 
 USER mef90
 
