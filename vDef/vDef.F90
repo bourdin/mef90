@@ -357,7 +357,6 @@ Program vDef
                            Write(IOBuffer,400) "damage field",snesDamageConvergedReason
                            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         End If
-
                         !!! Over relaxation of the damage variable
                         If (AltMinIter > 1) Then
                            If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then

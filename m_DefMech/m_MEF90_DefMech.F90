@@ -1022,18 +1022,18 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       End If
 
 
-      If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
          If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
             !Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
             !Call DMGlobalToLocalBegin(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             !Call DMGlobalToLocalEnd(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
             !Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-            !                       MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,ierr);CHKERRQ(ierr)
+            !                       MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
             !Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
             Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,ierr);CHKERRQ(ierr)
+                                   MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
          Else
-            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedDissipatedPlasticEnergy field not associated, not saving. Use -cumulatedDissipatedPlasticEnergy_offset 0 \n",ierr);CHKERRQ(ierr)
+            Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedDissipatedPlasticEnergy field not associated, not saving. Use -cumulatedPlasticDissipationOffset 0 \n",ierr);CHKERRQ(ierr)
          End If
       End If
 
@@ -1188,7 +1188,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
                      MEF90DefMechGlobalOptions%CrackPressureOffset,&
                      MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
                      MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1,&
-                     MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset)
+                     MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)
       Allocate(nameC(numfield))
       nameC = "empty"
       If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
@@ -1236,8 +1236,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          End If
       End If
 
-      If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
-         nameC(MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset)       = "Cumulated_Plastic_Energy"
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
+         nameC(MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)       = "Cumulated_Plastic_Dissipation"
       End If
       
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)

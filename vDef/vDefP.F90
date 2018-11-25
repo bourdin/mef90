@@ -261,10 +261,10 @@ Program CoupledPlasticityDamage
          Call VecCopy(MEF90DefMechCtx%damage,damageOld,ierr);CHKERRQ(ierr)
          Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
 
-         If (MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset > 0) Then
+         If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
             Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,ierr);CHKERRQ(ierr)
+                                         MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
             Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
             Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
             Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)

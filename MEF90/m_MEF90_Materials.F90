@@ -684,6 +684,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw2DXMatS2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(MatS2D), Intent(IN)                     :: X
@@ -714,6 +715,7 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Function MEF90HookesLaw3DXMatS3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(MatS3D), Intent(IN)                     :: X
@@ -781,8 +783,8 @@ Contains
 !!!
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
-      Type(Mat3D), Intent(IN)                     :: X
-      Type(Mat3D)                                 :: MEF90HookesLaw3DXMat3D
+      Type(Mat3D), Intent(IN)                      :: X
+      Type(Mat3D)                                  :: MEF90HookesLaw3DXMat3D
       
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2

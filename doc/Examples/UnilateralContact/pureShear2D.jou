@@ -3,7 +3,7 @@ reset
 #{H=1}
 #{lc=1}
 #{epsc=.001}
-#{h=.01}
+#{h=.02}
 #{hstr = tostring(h)}
 
 tridelaunay point placement gq

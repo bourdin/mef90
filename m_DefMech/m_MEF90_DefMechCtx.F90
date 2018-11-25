@@ -65,6 +65,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: CrackPressureOffset
       PetscInt                               :: plasticStrainOffset
       PetscInt                               :: stressOffset
+      PetscInt                               :: cumulatedPlasticDissipationOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscInt                               :: boundaryDisplacementScaling
       PetscInt                               :: boundaryDamageScaling
@@ -81,7 +82,6 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: BTScope
       PetscReal                              :: BTTol
       PetscReal                              :: plasticStrainATol
-      PetscInt                               :: cumulatedDissipatedPlasticEnergyOffset
       PetscReal                              :: InjectedVolumeATol
       PetscReal                              :: dampingCoefficientDisplacement
       PetscReal                              :: dampingCoefficientDamage      
@@ -295,6 +295,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxInitialize_Private(ierr)
       PetscErrorCode,Intent(OUT)                         :: ierr
    
@@ -376,6 +377,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxCreate(DefMechCtx,Mesh,MEF90Ctx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
       Type(DM),target,Intent(IN)                               :: Mesh
@@ -495,6 +497,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxSetSections(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -542,6 +545,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxCreateVectors(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -620,6 +624,7 @@ Contains
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxDestroyVectors(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -711,6 +716,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxDestroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -782,6 +788,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
       PetscBag                                                 :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
@@ -802,7 +809,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDamageOffset,default%boundaryDamageOffset,'boundaryDamage_Offset','Position of boundary damage field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%stressOffset,default%stressOffset,'stress_Offset','Position of stress field in EXO file',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%temperatureOffset,default%temperatureOffset,'temperature_Offset','Position of temperature field in EXO file',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of the plastic Strain field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%plasticStrainOffset,default%plasticStrainOffset,'plasticStrain_Offset','Position of the plastic strain field in EXO file',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedPlasticDissipationOffset,default%cumulatedPlasticDissipationOffset,'cumulatedPlasticDissipation_Offset','Position of the Cumulated Plastic Plastic Dissipation field in EXO file',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)
@@ -828,7 +836,6 @@ Contains
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%BTTol,default%BTTol,'BT_Tol','Backtracking relative tolerance',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%plasticStrainATol,default%plasticStrainATol,'defmech_plasticstrain_atol','Absolute tolerance on plastic error',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedDissipatedPlasticEnergyOffset,default%cumulatedDissipatedPlasticEnergyOffset,'cumulatedDissipatedPlasticEnergy_Offset','Position of the Cumulated Plastic Energy Dissipated field in EXO file',ierr);CHKERRQ(ierr)
       
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%InjectedVolumeATol,default%InjectedVolumeATol,'defmech_InjectedVolume_atol','Absolute tolerance on injected volume error',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechGlobalOptions%dampingCoefficientDisplacement,default%dampingCoefficientDisplacement,'defmech_dampingCoefficient_displacement','Damping coefficient on displacement field (0 for minimization, 1 for semi-implicit gradient flow)',ierr);CHKERRQ(ierr)
@@ -843,6 +850,7 @@ Contains
 !!!  
 !!!  (c) 2012-18 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
@@ -871,7 +879,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%CrackVolumeControlled,default%CrackVolumeControlled,'CrackVolumeControlled','Crack Pressure controlled by the crack volume in this block (Y/N)',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%WorkControlled,default%WorkControlled,'WorkControlled','Force magnitude controlled by its workin this block (Y/N)',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%WorkControlled,default%WorkControlled,'WorkControlled','Force magnitude controlled by its work in this block (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions
 
@@ -910,6 +918,7 @@ Contains
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
+
    Subroutine MEF90DefMechCtxSetFromOptions(DefMechCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,    &
                                               defaultVertexSetOptions,ierr)
