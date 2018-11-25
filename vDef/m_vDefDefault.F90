@@ -34,6 +34,7 @@ module m_vDefDefault
                                                          0,                       & ! CrackPressureOffset
                                                          0,                       & ! plasticStrainOffset
                                                          6,                       & ! StressOffset
+                                                         1,                       & ! cumulatedPlasticDissipationOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
@@ -49,7 +50,6 @@ module m_vDefDefault
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
                                                          1.0e-3,                  & ! InjectedVolumeAtol
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr)                    ! dampingCoefficientDamage
@@ -68,6 +68,7 @@ module m_vDefDefault
                                                          0,                       & ! CrackPressureOffset
                                                          0,                       & ! plasticStrainOffset
                                                          7,                       & ! StressOffset
+                                                         1,                       & ! cumulatedPlasticDissipationOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
@@ -83,7 +84,6 @@ module m_vDefDefault
                                                          -1,                      & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
-                                                         1,                       & ! cumulatedDissipatedPlasticEnergyOffset
                                                          1.0e-3,                  & ! InjectedVolumeAtol
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr)                    ! dampingCoefficientDamage
