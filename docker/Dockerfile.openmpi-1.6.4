@@ -37,7 +37,7 @@ ENV PYTHONPATH      "${MEF90_DIR}/python:${PYTHONPATH}"
 # Download dependencies
 RUN curl http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p7.tar.gz | tar zxvf -
 RUN hg clone https://bitbucket.org/bourdin/mef90-sieve mef90
-RUN hg clone https://bitbucket.org/bourdin/mef90-tutorial-files
+#RUN hg clone https://bitbucket.org/bourdin/mef90-tutorial-files
 RUN git clone https://bourdin@bitbucket.org/bourdin/snlp.git
 
 #### Build PETSc
