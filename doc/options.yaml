@@ -1,0 +1,154 @@
+# GLOBAL OPTIONS
+verbose:  <1> #Verbosity level 
+dryrun:   <FALSE> #Dry run in order to validate the options file. 
+                  # Use in combination with -h to print help or 
+                  #-verbose 1 to check input deck 
+file:
+	format:  <EXOSingle> #file format. (choose one of)  EXOSingle EXOSplit
+time:
+  interpolation: <linear> #interpolation type (choose one of)  linear Vcycle quadratic exo
+  min: <0> # first time
+  max: <1> # last time
+  numstep: <11>: #number of time steps 
+  skip: <0> #number of time steps skipped
+  numCycle: <1> #number of cycles for cyclic loads
+
+# DEFECT MECHANICS GLOBAL OPTIONS
+DefMech:
+  TimeStepping:
+    Type: <QuasiStatic> #Type of defect mechanics Time steping (choose one of)  Null QuasiStatic
+  solver:
+    Type: <AltMin> #Type of defect mechanics solver (choose one of)  AltMin QuasiNewton1 QuasiNewton2
+  disp:
+    addNullSpace: <TRUE> #handle rigid motion automatically  
+  displacement:
+    Offset: <3> #Position of displacement field in EXO file 
+  damage:
+    Offset: <2> #Position of damage field in EXO file 
+  boundaryDamage:
+    Offset: <0> #Position of boundary damage field in EXO file 
+  stress:
+    Offset: <6> #Position of stress field in EXO file 
+  temperature:
+    Offset: <1> #Position of temperature field in EXO file 
+  plasticStrain:
+    Offset: <0> #Position of the plastic strain field in EXO file 
+  cumulatedPlasticDissipation:
+    Offset: <1> #Position of the Cumulated Plastic Plastic Dissipation field in EXO file 
+  boundaryDisplacement:
+    scaling: <linear> #Boundary displacement scaling (choose one of)  constant linear file null
+    Offset: <3> #Position of boundary displacement field in EXO file 
+  boundaryDamage:
+    scaling: <constant> #Boundary damage scaling (choose one of)  constant linear file null
+  force:
+    scaling: <linear> #Force scaling (choose one of)  constant linear file null
+    Offset: <4> #Position of force field in EXO file 
+  pressureForce:
+    scaling: <linear> #Pressure force scaling (choose one of)  constant linear file null
+    Offset: <3> #Position of pressure force field in EXO file 
+  CrackPressure:
+    scaling: <linear> #Crack Pressure scaling (choose one of)  constant linear file null
+    Offset: <0> #Position of Crack Pressure field in EXO file 
+  defmech:
+    damage:
+      atol: <0.001> #Absolute tolerance on damage error 
+    maxit: <1000> #Maximum number of alternate minimizations for damage 
+    pclag: <10> #Interval at which the PC is recomputed during alternate minimization 
+    irrevThres: <0> #Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality) 
+    SOR:
+      Omega:  <1> #Alterate Minimization over relaxation factor (>0 for limited, <0 for projected) 
+    plasticstrain:
+      atol: <0.0001> #Absolute tolerance on plastic strain
+    InjectedVolume:
+      atol: <0.001> #Absolute tolerance on injected volume error 
+    dampingCoefficient:
+      displacement: <0> #Damping coefficient on displacement field (0 for minimization, 1 for semi-implicit gradient flow) 
+      damage: <0> #Damping coefficient on damage field (0 for minimization, 1 for semi-implicit gradient flow) 
+  BT:
+    Type: <Null> #Backtracking type (choose one of)  Null Backward Forward
+    Interval: <-1> #Interval at which Backtracking is run in inner loop (0 for outer loop) 
+    Scope: <-1> #Backtracking scope (0 for unlimited) 
+    Tol: <0.01>: #Backtracking relative tolerance 
+
+# HEAT TRANSFER GLOBAL OPTIONS:
+heatxfer:
+  timeStepping:
+    type: <SteadyState> #Type of heat transfer computation (choose one of)  null SteadyState Transient
+  addNullSpace <FALSE> #Add null space to SNES 
+  initialTemp: <0> #[K] (T): Initial Temperature 
+  boundaryTemp:
+    scaling: <linear> #Boundary temperature scaling (choose one of)  constant linear file null
+    Offset: <0> #Position of boundary temperature field in EXO file 
+  externalTemp:
+    scaling: <linear> #External Temperature scaling (choose one of)  constant linear file null
+    Offset <2> #Position of external temperature field in EXO file 
+  flux:
+    scaling: <linear> #Heat flux scaling (choose one of)  constant linear file null
+    Offset: #Position of heat flux field in EXO file 
+
+# CELL SET DEFECT MECHANICS OPTIONS: 
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Force: <0 1 2 > #[N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force 
+  pressureForce: <0> #[N.m^(-2) / N.m^(-1)] (p): boundary pressureforce 
+  CrackPressure: <0> #[unit-less] internal crack pressure 
+  damage:
+    type: <AT1> #Type of damage law (choose one of)  AT1 AT2 LinSoft KKL AT1Elastic AT2Elastic LinSoftElastic KKLElastic
+  plasticity:
+    type: <None> #Type of plasticity law (choose one of)  None Tresca VonMises VonMisesPlaneTheory CapModel DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson
+  unilateralContact:
+    type: <None> #Type of handling of unilateral contact (choose one of)  None HydrostaticDeviatoric BrittleDuctile PositiveHydrostatic HybridHydrostaticDeviatoric Deviatoric PrincipalStrains Masonry
+  DisplacementBC: <0 1 2 > #Displacement has Dirichlet boundary Condition (Y/N, yes/no, true/false, 0,1) 
+  boundaryDisplacement: <0 1 2 > #[m] (U): Displacement boundary value 
+  DamageBC: <FALSE> #Damage has Dirichlet boundary Condition (Y/N) 
+  boundaryDamage: <0> #[unit-less] (alpha): Damage boundary value 
+  CrackVolumeControlled: <FALSE> #Crack Pressure controlled by the crack volume in this block (Y/N) 
+  WorkControlled: <FALSE> #Force magnitude controlled by its work in this block (Y/N) 
+
+# CELL SET HEAT TRANSFER OPTIONS:
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Flux: <0> #[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux 
+  SurfaceThermalConductivity: <0> #[J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity 
+  externalTemp: <0> #Reference temperature T [K] 
+  TempBC: <FALSE> #Temperature has Dirichlet boundary Condition (Y/N) 
+  boundaryTemp: <0> #Temperature boundary value 
+
+# CELL SET MATERIAL PROPERTIES
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Name: <MEF90Mathium2D> #unused  
+  Density: <1> #[kg.m^(-2)] (rho) Density 
+  FractureToughness: <1> #[N.m^(-1)] (G_c) Fracture toughness 
+  SpecificHeat: <1> #[J.kg^(-1).K^(-1)] (Cp) Specific heat 
+  ThermalConductivity: <1 2 3 > #[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity 
+  LinearThermalExpansion: <1 2 3 > #[K^(-1)] (alpha) Linear thermal expansion matrix 
+  hookeslaw:
+    type: <Isotropic> #Type of Hooke's law (choose one of)  Full Isotropic
+  hookeslaw:
+    YoungsModulus: <1> #[N.m^(-2)] (E) Young's Modulus 
+    PoissonRatio: <0.3> #[unit-less] (nu) Poisson Modulus 
+    planeStress: <FALSE> #Use plane stress elasticity (2D only)
+    internalLength: <1> #[m] (l) Internal Length 
+    CoefficientLinSoft: <0> #[] (k) Linear softening coefficient for LinSoft 
+    yieldStress: <1> #[N.m^(-2)] (sigma_y) stress threshold for plasticity 
+    residualyieldStress: <0> #[unit-less] (eta) residual yield stress 
+    DuctileCouplingPower: <2> #[] power of the coupling function b(\alpha) between the damage and the plasticity 
+    CoefficientCapModel0: <-0.3> #C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0 
+    CoefficientCapModel1: <0.4> #C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0 
+    CoefficientCapModel2: <1> #C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0 
+    CoefficientCapModelD: <1> #CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0 
+    CoefficientDruckerPrager: <-0.5> #k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0 
+    CoeffF: <0.3> #[unit-less] (F) coefficient F in the Hill yield criterion 
+    CoeffG: <0.3> #[unit-less] (G) coefficient G in the Hill yield criterion 
+    CoeffH: <0.3> #[unit-less] (H) coefficient H in the Hill yield criterion 
+    CoeffM: <1> #[unit-less] (M) coefficient M in the Hill yield criterion 
+    CoeffN: <1> #[unit-less] (N) coefficient N in the Hill yield criterion 
+    CoeffL: <1> #[unit-less] (L) coefficient L in the Hill yield criterion 
+    YieldTau0: <1> #[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion 
+  residualYieldTau0: <0> #[unit-less] residual stress threshold in the Hill yield criterion 
+  phi1: <0> #[radians] Bunge-Euler angle in the Hill yield criterion 
+  phi2: <0> #[radians] Bunge-Euler angle in the Hill yield criterion 
+  Phi: <0> #[radians] Bunge-Euler angle in the Hill yield criterion 
+  delta: <0.0001> #[unit-less] residual in the definition of the porosity, Gurson and Green criteria 
+  cohesiveStiffness: <0> #[N.m^(-4)] (k) cohesive stiffness in Winkler-type models 
+  residualStiffness: <1e-09> #[unit-less] (eta) residual stiffness 
+  isLinearIsotropicHardening: <FALSE> #[bool] Plasticity with Linear Isotropic Hardening 
+  isNoPlCoupling: <FALSE> #[bool] Coupling between damage and plastic dissipation 
