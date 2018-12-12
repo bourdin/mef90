@@ -34,6 +34,9 @@
 
 
 \def\vDef{{\texttt{vDef}} }
+\def\vDefBT{{\texttt{vDefBT}} }
+\def\vDefP{{\texttt{vDefP}} }
+\def\vDefUPA{{\texttt{vDefUpa}} }
 \DeclareMathOperator*{\argmin}{argmin}
 \let\div\relax
 \DeclareMathOperator*{\div}{div}
@@ -60,9 +63,14 @@
 This brief manual lists the main command line options for \vDef with default values are shown between angled brackets \verb+<>+. Note that auto--generated documentation can always be printed using the \texttt{-h} and  \texttt{-verbose 1} flags, possibly combined with \texttt{-dryrun}.
 
 
-\vDef uses the exodusII file format for its input and output. XDMF / HDF5--based export for very large data files is a planned feature but not available yet. Geometric entities corresponding to different materials, models or boundary conditions can be encoded using exodus ``element blocks'' (cell sets in \vDef lingo) and ``node sets'' (referred to as vertex sets). Note that exodusII ``side sets'' are not supported. Instead, \vDef uses cell sets of co-dimension 1.
+\vDef uses the exodusII file format for its input and output. Geometric entities corresponding to different materials, models or boundary conditions can be encoded using exodus ``element blocks'' (cell sets in \vDef lingo) and ``node sets'' (referred to as vertex sets). Note that exodusII ``side sets'' are not supported. Instead, \vDef uses cell sets of co-dimension 1, \emph{i.e.} ``bar'' elements in 2D and ``triangle'' elements in 3d.
 
-
+There are several variants of \vDef:
+\begin{itemize}
+    \item \vDef focusses on quasi-static fracture.
+    \item \vDefBT implements muktiple variants of the \emph{backtracking} algorithm.
+    \item \vDefP and \vDefUPA implement two different strategies for coupling damage and plasticity. \vDefP also has some support for work controlled and crack volume-controled evolution.
+\end{itemize}
 \newpage
 \chapter{Models and algorithms}
 \section{Heat transfer}
@@ -77,7 +85,7 @@ This brief manual lists the main command line options for \vDef with default val
 Where $f$ and $g$ denotes respectively the body and boundary fluxes, $T_b$ is a prescribed boundary temperature, $T_e$ is a constant surrounding temperature, and $T_0$ is a constant initial temperature. $\rho$ is the material's density, $c_p$ its specific heat, $K$ is the thermal conductivity, a symmetric tensor, and $H$ is the surface thermal conductivity. For steady state problems, time derivatives are ignored and the initial temperature is used as the initial guess of the iterative solver.
 
 
-\section{Gradient damage models}
+\section{Variational Phase-Field models of fracture}
 \label{sec:GradientDamageModels}
 The damage models implemented in \vDef are regularization of the energy functional devised in the the variational approach to fracture~\cite{Ambrosio-Tortorelli-1990,Ambrosio-Tortorelli-1992,Giacomini-2005,Sicsic-Marigo-2013a}. These problems are formulated as rate independent unilateral minimization problems of a total energy functional
 \begin{equation}
@@ -96,7 +104,7 @@ Three variants are implemented ($\eta$ being a small \emph{residual stiffness} p
 \item ``AT2'': $a(\alpha) = \eta + (1-\alpha)^2$, $w(\alpha) = \alpha^2$, and $c_w = 1/2$. Critical stress,  $\sigma_c^{1D} = (3/16) \sqrt{3EG_c/\ell}$
 \item ``LSk'': $a(\alpha) =  \eta + \frac{1-w(\alpha)}{1+(k-1)w(\alpha)}$, $w(\alpha) = 1- (1-\alpha)^2$, and $c_w =\pi/4$.  Critical stress, $\sigma_c^{1D} = \sqrt{2G_cE/k\pi\ell}$
 \end{itemize}
-For ``AT1-AT2'' comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}. The ``LSk'' model property is having a linear softening slop controlled by a material constant $k$. Notice that this model is not convex in $\alpha$ when no elastic energy is involves, but it remains convex if $\mathtt{A}(e(u)-p):(e(u)-p) >> G_c/(4cw\ell)$.
+For ``AT1-AT2'' comparison of the properties, refer to~\cite{Pham-Amor-EtAl-2011a}. The ``LSk'' model property is having a linear softening slop controlled by a material constant $k$. Notice that this model is not convex in $\alpha$ when no elastic energy is involved, but it remains convex if $\mathtt{A}(e(u)-p):(e(u)-p) \gg G_c/(4cw\ell)$.
 
 In the time discrete formulation, the displacement and damage field at time step $t_i$ are given by
 \begin{equation}
@@ -110,12 +118,12 @@ $$
 Note that with these notations, enforcing irreversibility through inequality constraints as proposed in~\cite{Giacomini-2005,Amor-Marigo-EtAl-2008a,Pham-Amor-EtAl-2011a} corresponds to $\eta = 0$ whereas equality constraints under a threshold as originally proposed in~\cite{Bourdin-Francfort-EtAl-2000a} corresponds to $\eta$ close to 1.
 
 
-\section{Plasticity coupled with gradient-damage model}
+\section{Plasticity coupled with damage model}
 
-The reader is kindly invited to read the appendix A to see the perfect plasticity in the variational formulation.
 
-The closed convex set (not necessary differentiable) of admissible stress is defined by the yield surface, where most of well known yield surface are:
 
+In associated perfect plasticity models, the set of admissible stresses is a closed convex set whose boundary is the yield surface. 
+Classical yield surfaces implemented in \vDef include
 \begin{equation}
 \begin{split}
 \text{Von Mises},\quad& \quad \sqrt{\frac{3}{2}\sigma_D:\sigma_D} = ||\sigma_D|| \leq \sigma_y  \\
@@ -126,55 +134,77 @@ The closed convex set (not necessary differentiable) of admissible stress is def
 %\text{General Notation},& \sum_{i}^n  C_{Dk_i} ||\sigma_D||^2 + C_D||\sigma_D|| + C_T \text{tr} (\sigma) \leq \sigma_y_i
 \end{split}
 \end{equation}
+Remarks: Von-Mises and Drucker-Prager are special cases of the Cap Model, and the  Tresca model is a special case of the Mohr-Coulomb model.
 
+Appendix~\ref{sec:Plasticity} gives a short description of the construction and implementation of perfect plasticity in variational form.
+This approach can be extended to couple plasticity and damage model presented previously as described in~\cite{Alessi-2013a,Alessi-Marigo-EtAl-2017a,Tanne-2017a}. 
+Let $b(\alpha)$ be a given function representing how the elastic domain evolves with the damage variable. 
+The total energy functional accounting for plastic dissipation is
+\begin{equation}
+    \label{eq:totalEnergyPlasticity}
+    \mathcal{E}(u,\alpha,p) = \int_{\Omega} \left[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\varsigma \in K}  \{ \varsigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \left( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \right) \right]\,x
+\end{equation}
 
-Remarks: Von-Mises, Durcker-Prager are particular cases of Cap-Model similar with Tresca for Mohr-Coulomb.
-
-Both perfect plasticity and gradient damage model are expressed in a variational formulation and have been presented previously, now let's coupled plasticity with damage using the function $b(\alpha)$ such as,
-
-$$ \mathcal{E}(u,\alpha,p) = \int_{\Omega} \Big[  \frac{1}{2} a(\alpha) \mathtt{A} (e(u)-p):(e(u)-p) + b(\alpha) \int_0^t \sup_{\varsigma \in K}  \{ \varsigma : \dot{p} \} \mathrm{d}\tau + \frac{k}{4c_w} \Big( \frac{w(\alpha)}{\ell} + \ell |\nabla \alpha |^2 \Big) \Big] \mathrm{d}x$$
-
-
-The algorithm is based on the decreasing total energy using alternate minimization with respect to $(u,\alpha,p)$. The minimization with respect to $(u,p)$ is respectively solving a linear problem for $u$, and for $p$, making projection onto the admissible yield surface on each element. Let plug this $(u,p)$ minimization into the $\alpha$ minimization, the algorithm takes the form Algo \ref{algo:Ductile_Algo}.
+Two solution strategies are implemented:
+In \vDefP, minimization with respect to $\alpha$ and joint minimization in the $(u,p)$ are alternated until convergence (see Algorithm~\ref{algo:Ductile_Algo}).
+In \vDefUPA, successive minimizations with respect to $u$, $p$, and $\alpha$ are performed until convergence.
 
 
 \begin{algorithm}
     \caption{Damage coupled with plasticity algorithm}
     \label{algo:Ductile_Algo}
-        \begin{algorithmic}[1]
-        \State{Set $\alpha_{0}=0,p_0=0$.}
+    \begin{algorithmic}[1]
+    \State{Set $\alpha_{0}=0,p_0=0$.}
 
-        \For{$i=0$ to $N$}
-            \While{$\left| \alpha^j_i-\alpha^{j-1}_i\right|_{L^\infty} \le \delta_{\alpha}$}
-                \State{$\alpha^{j+1}_{i} \longleftarrow\underset{\alpha_{i-1}\leq\alpha\leq1}{\argmin} \; \mathcal{E}(u_i^j,\alpha,p_i^j)$}
-                \While{$\left| p^{j+1,k}_i-p^{j+1,k-1}_i\right|_{L^\infty} \le \delta_{p}$}
+    \For{$i=0$ to $N$}
+        \While{$\left| \alpha^{j+1}_i-\alpha^{j}_i\right|_{L^\infty} \le \delta_{\alpha}$}
+            \State{$\alpha^{j+1}_{i} \longleftarrow\underset{\alpha_{i-1}\leq\alpha\leq1}{\argmin} \; \mathcal{E}(u_i^j,\alpha,p_i^j)$}
+            \While{$\left| p^{j+1,k}_i-p^{j+1,k-1}_i\right|_{L^\infty} \le \delta_{p}$}
                 \State{$u^{j+1,k+1}_{i} \longleftarrow\underset{u\in\mathcal{K}_{A}}{\argmin} \; \frac{1}{2}a(\alpha^{j+1}_{i})\mathtt{A}(e(u)-p^{j+1,k}):(e(u)-p^{j+1,k})$}
                 \State{$p^{j+1,k+1}_{i} \longleftarrow\underset{ a(\alpha^{j+1}_{i}) \mathtt{A} (e(u^{j+1,k+1}_i)-p_{i-1}) \in b(\alpha^{j+1}_{i}) K}{\underset{p}\argmin}  \mathtt{A} (p-p_{i-1}) :(p-p_{i-1}) $} 
-            \State{$k\longleftarrow k+1$}
+                \State{$k\longleftarrow k+1$}
             \EndWhile
             \State{$p_i^{j+1}\longleftarrow p^{j+1,k}_{i}$}
             \State{$u_i^{j+1}\longleftarrow u^{j+1,k}_{i}$}
             \State{$j\longleftarrow j+1$}
-    \EndWhile
+        \EndWhile
     \State{$p_i\longleftarrow p^{j}_{i}$}
     \State{$u_i\longleftarrow u^{j}_{i}$}
     \State{$\alpha_i\longleftarrow \alpha^{j}_{i}$}
-\EndFor
-
-        \end{algorithmic}
+    \EndFor
+    \end{algorithmic}
 \end{algorithm}
 
 
+\begin{algorithm}
+    \caption{Damage coupled with plasticity algorithm}
+    \label{algo:vDefUPA}
+    \begin{algorithmic}[1]
+    \State{Set $\alpha_{0}=0,p_0=0$.}
+
+    \For{$i=0$ to $N$}
+        \While{$\left| \alpha^{j+1}_i-\alpha^{j}_i\right|_{L^\infty} \le \delta_{\alpha}$ and $\left| p^{j+1}_i-p^{j}_i\right|_{L^\infty} \le \delta_{p}$}
+            \State{$u^{j+1}_{i} \longleftarrow\underset{u\in\mathcal{K}_{A}}{\argmin} \; \frac{1}{2}a(\alpha^{j+1}_{i})\mathtt{A}(e(u)-p^{j}):(e(u)-p^{j})$}
+            \State{$\alpha^{j+1}_{i} \longleftarrow\underset{\alpha_{i-1}\leq\alpha\leq1}{\argmin} \; \mathcal{E}(u_i^{j+1},\alpha,p_i^j)$}
+            \State{$p^{j+1}_{i} \longleftarrow\underset{ a(\alpha^{j+1}_{i}) \mathtt{A} (e(u^{j+1}_i)-p_{i-1}) \in b(\alpha^{j+1}_{i}) K}{\underset{p}\argmin}  \mathtt{A} (p-p_{i-1}) :(p-p_{i-1}) $} 
+            \State{$j \longleftarrow j+1$}
+        \EndWhile
+    \State{$p_i\longleftarrow p^{j+1}_{i}$}
+    \State{$u_i\longleftarrow u^{j+1}_{i}$}
+    \State{$\alpha_i\longleftarrow \alpha^{j+1}_{i}$}
+    \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
 \section{Unilateral-Contact}
+The phase-field energy~\eqref{eq:defEll} does not distinguish traction from compression, so that compressive interpenetrating cracks are possible.
+Dealing with interpenetration or unilateral contact in variational phase-field models of fracture is still challenging. 
+\vDef implements several approaches.
+For a good survey of models of unilateral contact, refer to~\cite{Li-2016a}.
 
-Unilateral contact is basically a way to distinguish material response in traction-compression and torsion. The idea is to split the softening function $a(\alpha)$ that act on the total elastic energy of the material on different elastic energy contributions such as a traction, compression and torsion part. Those type of models have been only developed on phase field gradient damage without any plasticity.
-
-\textcolor{red}{Unilateral contact models are being reimplemented and may not work at the moment}.
 
 \subsection{Amor-Marigo-Maurini model (Hydrostatic deviatoric)}
-
-Properties of such model can be found in \cite{Amor-Marigo-Maurini-2009}.
-The elastic energy takes the form,
+In this approach, originally introduced in~\cite{Amor-Marigo-Maurini-2009}, the elastic energy is modified in such a way that only deviatoric and positive hydrostatic strains  are allowed along crack surfaces:
 $$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr ^+({e(u)}) + \mu e_D(u):e_D(u) \Big) $$ where $K=\frac{(\lambda+2\mu)}{3}$ in 3D and $K=\frac{(\lambda+2\mu)}{2}$ in 2D. The positive trace is:
 
 \begin{equation}
@@ -185,51 +215,52 @@ $$W^{free}(u,\alpha)= \frac{K}{2} \tr^-({e(u)}) + a(\alpha) \Big( \frac{K}{2}\tr
     \end{array}
 \right.
 \end{equation}
-
 and $\tr ^-({e(u)}) = \tr({e(u)}) - \tr ^+({e(u)})$
 
+This is the best understood approach, and was recently shown to converge to a variational model of fracture with a constrain on interpenetration (see~\cite{Chambolle-Conti-EtAl-2017a}).
 
-\subsection{Masonry}
+%\subsection{Masonry}
+%Masonry model deal in the principal deformation basis, some numerical results can be found in \cite{Freddi-Carfagni-2011}.
 
-Masonry model deal in the principal deformation basis, some numerical results can be found in \cite{Freddi-Carfagni-2011}.
+%$$W^{free}(u,\alpha)= \frac{1}{2} a(\alpha) \mathtt{A} e^+(u):e^+(u) + \frac{1}{2} \mathtt{A} \big( e(u)-e^+(u) \big): \big( e(u)-e^+(u) \big) $$
 
-$$W^{free}(u,\alpha)= \frac{1}{2} a(\alpha) \mathtt{A} e^+(u):e^+(u) + \frac{1}{2} \mathtt{A} \big( e(u)-e^+(u) \big): \big( e(u)-e^+(u) \big) $$
+%$e(u)=e^+(u) + e^-(u)$ , where $e$ is the principal strain. $e^+$ is the projection in the positive principal basis such as minimize the energy norm $||*||_{\mathtt{A}}=\mathtt{A}*:*$,
 
-$e(u)=e^+(u) + e^-(u)$ , where $e$ is the principal strain. $e^+$ is the projection in the positive principal basis such as minimize the energy norm $||*||_{\mathtt{A}}=\mathtt{A}*:*$,
+%$$|| e^+(u) - e(u) ||_\mathtt{A} = \min_{\varepsilon(u) \in S} || \varepsilon(u) - e(u)||_\mathtt{A} =\min_{\varepsilon \in S} \mathtt{A} (\varepsilon(u)-e(u)):(\varepsilon(u)-e(u))$$
+$S$ 
+%is a cone convex set.
+%Because the projection is not differentiable we do alternate projection until convergence of the displacement.
 
-$$|| e^+(u) - e(u) ||_\mathtt{A} = \min_{\varepsilon(u) \in S} || \varepsilon(u) - e(u)||_\mathtt{A} =\min_{\varepsilon \in S} \mathtt{A} (\varepsilon(u)-e(u)):(\varepsilon(u)-e(u))$$
+\section{Volume controlled evolutions}
+%Body and surface forces, as well as some pressure forces along the crack faces can be modeled in \vDefP.
+%This is not a straightforward process, which is described below:
 
-$S$ is a cone convex set.
-Because the projection is not differentiable we do alternate projection until convergence of the displacement.
+%\subsection{Volume controlled}
+Pressure forces along fracture faces are critical to hydraulic fracturing applications.
 
-\section{Volume controlled and work controlled }
-
-\subsection{Volume controlled}
-
-The evaluation of a crack volume in a domain is :
-
-$$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s$$
-
-It can be proved using the $\Gamma$-convergence results that,
-$V_{\ell} \underset{\Gamma}{\longrightarrow} V$ , when $\ell \rightarrow 0$ where $V$ is:
-$$ V = \int_{\Gamma} \jump{u} .n\, \mathrm{d}\mathcal{H}^{n-1}$$
+The total aperture of the cracks is
+$$ V = \int_{\Gamma} \jump{u} .n\, \mathrm{d}\mathcal{H}^{n-1},$$
+and can be approximated by
+$$ V_{\ell}(\alpha,u)=\int_{\Omega} \alpha \div{(u)} \mathrm{d}x= - \int_{\Omega} \nabla u . \nabla \alpha + \int_{\partial \Omega} \frac{\partial \alpha}{\partial n} u \mathrm{d}s.$$
 
 
-For sake of simplicity let $\frac{\partial \alpha}{\partial n} = 0 $ on $\partial \Omega$. Let assume that a constant pressure is applied on the crack, the external work due to the crack pressure is:
+For sake of simplicity let $\frac{\partial \alpha}{\partial n} = 0 $ on $\partial \Omega$ and assume that a constant pressure is applied on the crack.
 
-$$ W^{crack pres force} =  pV = - p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x$$ 
-
-By plugging this crack pressure work into the total energy it turns out,
-
-\begin{equation}
+Accounting for the work of the pressure force along the cracks
+$$ W^{crack pres force} =  pV = - p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,$$ 
+the total energy~\eqref{eq:defEll}becomes
+\begin{multline}
 	\label{eq:defEll}
-	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u))\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
-\end{equation}
+	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u))\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx \\
+    + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
+\end{multline}
 
-
-By letting “p" the crack pressure as a loading parameter the problem becomes not well posed, it is similar to the stress controlled body. The idea is to control the incompressible volume of fluid injected into cracks. If there is no \textit{in-situ} stresses applied on $\Omega$, the problem remains linear. The technique is to find the pressure $p_t$ where at the equilibrium is associated to the target volume $V_t$. For that, let applied any positive pressure for example $\bar{p}$ then calculate the volume of crack pressure for this $\bar{p}$ denoted $\bar{V}$. Knowing the volume target the pressure to applied is :
-
-$$ p_t=\frac{V_t \bar{p}}{\bar{V}}$$
+In general, crack propagation driven by the crack pressure $p$ is unstable in the sense of Griffith.
+Instead, it is common to consider an \emph{injected volume driven} evolution, assuming that all cracks are filled with an incompressible fluid at a constant pressure $p$
+Given a target volume $V$ and for a fixed $\alpha$, the equilibrium pressure can be evaluated by solving for mechanical equilibrium for an arbitrary crack pressure $\bar{p}$.
+Let $\bar{V}$ be the fracture volume associated to $\bar{p}$.
+then, the pressure required to achieve a total fracture aperture is
+$$ p_t=\frac{V_t \bar{p}}{\bar{V}}.$$
 
 %\subsection{Work controlled}
 %
@@ -342,7 +373,7 @@ The most common errors leading to an unparseable YAML file are
 
 \section{General options}
 
-vDef can handle input and result files in two different ways: through the \verb+-prefix+ option or the \verb+-geometry+ \verb+-reult+ option pair.
+vDef can handle input and result files in two different ways: through the \verb+-prefix+ option or the \verb+-geometry+ \verb+-result+ option pair.
 
 \begin{boxedverbatim}
 -prefix : File name prefix
@@ -880,7 +911,7 @@ The brazilian test is a simple and famous test used for rocks and concrete to de
 \renewcommand{\thechapter}{A}
 \chapter{Appendix}
 \section{Plasticity}
-
+\label{sec:Plasticity}
 Let's start to set up the classical variational model for perfect plasticity in the framework of Generalized Standard materials without any damage.
 
 Let $(u,p)$ two state variables defined respectively as the displacement vector and the plastic strain symmetric tensor. The Helmholtz free energy (recoverable internal energy) associated to $(u,p)$ is, 

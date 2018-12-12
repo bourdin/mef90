@@ -35,8 +35,18 @@ def GMSHImporter(filename):
     if not f.readline() == '$MeshFormat\n':     #checking if mesh file
         print "Unknown file format"
         return -1
-    for n in range(3):                          #skipping to the coordinates
-        f.readline()
+    buffer = f.readline()
+    if not buffer.lstrip().startswith('2.2'):
+        print "gmsh2exo.py can only read msh2 format, but got format {0}.\nRegenerate your mesh with the option -format msh2".format(buffer.rstrip())
+        return -1
+    if not f.readline() == '$EndMeshFormat\n':
+        print "Something weird is happening here at EndMeshFormat"
+        return -1
+
+    #checking to see if we are at the correct location in mesh file again
+    if not f.readline() == '$Nodes\n':
+        print "Something weird is happening here at Nodes"
+        return -1
     nVert = int(f.readline())                   #number of vertices
 
     #creating and filling list of coordinates from mesh file
@@ -239,8 +249,11 @@ def main():
             else:
                 print '\n\t{0} was NOT generated from {1}\n'.format(args.exoFile,args.gmeshFile)
                 return -1
-
-    (coord,vertexSet,cellSet) = GMSHImporter(args.gmeshFile)
+    try:
+        (coord,vertexSet,cellSet) = GMSHImporter(args.gmeshFile)
+    except TypeError:
+        print "Cannot read {0} is it in gmsh 2 format?".format(args.gmeshFile)
+        return -1
     exoWriter(coord,vertexSet,cellSet,args.exoFile)
 
 if __name__ == '__main__':
