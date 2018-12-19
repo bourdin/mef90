@@ -1,4 +1,4 @@
-\documentclass[10pt,oneside]{memoir}
+\documentclass[10pt,oneside]{report}
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
@@ -8,6 +8,7 @@
 \usepackage{empheq}
 \usepackage{color}
 \usepackage{url}
+\usepackage{fancyvrb}
 %\usepackage[notref,notcite]{showkeys}
 \usepackage[pdftex,
             pdfauthor={Blaise Bourdin},
@@ -31,6 +32,7 @@
 \usepackage{verbatim}
 \usepackage{algorithm,algpseudocode}
 \usepackage{siunitx}
+\usepackage{minted}
 
 
 \def\vDef{{\texttt{vDef}} }
@@ -49,7 +51,6 @@
 \author{Blaise Bourdin}
 \date{\today}
 
-\chapterstyle{section}
 \begin{document}
 \bibliographystyle{alpha}
 \maketitle
@@ -117,11 +118,8 @@ $$
 $$
 Note that with these notations, enforcing irreversibility through inequality constraints as proposed in~\cite{Giacomini-2005,Amor-Marigo-EtAl-2008a,Pham-Amor-EtAl-2011a} corresponds to $\eta = 0$ whereas equality constraints under a threshold as originally proposed in~\cite{Bourdin-Francfort-EtAl-2000a} corresponds to $\eta$ close to 1.
 
-
 \section{Plasticity coupled with damage model}
-
-
-
+\label{sec:plasticity}
 In associated perfect plasticity models, the set of admissible stresses is a closed convex set whose boundary is the yield surface. 
 Classical yield surfaces implemented in \vDef include
 \begin{equation}
@@ -196,12 +194,16 @@ In \vDefUPA, successive minimizations with respect to $u$, $p$, and $\alpha$ are
     \end{algorithmic}
 \end{algorithm}
 
+Plasticity options are set in the Plasticity and material properties of each cell set
+
 \section{Unilateral-Contact}
+\label{sec:UnilateralContact}
 The phase-field energy~\eqref{eq:defEll} does not distinguish traction from compression, so that compressive interpenetrating cracks are possible.
 Dealing with interpenetration or unilateral contact in variational phase-field models of fracture is still challenging. 
 \vDef implements several approaches.
 For a good survey of models of unilateral contact, refer to~\cite{Li-2016a}.
 
+Unilateral contact options are set in the \verb+UnilateralContact+ section of each cell set
 
 \subsection{Amor-Marigo-Maurini model (Hydrostatic deviatoric)}
 In this approach, originally introduced in~\cite{Amor-Marigo-Maurini-2009}, the elastic energy is modified in such a way that only deviatoric and positive hydrostatic strains  are allowed along crack surfaces:
@@ -250,7 +252,7 @@ Accounting for the work of the pressure force along the cracks
 $$ W^{crack pres force} =  pV = - p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,$$ 
 the total energy~\eqref{eq:defEll}becomes
 \begin{multline}
-	\label{eq:defEll}
+	\label{eq:defEllPressure}
 	\mathcal{E}_\ell(u,\alpha) := \int_\Omega a(\alpha) W(\e(u))\, dx - \int_\Omega f\cdot u \, dx - \int_{\partial_n \Omega} \tau \cdot u \, ds + \frac{G_c}{4c_w} \int_\Omega \frac{w(\alpha)}{\ell} + \ell|\nabla \alpha|^2\, dx \\
     + p \int_{\Omega} \nabla u . \nabla \alpha \mathrm{d}x,
 \end{multline}
@@ -313,16 +315,16 @@ In the deep backtracking, the exploration loop (lines 5-10) is moved into the al
 %\item Work constrained evolution, multiple load sets, variational plasticity, thermodynamically consistent evolutions are not implemented in this version of vDef.
 \end{itemize}
 
-\chapter{Command line options}
+
+\chapter{Command line options and YAML configuration file}
 
 
 \section{Options strings vs. YAML files}
-Command line options can also be passed to vDef through an option file, using the \verb+-options_file+ command line flag. Machine readable \href{http://www.yaml.org}{YAML} files can be used with the flag \verb+-options_file_yaml+. YAML parsing is fragile, incomplete, and somewhat experimental (alias and links are not implemented, and error reporting is lacking), but much easier to parse. PETSc  uses  underscores as field delimiters in its options handling and keeps track of hierarchy of options through prefixes, Whereas YAML relies on indented lists. The correspondence between standard options and YAML file straightforward, with a few caveats: array arguments must be given as space delimited in PETSc options but comma delimited without spaces in YAML and boolean arguments can be given the value \verb+0,false,no+ or \verb+1,true,yes+ in PETSc but only \verb+0,no+ or \verb+1,yes+ are acceptable in a YAML option file. An example of translation from PETSC--like to YAML options is given in Table~\ref{tab:PETSctoYAML}.
+Command line options can also be passed to vDef through an option file, using the \verb+-options_file+ command line flag. Machine readable \href{http://www.yaml.org}{YAML} files can be used with the flag \verb+-options_file_yaml+. YAML parsing is fragile, incomplete, and somewhat experimental (alias and links are not implemented, and error reporting is lacking), but much easier to parse. PETSc  uses  underscores as field delimiters in its options handling and keeps track of hierarchy of options through prefixes, Whereas YAML relies on indented lists. The correspondence between standard options and YAML file straightforward, with a few caveats: array arguments must be given as space delimited in PETSc options but comma delimited without spaces in YAML and boolean arguments can be given the value \verb+0,false,no+ or \verb+1,true,yes+ in PETSc but only \verb+0,no+ or \verb+1,yes+ are acceptable in a YAML option file. An example of translation from PETSC--like to YAML options is given below:.
 
-\begin{table}
-PETSc--like options string\\
-\small{
-\begin{boxedverbatim}
+%\begin{lstlisting}[language=bash,style=custombash]
+Command line options:
+\begin{minted}[frame=single]{bash}
 -time_min 0 -time_max 1 -time_interpolation linear -time_numstep 11  -dryrun \
 -cs0001_hookeslaw 1. 0. 0. .5 0. 1. -cs0001_fractureToughness .1 \
 -cs0001_internalLength 01 -cs0001_residualStiffness 0.\
@@ -330,11 +332,9 @@ PETSc--like options string\\
 -cs0001_defectLaw_gradientDamage_type AT1 \
 -cs0001_displacementBC true false false -cs0001_boundaryDisplacement 1. 0. 0. \
 -cs0001_damageBC false
-\end{boxedverbatim}
-}
-Equivalent YAML file\\
-\small{
-\begin{boxedverbatim}
+\end{minted}
+Equivalent YAML file:
+\begin{minted}[frame=single]{yaml}
 time:
     min: 0
     max: 1
@@ -352,16 +352,12 @@ cs0001:
     displacementBC: yes,no,no
     boundaryDisplacement: 1.,0.,0.
     damageBC: no
-\end{boxedverbatim}
-}
-\caption{Translating PETSc options to YAML files}
-\label{tab:PETSctoYAML}
-\end{table}
+\end{minted}
 
-YAML parsing is fragile.  Most erros in the YAML file will lead to a deadloop in the parser. A simple script \verb+$\MEF90_DIR/Tests/YAMLValidator+ can be used to test-parse a yaml file:
-\begin{boxedverbatim}
+YAML parsing is fragile.  Most errors in the YAML file will lead to a deadloop in the parser. A simple script \verb+$\MEF90_DIR/Tests/YAMLValidator+ can be used to test-parse a yaml file:
+\begin{Verbatim}
 YAMLValidator -options_file_yaml <yaml file>
-\end{boxedverbatim}
+\end{Verbatim}
 If the parsing is successsful, the petsc options version of the yaml file will be displayed.
 
 The most common errors leading to an unparseable YAML file are
@@ -369,19 +365,21 @@ The most common errors leading to an unparseable YAML file are
     \item tabulation signs,
     \item windows line ending,
     \item inconsistent indentation.
+    \item spaces in list (\verb+boundaryDisplacement: 1., 0.,0.+ is parsed as \verb+boundaryDisplacement: 1.+ with all entries following the space being ignored)
+
 \end{compactenum}
 
 \section{General options}
 
 vDef can handle input and result files in two different ways: through the \verb+-prefix+ option or the \verb+-geometry+ \verb+-result+ option pair.
 
-\begin{boxedverbatim}
+\begin{Verbatim}
 -prefix : File name prefix
 -verbose <1>: Verbosity: level 
 -dryrun <FALSE>: Dry run in order to validate the options file. 
 -file_format <EXOSingle>: (MEF90FileFormat) I/O: file format. 
                           Choose one of EXOSingle EXOSplit
-\end{boxedverbatim}
+\end{Verbatim}
 Notes: 
 \begin{compactenum}
     \item  If \verb+-prefix <prefix>+ is specified, vDef will look for an input mesh is named \verb+<prefix>.gen+, results will be saved as \verb+<prefix>_out.gen+ or \verb+<prefix>-\%4i.gen+ if output in split files exodus files is chosen), energies will be saved in  \verb+<prefix>_out.ener+ for the entire domain and \verb+<prefix>_out-\%4i.enerblk+ for each cell set.
@@ -406,7 +404,7 @@ becomes:
 $\left[C_{1111}\ C_{1122}\  C_{1133}\  C_{1123}\  C_{1113}\  C_{1112}\  C_{2222}\  \dots  C_{1312}\  C_{1313}\right]$.
 
 A small utility in \verb+$MEF90_DIR/Tests/HookeLaws+ can be used to compute the coefficients of isotropic Hooke's laws:
-\begin{boxedverbatim}
+\begin{Verbatim}
 bourdin@galerkin:Tests $ ./HookeLaws -E 1 -nu .3
  # MEF90: hg changeset 1792:b88429f29d30 
  # Copyright (c) 1998-2014 B. Bourdin <bourdin@lsu.edu> 
@@ -423,22 +421,23 @@ Hooke's laws for E= 1.00E+00 nu= 3.00E-01
  1.09890E+00, 3.29670E-01, 0.00000E+00, 1.09890E+00, 0.00000E+00, 3.84615E-01 
  2D plane strain
  1.34615E+00, 5.76923E-01, 0.00000E+00, 1.34615E+00, 0.00000E+00, 3.84615E-01 
-\end{boxedverbatim}
+\end{Verbatim}
 
 Alternatively, \emph{isotropic} Hooke's laws are also implemented (see Section~\ref{sec:MatProp}).
 
 
 \subsection{Time interpolation}
-\small{
-\begin{boxedverbatim}
--time_min <0>: Time: min 
--time_max <1>: Time: max 
--time_numstep <11>: Time: number of time steps 
--time_interpolation <linear>: Time: interpolation type. One of linear quadratic exo
-\end{boxedverbatim}
-}
-Notes: 
+\begin{minted}[frame=single]{yaml}
+time:
+  interpolation: <linear> #interpolation type (choose one of)  linear Vcycle quadratic exo
+  min: <0>       # "time" value at the first step
+  max: <1>       # "time" value at the last step
+  numstep: <11>: # number of time steps 
+  skip: <0>      # number of time steps skipped (use for multi stage simulations)
+  numCycle: <1>  # number of cycles for cyclic loads
+\end{minted}
 
+Notes: 
 \begin{compactenum}
 	\item If \verb+-time_interpolation exo+ is selected, analysis times will be loaded from the \emph{output} exodus file, which is expected to exist.
 	\item \verb+-time_interpolation quadratic+ corresponds to the natural time scaling in many heat transfer problems, i.e. $\tau$ is linearly interpolated between $\sqrt{t_{min}}$ and $\sqrt{t_{max}}$, and $t_i = \tau_i^2$.
@@ -455,211 +454,210 @@ Due to a bug in the ExodusII fortran bindings, \vDef can only import Exodus enti
 \subsection{Material properties}
 \label{sec:MatProp}
 Material properties for a cell set are passed by prefixing the following options with the cell set number (i.e. \verb+-cs0001_Density+, for instance). Materials names are not used at the moment. Substitute the \verb+cs0001_+ prefix with the appropriate reference.
-\small{
-\begin{boxedverbatim}
--cs0001_Name <MEF90Mathium2D>:  
--cs0001_Density <1>: [kg.m^(-2)] (rho) Density 
--cs0001_FractureToughness <1>: [N.m^(-1)] (G_c) Fracture toughness 
--cs0001_SpecificHeat <1>: [J.kg^(-1).K^(-1)] (Cp) Specific heat 
--cs0001_ThermalConductivity <1 1 0 >: [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity 
--cs0001_LinearThermalExpansion <1 1 0 >: [K^(-1)] (alpha) Linear thermal expansion  
--cs0001_HookesLaw <1 0 0 .5 0 1 >: [N.m^(-2)] (A) Hooke's law 
--cs0001_internalLength <1>: [m] (l) Internal Length 
-\end{boxedverbatim}
-}
 
-Isotropic Hookes laws are described in terms of  Youngs Modulus / Poisson ration in plane stress or plane strain (2D only) as:
-\begin{boxedverbatim}
--cs0001_hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
--cs0001_hookeslaw_YoungsModulus = 1 ; [N.m^(-2)] (E) Young's Modulus
--cs0001_hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
--cs0001_hookeslaw_planeStress =  FALSE; Use plane stress elasticity
-\end{boxedverbatim}
-or as a general fourth order tensor.
+\begin{minted}[frame=single]{yaml}
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Name: <MEF90Mathium2D> # unused  
+  Density: <1> # [kg.m^(-2)] (rho) Density 
+  FractureToughness: <1> # [N.m^(-1)] (G_c) Fracture toughness 
+  SpecificHeat: <1> # [J.kg^(-1).K^(-1)] (Cp) Specific heat 
+  ThermalConductivity: <1 2 3 > # [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity 
+  LinearThermalExpansion: <1 2 3 > # [K^(-1)] (alpha) Linear thermal expansion matrix 
+  hookeslaw:
+    type: <Isotropic> # Type of Hooke's law (choose one of)  Full Isotropic
+    # for isotropic Hooke's laws only
+    YoungsModulus: <1> # [N.m^(-2)] (E) Young's Modulus 
+    PoissonRatio: <0.3> # [unit-less] (nu) Poisson Modulus 
+    planeStress: <FALSE> # Use plane stress elasticity (2D only)
+    # For full Hooke's laws:
+    tensor: <> # coefficients of the Hookes law as described in Section 
+    internalLength: <1> # [m] (l) Internal Length 
+    CoefficientLinSoft: <0> #[] (k) Linear softening coefficient for LinSoft 
+    yieldStress: <1> #[N.m^(-2)] (sigma_y) stress threshold for plasticity 
+    residualyieldStress: <0> #[unit-less] (eta) residual yield stress 
+    DuctileCouplingPower: <2> #[] power of the coupling function b(\alpha) 
+                              # between the damage and the plasticity models
+    # Options for cap model plasticity:
+    #    CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+    CoefficientCapModel0: <-0.3> # C0
+    CoefficientCapModel1: <0.4>  # C1 
+    CoefficientCapModel2: <1>    # C2
+    CoefficientCapModelD: <1>    # CD
+    # options for Drucker Prager plasticity:
+    #    || dev(stress) || - k tr(stress) - yieldStress <= 0
+    CoefficientDruckerPrager: <-0.5> #k 
+    # options for Hill plasticity:
+    CoeffF: <0.3> #[unit-less] (F) 
+    CoeffG: <0.3> #[unit-less] (G) 
+    CoeffH: <0.3> #[unit-less] (H) 
+    CoeffM: <1> #[unit-less] (M) 
+    CoeffN: <1> #[unit-less] (N) 
+    CoeffL: <1> #[unit-less] (L)
+    YieldTau0: <1> #[N.m^(-2)] (tau_0) 
+    residualYieldTau0: <0> #[unit-less] residual stress threshold
+    phi1: <0> #[radians] Bunge-Euler angle
+    phi2: <0> #[radians] Bunge-Euler angle
+    Phi: <0> #[radians] Bunge-Euler angle
+    # options for Gurson and Green plasticity:
+    delta: <0.0001> #[unit-less] residual in the definition of the porosity
+    # Options for Winkler-type model (thin film over a substrate, 2D only)
+    cohesiveStiffness: <0> #[N.m^(-4)] (k) cohesive stiffness in Winkler-type models 
+    residualStiffness: <1e-09> #[unit-less] (eta) residual stiffness 
+    isLinearIsotropicHardening: <FALSE> #[bool] Plasticity with Linear Isotropic Hardening 
+    isNoPlCoupling: <FALSE> #[bool] Coupling between damage and plastic dissipation 
+\end{minted}
 
 
-\subsection{Plasticity}
 
-
-\subsubsection{Global options}
-\small{\begin{boxedverbatim}
--defmech_mode_plasticStrain_atol = 1E-4 ; tolerance for the infinit norme in p
--plasticStrain_offset = 4 ; Position of plasticStrain field in EXO file 
-\end{boxedverbatim}}
-
-
-
-\subsubsection{Cell sets options}
-To use plasticty you need to specify some material properties such as, the plasticity type and it's coefficent:
-\begin{boxedverbatim}
--cs0001_plasticity_type = VonMises ; Different choice ('None','Tresca',
-'VonMises','VonMisesPlaneTheory','CapModel','DruckerPragerCapModel','VonMises1D')
--cs0001_yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
--cs0001_residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
--cs0001_DuctileCouplingPower = 2 ; [] power of the coupling between the 
-damage and the plasticity
--cs0001_CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD 
-|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
--cs0001_CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD 
-|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
--cs0001_CoefficientCapModel2 = 1 ; C2 in the Yield function: CD 
-|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
--cs0001_CoefficientCapModelD = 1 ; CD in the Yield function: CD 
-|| dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
--cs0001_CoefficientDruckerPrager = -0.5 ; k in the Yield function: 
-|| dev(stress) || - k tr(stress) - yieldStress <= 0
-\end{boxedverbatim}
 
 
 \subsection{Heat transfer options}
 \subsubsection{Global options}
-\small{\begin{boxedverbatim}
--heatxfer_timestepping_type <SteadyState>:   Type of heat transfer computation 
-                                choose one of null SteadyState Transient
--heatxfer_addNullSpace <FALSE>: Add null space to SNES 
--temp_Offset <1>:               Position of temperature field in EXO file 
--heatxfer_initialTemp <0>:      [K] (T): Initial Temperature 
--boundaryTemp_scaling <linear>: Boundary temperature scaling 
-                                choose one of)  constant linear file null
--boundaryTemp_Offset <0>:       Position of boundary temperature field in EXO file 
--externalTemp_scaling <linear>: External Temperature scaling 
-                                choose one of constant linear file null
--externalTemp_Offset <2>:       Position of external temperature field in EXO file 
--flux_scaling <linear>:         Heat flux scaling 
-                                choose one of constant linear file null
--flux_Offset <1>:               Position of heat flux field in EXO file 
-\end{boxedverbatim}}
+
+\begin{minted}[frame=single]{yaml}
+heatxfer:
+  timeStepping:
+    type: <SteadyState> # Type of heat transfer computation (choose one of)  
+                        # null SteadyState Transient
+  addNullSpace: <FALSE> # Add null space to SNES 
+  initialTemp: <0> # [K] (T): Initial Temperature 
+  boundaryTemp:
+    scaling: <linear> # Boundary temperature scaling (choose one of)  
+                      # constant linear file null
+    Offset: <0> # Position of boundary temperature field in EXO file 
+  externalTemp:
+    scaling: <linear> # External Temperature scaling (choose one of)  
+                      # constant linear file null
+    Offset: <2> # Position of external temperature field in EXO file 
+  flux:
+    scaling: <linear> # Heat flux scaling (choose one of)  constant linear file null
+    Offset: # Position of heat flux field in EXO file 
+\end{minted}
 
 \subsubsection{Cell sets options}
-\small{\begin{boxedverbatim}
--cs0001_ShortID <1>: Element type ShortID 
--cs0001_Flux <0>: [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Body / surface heat flux 
--cs0001_SurfaceThermalConductivity <0>: [J.s^(-2).m^(-1).K^(-1)]
-                                        (H) Surface Thermal Conductivity 
--cs0001_externalTemp <0>: Surrounding temperature T [K] 
--cs0001_TempBC <FALSE>:   Temperature has Dirichlet boundary Condition (Y/N) 
--cs0001_boundaryTemp <0>: Temperature boundary value 
-\end{boxedverbatim}}
+\begin{minted}[frame=single]{yaml}
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Flux: <0> # [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux 
+  SurfaceThermalConductivity: <0> # [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity 
+  externalTemp: <0> # Reference temperature T [K] 
+  TempBC: <FALSE> # Temperature has Dirichlet boundary Condition (Y/N) 
+  boundaryTemp: <0> # Temperature boundary value 
+\end{minted}
 Notes:
 \begin{compactenum}
-\item Element shortID should not be changed manually. 
 \item Surrounding temperature is assumed to be constant. This could easily be changed.
 \end{compactenum}
 
 \subsubsection{Vertex sets options}
-\small{\begin{boxedverbatim}
--vs0500_TempBC <FALSE>:   Temperature has Dirichlet boundary Condition (Y/N) 
--vs0500_boundaryTemp <0>: Temperature boundary value 
-\end{boxedverbatim}}
+\begin{minted}[frame=single]{yaml}
+vs0100: # ID of cell set formatted with 4 digits padded to the left by zeros
+  TempBC: <FALSE> # Temperature has Dirichlet boundary Condition (Y/N) 
+  boundaryTemp: <0> # Temperature boundary value 
+\end{minted}
 
-\subsection{Gradient damage options and unilateral contact}
+\subsection{Damage and plasticity options}
+
 \subsubsection{Global options}
-\small{\begin{boxedverbatim}
--defmechech_timestepping_type <QuasiStatic>: Type of defect mechanics computation. 
-                             Choose one of Null QuasiStatic 
--defmech_dampingcoefficient_damage <0.>: damping coeffifient on damage
--defmech_dampingcoefficient_displacement <0.>: damping coeffifient on displacement
--defmech_pclag <5>: How often the preconditioner is recomputed 
--defmech_damage_atol <0.0001>: Absolute tolerance on damage error 
--defmech_maxit <1000>: Maximum number of alternate minimizations for damage 
--defmech_irrevThres <0>: Threshold above which irreversibility is enforced 
-                        (0 for monotonicity, .99 for equality) 
--defmech_solver_type <AltMin>: global solution strategy. 
-                               one of AltMin, quasiNewton1, quasiNewton2
--disp_addNullSpace <TRUE>: Add null space to SNES 
--displacement_Offset <3>: Position of displacement field in EXO file 
--damage_Offset <2>: Position of damage field in EXO file 
--boundaryDamage_Offset <0>: Position of boundary damage field in EXO file 
--stress_Offset <6>: Position of stress field in EXO file 
--temperature_Offset <1>: Position of temperature field in EXO file 
--plasticStrain_Offset <0>: Position of the plastic Strain field in EXO file 
--boundaryDisplacement_scaling <linear>: Boundary displacement scaling.
-                                        Choose one of constant linear file null
--boundaryDisplacement_Offset <3>: Position of boundary displacement field in EXO file 
--boundaryDamage_scaling <constant>: Boundary damage scaling.
-                                    Choose one of constant linear file null
--force_scaling <linear>: Force scaling. 
-                         Choose one of constant linear file null
--force_Offset <4>: Position of force field in EXO file 
--pressureForce_scaling <linear>: Pressure force scaling. 
-                                 Choose one of constant linear file null
--pressureForce_Offset <3>: Position of pressure force field in EXO file 
+The global options are in the \verb+Defmech+ Section of the YAML file:
+\begin{minted}[frame=single]{yaml}
+DefMech:
+  TimeStepping:
+    Type: <QuasiStatic> # Type of defect mechanics Time steping (choose one of)  
+                        # Null QuasiStatic
+  solver:
+    Type: <AltMin>      # Type of defect mechanics solver (choose one of)  
+                        # AltMin QuasiNewton1 QuasiNewton2
+  disp:
+    addNullSpace: <TRUE> # handle rigid motion automatically  
+  displacement:
+    Offset: <3> # Position of displacement field in EXO file 
+  damage:
+    Offset: <2> # Position of damage field in EXO file 
+    atol: <1.e-3> # Absolute tolerance on damage error 
+  boundaryDamage:
+    Offset: <0> # Position of boundary damage field in EXO file 
+  stress:
+    Offset: <6> # Position of stress field in EXO file 
+  temperature:
+    Offset: <1> # Position of temperature field in EXO file 
+  plasticStrain:
+    Offset: <0> # Position of the plastic strain field in EXO file 
+    atol: <1.e-4> # Absolute tolerance on plastic strain
+  cumulatedPlasticDissipation:
+    Offset: <1> # Position of the Cumulated Plastic Plastic Dissipation field in EXO file 
+  boundaryDisplacement:
+    scaling: <linear> # Boundary displacement scaling (choose one of)  constant linear file null
+    Offset: <3> # Position of boundary displacement field in EXO file 
+  boundaryDamage:
+    scaling: <constant> # Boundary damage scaling (choose one of)  constant linear file null
+  force:
+    scaling: <linear> # Force scaling (choose one of)  constant linear file null
+    Offset: <4> # Position of force field in EXO file 
+  pressureForce:
+    scaling: <linear> # Pressure force scaling (choose one of)  constant linear file null
+    Offset: <3> # Position of pressure force field in EXO file 
+  CrackPressure:
+    scaling: <linear> # Crack Pressure scaling (choose one of)  constant linear file null
+    Offset: <0> # Position of Crack Pressure field in EXO file 
+  maxit: <1000> # Maximum number of alternate minimizations for damage 
+  pclag: <10> # Interval at which the PC is recomputed during alternate minimization 
+  irrevThres: <0> # Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality) 
+  SOR:
+    Omega:  <1> # Alterate Minimization over relaxation factor (>0 for limited, <0 for projected) 
+  InjectedVolume:
+    atol: <1.e-3> # Absolute tolerance on injected volume error 
+  dampingCoefficient:
+    displacement: <0> # Damping coefficient on displacement field 
+                      # (0 for minimization, 1 for semi-implicit gradient flow) 
+    damage: <0> # Damping coefficient on damage field 
+                # (0 for minimization, 1 for semi-implicit gradient flow) 
+  BT:
+    Type: <Null> # Backtracking type (choose one of)  Null Backward Forward
+    Interval: <-1> # Interval at which Backtracking is run in inner loop (0 for outer loop) 
+    Scope: <-1> # Backtracking scope (0 for unlimited) 
+    Tol: <0.01>: # Backtracking relative tolerance 
+\end{minted}
 
-
--BT_Type <Null>: Backtracking type.
-                 Choose one of Null Backward Forward
--BT_Interval <-1>: Interval at which Backtracking is run in inner loop 
-                   (<0 for outer loop) 
--BT_Scope <-1>: Backtracking scope (<0 for unlimited) 
--BT_Tol <0.01>: Backtracking relative tolerance 
-\end{boxedverbatim}}
 Notes:
 \begin{compactenum}
-\item Element shortID should not be changed manually. 
 \item \verb+-BT_Interval 1+ is for \emph{deep} backtracking, \verb+-BT_Interval -1+ for a standard backtracking.
 \end{compactenum}
 
 \subsubsection{Cell sets options}
-\small{\begin{boxedverbatim}
--cs0001_ShortIDDisplacement <3>: Displacement element type ShortID 
--cs0001_ShortIDDamage <1>: Damage field element type ShortID 
--cs0001_Force <0 1 2 >: [N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force 
--cs0001_pressureForce <0>: [N.m^(-2) / N.m^(-1)] (p): boundary pressure force 
--cs0001_defectLaw_type <GradientDamage>: Type of defect law. Choose one of 
-                                         Elasticity GradientDamage Plasticity
--cs0001_defectLaw_gradientDamage_type <AT1>: Ambrosio-Tortorelli variant. 
-                                             Choose one of AT1 AT2
--cs0001_DisplacementBC <0 1 2 >: Displacement has Dirichlet boundary Condition (Y/N) 
--cs0001_boundaryDisplacement <0 1 2 >: [m] (U): Displacement boundary value 
--cs0001_DamageBC <FALSE>: Damage has Dirichlet boundary Condition (Y/N) 
--cs0001_boundaryDamage <0>: [unit-less] (alpha): Damage boundary value 
--cs0001_residualStiffness <1e-09>: [unit-less] (eta): residual stiffness multiplier 
-\end{boxedverbatim}}
+\begin{minted}[frame=single]{yaml}
+cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
+  Force: <0 1 2 > # [N.m^(-3) / N.m^(-2) / N.m^(-1)] (f): body / boundary force 
+  pressureForce: <0> # [N.m^(-2) / N.m^(-1)] (p): boundary pressureforce 
+  CrackPressure: <0> # [unit-less] internal crack pressure 
+  damage:
+    type: <AT1> # Type of damage law (choose one of)  
+                # AT1 AT2 LinSoft AT1Elastic AT2Elastic LinSoftElastic
+  plasticity:
+    type: <None> # Type of plasticity law (choose one of)  
+                 # None Tresca VonMises VonMisesPlaneTheory CapModel 
+                 # DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson
+  unilateralContact:
+    type: <None> # Type of handling of unilateral contact (choose one of)  
+                 # None HydrostaticDeviatoric Deviatoric
+  DisplacementBC: <0 1 2 > # Displacement has Dirichlet boundary Condition (Y/N)
+  boundaryDisplacement: <0 1 2 > # [m] (U): Displacement boundary value 
+  DamageBC: <FALSE> # Damage has Dirichlet boundary Condition (Y/N) 
+  boundaryDamage: <0> # [unit-less] (alpha): Damage boundary value 
+  CrackVolumeControlled: <FALSE> # Crack Pressure controlled by the crack volume 
+                                 # in this block (Y/N) 
+  WorkControlled: <FALSE> # Force magnitude controlled by its work in this block (Y/N) 
+\end{minted}
 
-To use linear softening damage model you have to specify the value of $k$ (Linear softening coefficient):
-\begin{boxedverbatim}
--cs0001_CoefficientLinSoft = 2 ; [] (k) Linear softening coefficient for LinSoft
-\end{boxedverbatim}
-
-
-To use unilateral contact:
-\begin{boxedverbatim}
--cs0001_unilateralContact_type: masonry , choice ('HydrostaticDeviatoric,
-'BrittleDuctile','PositiveHydrostatic','Deviatoric','PrincipalStrains','Masonry')
-\end{boxedverbatim}
-
-Notes:
-\begin{compactenum}
-\item Element shortID should not be changed manually.
-\item \verb+defectLaw+ and children have no effect on cell sets of codimension 1
-\item \verb+defectLaw_type plasticity+ is not implemented right now.
-\item \verb+defectLaw+, (and fracture toughness and internal length) must be given even when \verb+defectLaw_type elasticity+ is used. See Section~\ref{sec:GradientDamageModels} for details
-\end{compactenum}
-
+Note that +damage+, +plasticity+, and +unilateralContact+ have no effect on cell sets of codimension 1 (lines in 2D and surfaces in 3D).
 
 \subsubsection{Vertex sets options}
-\small{\begin{boxedverbatim}
--vs0500_DisplacementBC <0 1 2 >: Displacement has Dirichlet boundary Condition (Y/N) 
--vs0500_boundaryDisplacement <0 1 2 >: [m] (U): Displacement boundary value 
--vs0500_DamageBC <FALSE>: Damage has Dirichlet boundary Condition (Y/N) 
--vs0500_boundaryDamage <0>: [unit-less] (alpha): boundaryDamage 
-\end{boxedverbatim}}
-
-
-\subsection{Controlled crack volume}
-
-\subsubsection{Global options}
-\small{\begin{boxedverbatim}
--CrackPressure_scaling: <constant> ; Crack pressure scaling (linear-constant)
--CrackPressure_Offset: <4> ; Position of Crack pressure field in EXO file 
-\end{boxedverbatim}}
-
-
-\subsubsection{Cell sets options}
-\small{\begin{boxedverbatim}
--cs0001_Crackpressure: 1. ; Value of crack pressure applied on the block
--cs0001_IsCrackPressureActivated: <yes> ; Is this block play a role in the evalutation of the crack volume 
-\end{boxedverbatim}}
+\begin{minted}[frame=single]{yaml}
+vs0100: # ID of cell set formatted with 4 digits padded to the left by zeros
+  DisplacementBC: <0 1 2 > # Displacement has Dirichlet boundary Condition (Y/N)
+  boundaryDisplacement: <0 1 2 > # [m] (U): Displacement boundary value 
+  DamageBC: <FALSE> # Damage has Dirichlet boundary Condition (Y/N) 
+  boundaryDamage: <0> # [unit-less] (alpha): Damage boundary value 
+\end{minted}
 
 \chapter{Examples}
 \section{Uniaxial tension}
@@ -986,7 +984,43 @@ because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem beco
 
 $$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
 
-
+\section{List of all supported YAML options as of 12/13/2018}
+\inputminted[]{yaml}{alloptions-2018-12-13.yaml}.
+%%% \begin{minted}[
+%%%    gobble=4,
+%%%    frame=single,
+%%%    linenos
+%%%  ]{yaml}
+%%%    --- !clarkevans.com/^invoice
+%%%    invoice: 34843
+%%%    date   : 2001-01-23
+%%%    bill-to: &id001
+%%%        given  : Chris
+%%%        family : Dumars
+%%%        address:
+%%%            lines: |
+%%%                458 Walkman Dr.
+%%%                Suite #292
+%%%            city    : Royal Oak
+%%%            state   : MI
+%%%            postal  : 48046
+%%%    ship-to: *id001
+%%%    product:
+%%%        - sku         : BL394D
+%%%          quantity    : 4
+%%%          description : Basketball
+%%%          price       : 450.00
+%%%        - sku         : BL4438H
+%%%          quantity    : 1
+%%%          description : Super Hoop
+%%%          price       : 2392.00
+%%%    tax  : 251.42
+%%%    total: 4443.52
+%%%    comments: >
+%%%        Late afternoon is best.
+%%%        Backup contact is Nancy
+%%%        Billsmer @ 338-4338.
+%%%  \end{minted}
 
 \bibliography{vDef}
 \end{document}  

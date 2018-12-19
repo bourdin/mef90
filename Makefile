@@ -42,6 +42,10 @@ vDef: MEF90 m_DefMech m_HeatXfer chkpaths
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
 	-@make -C objs/${PETSC_ARCH} -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT
 
+YAMLValidator: MEF90 m_DefMech m_HeatXfer
+	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
+	-@make -C objs/${PETSC_ARCH} -f ../../Tests/Makefile YAMLValidator
+
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
 	-@make -s -C ThermoElasticity test
@@ -57,6 +61,10 @@ bin/${PETSC_ARCH}:
 	-@mkdir -p bin/${PETSC_ARCH}
 lib/${PETSC_ARCH}:
 	-@mkdir -p lib/${PETSC_ARCH}
+
+doc: doc/vDef.pdf doc/vDef.tex
+	-@echo "Building documentation"
+	-@cd doc; pdflatex -shell-escape vDef.tex; bibtext vDef.tex; pdflatex -shell-escape vDef.tex; pdflatex -shell-escape vDef.tex;
 
 tarball: clean
 	$(eval hgver := $(shell hg parents | head -1 | cut -d : -f 2 | tr -d ' '))
