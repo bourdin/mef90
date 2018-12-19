@@ -369,7 +369,7 @@ Contains
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr)
          Case(MEF90HookesLawTypeIsotropic)
             Call PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
             Call PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr)
