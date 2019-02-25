@@ -3,6 +3,7 @@ import numpy as np
 import exodus as exo
 import argparse
 import io
+
 #--------Function for parsing mesh file
 def GMSHImporter(filename):
     elemDim = {1:2,   # 2 node line
@@ -30,23 +31,20 @@ def GMSHImporter(filename):
                 15:""           #vertex
                 }
 
+    cl = 0
     # Opening and reading mesh file
     f = io.open(filename, 'r') 
     if not f.readline() == '$MeshFormat\n':     #checking if mesh file
-        print "Unknown file format"
-        return -1
+        raise(RuntimeError,"Unable to parse file {0}".format(filename))
     buffer = f.readline()
-    if not buffer.lstrip().startswith('2.2'):
-        print "gmsh2exo.py can only read msh2 format, but got format {0}.\nRegenerate your mesh with the option -format msh2".format(buffer.rstrip())
-        return -1
+    if not buffer.lstrip().startswith('2.'):
+        raise(RuntimeError,"gmsh2exo.py can only read msh2 format, but got format {0}.\nRegenerate your mesh with the option -format msh2".format(buffer.rstrip()))
     if not f.readline() == '$EndMeshFormat\n':
-        print "Something weird is happening here at EndMeshFormat"
-        return -1
+        raise(RuntimeError,"Unable to parse file {0}: $EndMeshFormat not found when expected".format(filename))
 
     #checking to see if we are at the correct location in mesh file again
     if not f.readline() == '$Nodes\n':
-        print "Something weird is happening here at Nodes"
-        return -1
+        raise(RuntimeError,"Unable to parse file {0}:  $Nodes not found when expected".format(filename))
     nVert = int(f.readline())                   #number of vertices
 
     #creating and filling list of coordinates from mesh file
@@ -57,13 +55,11 @@ def GMSHImporter(filename):
     
     #checking to see if we are at the correct location in mesh file
     if not f.readline() == '$EndNodes\n':
-        print "Something weird is happening here at EndNodes"
-        return -1
+        raise(RuntimeError,"Unable to parse file {0}:  $EndNodes not found when expected".format(filename))
 
     #checking to see if we are at the correct location in mesh file again
     if not f.readline() == '$Elements\n':
-        print "Something weird is happening here at Elements"
-        return -1
+        raise(RuntimeError,"Unable to parse file {0}:  $Elements not found when expected".format(filename))
 
     #finding number of cells in mesh file
     nCell = int(f.readline())
@@ -97,9 +93,21 @@ def GMSHImporter(filename):
                         
     #checking to make sure we are at end of file
     if not f.readline() == '$EndElements\n':    
-        print "Something weird is happening here at End Elements"
-        return -1
-    return coord,vertexSet,cellSet
+        raise(RuntimeError,"Unable to parse file {0}:  $EndElements not found when expected".format(filename))
+
+    #block info and connectivity
+    ###
+    ### Sort cell sets in order to write boundary cell sets last
+    ###
+    X = coord[:,0]
+    Y = coord[:,1]
+    Z = coord[:,2]
+    if max(Z) == min(Z):
+        numDim = 2
+    else:
+        numDim = 3
+
+    return coord,vertexSet,cellSet,numDim
 
 def FixOrientation(connect,coord):
     e0 = (coord[1][0] - coord[0][0],coord[1][1] - coord[0][1])
@@ -111,39 +119,12 @@ def FixOrientation(connect,coord):
         return connect
 
 #------Function for writing to exo format
-def exoWriter(coords,vertexSets,cellSets,exoFile):
+def exoWriter(coords,vertexSets,cellSets,numDim,exoFile):
     cell1D = ("BAR","BAR2","BEAM2","BAR3","BEAM3")
     cell2D = ("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3","TRI6","TRISHELL6","QUAD","QUAD4","SHELL","SHELL4","QUAD9","SHELL9")
     cell3D = ("TETRA","TETRA4","TETRA10","HEX","HEX8","HEX27")
 
-    X = coords[:,0]         #set of all X coords
-    Y = coords[:,1]         #set of all Y coords
-    Z = coords[:,2]         #set of all Z coords
-    if max(Z) == min(Z):        #two dimensional case if Z is static
-        numDim = 2
-    else:                       #otherwise we assume we have a three dimensional case
-        numDim = 3
-
-    numElem = 0
-    for k in cellSets.keys():       #finding number of elements
-        numElem += len(cellSets[k]['connect'])/cellSets[k]['numVPE']
-
-    filename = exoFile           #this is the file specified when function is called
-
-    #setting up exo file for writing
-    e=exo.exodus(filename, mode='w',title='title',numDims=numDim,numNodes=len(X), 
-                  numElems=numElem,numBlocks=len(cellSets),numNodeSets=len(vertexSets),numSideSets=0)
-    #coordinates
-    if numDim == 3:
-        e.put_coord_names(["x","y","z"])    #name of each coordinate
-    else:
-        e.put_coord_names(["x","y"])    #name of each coordinate
-    e.put_coords(X,Y,Z)                 #actual coordinates
-
-    #block info and connectivity
-    ###
-    ### Sort cell sets in order to write boundary cell sets last
-    ###
+    # Reorder blocks with cells of coDimension 0 first
     blocksOrder = []
     if numDim == 2:
         cellCoDim0 = cell2D
@@ -151,6 +132,21 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
     else:
         cellCoDim0 = cell3D
         cellCoDim1 = cell2D
+        cellCoDim2 = cell1D
+
+    #in 3D, cellCoDim2 cells need to be converted into a vertex set
+    for setID in cellSets.keys():
+        if cellSets[setID]['elemType'].upper() in cellCoDim2:
+            vs = []
+            for v in cellSets[setID]['connect']:
+                if v not in vs:
+                    vs.append(v)
+            cellSets.pop(setID,'None')
+            if setID in vertexSets.keys():
+                print("Codimension 2 cell set {0} renamed vertex set {1} so as not to clash with existing vertex set".format(setID,max(vertexSets.keys())+1))
+                setID = max(vertexSets.keys())+1
+            vertexSets[setID]=vs
+
 
     for setID in cellSets.keys():
         if cellSets[setID]['elemType'].upper() in cellCoDim0:
@@ -159,13 +155,25 @@ def exoWriter(coords,vertexSets,cellSets,exoFile):
         if cellSets[setID]['elemType'].upper() in cellCoDim1:
             blocksOrder.append(setID)
 
-    #for setID in cellSets.keys():
+    #Writting exodusII file
+    numElem = 0
+    for k in cellSets.keys():       #finding number of elements
+        numElem += len(cellSets[k]['connect'])/cellSets[k]['numVPE']
+    numNodes = len(coords[:,0])
+    e=exo.exodus(exoFile, mode='w',title='title',numDims=numDim,numNodes=numNodes, 
+                  numElems=numElem,numBlocks=len(cellSets),numNodeSets=len(vertexSets),numSideSets=0)
+    #coordinates
+    if numDim == 3:
+        e.put_coord_names(["x","y","z"])
+    else:
+        e.put_coord_names(["x","y"])
+    e.put_coords(coords[:,0],coords[:,1],coords[:,2])
+
     for setID in blocksOrder:
             ###---setID, elemType, num elems, num nodes per elem, num attributes per elem
             e.put_elem_blk_info(setID,cellSets[setID]['elemType'],len(cellSets[setID]['connect'])/cellSets[setID]['numVPE'],cellSets[setID]['numVPE'],0)
             ###---setID, connectivity table
             e.put_elem_connectivity(setID,cellSets[setID]['connect'])
-    #node set info
     for setID in vertexSets.keys():
         ###---setID, num nodes, num distribution factors in a node set
         e.put_node_set_params(setID,len(vertexSets[setID]),0)
@@ -250,11 +258,11 @@ def main():
                 print '\n\t{0} was NOT generated from {1}\n'.format(args.exoFile,args.gmeshFile)
                 return -1
     try:
-        (coord,vertexSet,cellSet) = GMSHImporter(args.gmeshFile)
+        (coord,vertexSet,cellSet,numDim) = GMSHImporter(args.gmeshFile)
     except TypeError:
         print "Cannot read {0} is it in gmsh 2 format?".format(args.gmeshFile)
         return -1
-    exoWriter(coord,vertexSet,cellSet,args.exoFile)
+    exoWriter(coord,vertexSet,cellSet,numDim,args.exoFile)
 
 if __name__ == '__main__':
     main()
