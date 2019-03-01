@@ -129,7 +129,7 @@ def exoWriter(coords,vertexSets,cellSets,numDim,exoFile):
     if numDim == 2:
         cellCoDim0 = cell2D
         cellCoDim1 = cell1D
-        cellCoDim2 = None
+        cellCoDim2 = ()
     else:
         cellCoDim0 = cell3D
         cellCoDim1 = cell2D
