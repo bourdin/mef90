@@ -55,8 +55,8 @@ module m_vDefDefault
                                                          0.0_Kr)                    ! dampingCoefficientDamage
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          3,                       & ! DisplacementOffset
                                                          2,                       & ! DamageOffset
