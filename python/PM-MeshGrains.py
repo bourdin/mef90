@@ -1,6 +1,5 @@
 import os
 import sys
-sys.path.append('/Users/blaise/Development/mef90/mef90-sieve/python')
 import pymef90
 
 if __name__ == '__main__':

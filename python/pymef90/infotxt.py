@@ -20,7 +20,7 @@ def DictwriteJSON(D,filename,overwrite=True):
         json.dump(D,jsonfile, sort_keys = True, indent = 4)
         jsonfile.close()
     except ImportError:
-        print 'JSON module not available, skipping DictJSONwrite'
+        print ('JSON module not available, skipping DictJSONwrite')
 
 
 def Dictreadtxt(filename):

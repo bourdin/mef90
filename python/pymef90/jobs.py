@@ -97,7 +97,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
     ### 
     for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
         if debug:
-            print 'searching for yamlfile in %s'%root
+            print ('searching for yamlfile in {0}'.format(root))
         if os.path.isfile(os.path.join(root,Parameters['yamlfile'])):
             Parameters['yamlfile'] = os.path.join(root,Parameters['yamlfile'])
             break
@@ -109,13 +109,13 @@ def PrepareJob(Geometry,Parameters,debug=False):
     if 'meshdir' in Parameters.keys():
         for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
             if debug:
-                print 'searching for meshdir in %s'%root
+                print ('searching for meshdir in {0}'.format(root))
             if os.path.isdir(os.path.join(root,Parameters['meshdir'])):
                 Parameters['meshdir'] = os.path.join(root,Parameters['meshdir'])
                 break
 
         if not os.path.isdir(Parameters['meshdir']):
-            print 'meshdir %s does not exist, giving up'%Parameters['meshdir']
+            print ('meshdir {meshdir} does not exist, giving up'.format(**Parameters))
             sys.exit(-1)
 
         

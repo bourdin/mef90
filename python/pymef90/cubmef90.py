@@ -3,9 +3,8 @@
 ###
 def WebcutTool2(body_list_in, tool_ID, delete=False):
     import cubit
-    print "&&&&&&&&&&&&&&&&&"
-    print "body_list_in: ", body_list_in
-    print "tool_ID: ", tool_ID
+    print ("body_list_in: ", body_list_in)
+    print ("tool_ID: ", tool_ID)
     ### delete group 'webcut_group' if it exists
     cubit.delete_group(cubit.get_id_from_name('webcut_group'))
     ### webcut 
@@ -17,9 +16,8 @@ def WebcutTool2(body_list_in, tool_ID, delete=False):
 
 def WebcutTool(body_list_in, tool_ID, delete=False):
     import cubit
-    print "&&&&&&&&&&&&&&&&&"
-    print "body_list_in: ", body_list_in
-    print "tool_ID: ", tool_ID
+    print ("body_list_in: ", body_list_in)
+    print ("tool_ID: ", tool_ID)
     ### delete group 'webcut_group' if it exists
     cubit.delete_group(cubit.get_id_from_name('webcut_group'))
     ### webcut 
@@ -40,8 +38,7 @@ def WebcutTool(body_list_in, tool_ID, delete=False):
     tool_list_out = tmp_list # just so that I can make a call with tool_ID = tool_list_out
     ### remove tool_list_out and tool_ID from ovlp
     body_list_out = [vol_id for vol_id in webcut_group_IDs if vol_id not in ovlp]
-    print "body_list_out: ",body_list_out
-    print "&&&&&&&&&&&&&&&&&"
+    print ("body_list_out: ",body_list_out)
     ### delete the tool of requested
     if delete:
         cubit.cmd('delete volume %i' % tool_ID)
@@ -667,27 +664,18 @@ def SPacmanCoinLayeredCreate(LX, LY, lx, ly, lz, alpha, theta1, theta2, thetacra
     ### remove crack
     ###
     cubit.cmd("subtract volume %i from volume %i" % (WEDGE, OUTSIDE_3D[0]))
-    print "1**********************************************"
-    print WEDGE,OUTSIDE_3D
-    print "1**********************************************"
     ###
     ### Create center coin
     ###
     cubit.cmd ("Create brick X %f Y %f Z %f" % (lx, ly, lz)) 
     PM = cubit.get_last_id("volume")
     (OUTSIDE_3D, PM_ID) = WebcutTool(OUTSIDE_3D, PM, delete=True)
-    print "2**********************************************"
-    print OUTSIDE_3D, PM_ID
-    print "2**********************************************"
     ###
     ### create layers
     ###
     bb=[-1.1*lx/2., 1.1*lx/2., -1.1*ly/2., 1.1*ly/2., -2.*lz, 2.*lz]
     print('PM_ID, bb, alpha, theta1, theta2', PM_ID, bb, alpha, theta1, theta2)
     (LAYER1_3D, LAYER2_3D) = Layer(PM_ID, bb, alpha, theta1, theta2, 0.)
-    print "3**********************************************"
-    print LAYER1_3D, LAYER2_3D
-    print "3**********************************************"
     ###
     ### imprint and merge
     ###
