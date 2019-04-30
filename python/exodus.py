@@ -324,7 +324,7 @@ class exodus:
                numDims=None, numNodes=None, numElems=None, numBlocks=None,
                numNodeSets=None, numSideSets=None,
                init_params=None, io_size=0):
-    print (EXODUS_PY_COPYRIGHT)
+    print EXODUS_PY_COPYRIGHT
     if mode == None:
       mode = 'r'
     if array_type == 'numpy':
@@ -568,8 +568,8 @@ class exodus:
     """
     for rec in info:
       if len(str(rec)) > MAX_LINE_LENGTH:
-        print ("WARNING: max line length reached for one or more info records;")
-        print ("         info stored to exodus file is incomplete for these records")
+        print "WARNING: max line length reached for one or more info records;"
+        print "         info stored to exodus file is incomplete for these records"
         break
     return self.__ex_put_info_recs(info)
 
@@ -601,8 +601,8 @@ class exodus:
       if begin: # inside Sierra block
         sierra_inp.append(rec)
         if len(rec) > MAX_LINE_LENGTH:
-          print ("WARNING: max line length reached for one or more input lines;")
-          print ("         input data might be incomplete for these lines")
+          print "WARNING: max line length reached for one or more input lines;"
+          print "         input data might be incomplete for these lines"
           break
         if len(vals) >= 2 and vals[0].lower() == "end" and vals[1].lower() == "sierra":
           break # end of Sierra block
@@ -962,9 +962,9 @@ class exodus:
     ndType = ex_entity_type("EX_NODAL")
     NDvarNames = self.get_node_variable_names()
     if name in NDvarNames:
-      print ("WARNING:node variable \"", name, "\" already exists.")
+      print "WARNING:node variable \"", name, "\" already exists."
     if index > len(NDvarNames):
-      raise Exception("ERROR: variable index out of range.")
+      raise Exception, ("ERROR: variable index out of range.")
     self.__ex_put_variable_name(ndType, index, name)
     return True
 
@@ -1784,10 +1784,10 @@ class exodus:
     ebType = ex_entity_type("EX_ELEM_BLOCK")
     EBvarNames = self.get_element_variable_names()
     if name in EBvarNames:
-      print ("WARNING:element variable \"", name, "\" already exists.")
+      print "WARNING:element variable \"", name, "\" already exists."
     if index > len(EBvarNames):
-      print ("index", index, "len", len(EBvarNames))
-      raise Exception("ERROR: variable index out of range.")
+      print "index", index, "len", len(EBvarNames)
+      raise Exception, ("ERROR: variable index out of range.")
     self.__ex_put_variable_name(ebType, index, name)
     return True
 
@@ -2237,9 +2237,9 @@ class exodus:
     nsType = ex_entity_type("EX_NODE_SET")
     NSvarNames = self.get_node_set_variable_names()
     if name in NSvarNames:
-      print ("WARNING: Node set variable \"", name, "\" already exists.")
+      print "WARNING: Node set variable \"", name, "\" already exists."
     if index > len(NSvarNames):
-      raise Exception("ERROR: variable index out of range.")
+      raise Exception, ("ERROR: variable index out of range.")
     self.__ex_put_variable_name(nsType, index, name)
     return True
 
@@ -2558,7 +2558,7 @@ class exodus:
     """
     ssids = self.get_side_set_ids()
     if (id not in ssids):
-      print ("WARNING: queried side set ID does not exist in database")
+      print "WARNING: queried side set ID does not exist in database"
       return 0
     (num_side_in_set, num_dist_fact_in_set) = self.__ex_get_side_set_param(id)
     return num_side_in_set
@@ -2909,9 +2909,9 @@ class exodus:
     ssType = ex_entity_type("EX_SIDE_SET")
     SSvarNames = self.get_side_set_variable_names()
     if name in SSvarNames:
-      print ("WARNING:Side set variable \"", name, "\" already exists.")
+      print "WARNING:Side set variable \"", name, "\" already exists."
     if index > len(SSvarNames):
-      raise Exception("ERROR: variable index out of range.")
+      raise Exception, ("ERROR: variable index out of range.")
     self.__ex_put_variable_name(ssType, index, name)
     return True
 
@@ -3116,10 +3116,10 @@ class exodus:
     gbType = ex_entity_type("EX_GLOBAL")
     GlobVarNames = self.get_global_variable_names()
     if name in GlobVarNames:
-      print ("WARNING: global variable \"", name, "\" already exists.")
+      print "WARNING: global variable \"", name, "\" already exists."
     if index > len(GlobVarNames):
-      print ("index", index, "len", len(GlobVarNames))
-      raise Exception("ERROR: variable index out of range.")
+      print "index", index, "len", len(GlobVarNames)
+      raise Exception, ("ERROR: variable index out of range.")
     self.__ex_put_variable_name(gbType, index, name)
     return True
 
@@ -3457,10 +3457,10 @@ class exodus:
         Can only be called once for an exodus object, and once called
         all methods for that object become inoperable
     """
-    print ("Closing exodus file: " + self.fileName)
+    print "Closing exodus file: " + self.fileName
     errorInt = EXODUS_LIB.ex_close(self.fileId)
     if errorInt != 0:
-      raise Exception("ERROR: Closing file " + self.fileName + " had problems.")
+      raise Exception, ("ERROR: Closing file " + self.fileName + " had problems.")
 
   # --------------------------------------------------------------------
   #
@@ -3469,16 +3469,16 @@ class exodus:
   # --------------------------------------------------------------------
 
   def __open(self, io_size=0):
-    print ("Opening exodus file: " + self.fileName)
+    print "Opening exodus file: " + self.fileName
     self.mode = EX_READ
     if self.modeChar.lower() == "a": self.mode = EX_WRITE
     if self.modeChar.lower() in ["a", "r"] and not os.path.isfile(self.fileName):
-      raise Exception("ERROR: Cannot open " + self.fileName + " for read. Does not exist.")
+      raise Exception, ("ERROR: Cannot open " + self.fileName + " for read. Does not exist.")
     elif self.modeChar.lower() == "w" and os.path.isfile(self.fileName):
-      raise Exception("ERROR: Cowardly not opening " + self.fileName + \
+      raise Exception, ("ERROR: Cowardly not opening " + self.fileName + \
                         " for write. File already exists.")
     elif self.modeChar.lower() not in ["a", "r", "w"]:
-      raise Exception("ERROR: File open mode " + self.modeChar + " unrecognized.")
+      raise Exception, ("ERROR: File open mode " + self.modeChar + " unrecognized.")
     self.comp_ws = c_int(8)
     self.io_ws = c_int(io_size)
     self.version = c_float(0.0)
@@ -3632,8 +3632,8 @@ class exodus:
       info_recs.append(irp.contents.value)
     for rec in info_recs:
       if len(rec) > MAX_LINE_LENGTH:
-        print ("WARNING: max line length reached for one or more info records;")
-        print ("         info might be incomplete for these records")
+        print "WARNING: max line length reached for one or more info records;"
+        print "         info might be incomplete for these records"
         break
     return info_recs
 
@@ -3659,7 +3659,7 @@ class exodus:
       dummy_int = c_int(0)
     val = EXODUS_LIB.ex_inquire(self.fileId, id, byref(dummy_int), byref(ret_float), dummy_char)
     if val < 0:
-      raise Exception("ERROR: ex_inquire(" + str(id) + ") failed on " + self.fileName)
+      raise Exception, ("ERROR: ex_inquire(" + str(id) + ") failed on " + self.fileName)
     return ret_float
 
   # --------------------------------------------------------------------
@@ -3668,7 +3668,7 @@ class exodus:
     val = c_longlong(0)
     val = EXODUS_LIB.ex_inquire_int(self.fileId, id)
     if val < 0:
-      raise Exception("ERROR: ex_inquire_int(" + str(id) + ") failed on " + self.fileName)
+      raise Exception, ("ERROR: ex_inquire_int(" + str(id) + ") failed on " + self.fileName)
     return val
 
   # --------------------------------------------------------------------
@@ -4362,8 +4362,8 @@ class exodus:
       return True
     errorInt = EXODUS_LIB.ex_put_variable_param(self.fileId, var_type, num_vars)
     if errorInt != 0:
-      print ("ERROR code =", errorInt)
-      raise Exception("ERROR: ex_put_variable_param had problems. This can only be called once per varType.")
+      print "ERROR code =", errorInt
+      raise Exception, ("ERROR: ex_put_variable_param had problems. This can only be called once per varType.")
     return True
 
   # --------------------------------------------------------------------
@@ -4473,9 +4473,9 @@ def collectElemConnectivity(exodusHandle, connectivity):
   """
 
   if type(connectivity) is not list:
-    raise Exception("ERROR: connectivity is not a list in call to collectElemConnectivity().")
+    raise Exception, ("ERROR: connectivity is not a list in call to collectElemConnectivity().")
   if connectivity:
-    raise Exception("ERROR: connectivity is not empty in call to collectElemConnectivity().")
+    raise Exception, ("ERROR: connectivity is not empty in call to collectElemConnectivity().")
 
   blockIds = exodusHandle.get_elem_blk_ids()
   for blId in blockIds:
@@ -4504,11 +4504,11 @@ def collectLocalNodeToLocalElems(exodusHandle, connectivity, localNodeToLocalEle
   """
 
   if type(connectivity) is not list:
-    raise Exception("ERROR: connectivity is not a list in call to collectLocalNodeToLocalElems().")
+    raise Exception, ("ERROR: connectivity is not a list in call to collectLocalNodeToLocalElems().")
   if type(localNodeToLocalElems) is not list:
-    raise Exception("ERROR: localNodeToLocalElems is not a list in call to collectLocalNodeToLocalElems().")
+    raise Exception, ("ERROR: localNodeToLocalElems is not a list in call to collectLocalNodeToLocalElems().")
   if localNodeToLocalElems:
-    raise Exception("ERROR: localNodeToLocalElems is not empty in call to collectLocalNodeToLocalElems().")
+    raise Exception, ("ERROR: localNodeToLocalElems is not empty in call to collectLocalNodeToLocalElems().")
 
   if not connectivity:
     collectElemConnectivity(exodusHandle, connectivity)
@@ -4541,13 +4541,13 @@ def collectLocalElemToLocalElems(exodusHandle, connectivity, localNodeToLocalEle
   """
 
   if type(connectivity) is not list:
-    raise Exception("ERROR: connectivity is not a list in call to collectLocalElemToLocalElems().")
+    raise Exception, ("ERROR: connectivity is not a list in call to collectLocalElemToLocalElems().")
   if type(localNodeToLocalElems) is not list:
-    raise Exception("ERROR: localNodeToLocalElems is not a list in call to collectLocalElemToLocalElems().")
+    raise Exception, ("ERROR: localNodeToLocalElems is not a list in call to collectLocalElemToLocalElems().")
   if type(localElemToLocalElems) is not list:
-    raise Exception("ERROR: localElemToLocalElems is not a list in call to collectLocalElemToLocalElems().")
+    raise Exception, ("ERROR: localElemToLocalElems is not a list in call to collectLocalElemToLocalElems().")
   if localElemToLocalElems:
-    raise Exception("ERROR: localElemToLocalElems is not empty in call to collectLocalElemToLocalElems().")
+    raise Exception, ("ERROR: localElemToLocalElems is not empty in call to collectLocalElemToLocalElems().")
 
   if not connectivity:
     collectElemConnectivity(exodusHandle, connectivity)
@@ -4616,7 +4616,7 @@ def copy_mesh(fromFileName, toFileName, exoFromObj = None, \
     exoFrom = exoFromObj
 
   if ( os.path.isfile(toFileName) ):
-    raise Exception("ERROR: ", toFileName, " file already exists cowardly exiting instead of overwriting in call to copy_mesh().")
+    raise Exception, ("ERROR: ", toFileName, " file already exists cowardly exiting instead of overwriting in call to copy_mesh().")
 
   title = exoFrom.title()
   ex_pars = ex_init_params(num_dim=exoFrom.num_dimensions(),
@@ -4684,7 +4684,7 @@ def copy_mesh(fromFileName, toFileName, exoFromObj = None, \
         #because that is format required by exo.put_elem_attr().
         e_attr_vals[blk_id].extend([0.0] * blk_num_elem[blk_id])
   
-  if debugPrint: print ("Transfer Element Data")
+  if debugPrint: print "Transfer Element Data"
   blkIds = exoFrom.get_elem_blk_ids()
   for blkId in blkIds:
     (elemType,numElem,nodesPerElem,oldnumAttr) = exoFrom.elem_blk_info(blkId)
@@ -4705,11 +4705,11 @@ def copy_mesh(fromFileName, toFileName, exoFromObj = None, \
     blockName = exoFrom.get_elem_blk_name(blkId)
     exoTo.put_elem_blk_name(blkId, blockName)
 
-  if debugPrint: print ("Transfer Element Id Map")
+  if debugPrint: print "Transfer Element Id Map"
   elemIdMap = exoFrom.get_elem_id_map()
   exoTo.put_elem_id_map(elemIdMap)
 
-  if debugPrint: print ("Transfer Node Sets")
+  if debugPrint: print "Transfer Node Sets"
   if (exoFrom.num_node_sets() > 0):
     nodeSetProps = exoFrom.get_node_set_property_names()
     nodeSetIds = exoFrom.get_node_set_ids()
@@ -4730,7 +4730,7 @@ def copy_mesh(fromFileName, toFileName, exoFromObj = None, \
         else:
           exoTo.put_node_set_property_value(nsId, nodeSetProp, propVal)
 
-  if debugPrint: print ("Transfer Side Sets")
+  if debugPrint: print "Transfer Side Sets"
   if (exoFrom.num_side_sets() > 0):
     sideSetProps = exoFrom.get_side_set_property_names()
     sideSetIds = exoFrom.get_side_set_ids()
@@ -4789,18 +4789,18 @@ def transfer_variables(exoFrom, exoTo, array_type='ctype',
   debugPrint = False
 
   if type(additionalGlobalVariables) is not list:
-    raise Exception("ERROR: additionalGlobalVariables is not a list.")
+    raise Exception, ("ERROR: additionalGlobalVariables is not a list.")
   if type(additionalNodalVariables) is not list:
-    raise Exception("ERROR: additionalNodalVariables is not a list.")
+    raise Exception, ("ERROR: additionalNodalVariables is not a list.")
   if type(additionalElementVariables) is not list:
-    raise Exception("ERROR: additionalElementVariables is not a list.")
+    raise Exception, ("ERROR: additionalElementVariables is not a list.")
 
-  if debugPrint: print ("Transfer Info records")
+  if debugPrint: print "Transfer Info records"
   numInfoRecs = exoFrom.num_info_records()
   if numInfoRecs > 0:
     infoRecs = exoFrom.get_info_records()
     exoTo.put_info_records(infoRecs)
-  if debugPrint: print ("Transfer time values")
+  if debugPrint: print "Transfer time values"
 
   nSteps = exoFrom.num_times()
   if nSteps == 0:
@@ -4810,7 +4810,7 @@ def transfer_variables(exoFrom, exoTo, array_type='ctype',
   for step in xrange(nSteps):
     exoTo.put_time(step+1, timeVals[step])
 
-  if debugPrint: print ("Add Global Variables")
+  if debugPrint: print "Add Global Variables"
   nNewGlobalVars = len(additionalGlobalVariables)
   nGlobalVars = exoFrom.get_global_variable_number() + nNewGlobalVars
   defaultNewVarVals = []
@@ -4831,7 +4831,7 @@ def transfer_variables(exoFrom, exoTo, array_type='ctype',
         gValues.extend(defaultNewVarVals)
       exoTo.put_all_global_variable_values(step+1, gValues)
 
-  if debugPrint: print ("Add Nodal Variables")
+  if debugPrint: print "Add Nodal Variables"
   nNewNodalVars = len(additionalNodalVariables)
   nOrigNodalVars = exoFrom.get_node_variable_number()
   nNodalVars = nOrigNodalVars + nNewNodalVars
@@ -4848,7 +4848,7 @@ def transfer_variables(exoFrom, exoTo, array_type='ctype',
           exoTo.put_node_variable_values(nodalVarName, step+1, nValues)
 
   if debugPrint:
-    print ("Construct Truth Table for additionalElementVariables")
+    print "Construct Truth Table for additionalElementVariables"
   blkIds = exoFrom.get_elem_blk_ids()
   numBlks = exoFrom.num_blks()
   newElemVariableNames = []
@@ -4865,10 +4865,10 @@ def transfer_variables(exoFrom, exoTo, array_type='ctype',
       newElemVariableNames.append(item)
       newElemVariableBlocks.append(blkIds)
     else:
-      print ("Warning additionalElementVariable item ", item, " is not right type to add.")
-      print ("should be a string or tuple, skipping")
+      print "Warning additionalElementVariable item ", item, " is not right type to add."
+      print "should be a string or tuple, skipping"
 
-  if debugPrint: print ("Add Element Variables")
+  if debugPrint: print "Add Element Variables"
   nNewElemVars = len(newElemVariableNames)
   nOrigElemVars = exoFrom.get_element_variable_number()
   nElemVars = nOrigElemVars + nNewElemVars
@@ -4944,14 +4944,14 @@ def add_variables(exo, global_vars = [], nodal_vars = [], element_vars = []):
   debugPrint = False
 
   if type(global_vars) is not list:
-    raise Exception("ERROR: global_vars is not a list.")
+    raise Exception, ("ERROR: global_vars is not a list.")
   if type(nodal_vars) is not list:
-    raise Exception("ERROR: nodal_vars is not a list.")
+    raise Exception, ("ERROR: nodal_vars is not a list.")
   if type(element_vars) is not list:
-    raise Exception("ERROR: element_vars is not a list.")
+    raise Exception, ("ERROR: element_vars is not a list.")
 
   if (exo.modeChar is 'r'):
-    raise Exception("ERROR: variables cannot be added to an exodus object in read only mode")
+    raise Exception, ("ERROR: variables cannot be added to an exodus object in read only mode")
 
   if debugPrint: 
     print("Add Global Variables")
@@ -4987,7 +4987,7 @@ def add_variables(exo, global_vars = [], nodal_vars = [], element_vars = []):
       exo.put_node_variable_name(var_name, i + n_old_vars + 1)
 
   if debugPrint:
-    print ("Construct Truth Table for additionalElementVariables")
+    print "Construct Truth Table for additionalElementVariables"
   new_e_var_names = []
   new_e_var_blks = []
   blk_ids = exo.get_elem_blk_ids()
