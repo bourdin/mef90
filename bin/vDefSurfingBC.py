@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 
 def parse(args=None):
@@ -109,7 +109,7 @@ def main():
             if pymef90.confirm("ExodusII file {0} already exists. Overwrite?".format(options.outputfile)):
                 os.remove(options.outputfile)
             else:
-                print '\n\t{0} was NOT generated.\n'.format(options.outputfile)
+                print ('\n\t{0} was NOT generated.\n'.format(options.outputfile))
                 return -1
     exoin  = exo.exodus(options.inputfile,mode='r')
     exoout = exoin.copy(options.outputfile)
@@ -119,7 +119,7 @@ def main():
     dim = exoout.num_dimensions()
     step = 0
     for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
-        print "writing step",step+1,t
+        print ("writing step {0}, t = {1:0.4f}".format(step+1,t))
         exoout.put_time(step+1,t)
         U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.ampl)
         X,Y,Z=exoout.get_coords()
