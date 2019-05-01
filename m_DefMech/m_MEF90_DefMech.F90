@@ -1182,15 +1182,31 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
          nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
       End If
-                     
-      numfield = max(MEF90DefMechGlobalOptions%forceOffset+dim-1,&
-                     MEF90DefMechGlobalOptions%pressureForceOffset,&
-                     MEF90DefMechGlobalOptions%CrackPressureOffset,&
-                     MEF90DefMechGlobalOptions%StressOffset+(dim*(dim+1))/2-1,&
-                     MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1,&
-                     MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)
+      
+      numfield = 0
+      If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%forceOffset+dim-1)
+      End If
+      
+      If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%pressureForceOffset)
+      End If
+      
+      If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%CrackPressureOffset)
+      End If
+
+      If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%stressOffset+(dim*(dim+1))/2-1)
+      End If
+      If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
+      End If
+
       Allocate(nameC(numfield))
-      nameC = "empty"
+      If (numfield > 0) Then
+         nameC = "empty"
+      End If
       If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
          nameC(MEF90DefMechGlobalOptions%forceOffset+0)                                = "Force_X"
          nameC(MEF90DefMechGlobalOptions%forceOffset+1)                                = "Force_Y"
@@ -1240,6 +1256,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          nameC(MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)       = "Cumulated_Plastic_Dissipation"
       End If
       
+write(*,*) '========================'
+write(*,*) numfield, nameC
+write(*,*) '========================'
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
       !!! This makes no sense, but there seems to be a bug in exodus / OSX where
       !!! formatting is not flushed to the drive
