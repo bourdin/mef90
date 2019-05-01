@@ -52,7 +52,17 @@ def confirm(prompt=None, resp=False):
     True
 
     """
-    
+    from sys import version_info
+    if version_info.major == 3:
+        pass
+    elif version_info.major == 2:
+        try:
+            input = raw_input
+        except NameError:
+            pass
+    else:
+        print ("Unknown python version - input function not safe")
+
     if prompt is None:
         prompt = 'Confirm'
 
