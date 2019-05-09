@@ -241,7 +241,6 @@ Program CoupledPlasticityDamage
       Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
       ActivatedCrackPressureBlocksList(set) = cellSetOptions%CrackVolumeControlled
       ActivatedWorkControlledBlocksList(set) = cellSetOptions%WorkControlled
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
    End Do
    Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
    Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)

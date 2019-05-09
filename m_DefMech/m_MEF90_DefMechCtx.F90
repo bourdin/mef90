@@ -10,6 +10,7 @@ Module m_MEF90_DefMechCtx_Type
       Type(Vec),pointer                      :: displacement,displacementPreviousStep
       Type(Vec),pointer                      :: damage,damagePreviousStep
       Type(Vec),pointer                      :: boundaryDisplacement
+      Type(Vec),pointer                      :: displacementLowerBound,displacementUpperBound
       Type(Vec),pointer                      :: boundaryDamage
       Type(Vec),Pointer                      :: temperature
       
@@ -47,6 +48,8 @@ Module m_MEF90_DefMechCtx_Type
       Type(PetscViewer),Dimension(:),Pointer :: setEnergyViewer
 
       Type(SNES)                             :: SNESDisp,SNESDamage
+      PetscBool                              :: hasDisplacementBounds
+      PetscBool                              :: hasUnilateralContact
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
@@ -68,6 +71,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscInt                               :: cumulatedPlasticDissipationOffset
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscInt                               :: boundaryDisplacementScaling
+      PetscInt                               :: displacementLowerBoundScaling
+      PetscInt                               :: displacementUpperBoundScaling
       PetscInt                               :: boundaryDamageScaling
       PetscInt                               :: forceScaling
       PetscInt                               :: pressureForceScaling
@@ -98,6 +103,8 @@ Module m_MEF90_DefMechCtx_Type
       PetscEnum                              :: unilateralContactType
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
+      PetscReal,Dimension(3)                 :: displacementLowerBound
+      PetscReal,Dimension(3)                 :: displacementUpperBound
       PetscBool                              :: Has_damageBC
       PetscBool                              :: CrackVolumeControlled
       PetscBool                              :: WorkControlled
@@ -107,6 +114,8 @@ Module m_MEF90_DefMechCtx_Type
    Type MEF90DefMechVertexSetOptions_Type
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
+      PetscReal,Dimension(3)                 :: displacementLowerBound
+      PetscReal,Dimension(3)                 :: displacementUpperBound
       PetscBool                              :: Has_damageBC
       PetscReal                              :: boundaryDamage
    End Type MEF90DefMechVertexSetOptions_Type 
@@ -393,7 +402,7 @@ Contains
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
       Character(len=MEF90_MXSTRLEN)                            :: filename,IOBuffer
-      
+
       Call MEF90DefMechCtxInitialize_Private(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
       DefMechCtx%DM => Mesh
@@ -477,6 +486,8 @@ Contains
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
+      Nullify(DefMechCtx%displacementLowerBound)
+      Nullify(DefMechCtx%displacementUpperBound)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%displacementPreviousStep)
@@ -565,6 +576,16 @@ Contains
       Call PetscObjectSetName(DefMechCtx%boundaryDisplacement,"boundary Displacement",ierr);CHKERRQ(ierr)
       Call VecSet(DefMechCtx%boundaryDisplacement,0.0_Kr,ierr);CHKERRQ(ierr)
    
+      Allocate(DefMechCtx%displacementLowerBound,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%displacementLowerBound,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%displacementLowerBound,"displacement Lower Bound",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%displacementLowerBound,0.0_Kr,ierr);CHKERRQ(ierr)
+   
+      Allocate(DefMechCtx%displacementUpperBound,stat=ierr)
+      Call DMCreateGlobalVector(DefMechCtx%DMVect,DefMechCtx%displacementUpperBound,ierr);CHKERRQ(ierr)
+      Call PetscObjectSetName(DefMechCtx%displacementUpperBound,"displacement Upper Bound",ierr);CHKERRQ(ierr)
+      Call VecSet(DefMechCtx%displacementUpperBound,0.0_Kr,ierr);CHKERRQ(ierr)
+   
       Allocate(DefMechCtx%force,stat=ierr)
       Call DMCreateGlobalVector(DefMechCtx%cellDMVect,DefMechCtx%force,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(DefMechCtx%force,"Force",ierr);CHKERRQ(ierr)
@@ -645,6 +666,18 @@ Contains
          Call VecDestroy(DefMechCtx%boundaryDisplacement,ierr);CHKERRQ(ierr)
          DeAllocate(DefMechCtx%boundaryDisplacement)
          Nullify(DefMechCtx%boundaryDisplacement)
+      End If   
+
+      If (Associated(DefMechCtx%displacementLowerBound)) Then 
+         Call VecDestroy(DefMechCtx%displacementLowerBound,ierr);CHKERRQ(ierr)
+         DeAllocate(DefMechCtx%displacementLowerBound)
+         Nullify(DefMechCtx%displacementLowerBound)
+      End If   
+
+      If (Associated(DefMechCtx%displacementUpperBound)) Then 
+         Call VecDestroy(DefMechCtx%displacementUpperBound,ierr);CHKERRQ(ierr)
+         DeAllocate(DefMechCtx%displacementUpperBound)
+         Nullify(DefMechCtx%displacementUpperBound)
       End If   
 
       If (Associated(DefMechCtx%boundaryDamage)) Then 
@@ -749,6 +782,8 @@ Contains
       Nullify(DefMechCtx%pressureforce)
       Nullify(DefMechCtx%CrackPressure)
       Nullify(DefMechCtx%boundaryDisplacement)
+      Nullify(DefMechCtx%displacementLowerBound)
+      Nullify(DefMechCtx%displacementUpperBound)
       Nullify(DefMechCtx%boundaryDamage)
       Nullify(DefMechCtx%Displacement)
       Nullify(DefMechCtx%displacementPreviousStep)
@@ -813,6 +848,8 @@ Contains
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%cumulatedPlasticDissipationOffset,default%cumulatedPlasticDissipationOffset,'cumulatedPlasticDissipation_Offset','Position of the Cumulated Plastic Plastic Dissipation field in EXO file',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementLowerBoundScaling,MEF90ScalingList,default%displacementLowerBoundScaling,'displacementlowerbound_scaling','Displacement lower bound scaling',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementUpperBoundScaling,MEF90ScalingList,default%displacementUpperBoundScaling,'displacementupperbound_scaling','Displacement upper bound scaling',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt (bag,DefMechGlobalOptions%boundaryDisplacementOffset,default%boundaryDisplacementOffset,'boundaryDisplacement_Offset','Position of boundary displacement field in EXO file',ierr);CHKERRQ(ierr)
 
       Call PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDamageScaling,MEF90ScalingList,default%boundaryDamageScaling,'boundaryDamage_scaling','Boundary damage scaling',ierr);CHKERRQ(ierr)
@@ -864,8 +901,10 @@ Contains
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
       
       DefMechCellSetOptions%force = default%Force
-      DefMechCellSetOptions%boundaryDisplacement = default%boundaryDisplacement
-      DefMechCellSetOptions%Has_displacementBC   = default%Has_displacementBC
+      DefMechCellSetOptions%boundaryDisplacement   = default%boundaryDisplacement
+      DefMechCellSetOptions%displacementLowerBound = default%displacementLowerBound
+      DefMechCellSetOptions%displacementUpperBound = default%displacementUpperBound
+      DefMechCellSetOptions%Has_displacementBC     = default%Has_displacementBC
 
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDisplacement,default%ElemTypeShortIDDisplacement,'ShortIDDisplacement','Displacement element type ShortID',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterInt(bag,DefMechCellSetOptions%ElemTypeShortIDDamage,default%ElemTypeShortIDDamage,'ShortIDDamage','Damage field element type ShortID',ierr);CHKERRQ(ierr)
@@ -877,6 +916,8 @@ Contains
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementUpperBound,3,'displacementUpperBound','[m] (U): Displacement upper bound',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%CrackVolumeControlled,default%CrackVolumeControlled,'CrackVolumeControlled','Crack Pressure controlled by the crack volume in this block (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechCellSetOptions%WorkControlled,default%WorkControlled,'WorkControlled','Force magnitude controlled by its work in this block (Y/N)',ierr);CHKERRQ(ierr)
@@ -902,10 +943,14 @@ Contains
       Call PetscBagSetName(bag,trim(name),"DefMechVertexSetOptions MEF90 Defect Mechanics Vertex Set options",ierr);CHKERRQ(ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
 
-      DefMechVertexSetOptions%Has_displacementBC   = default%Has_displacementBC
-      DefMechVertexSetOptions%boundaryDisplacement = default%boundaryDisplacement
+      DefMechVertexSetOptions%Has_displacementBC     = default%Has_displacementBC
+      DefMechVertexSetOptions%boundaryDisplacement   = default%boundaryDisplacement
+      DefMechVertexSetOptions%displacementLowerBound = default%displacementLowerBound
+      DefMechVertexSetOptions%displacementUpperBound = default%displacementUpperBound
       Call PetscBagRegisterBoolArray(bag,DefMechVertexSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementUpperBound,3,'displacementUpperBound','[m] (U): Displacement upper bound',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): boundaryDamage',ierr);CHKERRQ(ierr)
    End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
@@ -938,6 +983,8 @@ Contains
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
       Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
+      Type(MEF90DefMechCellSetOptions_Type),pointer         :: cellSetOptions    
+      Type(IS)                                              :: cellSetGlobalIS  
 
       Call PetscBagGetDataMEF90CtxGlobalOptions(DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
       !!!
@@ -997,6 +1044,19 @@ Contains
          End if
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+
+      !!! Identify if any of the displacement bounds are set
+      DefMechCtx%hasDisplacementBounds = PETSC_FALSE
+      Call DMmeshGetLabelIdIS(DefMechCtx%CellDMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
+      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Do set = 1,size(setID)
+         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+         DefMechCtx%hasDisplacementBounds = any(cellSetOptions%displacementLowerBound /= MEF90_NINFINITY) .OR. DefMechCtx%hasDisplacementBounds
+         DefMechCtx%hasDisplacementBounds = any(cellSetOptions%displacementUpperBound /= MEF90_INFINITY)  .OR. DefMechCtx%hasDisplacementBounds
+      EndDo
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')

@@ -36,6 +36,8 @@ module m_vDefDefault
                                                          6,                       & ! StressOffset
                                                          1,                       & ! cumulatedPlasticDissipationOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! displacementLowerBoundScaling
+                                                         MEF90Scaling_CST,        & ! displacementUpperBoundScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
@@ -70,6 +72,8 @@ module m_vDefDefault
                                                          7,                       & ! StressOffset
                                                          1,                       & ! cumulatedPlasticDissipationOffset
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_CST,        & ! displacementLowerBoundScaling
+                                                         MEF90Scaling_CST,        & ! displacementUpperBoundScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! ForceScaling
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
@@ -89,25 +93,29 @@ module m_vDefDefault
                                                          0.0_Kr)                    ! dampingCoefficientDamage
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                      & ! elemTypeShortIDDispl will be overriden
-                                                         -1,                                      & ! elemTypeShortIDDamage will be overriden
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
-                                                         0.0_Kr,                                  & ! pressureForce
-                                                         0.0_Kr,                                  & ! CrackPressure
-                                                         MEF90DefMech_damageTypeAT1,              & ! damageType
-                                                         MEF90DefMech_plasticityTypeNone,         & ! plasticityType
-                                                         MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         PETSC_FALSE,                             & ! CrackVolumeControlled
-                                                         PETSC_FALSE,                             & ! WorkControlled
-                                                         0._Kr)                                     ! Boundary Damage
+                                                         -1,                                                & ! elemTypeShortIDDispl will be overriden
+                                                         -1,                                                & ! elemTypeShortIDDamage will be overriden
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! force
+                                                         0.0_Kr,                                            & ! pressureForce
+                                                         0.0_Kr,                                            & ! CrackPressure
+                                                         MEF90DefMech_damageTypeAT1,                        & ! damageType
+                                                         MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
+                                                         MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
+                                                         [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound
+                                                         [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY],    & ! displacement Upper Bound
+                                                         PETSC_FALSE,                                       & ! Has Damage BC
+                                                         PETSC_FALSE,                                       & ! CrackVolumeControlled
+                                                         PETSC_FALSE,                                       & ! WorkControlled
+                                                         0._Kr)                                               ! Boundary Damage
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: vDefDefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr)                                    ! boundary Damage
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
+                                                         [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound
+                                                         [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY],    & ! displacement Upper Bound
+                                                         PETSC_FALSE,                                       & ! Has Damage BC
+                                                         0.0_Kr)                                              ! boundary Damage
 
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: vDefHeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                          MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
