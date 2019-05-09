@@ -46,6 +46,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
       Type(MEF90Element_Type)                            :: elemType
       PetscInt                                           :: cell,dof,nVal
+      Type(MEF90_VECT)                                   :: advectionVector
 
       !!! Create dof-based sections
       Call SectionRealDuplicate(MEF90HeatXferCtx%DMScalSec,xSec,ierr);CHKERRQ(ierr)
@@ -91,6 +92,10 @@ Contains
             Call MEF90Element_Create(MEF90HeatXferCtx%DM,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
             If (elemType%Codim == 0) Then
                Call MEF90DiffusionOperatorSet(residualSec,MEF90HeatXferCtx%DM,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+               advectionVector = -matPropSet%density * matPropSet%SpecificHeat * cellSetOptions%advectionVector(1:MEF90_DIM)
+               If (norm(adVectionVector) /= 0.0_Kr) Then
+                  Call MEF90DiffusionOperatorAdvectionSet(residualsec,MEF90HeatXferCtx%DM,xSec,setIS,advectionVector,elem,elemType,ierr);CHKERRQ(ierr)
+               End If
             End If
 
             !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
@@ -100,14 +105,13 @@ Contains
             Do cell = 1,size(setIdx)
                Call SectionRealRestrict(fluxSec,setIdx(cell),fluxPtr,ierr);CHKERRQ(ierr)
                modifiedFluxPtr = - fluxPtr
-               Call SectionRealUpdate(modifiedFluxSec,setIdx(cell),modifiedFluxPtr,ADD_VALUES,ierr);CHKERRQ(ierr)
+               If (cellSetOptions%SurfaceThermalConductivity /= 0.0_Kr) Then
+                  Call SectionRealRestrict(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
+                  modifiedFluxPtr = modifiedFluxPtr - cellSetOptions%SurfaceThermalConductivity * externalTemperaturePtr
+                  Call SectionRealRestore(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
+               End If
                Call SectionRealRestore(fluxSec,setIdx(cell),fluxPtr,ierr);CHKERRQ(ierr)
-            End Do
-            Do cell = 1,size(setIdx)
-               Call SectionRealRestrict(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
-               modifiedFluxPtr = - cellSetOptions%SurfaceThermalConductivity * externalTemperaturePtr
                Call SectionRealUpdate(modifiedFluxSec,setIdx(cell),modifiedFluxPtr,ADD_VALUES,ierr);CHKERRQ(ierr)
-               Call SectionRealRestore(externalTemperatureSec,setIdx(cell),externalTemperaturePtr,ierr);CHKERRQ(ierr)
             End Do
             Call MEF90DiffusionRHSSetCell(residualsec,MEF90HeatXferCtx%DM,modifiedFluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
           
@@ -216,6 +220,7 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
       PetscInt                                           :: cell,v,numBC,numDoF,numCell
+      Type(MEF90_VECT)                                   :: adVectionVector
       
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
@@ -231,6 +236,10 @@ Contains
                QuadratureOrder = 2 * elemType%order
                Call MEF90Element_Create(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
                Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DMScal,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
+               advectionVector = -matPropSet%density * matPropSet%SpecificHeat * cellSetOptions%advectionVector(1:MEF90_DIM)
+               If (norm(adVectionVector) /= 0.0_Kr) Then
+                  Call  MEF90DiffusionBilinearFormAdvectionSet(A,MEF90HeatXferCtx%DMScal,setIS,advectionVector,elem,elemType,ierr);CHKERRQ(ierr)
+               End If
                Call MEF90Element_Destroy(elem,ierr)
                Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
             End If

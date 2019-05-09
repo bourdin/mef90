@@ -10,7 +10,9 @@ Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
 
    Private   
    Public :: MEF90DiffusionBilinearFormSet
+   Public :: MEF90DiffusionBilinearFormAdvectionSet
    Public :: MEF90DiffusionEnergySet
+   Public :: MEF90DiffusionOperatorAdvectionSet
    Public :: MEF90DiffusionOperatorAddTransientTermSet
    Public :: MEF90DiffusionOperatorSet
    Public :: MEF90DiffusionRHSSetVertex
@@ -22,11 +24,11 @@ Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
 
    
 
-!  Assembles all components required to solve a MEF90Diffusion equation in the form
+!  Assembles all components required to solve a diffusion equation in the form
 !
-!       { -div[A\nabla v] + \lambda v = f in \Omega
-!  (1)  {                           v = V on \partial \Omega_d
-!       {                        Av.n = g on \partial \Omega_n
+!       { -div[A\nabla v] + \lambda v = f   in \Omega
+!  (1)  {                           v = v_0 on \partial \Omega_d
+!       {                        Av.n = g   on \partial \Omega_n
 !
 !  or equivalently to minimize
 !
@@ -104,6 +106,55 @@ Contains
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionBilinearFormSet
 
+!!!
+!!!  
+!!!  MEF90DiffusionBilinearFormAdvectionSet:
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DiffusionBilinearFormAdvectionSet"
+
+   Subroutine MEF90DiffusionBilinearFormAdvectionSet(K,mesh,cellIS,advectionVector,elem,elemType,ierr)
+      Type(Mat),Intent(IN)                               :: K 
+      Type(DM),Intent(IN)                                :: mesh
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_VECT),Intent(IN)                        :: advectionVector
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:,:),Pointer                   :: MatElem
+      PetscInt                                           :: iDoF1,iDoF2,iGauss
+      Type(SectionReal)                                  :: defaultSection
+      PetscLogDouble                                     :: flops
+     
+      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(MatElem(elemType%numDof,elemType%numDof))
+         Do cell = 1,size(cellID)   
+            MatElem = 0.0_Kr
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               Do iDoF1 = 1,elemType%numDof
+                  Do iDoF2 = 1,elemType%numDof
+                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
+                                    (advectionVector .dotP. elem(cell)%Grad_BF(iDoF1,iGauss)) * elem(cell)%BF(iDoF2,iGauss)
+                  End Do
+               End Do
+            End Do
+            Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
+         End Do
+         flops = 5 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(MatElem)
+      End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DiffusionBilinearFormAdvectionSet
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionOperatorSet"   
 
@@ -122,8 +173,8 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: Gloc
       PetscReal,Dimension(:),Pointer                     :: Vloc
-      PetscReal                                          :: Velem
-      Type(MEF90_VECT)                                   :: GradVelem
+      PetscReal                                          :: Velem,lambdaVelem
+      Type(MEF90_VECT)                                   :: GradVelem,AGradVelem
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
@@ -141,10 +192,12 @@ Contains
                   Velem     = Velem     + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
                   GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
                End Do
+               AGradVelem  = A * GradVelem
+               lambdaVelem = lambda * Velem
                Do iDoF1 = 1,elemType%numDof
                   Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                 (lambda * elem(cell)%BF(iDoF1,iGauss) * Velem + &
-                                  ( (A * elem(cell)%Grad_BF(iDoF1,iGauss)) .DotP. GradVelem))
+                                 ( elem(cell)%BF(iDoF1,iGauss) * lambdaVelem + &
+                                  ( elem(cell)%Grad_BF(iDoF1,iGauss) .DotP. AGradVelem) )
                End Do
             End Do
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
@@ -158,8 +211,66 @@ Contains
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DiffusionOperatorSet
 
+!!!
+!!!  
+!!!  MEF90DiffusionOperatorAdvectionSet:
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DiffusionOperatorAdvectionSet"   
+
+   Subroutine MEF90DiffusionOperatorAdvectionSet(G,mesh,V,cellIS,advectionVector,elem,elemType,ierr)
+      Type(SectionReal),Intent(IN)                       :: G
+      Type(DM),Intent(IN)                                :: mesh
+      Type(SectionReal),Intent(IN)                       :: V
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_VECT),Intent(IN)                        :: advectionVector
+      Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
+      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscReal,Dimension(:),Pointer                     :: Gloc
+      PetscReal,Dimension(:),Pointer                     :: Vloc
+      Type(MEF90_VECT)                                   :: GradVelem
+      PetscReal                                          :: advectionVectorDotGradVelem
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+           
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Vloc(elemType%numDof))
+         Allocate(Gloc(elemType%numDof))
+         Do cell = 1,size(cellID)      
+            Gloc = 0.0_Kr
+            Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elem(cell)%Gauss_C)
+               GradVElem = 0.0_Kr
+               Do iDoF1 = 1,elemType%numDof
+                  GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               advectionVectorDotGradVelem = advectionVector .dotP. GradVelem
+               Do iDoF1 = 1,elemType%numDof
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * advectionVectorDotGradVelem
+               End Do
+            End Do
+            Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)
+         End Do
+      
+         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Gloc)
+         DeAllocate(Vloc)
+      End If
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DiffusionOperatorAdvectionSet
+
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DiffusionOperatorAddTransientTermSet"
+
 !!!
 !!!  
 !!!  MEF90DiffusionOperatorAddTransientTermSet:
