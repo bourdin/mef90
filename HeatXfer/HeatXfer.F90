@@ -40,7 +40,8 @@ Program HeatXfer
                                                          0.0_Kr,        & ! surfaceThermalConductivity
                                                          0.0_Kr,        & ! externalTemp
                                                          PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr)          ! boundaryTemp
+                                                         0.0_Kr,        & ! boundaryTemp
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr]) ! AdvectionVelocity
                                                          
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_FALSE,   & ! Has BC

@@ -1,3 +1,4 @@
+%!TEX options = -shell-escape
 \documentclass[10pt,oneside]{report}
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
@@ -76,15 +77,33 @@ There are several variants of \vDef:
 \chapter{Models and algorithms}
 \section{Heat transfer}
 \label{sec:HeatXfer}
-\vDef can solve diffusive linear steady-state or transient heat transfer problems. This heat transfer solver can be used as a standalone simulator, or the temperature field can be plugged in the elasticity of gradient damage simulators. In the sequel, we consider the problem of finding the temperature $T(x,t)$ of a body occupying a region $\Omega$ of the two or three--dimensional space and satisfying
+\vDef can solve diffusive linear steady-state or transient advective-diffusive heat transfer problems. This heat transfer solver can be used as a standalone simulator, or the temperature field can be plugged in the elasticity of gradient damage simulators. In the sequel, we consider the problem of finding the temperature $T(x,t)$ of a body occupying a region $\Omega$ of the two or three--dimensional space and satisfying
 \begin{empheq}[left=\empheqlbrace]{align}
-	\rho(x) c_p(x) \frac{\partial T}{\partial t} &= \mathrm{div}\left( K(x) \nabla T\right) + f & \text{ in } \Omega,\\
-    K \frac{\partial T}{\partial n} (x,t)& = g(x,t) + H (T_e-T(x,t)) & \text{ on } \partial_n \Omega,\\
+	\rho(x) c_p(x) \left(\frac{\partial T(x,t)}{\partial t} - V\cdot\nabla T(x,t)\right) &= \nabla \cdot\left( K(x) \nabla T(x,t)\right) + \dot{q}_V(x,t) & \text{ in } \Omega,\\
+    K \frac{\partial T}{\partial n} (x,t)& = \dot{q}_S(x,t) + H (T_e-T(x,t)) & \text{ on } \partial_n \Omega,\\
     T(x,t) & = T_b(x,t) & \text{ on } \partial_d \Omega,\\
     T(x,0) & = T_0. 
 \end{empheq}
-Where $f$ and $g$ denotes respectively the body and boundary fluxes, $T_b$ is a prescribed boundary temperature, $T_e$ is a constant surrounding temperature, and $T_0$ is a constant initial temperature. $\rho$ is the material's density, $c_p$ its specific heat, $K$ is the thermal conductivity, a symmetric tensor, and $H$ is the surface thermal conductivity. For steady state problems, time derivatives are ignored and the initial temperature is used as the initial guess of the iterative solver.
+Where $\dot{q}_V$ and $\dot{Q}_S$ denotes respectively the body and boundary heat fluxes, $V$ is an advection vector, $T_b$ is a prescribed boundary temperature, $T_e$ is a constant surrounding temperature, and $T_0$ is a constant initial temperature. $\rho$ is the material's density, $c_p$ its specific heat, $K$ is the thermal conductivity, a symmetric tensor, and $H$ is the surface thermal conductivity. For steady state problems, time derivatives are ignored and the initial temperature is used as the initial guess of the iterative solver.
 
+\begin{table}[h!]
+\centering
+\begin{tabular}{lll}
+Symbol & Name & Unit \\
+\hline
+$T$ & temperature & \si{\kelvin}\\
+$t$ & time        & \si{\second}\\
+$\rho$ & density & \si{\kilo\gram \per \cubic\metre}\\
+$c_p$ & specific heat capacity & \si{\joule \per \kelvin \per \kilo \gram}\\
+$V$ & advection velocity (vector) & \si{\metre \per \second} \\
+$K$ & thermal conducticity (symmetric matrix)& \si{\joule \per \second \per \kelvin \per \metre}\\
+$\dot{q}_V$ & body heat flux & \si{\joule \per \second \per \cubic \metre}\\
+$\dot{q}_S$ & boundary heat flux & \si{\joule \per \second \per \square \metre}\\
+$H$ & surface thermal conductivity & \si{\joule \per \second \per \kelvin \per \square \metre} \\
+\end{tabular}
+\caption{Nomenclature for the heat transfer module}
+\label{tab:nomenclatureHeatXfer}
+\end{table}
 
 \section{Variational Phase-Field models of fracture}
 \label{sec:GradientDamageModels}
@@ -229,7 +248,7 @@ This is the best understood approach, and was recently shown to converge to a va
 %$e(u)=e^+(u) + e^-(u)$ , where $e$ is the principal strain. $e^+$ is the projection in the positive principal basis such as minimize the energy norm $||*||_{\mathtt{A}}=\mathtt{A}*:*$,
 
 %$$|| e^+(u) - e(u) ||_\mathtt{A} = \min_{\varepsilon(u) \in S} || \varepsilon(u) - e(u)||_\mathtt{A} =\min_{\varepsilon \in S} \mathtt{A} (\varepsilon(u)-e(u)):(\varepsilon(u)-e(u))$$
-$S$ 
+%$S$ 
 %is a cone convex set.
 %Because the projection is not differentiable we do alternate projection until convergence of the displacement.
 
@@ -950,39 +969,36 @@ The idea is to follow the classical alternate minimization which is a decreasing
 
 
 
-The minimization problem in $u$ is quadratic and the problem in $p$ can be turns into a minimization of a quadratic functional constraint by the stress which has to remains in the elastic domain.
+The minimization problem in $u$ is quadratic and the problem in $p$ can be turned into the minimization of a quadratic functional under the constraint that the stress which has to remains in the elastic domain.
 
-Let discretized the space time such as $0=t_0<..<t_{i-1}<t_i<..<t_N=T$ and for a given $u$ the minimization in $p$ is:
-
-$$\min_{p}   \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_{t_{i-1}}^{t_i} \mathrm{H} (p-p_{i-1}) + \sum_{k=0}^{i-1} \mathrm{H} (\dot{p_k-p_{k-1}}) $$
-
-Optimality conditions for the minimization problem in $p$ is, 
-
+Consider a discretized time interval $0=t_0<\dots<t_{i-1}<t_i<\dots<t_N=T$.
+For a given $u$ the minimization in $p$ is:
+$$
+    \min_{p}   \frac{1}{2} \mathtt{A} (e(u)-p) :  (e(u)-p) + \int_{t_{i-1}}^{t_i} \mathrm{H} (p-p_{i-1}) + \sum_{k=0}^{i-1} \mathrm{H} (\dot{p_k-p_{k-1}}).
+$$
+The optimality conditions for the minimization problem in $p$ are 
 \begin{equation}
 \begin{split}
-\partial_p \{  \frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) + \mathrm{H}(p-p_{i-1}) \} \ni 0 \\
--\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0
+\partial_p \left\{  \frac{1}{2}\mathtt{A} (e(u)-p):(e(u)-p) + \mathrm{H}(p-p_{i-1}) \right\} \ni 0 \\
+-\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0,
 \end{split}
 \end{equation}
-
-where $I^{*}_K$ is the indicator function in the dual space such as, $$I^*_K(p-p_{i-1})= \sup_{\sigma \in K} \{ \sigma:(p-p_{i-1}) - I_K(\sigma)  \} = \mathrm{H}(p-p_{i-1})$$
-
-
-Optimal conditions can be expressed in the dual space by using the Legendre-Fenchel transform.
-
-
+where $I^{*}_K$ is the indicator function in the dual space such as
+$$
+    I^*_K(p-p_{i-1})= \sup_{\sigma \in K} \{ \sigma:(p-p_{i-1}) - I_K(\sigma)  \} = \mathrm{H}(p-p_{i-1}).
+$$
+Using the Legendre-Fenchel transform, one gets the equivalent formulation 
 \begin{equation}
 \begin{split}
 -\mathtt{A} (e(u)-p) + \partial_p I^*_K(p-p_{i-1}) \ni 0 & \Leftrightarrow -(p-p_{i-1}) + \partial I_K(\mathtt{A} (e(u)-p)) \ni 0 \\
  & \Leftrightarrow   \mathtt{A}(p-p_{i-1}) - \mathtt{A}\partial I_K (\mathtt{A}(e(u)-p)) \ni 0 \\
-& \Leftrightarrow  \partial_p \Big( \frac{1}{2}\mathtt{A}(p-p_{i-1}):(p-p_{i-1}) - I_K (\mathtt{A}(e(u)-p)) \Big) \ni 0
+& \Leftrightarrow  \partial_p \Big( \frac{1}{2}\mathtt{A}(p-p_{i-1}):(p-p_{i-1}) - I_K (\mathtt{A}(e(u)-p)) \Big) \ni 0,
 \end{split}
 \end{equation}
-
-because $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem becomes,
-
-
-$$ \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}) $$
+and since $I_K(\sigma) = 0$ if $\sigma \in K$ , then the minimization problem becomes
+$$ 
+    \min_{\substack{p \\ \mathtt{A}(e(u)-p) \in K}} \frac{1}{2}\mathtt{A} (p-p_{i-1}):(p-p_{i-1}).
+$$
 
 \section{List of all supported YAML options as of 12/13/2018}
 \inputminted[]{yaml}{alloptions-2018-12-13.yaml}.

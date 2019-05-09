@@ -121,16 +121,16 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear, & ! fluxScaling
                                                          1)                     ! fluxOffset
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: vDefHeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-                                                         -1,            & ! elemTypeShortID will be overriden
-                                                         0.0_Kr,        & ! flux
-                                                         0.0_Kr,        & ! surfaceThermalConductivity
-                                                         0.0_Kr,        & ! externalTemp
-                                                         PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr)          ! boundaryTemp
+                                                         -1,                   & ! elemTypeShortID will be overriden
+                                                         0.0_Kr,               & ! flux
+                                                         0.0_Kr,               & ! surfaceThermalConductivity
+                                                         0.0_Kr,               & ! externalTemp
+                                                         PETSC_FALSE,          & ! Has BC
+                                                         0.0_Kr,               & ! boundaryTemp
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr]) ! advectionVelocity
                                                          
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: vDefHeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
-
 
 end module m_vDefDefault

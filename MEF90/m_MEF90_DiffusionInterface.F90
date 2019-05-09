@@ -6,7 +6,9 @@ Module m_MEF90_DiffusionInterface
    Use m_MEF90_Utils
    Use m_MEF90_DiffusionImplementation_2D, &
          MEF90DiffusionBilinearFormSet_2D => MEF90DiffusionBilinearFormSet, &
+         MEF90DiffusionBilinearFormAdvectionSet_2D => MEF90DiffusionBilinearFormAdvectionSet, &
          MEF90DiffusionEnergySet_2D => MEF90DiffusionEnergySet, &
+         MEF90DiffusionOperatorAdvectionSet_2D => MEF90DiffusionOperatorAdvectionSet, &
          MEF90DiffusionOperatorAddTransientTermSet_2D => MEF90DiffusionOperatorAddTransientTermSet, &
          MEF90DiffusionOperatorSet_2D => MEF90DiffusionOperatorSet, &
          MEF90DiffusionRHSSetVertex_2D => MEF90DiffusionRHSSetVertex, &
@@ -17,7 +19,9 @@ Module m_MEF90_DiffusionInterface
          MEF90DiffusionWorkSetCst_2D => MEF90DiffusionWorkSetCst
    Use m_MEF90_DiffusionImplementation_3D, &
          MEF90DiffusionBilinearFormSet_3D => MEF90DiffusionBilinearFormSet, &
+         MEF90DiffusionBilinearFormAdvectionSet_3D => MEF90DiffusionBilinearFormAdvectionSet, &
          MEF90DiffusionEnergySet_3D => MEF90DiffusionEnergySet, &
+         MEF90DiffusionOperatorAdvectionSet_3D => MEF90DiffusionOperatorAdvectionSet, &
          MEF90DiffusionOperatorAddTransientTermSet_3D => MEF90DiffusionOperatorAddTransientTermSet, &
          MEF90DiffusionOperatorSet_3D => MEF90DiffusionOperatorSet, &
          MEF90DiffusionRHSSetVertex_3D => MEF90DiffusionRHSSetVertex, &
@@ -32,7 +36,9 @@ Module m_MEF90_DiffusionInterface
 
    Private   
    Public :: MEF90DiffusionBilinearFormSet
+   Public :: MEF90DiffusionBilinearFormAdvectionSet
    Public :: MEF90DiffusionEnergySet
+   Public :: MEF90DiffusionOperatorAdvectionSet
    Public :: MEF90DiffusionOperatorAddTransientTermSet
    Public :: MEF90DiffusionOperatorSet
    Public :: MEF90DiffusionRHSSetVertex
@@ -45,11 +51,19 @@ Module m_MEF90_DiffusionInterface
    Interface MEF90DiffusionBilinearFormSet
       Module Procedure MEF90DiffusionBilinearFormSet_2D, MEF90DiffusionBilinearFormSet_3D
    End Interface MEF90DiffusionBilinearFormSet
+
+   Interface MEF90DiffusionBilinearFormAdvectionSet
+      Module Procedure MEF90DiffusionBilinearFormAdvectionSet_2D, MEF90DiffusionBilinearFormAdvectionSet_3D
+   End Interface MEF90DiffusionBilinearFormAdvectionSet
    
    Interface MEF90DiffusionEnergySet
       Module procedure MEF90DiffusionEnergySet_2D,MEF90DiffusionEnergySet_3D
    End Interface MEF90DiffusionEnergySet
 
+   Interface MEF90DiffusionOperatorAdvectionSet
+      Module procedure MEF90DiffusionOperatorAdvectionSet_2D,MEF90DiffusionOperatorAdvectionSet_3D
+   End Interface MEF90DiffusionOperatorAdvectionSet
+   
    Interface MEF90DiffusionOperatorAddTransientTermSet
       Module procedure MEF90DiffusionOperatorAddTransientTermSet_2D,MEF90DiffusionOperatorAddTransientTermSet_3D
    End Interface MEF90DiffusionOperatorAddTransientTermSet
