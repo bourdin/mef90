@@ -1393,9 +1393,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          nameC(MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)       = "Cumulated_Plastic_Dissipation"
       End If
       
-write(*,*) '========================'
-write(*,*) numfield, nameC
-write(*,*) '========================'
       Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
       !!! This makes no sense, but there seems to be a bug in exodus / OSX where
       !!! formatting is not flushed to the drive
