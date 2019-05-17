@@ -811,7 +811,7 @@ Contains
          Do cell = 1,size(cellID)   
             Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemType%numDof,xloc,ierr);CHKERRQ(ierr)
             Call SectionRealRestrict(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
-            fVect = floc(1)
+            fVect = floc
             Do iGauss = 1,size(elem(cell)%Gauss_C)
                xelem = 0.0_Kr
                Do iDoF1 = 1,elemType%numDof
