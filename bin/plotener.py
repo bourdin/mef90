@@ -65,13 +65,13 @@ def main():
       energies[:,-2] -= energies[tmin,-2]
       energies[:,-1] -= energies[tmin,-1]
     ### plot
-    plt.plot(energies[:,1],energies[:,2],'o-',label='Elastic energy')
-    plt.plot(energies[:,1],energies[:,-2],'o-',label='Surface energy',lw = 2)
+    plt.plot(energies[tmin:tmax,1],energies[tmin:tmax,2],'-',label='Elastic energy')
+    plt.plot(energies[tmin:tmax,1],energies[tmin:tmax,-2],'-',label='Surface energy',lw = 2)
     if options.forces:
-        plt.plot(energies[:,1],energies[:,3],'o-',label='External Forces',lw = 2)
+        plt.plot(energies[tmin:tmax,1],energies[tmin:tmax,3],'-',label='External Forces',lw = 2)
     if options.cohesive:
-        plt.plot(energies[:,1],energies[:,4],'o-',label='Cohesive energy',lw = 2)
-    plt.plot(energies[:,1],energies[:,-1],'o-',zorder=999,label='Total energy',lw=4)
+        plt.plot(energies[tmin:tmax,1],energies[tmin:tmax,4],'-',label='Cohesive energy',lw = 2)
+    plt.plot(energies[tmin:tmax,1],energies[tmin:tmax,-1],'-',zorder=999,label='Total energy',lw=4)
     plt.grid()
     plt.legend(loc=0)
     plt.xlabel('t')

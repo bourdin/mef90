@@ -102,7 +102,7 @@ def getlaststep(fname):
   laststep = lastline.rsplit()[0] 
   return(int(laststep))
 
-def drawCrack():
+def drawCrack(displacementScaling=.1,damageThreshold=.99):
     ##
     ## Add pseudocolor plot of fracture field
     ##
@@ -128,6 +128,19 @@ def drawCrack():
     PseudocolorAtts.lightingFlag = 0
     SetPlotOptions(PseudocolorAtts)
 
+    AddOperator("Displace", 1)
+    SetActivePlots(0)
+    SetActivePlots(0)
+    DisplaceAtts = DisplaceAttributes()
+    DisplaceAtts.factor = displacementScaling
+    DisplaceAtts.variable = "Displacement"
+    SetOperatorOptions(DisplaceAtts, 1)
+    AddOperator("Isovolume", 1)
+    IsovolumeAtts = IsovolumeAttributes()
+    IsovolumeAtts.lbound = -1e+37
+    IsovolumeAtts.ubound = damageThreshold
+    IsovolumeAtts.variable = "Damage"
+    SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
     Query("SpatialExtents", use_actual_data=1)
     BB = GetQueryOutputValue() 
@@ -162,7 +175,7 @@ def setBGWhite():
     SetAnnotationAttributes(AnnotationAtts)
     return 0
 
-def plot(filename,step):
+def plot(filename,step,displacementScaling,damageThreshold):
     import json
     import os
     import os.path
@@ -197,7 +210,7 @@ def plot(filename,step):
         print "unable to open database %s"%MyDatabase
         return -1
 
-    BB = drawCrack()
+    BB = drawCrack(displacementScaling,damageThreshold)
     SetAnnotations()
     DrawPlots()
 
@@ -208,10 +221,10 @@ def plot(filename,step):
         geometry = (2048,int(2048.*H/W))
     else:
         geometry = (int(2048.*W/H),2048)
-    filenameW = '{basename}-{step:04d}-w'.format(basename = prefix,step=step)
+    filenameW = '{basename}-{step:04d}-disp-w'.format(basename = prefix,step=step)
     setBGWhite()
     status = savePNG(filenameW,geometry)
-    filenameB = '{basename}-{step:04d}-b'.format(basename = prefix,step=step)
+    filenameB = '{basename}-{step:04d}-disp-b'.format(basename = prefix,step=step)
     setBGBlack()
     status = savePNG(filenameB,geometry)
 
@@ -224,6 +237,8 @@ def parse(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('inputfile',help='input file')
     parser.add_argument('--step',type=int,default=-1)
+    parser.add_argument('--displacementScaling',type=float,default=.1)
+    parser.add_argument('--damageThreshold',type=float,default=.99)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -233,7 +248,7 @@ if __name__ == "__main__":
     options = parse()
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
-        plot(options.inputfile,options.step)   
+        plot(options.inputfile,options.step,options.displacementScaling,options.damageThreshold)   
         sys.exit(0)
     else:
         sys.exit(-1)
