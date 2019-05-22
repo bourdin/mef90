@@ -135,7 +135,6 @@ def drawCrack():
 
     return BB
     
-
 def SetView(BB):
     View2DAtts = View2DAttributes()
     View2DAtts.viewportCoords = (0.05, 0.95, 0.05, 0.95)
@@ -162,13 +161,20 @@ def setBGWhite():
     SetAnnotationAttributes(AnnotationAtts)
     return 0
 
-def plot(filename,step):
+def plot(filename,stepmin=None,stepmax=None):
     import json
     import os
     import os.path
     import shutil
     import math
     
+    if not os.path.exists('Frames'):
+        os.makedirs('Frames')
+    if stepmax == 0:
+        stepmax = laststep
+    else:
+        stepmax = min(stepmax,laststep)
+
     prefix,ext = os.path.splitext(filename)
 
     if step <= 0:
@@ -198,32 +204,44 @@ def plot(filename,step):
         return -1
 
     BB = drawCrack()
-    SetAnnotations()
-    DrawPlots()
-
-
     W = BB[1]-BB[0]
     H = BB[3]-BB[2]
     if W > H:
         geometry = (2048,int(2048.*H/W))
     else:
         geometry = (int(2048.*W/H),2048)
-    filenameW = '{basename}-{step:04d}-w'.format(basename = prefix,step=step)
-    setBGWhite()
-    status = savePNG(filenameW,geometry)
-    filenameB = '{basename}-{step:04d}-b'.format(basename = prefix,step=step)
-    setBGBlack()
-    status = savePNG(filenameB,geometry)
+
+    SetAnnotations()
+    #DrawPlots()
+    for step in range(stepmin,stepmax):
+        SetTimeSliderState(step)
+        filenameW = '{basename}-{step:04d}-w'.format(basename = os.path.join('Frames',prefix),step=step)
+        setBGWhite()
+        status = savePNG(filenameW,geometry)
+        filenameB = '{basename}-{step:04d}-b'.format(basename = os.path.join('Frames',prefix),step=step)
+        setBGBlack()
+        status = savePNG(filenameB,geometry)
 
     DeleteAllPlots()
     CloseDatabase(MyDatabase)
+
+    print('Done processing Frames for {0}.'.format(filename))
+    cmd_exists = lambda x: any(os.access(os.path.join(path, x), os.X_OK) for path in os.environ["PATH"].split(os.pathsep))    
+    for pos in ('w', 'b'):
+        cmd = 'ffmpeg -y -i Frames/{prefix}-%04d-{pos}.png -vcodec mjpeg -qscale 1  {prefix}-{pos}.avi'.format(prefix=prefix,pos=pos)
+        if cmd_exists('ffmpeg'):
+            os.system(cmd)
+        else:
+            print('\t{0}'.format(cmd))
+
     return 0
 
 def parse(args=None):
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('inputfile',help='input file')
-    parser.add_argument('--step',type=int,default=-1)
+    parser.add_argument('--step_min',type=int,default=0)
+    parser.add_argument('--step_max',type=int,default=0)
     return parser.parse_args()
 
 if __name__ == "__main__":
