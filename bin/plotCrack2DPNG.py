@@ -102,7 +102,7 @@ def getlaststep(fname):
   laststep = lastline.rsplit()[0] 
   return(int(laststep))
 
-def drawCrack():
+def drawCrack(displacementScaling=.1,damageThreshold=.99):
     ##
     ## Add pseudocolor plot of fracture field
     ##
@@ -128,6 +128,19 @@ def drawCrack():
     PseudocolorAtts.lightingFlag = 0
     SetPlotOptions(PseudocolorAtts)
 
+    AddOperator("Displace", 1)
+    SetActivePlots(0)
+    SetActivePlots(0)
+    DisplaceAtts = DisplaceAttributes()
+    DisplaceAtts.factor = displacementScaling
+    DisplaceAtts.variable = "Displacement"
+    SetOperatorOptions(DisplaceAtts, 1)
+    AddOperator("Isovolume", 1)
+    IsovolumeAtts = IsovolumeAttributes()
+    IsovolumeAtts.lbound = -1e+37
+    IsovolumeAtts.ubound = damageThreshold
+    IsovolumeAtts.variable = "Damage"
+    SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
     Query("SpatialExtents", use_actual_data=1)
     BB = GetQueryOutputValue() 
@@ -162,42 +175,44 @@ def setBGWhite():
     SetAnnotationAttributes(AnnotationAtts)
     return 0
 
-def plot(filename,step):
+def plot(options):
     import json
     import os
     import os.path
     import shutil
     import math
     
-    prefix,ext = os.path.splitext(filename)
+    prefix,ext = os.path.splitext(options.inputfile)
 
-    if step <= 0:
-        enerfile = enerfile = prefix+'.ener'
+    laststep = 1000000
+    enerfile = prefix+'.ener'
+    if os.path.exists(enerfile):
+        laststep = getlaststep(enerfile)
+    else:
+        enerfile = prefix.split('_out')[0]+'.ener'
         print 'looking for ', enerfile
         if os.path.exists(enerfile):
-            step = getlaststep(enerfile)
+            laststep = getlaststep(enerfile)
         else:
-            enerfile = prefix.split('_out')[0]+'.ener'
-            print 'looking for ', enerfile
-            if os.path.exists(enerfile):
-                step = getlaststep(enerfile)
-            else:
-                print "unable to find step to plot."
-                return -1
+            print "unable to find step to plot."
+            return -1
+    if options.step == 0:
+        step = laststep
+    else:
+        step = min(options.step,laststep)
 
-    print("plotting step {0}".format(step))
     ##  
     ## Open the database
     ##
-    MyDatabase = os.path.join(filename)
+    MyDatabase = options.inputfile
       
-    print 'Trying to load {0}'.format(MyDatabase)
-    status = OpenDatabase(MyDatabase, step-1)       
+    print ('Trying to load {0}'.format(options.inputfile))
+    status = OpenDatabase(options.inputfile, step-1)       
     if not status:
-        print "unable to open database %s"%MyDatabase
+        print ("unable to open database {0}".format(options.inputfile))
         return -1
 
-    BB = drawCrack()
+    BB = drawCrack(options.displacementScaling,options.damageThreshold)
     SetAnnotations()
     DrawPlots()
 
@@ -208,12 +223,13 @@ def plot(filename,step):
         geometry = (2048,int(2048.*H/W))
     else:
         geometry = (int(2048.*W/H),2048)
-    filenameW = '{basename}-{step:04d}-w'.format(basename = prefix,step=step)
-    setBGWhite()
-    status = savePNG(filenameW,geometry)
-    filenameB = '{basename}-{step:04d}-b'.format(basename = prefix,step=step)
-    setBGBlack()
-    status = savePNG(filenameB,geometry)
+
+    filename = '{basename}-{step:04d}'.format(basename = prefix,step=step)
+    if options.bg == 'white':
+        setBGWhite()
+    else:
+        setBGBlack()
+    status = savePNG(filename,geometry)
 
     DeleteAllPlots()
     CloseDatabase(MyDatabase)
@@ -224,6 +240,9 @@ def parse(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('inputfile',help='input file')
     parser.add_argument('--step',type=int,default=-1)
+    parser.add_argument('--bg',choices=['white','black'],default='white')
+    parser.add_argument('--displacementScaling',type=float,default=.1)
+    parser.add_argument('--damageThreshold',type=float,default=.99)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -233,7 +252,7 @@ if __name__ == "__main__":
     options = parse()
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
-        plot(options.inputfile,options.step)   
+        plot(options)   
         sys.exit(0)
     else:
         sys.exit(-1)

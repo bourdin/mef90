@@ -161,7 +161,7 @@ def setBGWhite():
     SetAnnotationAttributes(AnnotationAtts)
     return 0
 
-def plot(filename,stepmin=None,stepmax=None):
+def plot(filename,stepmin=0,stepmax=0):
     import json
     import os
     import os.path
@@ -170,35 +170,34 @@ def plot(filename,stepmin=None,stepmax=None):
     
     if not os.path.exists('Frames'):
         os.makedirs('Frames')
+
+    prefix,ext = os.path.splitext(filename)
+
+    enerfile = enerfile = prefix+'.ener'
+    print 'looking for ', enerfile
+    laststep = 1000000
+    if os.path.exists(enerfile):
+        laststep = getlaststep(enerfile)
+    else:
+        enerfile = prefix.split('_out')[0]+'.ener'
+        print 'looking for ', enerfile
+        if os.path.exists(enerfile):
+            laststep = getlaststep(enerfile)
+        else:
+            print "unable to find step to plot."
+            return -1
     if stepmax == 0:
         stepmax = laststep
     else:
         stepmax = min(stepmax,laststep)
 
-    prefix,ext = os.path.splitext(filename)
-
-    if step <= 0:
-        enerfile = enerfile = prefix+'.ener'
-        print 'looking for ', enerfile
-        if os.path.exists(enerfile):
-            step = getlaststep(enerfile)
-        else:
-            enerfile = prefix.split('_out')[0]+'.ener'
-            print 'looking for ', enerfile
-            if os.path.exists(enerfile):
-                step = getlaststep(enerfile)
-            else:
-                print "unable to find step to plot."
-                return -1
-
-    print("plotting step {0}".format(step))
     ##  
     ## Open the database
     ##
     MyDatabase = os.path.join(filename)
       
     print 'Trying to load {0}'.format(MyDatabase)
-    status = OpenDatabase(MyDatabase, step-1)       
+    status = OpenDatabase(MyDatabase, stepmin-1)       
     if not status:
         print "unable to open database %s"%MyDatabase
         return -1
@@ -213,7 +212,7 @@ def plot(filename,stepmin=None,stepmax=None):
 
     SetAnnotations()
     #DrawPlots()
-    for step in range(stepmin,stepmax):
+    for step in range(stepmin-1,stepmax):
         SetTimeSliderState(step)
         filenameW = '{basename}-{step:04d}-w'.format(basename = os.path.join('Frames',prefix),step=step)
         setBGWhite()
@@ -240,7 +239,7 @@ def parse(args=None):
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('inputfile',help='input file')
-    parser.add_argument('--step_min',type=int,default=0)
+    parser.add_argument('--step_min',type=int,default=1)
     parser.add_argument('--step_max',type=int,default=0)
     return parser.parse_args()
 
@@ -251,7 +250,7 @@ if __name__ == "__main__":
     options = parse()
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
-        plot(options.inputfile,options.step)   
+        plot(options.inputfile,options.step_min,options.step_max)   
         sys.exit(0)
     else:
         sys.exit(-1)
