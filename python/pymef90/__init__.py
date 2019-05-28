@@ -6,4 +6,5 @@ from infotxt import *
 from jobs import *
 from pymef90utils import *
 from matplotlibmef90 import *
+from parse import *
 
