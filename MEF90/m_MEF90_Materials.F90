@@ -12,12 +12,19 @@ Module m_MEF90_Materials_Types
       PetscEnum          :: type
       PetscBool          :: isPlaneStress
    End Type MEF90HookesLaw2D
-   
+
    Type MEF90HookesLaw3D
       Sequence
       Type(Tens4OS3D)    :: fullTensor
       PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio
       PetscEnum          :: type
+#if (PETSC_SIZEOF_INT == 4)
+      ! With 4-byte integers, this declared type is 4-bytes shy of being
+      ! 8-byte aligned, which can be problematic for arrays of this type.
+      ! The MEF90HookesLaw2D has an extra PetscBool that keeps it 8-byte
+      ! aligned, so we'll mimic that:
+      PetscBool          :: padding = 0
+#endif
    End Type MEF90HookesLaw3D
 
    Type MEF90MatProp2D_Type
@@ -39,8 +46,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
-      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix 
-      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix 
+      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix
+      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix
       PetscReal                     :: CoeffH                                           ! coefficient H Hill matrix
       PetscReal                     :: CoeffM                                           ! coefficient M Hill matrix
       PetscReal                     :: CoeffN                                           ! coefficient N Hill matrix
@@ -76,8 +83,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoefficientCapModel2                             ! C2 in CapModel
       PetscReal                     :: CoefficientCapModelD                             ! CD in CapModel
       PetscReal                     :: CoefficientDruckerPrager                         ! k  in DruckerPrager
-      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix 
-      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix 
+      PetscReal                     :: CoeffF                                           ! coefficient F Hill matrix
+      PetscReal                     :: CoeffG                                           ! coefficient G Hill matrix
       PetscReal                     :: CoeffH                                           ! coefficient H Hill matrix
       PetscReal                     :: CoeffM                                           ! coefficient M Hill matrix
       PetscReal                     :: CoeffN                                           ! coefficient N Hill matrix
@@ -88,7 +95,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: phi2                                             ! Bunge Euler angle phi2
       PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
       PetscReal                     :: delta                                            ! residual Gurson and Green
-      PetscReal                     :: cohesiveStiffness          
+      PetscReal                     :: cohesiveStiffness
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -99,7 +106,7 @@ Module m_MEF90_Materials_Types
                     MEF90HookesLawTypeIsotropic
    End Enum
 
-   !!! The Mathium is a bogus isotropic material whose material properties are all 1 
+   !!! The Mathium is a bogus isotropic material whose material properties are all 1
    !!! except for a Poisson Ratio of 0.3
    Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type(    &
       1.0_Kr,                                                                          & ! Density
@@ -107,10 +114,10 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! SpecificHeat
       MEF90MatS2DIdentity,                                                             & ! ThermalConductivity
       MEF90MatS2DIdentity,                                                             & ! LinearThermalExpansion
-      MEF90HookesLaw2D(                                                                & 
+      MEF90HookesLaw2D(                                                                &
          Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
                               1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
-                                         0.38462_Kr),                                  & !                     XYXY        
+                                         0.38462_Kr),                                  & !                     XYXY
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
          MEF90HookesLawTypeIsotropic,                                                  & ! type
          .FALSE.),                                                                     & ! isPlaneStress
@@ -140,21 +147,21 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! cohesive stiffness
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
-      "MEF90Mathium2D")  
+      "MEF90Mathium2D")
 
-   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &  
+   Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &
       1.0_Kr,                                                                          & ! Density
       1.0_Kr,                                                                          & ! FractureToughness
       1.0_Kr,                                                                          & ! SpecificHeat
       MEF90MatS3DIdentity,                                                             & ! ThermalConductivity
       MEF90MatS3DIdentity,                                                             & ! LinearThermalExpansion
-      MEF90HookesLaw3D(                                                                & 
-         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY 
-                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY 
-                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY 
-                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY 
-                                                               0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY 
-                                                                          0.38462_Kr), & !                          XYXY 
+      MEF90HookesLaw3D(                                                                &
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY
+                                                               0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY
+                                                                          0.38462_Kr), & !                          XYXY
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
          MEF90HookesLawTypeIsotropic),                                                 & ! type
       1.0_Kr,                                                                          & ! Internal Length
@@ -183,7 +190,7 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! cohesive stiffness
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
-      "MEF90Mathium3D")  
+      "MEF90Mathium3D")
 End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
@@ -210,18 +217,18 @@ Contains
       PetscBag                                :: bag
       type(MEF90MatProp2D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
-      
+
       Call PetscBagGetData(bag,data,ierr)
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
             If (data%HookesLaw%isPlaneStress) Then
-               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr - data%HookesLaw%PoissonRatio**2) 
+               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr - data%HookesLaw%PoissonRatio**2)
                data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
             Else
                data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
-               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr      
+               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
             End If
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp2D
@@ -235,7 +242,7 @@ Module m_MEF90_Materials_Interface3D
    Implicit NONE
    Private
    Public :: PetscBagGetDataMEF90MatProp3D
-   
+
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_Materials_Types
@@ -251,14 +258,14 @@ Contains
       PetscBag                                :: bag
       type(MEF90MatProp3D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
-      
+
       Call PetscBagGetData(bag,data,ierr)
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
             data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
-            data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr      
+            data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
@@ -271,19 +278,19 @@ Module m_MEF90_Materials
    Use m_MEF90_Materials_Interface2D
    Use m_MEF90_Materials_Interface3D
    Implicit NONE
-   
+
    Interface PetscBagGetDataMEF90MatProp
       Module Procedure PetscBagGetDataMEF90MatProp2D,PetscBagGetDataMEF90MatProp3D
-   End Interface 
-   
+   End Interface
+
    Interface PetscBagRegisterMEF90MatProp
       Module Procedure PetscBagRegisterMEF90MatProp2D,PetscBagRegisterMEF90MatProp3D
    End Interface
-   
+
    Interface MEF90MatPropBagSetFromOptions
       Module Procedure MEF90MatPropBagSetFromOptions2D,MEF90MatPropBagSetFromOptions3D
    End Interface
-   
+
    Interface  Operator (*)
       Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D,MEF90HookesLaw2DXMat2D,MEF90HookesLaw3DXMat3D
    End Interface
@@ -291,26 +298,26 @@ Module m_MEF90_Materials
    Interface MasonryProjection
       Module Procedure MasonryProjection2D,MasonryProjection3D
    End Interface
-   
+
    Interface HDProjection
       Module Procedure HDProjection2D,HDProjection3D
    End Interface
-   
+
    PetscSizeT,protected   :: sizeofMEF90MatProp2D
    PetscSizeT,protected   :: sizeofMEF90MatProp3D
 
    PetscSizeT,protected   :: sizeofMEF90HookesLaw2D
    PetscSizeT,protected   :: sizeofMEF90HookesLaw3D
-   
+
    Character(len =  MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90HookesLawTypeList
 
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MaterialsInitialize_Private"
 !!!
-!!!  
+!!!
 !!!  MEF90MaterialsInitialize_Private:
-!!!  
+!!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90MaterialsInitialize_Private(ierr)
@@ -322,13 +329,13 @@ Contains
       Type(MEF90HookesLaw3D),Target       :: HookesLaw3D
       character(len=1),pointer            :: dummychar(:)
       PetscSizeT                          :: sizeofchar
-   
+
       Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
       sizeofMEF90MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
       sizeofMEF90MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
       sizeofMEF90HookesLaw2D = size(transfer(HookesLaw2D,dummychar))*sizeofchar
       sizeofMEF90HookesLaw3D = size(transfer(HookesLaw3D,dummychar))*sizeofchar
-      
+
       MEF90HookesLawTypeList(1) = 'Full'
       MEF90HookesLawTypeList(2) = 'Isotropic'
       MEF90HookesLawTypeList(3) = 'MEF90HookesLawTypeList'
@@ -339,9 +346,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90MatProp2D"
 !!!
-!!!  
+!!!
 !!!  PetscBagRegisterMEF90MatProp2D:
-!!!  
+!!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
@@ -351,11 +358,11 @@ Contains
       PetscErrorCode,intent(OUT)             :: ierr
 
       Type(MEF90MatProp2D_Type),pointer      :: matprop
-      
+
       Call PetscBagGetDataMEF90MatProp2D(bag,matprop,ierr)
       Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)
       Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
-      
+
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
@@ -364,7 +371,7 @@ Contains
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
-      
+
       Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
@@ -400,7 +407,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
       Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
       Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
-     
+
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
@@ -411,9 +418,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90MatProp3D"
 !!!
-!!!  
+!!!
 !!!  PetscBagRegisterMEF90MatProp3D:
-!!!  
+!!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
@@ -469,7 +476,7 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
       Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
       Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
- 
+
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
 
@@ -482,7 +489,7 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MatPropBagSetFromOptions2D"
 !!!
-!!!  
+!!!
 !!!  MEF90MatPropBagSetFromOptionsierr:
 !!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
@@ -493,16 +500,16 @@ Contains
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      
+
       Type(IS)                                        :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
-      
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
+
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr)
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -530,9 +537,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MatPropBagSetFromOptions3D"
 !!!
-!!!  
+!!!
 !!!  MEF90MatPropBagSetFromOptions3D:
-!!!  
+!!!
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
@@ -541,16 +548,16 @@ Contains
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      
+
       Type(IS)                                        :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions   
-      
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
+
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr)
       Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
       Allocate(MEF90MatPropBag(numSet))
@@ -576,74 +583,74 @@ Contains
    End Subroutine MEF90MatPropBagSetFromOptions3D
 
 
-!!! Subroutine generating various types of Hooke's laws 
+!!! Subroutine generating various types of Hooke's laws
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookeLawIsoLambdaMu2D"
-   Subroutine MEF90HookeLawIsoLambdaMu2D(A,lambda,mu) 
+   Subroutine MEF90HookeLawIsoLambdaMu2D(A,lambda,mu)
       Type(Tens4OS2D),Intent(OUT)         :: A
       PetscReal,Intent(IN)                :: lambda,mu
       A = 0.0_Kr
-      
+
       A%XXXX = lambda + 2.0_Kr * mu
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90HookeLawIsoLambdaMu2D         
+   End Subroutine MEF90HookeLawIsoLambdaMu2D
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookeLawIsoEnu2DPlaneStress"
-   Subroutine MEF90HookeLawIsoEnu2DPlaneStress(A,E,nu) 
+   Subroutine MEF90HookeLawIsoEnu2DPlaneStress(A,E,nu)
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS2D),Intent(OUT)         :: A
-      
+
       PetscReal                           :: Lambda,mu
-      
-      lambda = E * nu / (1.0_Kr - nu**2) 
+
+      lambda = E * nu / (1.0_Kr - nu**2)
       mu     = E / (1.0_Kr + nu) * .5_Kr
       A = 0.0_Kr
       A%XXXX = lambda + 2.0_Kr * mu
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90HookeLawIsoEnu2DPlaneStress         
-   
+   End Subroutine MEF90HookeLawIsoEnu2DPlaneStress
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookeLawIsoEnu2DPlaneStrain"
-   Subroutine MEF90HookeLawIsoEnu2DPlaneStrain(A,E,nu) 
+   Subroutine MEF90HookeLawIsoEnu2DPlaneStrain(A,E,nu)
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS2D),Intent(OUT)         :: A
-      
+
       PetscReal                           :: Lambda,mu
-      
+
       lambda = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu)
-      mu     = E / (1.0_Kr + nu) * .5_Kr      
+      mu     = E / (1.0_Kr + nu) * .5_Kr
       A = 0.0_Kr
       A%XXXX = lambda + 2.0_Kr * mu
       A%XXYY = lambda
       A%XYXY = mu
       A%YYYY = lambda + 2.0_Kr * mu
-   End Subroutine MEF90HookeLawIsoEnu2DPlaneStrain         
+   End Subroutine MEF90HookeLawIsoEnu2DPlaneStrain
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookeLawIsoLambdaMu3D"
    Subroutine MEF90HookeLawIsoLambdaMu3D(A,lambda,mu)
       PetscReal,Intent(IN)                :: lambda,mu
       Type(Tens4OS3D),Intent(OUT)         :: A
-   
+
       A = 0.0_Kr
       A%XXXX = lambda + mu * 2.0_Kr
       A%XXYY = lambda
       A%XXZZ = lambda
-      
+
       A%XYXY = mu
-      
+
       A%XZXZ = mu
-      
+
       A%YYYY = lambda + mu * 2.0_Kr
       A%YYZZ = lambda
-      
+
       A%YZYZ = mu
-      
+
       A%ZZZZ = lambda + mu * 2.0_Kr
    End Subroutine MEF90HookeLawIsoLambdaMu3D
 
@@ -652,36 +659,36 @@ Contains
    Subroutine MEF90HookeLawIsoENu3D(A,E,nu)
       PetscReal,Intent(IN)                :: E,nu
       Type(Tens4OS3D),Intent(OUT)         :: A
-      
+
       Real(Kind = Kr)                     :: Lambda,mu
-   
+
       lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
-      mu     = E / (1.0_Kr + nu) * .5_Kr      
-   
+      mu     = E / (1.0_Kr + nu) * .5_Kr
+
       A = 0.0_Kr
       A%XXXX = lambda + mu * 2.0_Kr
       A%XXYY = lambda
       A%XXZZ = lambda
-      
+
       A%XYXY = mu
-      
+
       A%XZXZ = mu
-      
+
       A%YYYY = lambda + mu * 2.0_Kr
       A%YYZZ = lambda
-      
+
       A%YZYZ = mu
-      
+
       A%ZZZZ = lambda + mu * 2.0_Kr
    End Subroutine MEF90HookeLawIsoENu3D
-   
+
 !!! Overloading linear algebra functions with Hookes Laws.
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMatS2D"
 !!!
-!!!  
+!!!
 !!!  MEF90HookesLaw2DXMatS2D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -689,7 +696,7 @@ Contains
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(MatS2D), Intent(IN)                     :: X
       Type(MatS2D)                                 :: MEF90HookesLaw2DXMatS2D
-      
+
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
@@ -710,9 +717,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMatS3D"
 !!!
-!!!  
+!!!
 !!!  MEF90HookesLaw2DXMatS3D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -720,7 +727,7 @@ Contains
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(MatS3D), Intent(IN)                     :: X
       Type(MatS3D)                                 :: MEF90HookesLaw3DXMatS3D
-      
+
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
@@ -745,16 +752,16 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMat2D"
 !!!
-!!!  
+!!!
 !!!  MEF90HookesLaw2DXMat2D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    Function MEF90HookesLaw2DXMat2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(Mat2D), Intent(IN)                      :: X
       Type(Mat2D)                                  :: MEF90HookesLaw2DXMat2D
-      
+
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
@@ -776,16 +783,16 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMat3D"
 !!!
-!!!  
+!!!
 !!!  MEF90HookesLaw2DXMat3D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(Mat3D), Intent(IN)                      :: X
       Type(Mat3D)                                  :: MEF90HookesLaw3DXMat3D
-      
+
       PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
@@ -814,9 +821,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MasonryProjection2D"
 !!!
-!!!  
+!!!
 !!!  MasonryProjection2D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -854,9 +861,9 @@ End If
 #undef __FUNCT__
 #define __FUNCT__ "MasonryProjection3D"
 !!!
-!!!  
+!!!
 !!!  MasonryProjection3D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -894,9 +901,9 @@ End If
 #undef __FUNCT__
 #define __FUNCT__ "HDProjection2D"
 !!!
-!!!  
+!!!
 !!!  HDProjection2D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -923,9 +930,9 @@ End If
 #undef __FUNCT__
 #define __FUNCT__ "HDProjection3D"
 !!!
-!!!  
+!!!
 !!!  HDProjection3D:
-!!!  
+!!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
