@@ -13,13 +13,20 @@ def plot(energies, showwork=False):
   ###
   return 0
 
-def getlaststep(fname):
+def getlaststep2(fname):
   ### open file
   f=open(fname)
   ### Read last line in a string
   lastline = f.readlines()[-1]
   laststep = lastline.rsplit()[0] 
   return(int(laststep))
+
+def getlaststep(fname):
+  import numpy as np
+  ### open file
+  ener = np.readtxt(fname)
+  print(ener[-1])
+  return ener[-1][0]
 
 def save(fname, energies):
   import numpy as np
