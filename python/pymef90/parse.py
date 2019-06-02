@@ -16,7 +16,6 @@ def parse(parser,key=None):
                     for key, value in data.items():
                         if not isinstance(value, dict):
                             arg_dict[key] = value
-
             # groups
             for group in parser._action_groups:
                 if group.title in data.keys():
@@ -26,8 +25,6 @@ def parse(parser,key=None):
                                 arg_dict[key].append(v)
                         else:
                             arg_dict[key] = value
-            # replace the file object with its name
-            #arg_dict[key] = arg_dict[key].name
     return args
 
 def parseGroup(parser,args,groupName): 

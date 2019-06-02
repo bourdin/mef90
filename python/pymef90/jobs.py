@@ -31,7 +31,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
     import os
     import sys
     
-    Parameters['hash'] = hashlib.sha1(repr(Geometry)).hexdigest()
+    Parameters['hash'] = hashlib.sha1(repr(Geometry).encode('utf-8')).hexdigest()
     if os.getenv('PBS_JOBID'):
         Parameters['jobid'] = os.getenv('PBS_JOBID')
     elif os.getenv('JOB_ID'):
@@ -93,7 +93,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
        
     ###
     ### Find the argument file
-    ### Try  absolute path then submission directory, then script directiry
+    ### Try  absolute path then submission directory, then script directory
     ### 
     for root in ['/',submitdir,os.path.dirname(os.path.abspath(__file__))]:
         if debug:
@@ -115,7 +115,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
                 break
 
         if not os.path.isdir(Parameters['meshdir']):
-            print ('meshdir {meshdir} does not exist, giving up'.format(**Parameters))
+            os.makedirs(Parameters['meshdir'])
             sys.exit(-1)
 
         
