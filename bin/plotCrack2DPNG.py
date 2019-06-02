@@ -190,7 +190,6 @@ def plot(options):
         laststep = getlaststep(enerfile)
     else:
         enerfile = prefix.split('_out')[0]+'.ener'
-        print 'looking for ', enerfile
         if os.path.exists(enerfile):
             laststep = getlaststep(enerfile)
         else:
@@ -224,7 +223,10 @@ def plot(options):
     else:
         geometry = (int(2048.*W/H),2048)
 
-    filename = '{basename}-{step:04d}'.format(basename = prefix,step=step)
+    if options.output != None:
+        filename=os.path.splitext(options.output)[0]
+    else:
+        filename = '{basename}-{step:04d}'.format(basename = prefix,step=step)
     if options.bg == 'white':
         setBGWhite()
     else:
@@ -238,11 +240,12 @@ def plot(options):
 def parse(args=None):
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('inputfile',help='input file')
-    parser.add_argument('--step',type=int,default=-1)
+    parser.add_argument('--step',type=int,default=0)
     parser.add_argument('--bg',choices=['white','black'],default='white')
-    parser.add_argument('--displacementScaling',type=float,default=.1)
+    parser.add_argument('--displacementScaling',type=float,default=0)
     parser.add_argument('--damageThreshold',type=float,default=.99)
+    parser.add_argument('--output',default=None)
+    parser.add_argument('inputfile',help='input file')
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -250,6 +253,7 @@ if __name__ == "__main__":
     import os.path
 
     options = parse()
+    print(options)
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
         plot(options)   
