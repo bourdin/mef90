@@ -8,7 +8,7 @@ as described in:
 
 
 This software is free software, distributed under the 2-clause BSD license. A copy of the license is included in the LICENSE file.
-We cordially ask that any published work derived from this code, or utilizing it references the above-mentioned published works:
+We cordially ask that any published work derived from this code, or utilizing it references the software as [![DOI](https://zenodo.org/badge/191032060.svg)](https://zenodo.org/badge/latestdoi/191032060), and the above-mentioned published works:
 
 ```
 @article{Bourdin-Francfort-EtAl-2000a,
