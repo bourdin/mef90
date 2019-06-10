@@ -26,7 +26,8 @@ of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the FreeBSD Project.
 
 In addition to the above license, we cordially ask that any published work derived 
-from this code, or utilizing it references the following published works:
+from this code, or utilizing it references the software as DOI:10.5281/zenodo.3242132, 
+and the above-mentioned published works:
 
 @article{Bourdin-Francfort-EtAl-2000a,
 	Author = {Bourdin, B. and Francfort, G.A. and Marigo, J.-J.},
