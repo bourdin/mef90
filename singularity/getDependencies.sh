@@ -18,10 +18,10 @@ wget http://gmsh.info/bin/Linux/gmsh-3.0.6-Linux64.tgz
 
 if [ -d mef90 ]; then
 	cd mef90
-	hg pull -u
+	git pull
 	cd ..
 else
-	hg clone https://bitbucket.org/bourdin/mef90-sieve mef90
+	git clone https://github.com/bourdin/mef90.git mef90
 fi
 
 if [ -d snlp ]; then
@@ -29,7 +29,7 @@ if [ -d snlp ]; then
 	git pull
 	cd ..
 else
-	git clone https://bitbucket.org/bourdin/snlp.git
+    git clone https://github.com/bourdin/SNLP.git snlp
 fi
 
 cd ..
