@@ -39,7 +39,7 @@ Contains
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: hg changeset ",MEF90_HGVER,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-      Write(IOBuffer,*) "# Copyright (c) 1998-2018 B. Bourdin <bourdin@lsu.edu> and co-authors\n"
+      Write(IOBuffer,*) "# Copyright (c) 1998-2019 B. Bourdin <bourdin@lsu.edu> and co-authors\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# See CONTRIBUTORS.txt for a list of contributors\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
