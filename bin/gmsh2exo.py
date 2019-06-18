@@ -217,7 +217,7 @@ def main():
             if pymef90.confirm("ExodusII file {0} already exists. Overwrite?".format(args.exoFile)):
                 os.remove(args.exoFile)
             else:
-                print '\n\t{0} was NOT generated from {1}\n'.format(args.exoFile,args.gmeshFile)
+                print ('\n\t{0} was NOT generated from {1}\n'.format(args.exoFile,args.gmeshFile))
                 return -1
     try:
         (coord,vertexSet,cellSet,numDim) = GMSHImporter(args.gmeshFile)
