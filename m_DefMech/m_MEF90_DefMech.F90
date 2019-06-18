@@ -1336,11 +1336,15 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
          numfield = max(numfield,MEF90DefMechGlobalOptions%stressOffset+(dim*(dim+1))/2-1)
       End If
+
       If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
          numfield = max(numfield,MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
       End If
-
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
+         numfield = max(numfield,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)
+      End If
       Allocate(nameC(numfield))
+
       If (numfield > 0) Then
          nameC = "empty"
       End If

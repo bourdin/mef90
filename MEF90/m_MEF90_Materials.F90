@@ -23,7 +23,7 @@ Module m_MEF90_Materials_Types
       ! 8-byte aligned, which can be problematic for arrays of this type.
       ! The MEF90HookesLaw2D has an extra PetscBool that keeps it 8-byte
       ! aligned, so we'll mimic that:
-      PetscBool          :: padding = .FALSE.
+      PetscBool          :: padding = PETSC_FALSE
 #endif
    End Type MEF90HookesLaw3D
 
@@ -163,7 +163,11 @@ Module m_MEF90_Materials_Types
                                                                0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY
                                                                           0.38462_Kr), & !                          XYXY
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
-         MEF90HookesLawTypeIsotropic),                                                 & ! type
+         MEF90HookesLawTypeIsotropic,                                                  & ! type
+#if (PETSC_SIZEOF_INT == 4)
+         PETSC_FALSE                                                                   & ! padding
+#endif
+      ),                                                                               & ! 
       1.0_Kr,                                                                          & ! Internal Length
       2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0e-9,                                                                          & ! Residual Stiffness
