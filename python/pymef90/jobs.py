@@ -76,7 +76,7 @@ def PrepareJob(Geometry,Parameters,debug=False):
         ### Try to figure out if workdir is a relative or absolute path
         ### 
         if not Parameters['workdir'][0] == '/':
-            Parameters['workdir'] = os.path.join(submitdir,args.workdir)
+            Parameters['workdir'] = os.path.join(submitdir,Parameter['workdir'])
     else:
         if os.getenv('PBS_O_WORKDIR'):
             # We are runnning inside a PBS job 
