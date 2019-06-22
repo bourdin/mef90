@@ -234,7 +234,7 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: Gloc
       PetscReal,Dimension(:),Pointer                     :: Vloc
-      Type(MEF90_VECT)                                   :: GradVelem
+      PetscReal                                          :: Velem
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
