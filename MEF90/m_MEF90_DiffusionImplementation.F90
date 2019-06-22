@@ -26,11 +26,11 @@ Module MEF90_APPEND(m_MEF90_DiffusionImplementation_,MEF90_DIM)D
 
 !  Assembles all components required to solve a diffusion equation in the form
 !
-!       { -div[A\nabla v] + \lambda v = f   in \Omega
-!  (1)  {                           v = v_0 on \partial \Omega_d
-!       {                        Av.n = g   on \partial \Omega_n
+!       { -div[A\nabla v] + V\cdot \nabla v + \lambda v = f   in \Omega
+!  (1)  {                                             v = v_0 on \partial \Omega_d
+!       {                                          Av.n = g   on \partial \Omega_n
 !
-!  or equivalently to minimize
+!  or equivalently (when V=0) to minimize
 !
 !  (2) E(v) := 1/2 \int A\nabla v \cdot \nabla v + \lambda v^2\, dx - \int_\Omega fv\, dx - \int_{\partial \Omega_n} gv\, dS
 
@@ -141,7 +141,7 @@ Contains
                Do iDoF1 = 1,elemType%numDof
                   Do iDoF2 = 1,elemType%numDof
                      MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                    (advectionVector .dotP. elem(cell)%Grad_BF(iDoF1,iGauss)) * elem(cell)%BF(iDoF2,iGauss)
+                                    (advectionVector .dotP. elem(cell)%Grad_BF(iDoF2,iGauss)) * elem(cell)%BF(iDoF1,iGauss)
                   End Do
                End Do
             End Do
@@ -235,7 +235,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: Gloc
       PetscReal,Dimension(:),Pointer                     :: Vloc
       Type(MEF90_VECT)                                   :: GradVelem
-      PetscReal                                          :: advectionVectorDotGradVelem
       PetscInt                                           :: iDoF1,iGauss
       PetscLogDouble                                     :: flops
            
@@ -247,13 +246,12 @@ Contains
             Gloc = 0.0_Kr
             Call SectionRealRestrictClosure(V,mesh,cellID(cell),elemType%numDof,Vloc,ierr);CHKERRQ(ierr)
             Do iGauss = 1,size(elem(cell)%Gauss_C)
-               GradVElem = 0.0_Kr
+               Velem = 0.0_Kr
                Do iDoF1 = 1,elemType%numDof
-                  GradVelem = GradVelem + Vloc(iDof1) * elem(cell)%Grad_BF(iDoF1,iGauss)
+                  Velem = Velem + Vloc(iDof1) * elem(cell)%BF(iDoF1,iGauss)
                End Do
-               advectionVectorDotGradVelem = advectionVector .dotP. GradVelem
                Do iDoF1 = 1,elemType%numDof
-                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * advectionVectorDotGradVelem
+                  Gloc(iDoF1) = Gloc(iDoF1) + elem(cell)%Gauss_C(iGauss) * (advectionVector .dotP. elem(cell)%Grad_BF(iDoF1,iGauss)) * Velem
                End Do
             End Do
             Call SectionRealUpdateClosure(G,mesh,cellID(cell),Gloc,ADD_VALUES,ierr);CHKERRQ(iErr)

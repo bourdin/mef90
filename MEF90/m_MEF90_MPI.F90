@@ -97,8 +97,8 @@ Contains
       Write(IOBuffer,100) MEF90_MyRank,MEF90_NumProcs,trim(procName)
       Call PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Call PetscSynchronizedFLush(PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
-#endif
 100 format(' # Task ',I6,'/',I6,' running on processor ',A,'\n')
+#endif
    End Subroutine MEF90MPIInitialize_Private
    
 !!!
