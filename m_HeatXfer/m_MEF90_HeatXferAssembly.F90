@@ -398,6 +398,7 @@ Contains
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
       PetscReal,Dimension(:),Pointer                     :: xPtr,FPtr,modifiedFluxPtr
       PetscReal,Dimension(:),Pointer                     :: fluxPtr,externalTemperaturePtr,boundaryTemperaturePtr
+      Type(MEF90_VECT)                                   :: advectionVector
       
       Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
 
@@ -428,17 +429,22 @@ Contains
       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Do set = 1,size(setID) 
-         Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
+
          If (.not. cellSetOptions%Has_BC) Then
+            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+            Call ISGetIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+
             elemType = MEF90knownElements(cellSetOptions%ElemTypeShortID)
             QuadratureOrder = elemType%order * 2
             Call MEF90Element_Create(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
-            Call MEF90DiffusionOperatorSet(FSec,MEF90HeatXferCtx%DMScal,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
             If (elemType%codim == 0) Then
+               Call MEF90DiffusionOperatorSet(FSec,MEF90HeatXferCtx%DMScal,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
                Call MEF90DiffusionOperatorAddTransientTermSet(FSec,MEF90HeatXferCtx%DMScal,xdotSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+               If (norm(adVectionVector) /= 0.0_Kr) Then
+                  Call MEF90DiffusionOperatorAdvectionSet(Fsec,MEF90HeatXferCtx%DM,xSec,setIS,advectionVector,elem,elemType,ierr);CHKERRQ(ierr)
+               End If
             End If
             !!! Modified flux is flux + surfaceThermalConductivity * refTemp      
             !!! I _could_ use a SecAXPY, but this would summ all values at all cells for each block
@@ -458,9 +464,9 @@ Contains
             End Do ! cell
             Call MEF90DiffusionRHSSetCell(FSec,MEF90HeatXferCtx%DMScal,modifiedFluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
             Call MEF90Element_Destroy(elem,ierr)
-         End If
-         Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
-         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+            Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)
+            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+         End If ! cellSetOptions%Has_BC
       End Do ! set
       DeAllocate(modifiedFluxPtr)
 
@@ -566,6 +572,7 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
       PetscInt                                           :: cell,v,numBC,numDoF,numCell
+      Type(MEF90_VECT)                                   :: adVectionVector
 
       Call MatZeroEntries(A,ierr);CHKERRQ(ierr)
       Call TSGetSNES(tempTS,tempSNES,ierr);CHKERRQ(ierr)
@@ -577,16 +584,20 @@ Contains
          Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
          Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
          If (.not. cellSetOptions%Has_BC) Then
-            Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
             elemType = MEF90knownElements(cellSetOptions%ElemTypeShortID)
-            QuadratureOrder = 2 * elemType%order
-            Call MEF90Element_Create(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
-            Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DMScal,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
             If (elemType%codim == 0) Then
+               Call DMMeshGetStratumIS(MEF90HeatXferCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
+               QuadratureOrder = 2 * elemType%order
+               Call MEF90Element_Create(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)
+               Call MEF90DiffusionBilinearFormSet(A,MEF90HeatXferCtx%DMScal,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
                Call MEF90_MassMatrixAssembleSet(A,MEF90HeatXferCtx%DMScal,setIS,shift*matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
+               advectionVector = -matPropSet%density * matPropSet%SpecificHeat * cellSetOptions%advectionVector(1:MEF90_DIM)
+               If (norm(adVectionVector) /= 0.0_Kr) Then
+                  Call  MEF90DiffusionBilinearFormAdvectionSet(A,MEF90HeatXferCtx%DMScal,setIS,advectionVector,elem,elemType,ierr);CHKERRQ(ierr)
+               End If
+               Call MEF90Element_Destroy(elem,ierr)
+               Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
             End If
-            Call MEF90Element_Destroy(elem,ierr)
-            Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          End If ! cellSetOptions%Has_BC
       End Do     
       Call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,iErr);CHKERRQ(iErr)
