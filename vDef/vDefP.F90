@@ -172,10 +172,9 @@ Program CoupledPlasticityDamage
       Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
          Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
       Case (MEF90HeatXfer_timeSteppingTypeTransient)
-         Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
-         tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
+         tsTempInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
          tsTempInitialTime = time(1)
-         Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+         Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,tsTempInitialTime,tsTempInitialStep,ierr)
          Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
          Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
       End Select

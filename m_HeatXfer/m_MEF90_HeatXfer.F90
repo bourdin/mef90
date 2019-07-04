@@ -669,10 +669,12 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residual,ierr)
+   Subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residual,initialTime,initialStep,ierr)
+
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       Type(TS),Intent(OUT)                               :: tsTemp
       Type(Vec),Intent(IN)                               :: residual
+      PetscReal,Intent(IN)                               :: initialTime,initialStep
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
@@ -693,6 +695,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
          Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
          Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
       End If
+      Call TSSetInitialTimeStep(tsTemp,initialTime,initialStep,ierr);CHKERRQ(ierr)
       Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
       Call TSCreate(PETSC_COMM_WORLD,tsTemp,ierr);CHKERRQ(ierr)

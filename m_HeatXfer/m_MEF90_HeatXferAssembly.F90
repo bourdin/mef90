@@ -442,7 +442,8 @@ Contains
             If (elemType%codim == 0) Then
                Call MEF90DiffusionOperatorSet(FSec,MEF90HeatXferCtx%DMScal,xSec,setIS,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,elem,elemType,ierr);CHKERRQ(ierr)
                Call MEF90DiffusionOperatorAddTransientTermSet(FSec,MEF90HeatXferCtx%DMScal,xdotSec,setIS,matpropSet%density*matpropSet%SpecificHeat,elem,elemType,ierr)
-               If (norm(adVectionVector) /= 0.0_Kr) Then
+               advectionVector = -matPropSet%density * matPropSet%SpecificHeat * cellSetOptions%advectionVector(1:MEF90_DIM)
+               If (norm(advectionVector) /= 0.0_Kr) Then
                   Call MEF90DiffusionOperatorAdvectionSet(Fsec,MEF90HeatXferCtx%DM,xSec,setIS,advectionVector,elem,elemType,ierr);CHKERRQ(ierr)
                End If
             End If

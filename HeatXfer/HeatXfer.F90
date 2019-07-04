@@ -118,10 +118,9 @@ Program HeatXfer
    If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
       Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
    Else
-      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
-      tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
+      tsTempInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
       tsTempInitialTime = time(1)
-      Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,tsTempInitialTime,tsTempInitialStep,ierr)
       Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
       Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
    End If
@@ -168,7 +167,7 @@ Program HeatXfer
             !!! Make sure TS does not overstep
             Call TSGetTime(tsTemp,t,ierr);CHKERRQ(ierr)
             If (t < time(step)) Then
-               Call TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr);CHKERRQ(ierr)
+               !Call TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr);CHKERRQ(ierr)
                !!! Something is up here. 
                !!! replacing the constant 10000 with a variable leads to divergence of TSAdapt
                !!! when using gcc
