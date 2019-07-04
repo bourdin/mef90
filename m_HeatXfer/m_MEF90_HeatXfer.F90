@@ -695,7 +695,6 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
          Call MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_OBJECT,nspTemp,ierr);CHKERRQ(ierr)
          Call MatSetNullSpace(matTemp,nspTemp,ierr);CHKERRQ(ierr)
       End If
-      Call TSSetInitialTimeStep(tsTemp,initialTime,initialStep,ierr);CHKERRQ(ierr)
       Call MatSetFromOptions(matTemp,ierr);CHKERRQ(ierr)
 
       Call TSCreate(PETSC_COMM_WORLD,tsTemp,ierr);CHKERRQ(ierr)
@@ -711,6 +710,7 @@ End Subroutine MEF90HeatXferUpdateboundaryTemperature
       Call TSSetProblemType(tsTemp,TS_LINEAR,ierr);CHKERRQ(ierr)
       Call VecSet(MEF90HeatXferCtx%temperature,MEF90HeatXferGlobalOptions%initialTemperature,ierr);CHKERRQ(ierr)
       Call TSSetSolution(tsTemp,MEF90HeatXferCtx%temperature,ierr);CHKERRQ(ierr)
+      Call TSSetInitialTimeStep(tsTemp,initialTime,initialStep,ierr);CHKERRQ(ierr)
       Call TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr);CHKERRQ(ierr)
       Call TSSetFromOptions(tsTemp,ierr);CHKERRQ(ierr)
       !!! 
