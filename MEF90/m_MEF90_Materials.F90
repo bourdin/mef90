@@ -31,6 +31,7 @@ Module m_MEF90_Materials_Types
       Sequence
       PetscReal                     :: Density                                          ! rho
       PetscReal                     :: FractureToughness                                ! Gc
+      Type(MatS2D)                  :: toughnessAnisotropyMatrix                        ! 
       PetscReal                     :: SpecificHeat                                     ! Cp
       Type(MatS2D)                  :: ThermalConductivity                              ! K
       Type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
@@ -68,6 +69,7 @@ Module m_MEF90_Materials_Types
       Sequence
       PetscReal                     :: Density                                          ! rho
       PetscReal                     :: FractureToughness                                ! Gc
+      Type(MatS3D)                  :: toughnessAnisotropyMatrix                        ! 
       PetscReal                     :: SpecificHeat                                     ! Cp
       Type(MatS3D)                  :: ThermalConductivity                              ! K
       Type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
@@ -111,6 +113,7 @@ Module m_MEF90_Materials_Types
    Type(MEF90MatProp2D_Type),Parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type(    &
       1.0_Kr,                                                                          & ! Density
       1.0_Kr,                                                                          & ! FractureToughness
+      MEF90MatS2DIdentity,                                                             & ! toughnessAnisotropyMatrix
       1.0_Kr,                                                                          & ! SpecificHeat
       MEF90MatS2DIdentity,                                                             & ! ThermalConductivity
       MEF90MatS2DIdentity,                                                             & ! LinearThermalExpansion
@@ -152,6 +155,7 @@ Module m_MEF90_Materials_Types
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &
       1.0_Kr,                                                                          & ! Density
       1.0_Kr,                                                                          & ! FractureToughness
+      MEF90MatS3DIdentity,                                                             & ! toughnessAnisotropyMatrix
       1.0_Kr,                                                                          & ! SpecificHeat
       MEF90MatS3DIdentity,                                                             & ! ThermalConductivity
       MEF90MatS3DIdentity,                                                             & ! LinearThermalExpansion
@@ -370,6 +374,7 @@ Contains
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
@@ -441,6 +446,7 @@ Contains
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
       Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)

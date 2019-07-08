@@ -322,7 +322,7 @@ Program vDef
             Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
                Select case(MEF90DefMechGlobalOptions%SolverType)
                   Case(MEF90DefMech_SolverTypeAltMin)
-                     Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
+                     !Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,1,ierr);CHKERRQ(ierr)
                      Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,1,ierr);CHKERRQ(ierr)
 
                      AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
@@ -332,7 +332,7 @@ Program vDef
 
                         !!! Solve SNES
                         If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-                           Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,-2,ierr);CHKERRQ(ierr)
+                           !Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDisp,-2,ierr);CHKERRQ(ierr)
                            Call SNESSetLagPreconditioner(MEF90DefMechCtx%snesDamage,-2,ierr);CHKERRQ(ierr)
                         End If 
 

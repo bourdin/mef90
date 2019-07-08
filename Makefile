@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled CoupledPlasticityDamage
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled
 
 ${MEF90_DIR}/.hg/dirstate:
 	@mkdir -p ${MEF90_DIR}/.hg; touch ${MEF90_DIR}/.hg/dirstate
