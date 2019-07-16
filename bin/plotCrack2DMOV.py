@@ -176,21 +176,21 @@ def plot(filename,stepmin=0,stepmax=0):
     enerfile = enerfile = prefix+'.ener'
     print 'looking for ', enerfile
     laststep = 1000000
-    if os.path.exists(enerfile):
-        laststep = getlaststep(enerfile)
-    else:
-        enerfile = prefix.split('_out')[0]+'.ener'
-        print 'looking for ', enerfile
+    if options.step_max == 0:
         if os.path.exists(enerfile):
             laststep = getlaststep(enerfile)
         else:
-            print "unable to find step to plot."
-            return -1
-    if stepmax == 0:
+            enerfile = prefix.split('_out')[0]+'.ener'
+            if os.path.exists(enerfile):
+                laststep = getlaststep(enerfile)
+            else:
+                print "unable to find step to plot."
+                return -1
         stepmax = laststep
     else:
-        stepmax = min(stepmax,laststep)
-
+        stepmax = options.step_max
+    step_min = options.step_min
+    
     ##  
     ## Open the database
     ##

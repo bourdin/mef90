@@ -186,19 +186,19 @@ def plot(options):
 
     laststep = 1000000
     enerfile = prefix+'.ener'
-    if os.path.exists(enerfile):
-        laststep = getlaststep(enerfile)
-    else:
-        enerfile = prefix.split('_out')[0]+'.ener'
+    if options.step == 0:
         if os.path.exists(enerfile):
             laststep = getlaststep(enerfile)
         else:
-            print "unable to find step to plot."
-            return -1
-    if options.step == 0:
+            enerfile = prefix.split('_out')[0]+'.ener'
+            if os.path.exists(enerfile):
+                laststep = getlaststep(enerfile)
+            else:
+                print "unable to find step to plot."
+                return -1
         step = laststep
     else:
-        step = min(options.step,laststep)
+        step = options.step
 
     ##  
     ## Open the database
