@@ -15,3 +15,5 @@ Plane Surface(6) = {6};
 Physical Line(20) = {4};
 Physical Line(30) = {2};
 Physical Surface(1) = {6};
+Physical Point(400) = {1};
+Physical Point(401) = {2};

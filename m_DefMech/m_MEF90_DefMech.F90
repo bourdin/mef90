@@ -1490,8 +1490,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
          Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
          Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-         rtol = 1.0D-4
-         atol = 1.0D-6
+         rtol = 1.0D-7
+         atol = 1.0D-7
          dtol = 1.0D+10
          Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)

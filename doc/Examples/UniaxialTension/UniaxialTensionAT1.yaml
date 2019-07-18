@@ -22,12 +22,12 @@ disp:
     snes:
         type: ksponly
     pc:
-        type: bjacobi
+        type: ml
 cs0001:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
-        PoissonRatio:  0.
+        PoissonRatio:  0.3
         PlaneStress: 0
     FractureToughness: 0.93
     internallength: .05
@@ -45,6 +45,16 @@ cs0020:
     boundaryDamage: 0.
 cs0030:
     displacementbc: yes,no,no
+    boundaryDisplacement: .5,0,0
+    damageBC: yes
+    boundaryDamage: 0.
+vs0400:
+    displacementbc: yes,yes,no
+    boundaryDisplacement: -.5,0,0
+    damageBC: yes
+    boundaryDamage: 0.
+vs0401:
+    displacementbc: yes,yes,no
     boundaryDisplacement: .5,0,0
     damageBC: yes
     boundaryDamage: 0.
