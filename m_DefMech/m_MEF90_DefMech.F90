@@ -1480,8 +1480,9 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          
          Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-         atol = 1.0D-6
-         Call SNESSetTolerances(snesDisp,atol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
+         atol = 1.0D-7
+         rtol = 1.0D-5
+         Call SNESSetTolerances(snesDisp,atol,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
 
          !!! 
@@ -1490,8 +1491,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
          Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
          Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-         rtol = 1.0D-7
-         atol = 1.0D-7
+         atol = 1.0D-8
+         rtol = 1.0D-8
          dtol = 1.0D+10
          Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
@@ -1565,7 +1566,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
          atol = 1.0D-7
-         rtol = 1.0D-7
+         rtol = 1.0D-5
          Call SNESSetTolerances(snesDamage,atol,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
          Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
 
