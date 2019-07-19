@@ -253,11 +253,11 @@ if __name__ == "__main__":
     import os.path
 
     options = parse()
-    print(options)
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
         plot(options)   
         sys.exit(0)
     else:
+        print('Unable to find input file {0}'.format(options.inputfile))
         sys.exit(-1)
 

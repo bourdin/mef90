@@ -253,5 +253,6 @@ if __name__ == "__main__":
         plot(options.inputfile,options.step_min,options.step_max)   
         sys.exit(0)
     else:
+        print('Unable to find input file {0}'.format(options.inputfile))
         sys.exit(-1)
 
