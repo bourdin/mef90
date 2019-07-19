@@ -374,6 +374,7 @@ Contains
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
       Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
@@ -446,6 +447,7 @@ Contains
       Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
       Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
       Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
       Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
       Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
       matprop%ThermalConductivity = default%ThermalConductivity
