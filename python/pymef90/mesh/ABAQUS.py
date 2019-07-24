@@ -110,9 +110,9 @@ def ABAQUSread(filename):
             #this condition is for reading lines which have a comma at the end
             #splitting at "," will return an additional string with nothing in it
             if line.strip().split(",")[len(line.strip().split(",")[0:])-1] == '':
-                ertexSet[setID]['vertex'] += [int(x)-1 for x in line.strip().split(",")[0:len(line.strip().split(","))-1]]
+                vertexSet[setID]['vertex'] += [int(x)-1 for x in line.strip().split(",")[0:len(line.strip().split(","))-1]]
             else:
-                ertexSet[setID]['vertex'] += [int(x)-1 for x in line.strip().split(",")[0:]]
+                vertexSet[setID]['vertex'] += [int(x)-1 for x in line.strip().split(",")[0:]]
             #move onto next line
             line = f.readline()
         return vertexSet,line

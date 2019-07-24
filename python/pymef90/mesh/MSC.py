@@ -197,6 +197,20 @@ def MSCread(filename):
                     faceConnect = MSCcellGetFace(setCellType,int(face.split(':')[1])-1)
                     for c in faceConnect:
                         cellSet[setID]['connect'].append(connect[int(face.split(':')[0])-1][c])
+            elif line.strip().split()[1].startswith('ndsq'):
+                setName = line.split()[-1].strip()
+                try:
+                    setID = int(setName)
+                    if setID in usedID:
+                        setID =  max(usedID)+1    
+                except ValueError:
+                    setID =  max(usedID)+1
+                usedID.append(setID)
+                vertexSet[setID] = {}
+                vertexSet[setID]['name'] = setName
+                print 'Vertex set {0} is now vertex set vs{1:04d}'.format(vertexSet[setID]['name'],setID)
+                line = MSCreadline(f)
+                vertexSet[setID]['vertex'] = [int(v) for v in line.split()]
         line=f.readline().strip()
     if max(coord[:,2]) == min(coord[:,2]):
         numDim = 2
