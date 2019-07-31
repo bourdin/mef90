@@ -225,6 +225,10 @@
       Module Procedure MatS3DEigenVectorValues,MatS2DEigenVectorValues
    End Interface
 
+   Interface Moment
+      Module Procedure Mat2DMoment, MatS2DMoment, Mat3DMoment, MatS3DMoment
+   End Interface
+
    !Interface MatSymToMat
    !   Module Procedure MatS3DToMat3D,MatS2DToMat2D
    !End Interface
@@ -2869,4 +2873,149 @@ Contains
       MatProj%YX = A(2,1)
       MatProj%YY = A(2,2)
    End Subroutine MatS2DEigenVectorValues
+
+#undef __FUNCT__
+#define __FUNCT__ "Mat2DMoment"
+!!!
+!!!  
+!!!  Mat2DMoment: k-th moment of a 2x2 matrix, i.e tr(A^k)
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function Mat2DMoment(k,A)
+      Integer,Intent(IN)                          :: k
+      Type(Mat2D),Intent(IN)                      :: A
+      PetscReal                                   :: Mat2DMoment
+
+      Integer                                     :: i
+      Type(Mat2D)                                 :: Ak
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      Select Case(k)
+      Case(1)
+         Mat2DMoment = trace(A)
+         flops = 0.
+      Case(2)
+         Mat2DMoment = A%XX**2 + 2*A%XY*A%YX + A%YY**2
+         flops = 6.0
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Case default
+         Ak = A
+         do i = 1, k-1
+            Ak = Ak*A
+         end do 
+         Mat2DMoment = trace(Ak)
+         flops = 0.
+      End Select
+   End Function Mat2DMoment
+
+#undef __FUNCT__
+#define __FUNCT__ "MatS2DMoment"
+!!!
+!!!  
+!!!  MatS2DMoment: k-th moment of a 2x2 symmetric matrix, i.e tr(A^k)
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MatS2DMoment(k,A)
+      Integer,Intent(IN)                          :: k
+      Type(MatS2D),Intent(IN)                     :: A
+      PetscReal                                   :: MatS2DMoment
+
+      Integer                                     :: i
+      Type(MatS2D)                                :: Ak
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      Select Case(k)
+      Case(1)
+         MatS2DMoment = trace(A)
+         flops = 0.
+      Case(2)
+         MatS2DMoment = A%XX**2 + 2*A%XY**2 + A%YY**2
+         flops = 6.0
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Case default
+         Ak = A
+         do i = 1, k-1
+            Ak = Ak*A
+         end do 
+         MatS2DMoment = trace(Ak)
+         flops = 0.
+      End Select
+   End Function MatS2DMoment
+
+#undef __FUNCT__
+#define __FUNCT__ "Mat3DMoment"
+!!!
+!!!  
+!!!  Mat3DMoment: k-th moment of a 3x3 matrix, i.e tr(A^k)
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function Mat3DMoment(k,A)
+      Integer,Intent(IN)                          :: k
+      Type(Mat3D),Intent(IN)                      :: A
+      PetscReal                                   :: Mat3DMoment
+
+      Integer                                     :: i
+      Type(Mat3D)                                 :: Ak
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      Select Case(k)
+      Case(1)
+         Mat3DMoment = trace(A)
+         flops = 0.
+      Case(2)
+         Mat3DMoment = A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%XY*A%YX + 2*A%XZ*A%ZX + 2*A%YZ*A%ZY
+         flops = 14.0
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Case default
+         Ak = A
+         do i = 1, k-1
+            Ak = Ak*A
+         end do 
+         Mat3DMoment = trace(Ak)
+         flops = 0.
+      End Select
+   End Function Mat3DMoment
+
+#undef __FUNCT__
+#define __FUNCT__ "MatS3DMoment"
+!!!
+!!!  
+!!!  MatS3DMoment: k-th moment of a 3x3 symmetric matrix, i.e tr(A^k)
+!!!  
+!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MatS3DMoment(k,A)
+      Integer,Intent(IN)                          :: k
+      Type(MatS3D),Intent(IN)                     :: A
+      PetscReal                                   :: MatS3DMoment
+
+      Integer                                     :: i
+      Type(MatS3D)                                :: Ak
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      Select Case(k)
+      Case(1)
+         MatS3DMoment = trace(A)
+         flops = 0.
+      Case(2)
+         MatS3DMoment = A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%YZ**2 + 2*A%XZ**2 + 2*A%XY**2
+         flops = 14.0
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      Case default
+         Ak = A
+         do i = 1, k-1
+            Ak = Ak*A
+         end do 
+         MatS3DMoment = trace(Ak)
+         flops = 0.
+      End Select
+   End Function MatS3DMoment
+
 End Module m_MEF90_LinAlg
