@@ -2694,7 +2694,7 @@ Contains
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
          Case (MEF90DefMech_damageTypeKKLElastic,MEF90DefMech_damageTypeKKL)
-            Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
+            Continue
          Case default
             Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
             STOP  
