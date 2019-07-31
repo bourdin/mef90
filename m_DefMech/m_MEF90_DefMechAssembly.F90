@@ -3799,7 +3799,7 @@ Contains
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) *  ( &
                                       -C1 * D2gDamageGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                      C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
       End Do
@@ -4787,7 +4787,7 @@ Contains
 
       N  = matprop%DuctileCouplingPower
       C1 = matprop%fractureToughness / matprop%internalLength / 4.0 / cwKKL
-      C2 = matprop%fractureToughness * matprop%internalLength * 2.0 / cwKKL
+      C2 = matprop%fractureToughness * matprop%internalLength / 2.0 / cwKKL
 
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
@@ -4874,7 +4874,7 @@ Contains
       numGauss = size(elemDamage%BF,2)
 
       C1 = matprop%fractureToughness / matprop%internalLength / 4.0 / cwKKL
-      C2 = matprop%fractureToughness * matprop%internalLength * 2.0 / cwKKL
+      C2 = matprop%fractureToughness * matprop%internalLength / 2.0 / cwKKL
 
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
@@ -4930,7 +4930,7 @@ Contains
 
       N  = matprop%DuctileCouplingPower
       C1 = matprop%fractureToughness / matprop%internalLength / 4.0 / cwKKL
-      C2 = matprop%fractureToughness * matprop%internalLength * 2.0 / cwKKL
+      C2 = matprop%fractureToughness * matprop%internalLength / 2.0 / cwKKL
 
       residualLoc = 0.0_Kr
       Do iGauss = 1,numGauss
