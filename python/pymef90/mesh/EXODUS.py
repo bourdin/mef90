@@ -54,11 +54,13 @@ def EXODUSwrite(coords,vertexSets,cellSets,numDim,exoFile):
             for v in cellSets[setID]['connect']:
                 if v not in vs:
                     vs.append(v)
-            cellSets.pop(setID,'None')
             if setID in vertexSets.keys():
                 print("Codimension 2 cell set {0} renamed vertex set {1} so as not to clash with existing vertex set".format(setID,max(vertexSets.keys())+1))
                 setID = max(vertexSets.keys())+1
-            vertexSets[setID]=vs
+            vertexSets[setID] = {}
+            vertexSets[setID]['vertex'] = vs
+            vertexSets[setID]['name']   = cellSets[setID]['name']
+            cellSets.pop(setID,'None')
 
     # reorder cells so that sets of codimension 0 are written first in the mesh
     blocksOrder = []
