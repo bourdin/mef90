@@ -14,6 +14,8 @@ temperature:
   offset: 0
 plasticStrain:
   offset: 0
+cumulatedPlasticDissipation:
+  offset: 0
 cs0001:
     hookesLaw:  
         type: isotropic

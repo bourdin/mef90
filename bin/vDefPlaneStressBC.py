@@ -7,17 +7,15 @@ def parse(args=None):
     parser = argparse.ArgumentParser(description='Compute boundary displacement for a surfing computation')
     parser.add_argument('-i','--inputfile',help='input file',default=None)
     parser.add_argument('-o','--outputfile',help='output file',default=None)
-    parser.add_argument("--time_min",type=float,help="first time step",default=0.)
-    parser.add_argument("--time_max",type=float,help="last time step",default=1.)
-    parser.add_argument("--time_numstep",type=int,help="number of time step",default=11)
-    parser.add_argument("--E",type=float,help="Youngs modulus",default=1.)
-    parser.add_argument("--nu",type=float,help="Poisson Ratio",default=.3)
-    parser.add_argument("--ampl",type=float,help="Amplification",default=1.)    
-    parser.add_argument("--initialpos",type=float,nargs=3,help="initial crack tip postion",default=[0.,0,0])
-    parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where surfing boundary displacements are applied",default=[])
-    parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where surfing boundary displacements are applied",default=[])
-    parser.add_argument("--plasticity",default=False,action="store_true",help="Add extended variables for plasticity related fields")
+    parser.add_argument('--E',type=float,help='Youngs Modulus',default=1)
+    parser.add_argument('--nu',type=float,help='Poisson Ratio',default=0)    
+    parser.add_argument('--sigma',type=float,help='Applied stress (sigma_11, sigma_22, sigma_12)',nargs=3,default=[1,0,0])
+    parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where the beam is applied",default=[])
+    parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where the beam is applied",default=[])
     parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
+    parser.add_argument("--time_min",type=float,default=1.,help='Start time')
+    parser.add_argument("--time_max",type=float,default=1.,help='End time')
+    parser.add_argument("--time_numstep",type=int,default=1,help='Number of time steps')
     return parser.parse_args()
     
 def exoformat(e,plasticity=False):
@@ -57,43 +55,37 @@ def exoformat(e,plasticity=False):
     e.set_element_variable_truth_table([True] * e.numElemBlk.value * len(element_variable_name))
     return(0)
 
-def cart2polar(x, y):
-    import numpy as np
-    r = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(y, x)
-    return r, theta
-        
-def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
+def displacementBC(e,t,options):
     import exodus as exo
     import numpy as np
     
-    kappa = (3.0-nu)/(1.0+nu)
-    mu = E / (1. + nu) * .5
-
     dim = e.num_dimensions()
+    if not dim == 2:
+        print('This function only makes sense in 2D')
+        exit(-1)
+
+    e11 = (options.sigma[0] - options.nu * options.sigma[1]) / options.E
+    e22 = (options.sigma[1] - options.nu * options.sigma[0]) / options.E
+    e12 = options.sigma[2] * (1. + options.nu) / options.E
+
     X,Y,Z=e.get_coords()
-    U = np.zeros([3,len(X)],dtype=exo.c_double)
+    U = np.zeros([2,len(X)],dtype=exo.c_double)
     
-    csoffset = [e.elem_blk_info(set)[1] for set in cslist]        
-    for set in cslist:
+    csoffset = [e.elem_blk_info(set)[1] for set in options.cs]        
+    for set in options.cs:
         connect = e.get_elem_connectivity(set)
         for cid in range(connect[1]):
             vertices = [connect[0][cid*connect[2]+c] for c in range(connect[2])]
             for v in vertices:
-                r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
-                z = Z[v-1]-Xc[2]
-                U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-                U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
-                U[2,v-1] = 0.0
+                U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1])
+                U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1])
         
-    for set in vslist:
+    for set in options.vs:
         for v in e.get_node_set_nodes(set):
-            r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
-            z = Z[v-1]
-            U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-            U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
-            U[2,v-1] = 0.0
+            U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1])
+            U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1])
     return U
+
 
 def main():
     import exodus as exo
@@ -114,24 +106,22 @@ def main():
     exoin  = exo.exodus(options.inputfile,mode='r')
     exoout = exoin.copy(options.outputfile)
     exoin.close()
-    exoformat(exoout,options.plasticity)
+    exoformat(exoout)
     
-    dim = exoout.num_dimensions()
-    step = 0
-    for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
-        print ("writing step {0}, t = {1:0.4f}".format(step+1,t))
+    if not  exoout.num_dimensions() == 2:
+        print("This program only makes sense in 2D")
+        return (-1)
+
+    T = np.linspace(options.time_min,options.time_max,options.time_numstep)
+    for step in range(options.time_numstep):
+        t = T[step]
+        print "writing step",step+1,t
         exoout.put_time(step+1,t)
-        U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.ampl)
-        X,Y,Z=exoout.get_coords()
+        U = displacementBC(exoout,t,options)
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])
         exoout.put_node_variable_values("Displacement_Y",step+1,U[1,:])
-        if dim == 3:
-            exoout.put_node_variable_values("Displacement_Z",step+1,U[2,:])
-        step += 1
     exoout.close()
-    ### 
-    ### compute boundary displacement at vertex sets
-    ###
+    return (0)
     
 if __name__ == "__main__":
         sys.exit(main())
