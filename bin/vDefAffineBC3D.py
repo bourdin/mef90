@@ -4,12 +4,12 @@ import sys
 def parse(args=None):
     import argparse
     ### Get options from the command line
-    parser = argparse.ArgumentParser(description='Compute boundary displacement for a surfing computation')
+    parser = argparse.ArgumentParser(description='Compute an affine boundary displacement in 2D')
     parser.add_argument('-i','--inputfile',help='input file',default=None)
     parser.add_argument('-o','--outputfile',help='output file',default=None)
     parser.add_argument('--E',type=float,help='Youngs Modulus',default=1)
     parser.add_argument('--nu',type=float,help='Poisson Ratio',default=0)    
-    parser.add_argument('--sigma',type=float,help='Applied stress (sigma_11, sigma_22, sigma_12)',nargs=3,default=[1,0,0])
+    parser.add_argument('--sigma',type=float,help='Applied stress (s11, s22, s33, s23, s13, s12)',nargs=6,default=[1,0,0,0,0,0])
     parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where the beam is applied",default=[])
     parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where the beam is applied",default=[])
     parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
@@ -59,17 +59,17 @@ def displacementBC(e,t,options):
     import exodus as exo
     import numpy as np
     
-    dim = e.num_dimensions()
-    if not dim == 2:
-        print('This function only makes sense in 2D')
-        exit(-1)
-
-    e11 = (options.sigma[0] - options.nu * options.sigma[1]) / options.E
-    e22 = (options.sigma[1] - options.nu * options.sigma[0]) / options.E
-    e12 = options.sigma[2] * (1. + options.nu) / options.E
+    E  = options.E
+    nu = options.nu
+    e11 = (       options.sigma[0] - nu * options.sigma[1] - nu * options.sigma[2]) / E
+    e22 = (- nu * options.sigma[0] +      options.sigma[1] - nu * options.sigma[2]) / E
+    e33 = (- nu * options.sigma[0] - nu * options.sigma[1] +      options.sigma[2]) / E
+    e23 = options.sigma[4] * (1. + nu) / E
+    e13 = options.sigma[5] * (1. + nu) / E
+    e12 = options.sigma[6] * (1. + nu) / E
 
     X,Y,Z=e.get_coords()
-    U = np.zeros([2,len(X)],dtype=exo.c_double)
+    U = np.zeros([3,len(X)],dtype=exo.c_double)
     
     csoffset = [e.elem_blk_info(set)[1] for set in options.cs]        
     for set in options.cs:
@@ -77,13 +77,15 @@ def displacementBC(e,t,options):
         for cid in range(connect[1]):
             vertices = [connect[0][cid*connect[2]+c] for c in range(connect[2])]
             for v in vertices:
-                U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1])
-                U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1])
+                U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1] + e13 * Z[v-1])
+                U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1] + e23 * Z[v-1])
+                U[2,v-1] = t * (e13 * X[v-1] + e23 * Y[v-1] + e33 * Z[v-1])
         
     for set in options.vs:
         for v in e.get_node_set_nodes(set):
-            U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1])
-            U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1])
+            U[0,v-1] = t * (e11 * X[v-1] + e12 * Y[v-1] + e13 * Z[v-1])
+            U[1,v-1] = t * (e12 * X[v-1] + e22 * Y[v-1] + e23 * Z[v-1])
+            U[2,v-1] = t * (e13 * X[v-1] + e23 * Y[v-1] + e33 * Z[v-1])
     return U
 
 
@@ -108,8 +110,8 @@ def main():
     exoin.close()
     exoformat(exoout)
     
-    if not  exoout.num_dimensions() == 2:
-        print("This program only makes sense in 2D")
+    if not  exoout.num_dimensions() == 3:
+        print("This program only makes sense in 3D")
         return (-1)
 
     T = np.linspace(options.time_min,options.time_max,options.time_numstep)
@@ -120,6 +122,7 @@ def main():
         U = displacementBC(exoout,t,options)
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])
         exoout.put_node_variable_values("Displacement_Y",step+1,U[1,:])
+        exoout.put_node_variable_values("Displacement_Z",step+1,U[1,:])
     exoout.close()
     return (0)
     
