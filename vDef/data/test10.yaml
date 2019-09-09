@@ -1,0 +1,43 @@
+verbose: 0
+time:
+    min: 0
+    max: 2.
+    numstep: 21
+heatxfer:
+    timestepping:
+        type: null
+defmech:
+    timestepping:
+        type: quasistatic
+temperature:
+    offset: 0
+cs0001:
+    fracturetoughness: 1
+    residualstiffness: 0.
+    internalLength: .5
+    damage:
+        type: AT1
+    plasticity:
+        type: NONE
+    Hookeslaw:
+        type: isotropic
+        YoungsModulus: 1.0
+        PoissonRatio:  0.0 
+        PlaneStress: true
+    drivingForce:
+        type: DruckerPrager
+        #type: NONE
+        tensilestrength: 1
+        compressivestrength: 2
+        alpha: 2.
+cs0010:
+    displacementBC: 1,1,1
+    boundaryDisplacement: -5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
+cs0020:
+    displacementBC: 1,1,1
+    boundaryDisplacement: 5,0,0 
+    damageBC: 1
+    boundaryDamage: 0
+

@@ -2897,16 +2897,16 @@ Contains
          Mat2DMoment = trace(A)
          flops = 0.
       Case(2)
-         Mat2DMoment = A%XX**2 + 2*A%XY*A%YX + A%YY**2
-         flops = 6.0
+         Mat2DMoment = (A%XX**2 + 2*A%XY*A%YX + A%YY**2) / 2.0_Kr
+         flops = 7.
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Case default
          Ak = A
          do i = 1, k-1
             Ak = Ak*A
          end do 
-         Mat2DMoment = trace(Ak)
-         flops = 0.
+         Mat2DMoment = trace(Ak)/k
+         flops = 1.
       End Select
    End Function Mat2DMoment
 
@@ -2933,16 +2933,16 @@ Contains
          MatS2DMoment = trace(A)
          flops = 0.
       Case(2)
-         MatS2DMoment = A%XX**2 + 2*A%XY**2 + A%YY**2
-         flops = 6.0
+         MatS2DMoment = (A%XX**2 + 2*A%XY**2 + A%YY**2) / 2.0_Kr
+         flops = 7.
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Case default
          Ak = A
          do i = 1, k-1
             Ak = Ak*A
          end do 
-         MatS2DMoment = trace(Ak)
-         flops = 0.
+         MatS2DMoment = trace(Ak) / k
+         flops = 1.
       End Select
    End Function MatS2DMoment
 
@@ -2969,16 +2969,16 @@ Contains
          Mat3DMoment = trace(A)
          flops = 0.
       Case(2)
-         Mat3DMoment = A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%XY*A%YX + 2*A%XZ*A%ZX + 2*A%YZ*A%ZY
-         flops = 14.0
+         Mat3DMoment = (A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%XY*A%YX + 2*A%XZ*A%ZX + 2*A%YZ*A%ZY) / 2.0_Kr
+         flops = 15.0
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Case default
          Ak = A
          do i = 1, k-1
             Ak = Ak*A
          end do 
-         Mat3DMoment = trace(Ak)
-         flops = 0.
+         Mat3DMoment = trace(Ak) / k
+         flops = 1.
       End Select
    End Function Mat3DMoment
 
@@ -3005,16 +3005,16 @@ Contains
          MatS3DMoment = trace(A)
          flops = 0.
       Case(2)
-         MatS3DMoment = A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%YZ**2 + 2*A%XZ**2 + 2*A%XY**2
-         flops = 14.0
+         MatS3DMoment = (A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%YZ**2 + 2*A%XZ**2 + 2*A%XY**2) / 2.0_Kr
+         flops = 15.
          Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       Case default
          Ak = A
          do i = 1, k-1
             Ak = Ak*A
          end do 
-         MatS3DMoment = trace(Ak)
-         flops = 0.
+         MatS3DMoment = trace(Ak) / k
+         flops = 1.
       End Select
    End Function MatS3DMoment
 

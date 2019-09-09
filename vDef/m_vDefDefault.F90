@@ -101,6 +101,7 @@ module m_vDefDefault
                                                          MEF90DefMech_damageTypeAT1,                        & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
+                                                         MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
                                                          [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound

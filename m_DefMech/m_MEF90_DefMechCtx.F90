@@ -101,6 +101,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscEnum                              :: damageType
       PetscEnum                              :: plasticityType
       PetscEnum                              :: unilateralContactType
+      PetscInt                               :: drivingForceType
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
       PetscReal,Dimension(3)                 :: displacementLowerBound
@@ -285,7 +286,6 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_PlasticityTypeGurson
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_plasticityTypeList
-
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,                     &
@@ -298,6 +298,12 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_unilateralContactTypeMasonry
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(11),protected   :: MEF90DefMech_unilateralContactTypeList
+
+   Enum,bind(c)
+      enumerator  :: MEF90DefMech_drivingForceTypeNone = 0,     &
+                     MEF90DefMech_drivingForceTypeDruckerPrager
+   End Enum
+   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_drivingForceTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -379,6 +385,12 @@ Contains
       MEF90DefMech_unilateralContactTypeList(9) = 'MEF90DefMech_unilateralContactTypeList'
       MEF90DefMech_unilateralContactTypeList(10) = '_MEF90DefMech_unilateralContactTypeList'
       MEF90DefMech_unilateralContactTypeList(11) = ''
+
+      MEF90DefMech_drivingForceTypeList(1) = 'None'
+      MEF90DefMech_drivingForceTypeList(2) = 'DruckerPrager'
+      MEF90DefMech_drivingForceTypeList(3) = 'MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_drivingForceTypeList(4) = '_MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_drivingForceTypeList(5) = ''
    End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__
@@ -917,6 +929,7 @@ Contains
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%drivingForceType,MEF90DefMech_drivingForceTypeList,default%drivingForceType,'drivingForce_type','Type of nucleation driving force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr);CHKERRQ(ierr)

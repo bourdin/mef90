@@ -8,7 +8,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw2D
       Sequence
       Type(Tens4OS2D)    :: fullTensor
-      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio
+      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
       PetscBool          :: isPlaneStress
    End Type MEF90HookesLaw2D
@@ -16,7 +16,7 @@ Module m_MEF90_Materials_Types
    Type MEF90HookesLaw3D
       Sequence
       Type(Tens4OS3D)    :: fullTensor
-      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio
+      PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
 #if (PETSC_SIZEOF_INT == 4)
       ! With 4-byte integers, this declared type is 4-bytes shy of being
@@ -60,6 +60,9 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
       PetscReal                     :: delta                                            ! residual Gurson and Green
       PetscReal                     :: cohesiveStiffness
+      PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-prager driving force
+      PetscReal                     :: drivingForceCompressiveStrength                  ! compressive strength in Drucker-prager driving force
+      PetscReal                     :: drivingForceAlpha                                ! alpha parameter in Drucker-prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -98,6 +101,9 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
       PetscReal                     :: delta                                            ! residual Gurson and Green
       PetscReal                     :: cohesiveStiffness
+      PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-prager driving force
+      PetscReal                     :: drivingForceCompressiveStrength                  ! compressive strength in Drucker-prager driving force
+      PetscReal                     :: drivingForceAlpha                                ! alpha parameter in Drucker-prager driving force 
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -121,7 +127,7 @@ Module m_MEF90_Materials_Types
          Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
                               1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
                                          0.38462_Kr),                                  & !                     XYXY
-         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
+         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,0.0_Kr,                                            & ! lambda, mu, E, nu, kappa (lambda, mu, kappa will be recomputed)
          MEF90HookesLawTypeIsotropic,                                                  & ! type
          .FALSE.),                                                                     & ! isPlaneStress
       1.0_Kr,                                                                          & ! Internal Length
@@ -148,6 +154,9 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! Bunge Euler angle Phi
       0.0001_Kr,                                                                       & ! Residual Gurson and Green
       0.0_Kr,                                                                          & ! cohesive stiffness
+      0.0_Kr,                                                                          & ! drivingForceTensileStrength
+      0.0_Kr,                                                                          & ! drivingForceCompressiveStrength
+      0.0_Kr,                                                                          & ! drivingForceAlpha
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
       "MEF90Mathium2D")
@@ -166,7 +175,7 @@ Module m_MEF90_Materials_Types
                                                     0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY
                                                                0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY
                                                                           0.38462_Kr), & !                          XYXY
-         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,                                                   & ! lambda, mu, E, nu (lambda, mu will be recomputed)
+         0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,0.0_Kr,                                            & ! lambda, mu, E, nu, kappa (lambda, mu, kappa will be recomputed)
          MEF90HookesLawTypeIsotropic,                                                  & ! type
 #if (PETSC_SIZEOF_INT == 4)
          PETSC_FALSE                                                                   & ! padding
@@ -196,6 +205,9 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! Bunge Euler angle Phi
       0.0001_Kr,                                                                       & ! Residual Gurson and Green
       0.0_Kr,                                                                          & ! cohesive stiffness
+      0.0_Kr,                                                                          & ! drivingForceTensileStrength
+      0.0_Kr,                                                                          & ! drivingForceCompressiveStrength
+      0.0_Kr,                                                                          & ! drivingForceAlpha
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
       "MEF90Mathium3D")
@@ -232,11 +244,13 @@ Contains
             Continue
          Case(MEF90HookesLawTypeIsotropic)
             If (data%HookesLaw%isPlaneStress) Then
-               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr - data%HookesLaw%PoissonRatio**2)
-               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+               data%HookesLaw%lambda      = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr - data%HookesLaw%PoissonRatio**2)
+               data%HookesLaw%mu          = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+               data%HookesLaw%BulkModulus = data%HookesLaw%lambda + 2.0_Kr * data%HookesLaw%mu / 3.0_Kr
             Else
-               data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
-               data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+               data%HookesLaw%lambda      = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
+               data%HookesLaw%mu          = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+               data%HookesLaw%BulkModulus = data%HookesLaw%lambda + data%HookesLaw%mu
             End If
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp2D
@@ -272,8 +286,9 @@ Contains
          Case(MEF90HookesLawTypeFull)
             Continue
          Case(MEF90HookesLawTypeIsotropic)
-            data%HookesLaw%lambda = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
-            data%HookesLaw%mu     = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+            data%HookesLaw%lambda       = data%HookesLaw%YoungsModulus * data%HookesLaw%PoissonRatio / (1.0_Kr + data%HookesLaw%PoissonRatio) / (1.0_Kr - 2.0_Kr * data%HookesLaw%PoissonRatio)
+            data%HookesLaw%mu           = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
+            data%HookesLaw%BulkModulus  = data%HookesLaw%lambda + 2.0_Kr * data%HookesLaw%mu / 3.0_Kr
       End Select
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
@@ -420,6 +435,11 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+
+      Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceAlpha,default%drivingForceALpha,'drivingForce_Alpha','[unit-less] (\alpha) alpha parameter in Drucker-Prager driving Force',ierr)
+
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
@@ -491,6 +511,10 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+
+      Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceAlpha,default%drivingForceALpha,'drivingForce_Alpha','[unit-less] (\alpha) alpha parameter in Drucker-Prager driving Force',ierr)
 
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)

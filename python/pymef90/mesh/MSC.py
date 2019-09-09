@@ -188,7 +188,7 @@ def MSCread(filename):
                 usedID.append(setID)
                 cellSet[setID] = {}
                 cellSet[setID]['name'] = setName
-                print 'Face set {0} is now cell set cs{1:04d}'.format(cellSet[setID]['name'],setID)
+                print ('Face set {0} is now cell set cs{1:04d}'.format(cellSet[setID]['name'],setID))
                 cellSet[setID]['connect']  = []
                 line = MSCreadline(f).split()
                 setCellType = MSCcellType(cellType[int(line[0].split(':')[0])-1])
@@ -208,7 +208,7 @@ def MSCread(filename):
                 usedID.append(setID)
                 vertexSet[setID] = {}
                 vertexSet[setID]['name'] = setName
-                print 'Vertex set {0} is now vertex set vs{1:04d}'.format(vertexSet[setID]['name'],setID)
+                print ('Vertex set {0} is now vertex set vs{1:04d}'.format(vertexSet[setID]['name'],setID))
                 line = MSCreadline(f)
                 vertexSet[setID]['vertex'] = [int(v) for v in line.split()]
         line=f.readline().strip()

@@ -1,6 +1,18 @@
 import numpy as np
 import io
 def GMSHread(filename):
+    """
+    Reads a mesh in gmsh v2. format
+    Parameters
+    ----------
+    filename : name of the mesh
+
+    returns:
+       coord:     a numpy array of vertex coordinates
+       vertexSet: a dictionary of vertex sets properties
+       cellSet:   a dictionary of cell sets properties, inclusing connectivity table
+       numDim:    dimensionality of the mesh
+    """
     def FixOrientation(connect,coord):
         e0 = (coord[1][0] - coord[0][0],coord[1][1] - coord[0][1])
         e1 = (coord[2][0] - coord[0][0],coord[2][1] - coord[0][1])
