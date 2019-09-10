@@ -66,4 +66,9 @@ vs0401:
     boundaryDisplacement: .5,0,0
     damageBC: yes
     boundaryDamage: 0.
+vs0402:
+    displacementbc: yes,yes,no
+    boundaryDisplacement: .5,0,0
+    damageBC: yes
+    boundaryDamage: 0.
 

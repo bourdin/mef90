@@ -37,3 +37,4 @@ Physical Surface(30) = {24};
 Physical Volume(1) = {28};
 Physical Point(400) = {5};
 Physical Point(401) = {6};
+Physical Point(402) = {2};
