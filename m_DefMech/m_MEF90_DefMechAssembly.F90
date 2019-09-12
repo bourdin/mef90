@@ -5604,8 +5604,8 @@ Contains
                   localOperatorFunction => MEF90DefMechOperatorDamageAT1UnilateralMasonryLoc
                End Select
                If (cellSetOptions%drivingForceType == MEF90DefMech_drivingForceTypeDruckerPrager) Then
+                  QuadratureOrder = 6
                   hasLocalOperatorFunction2 = .TRUE.
-QuadratureOrder = 8
                   localOperatorFunction2 => MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager
                End If
             Case (MEF90DefMech_damageTypeAT1Elastic)
@@ -5638,7 +5638,7 @@ QuadratureOrder = 8
             Case (MEF90DefMech_damageTypeLinSoft)
                Select Case(cellSetOptions%unilateralContactType)
                Case (MEF90DefMech_unilateralContactTypeNone)
-                  QuadratureOrder = 9! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
+                  QuadratureOrder = 8! 5 * elemDamageType%order + 5 * (elemDisplacementType%order - 1)
                   localOperatorFunction => MEF90DefMechOperatorDamageLinSoftLoc
                End Select
 
@@ -5941,6 +5941,7 @@ QuadratureOrder = 8
                   localAssemblyFunction => MEF90DefMechBilinearFormDamageAT1UnilateralMasonryLoc
                End Select
                If (cellSetOptions%drivingForceType == MEF90DefMech_drivingForceTypeDruckerPrager) Then
+                  QuadratureOrder = 6
                   hasLocalAssemblyFunction2 = .TRUE.
                   localAssemblyFunction2 => MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager
                End If
@@ -5968,7 +5969,6 @@ QuadratureOrder = 8
                   localAssemblyFunction => MEF90DefMechBilinearFormNull
                End Select
                If (cellSetOptions%drivingForceType == MEF90DefMech_drivingForceTypeDruckerPrager) Then
-QuadratureOrder = 8
                   hasLocalAssemblyFunction2 = .TRUE.
                   localAssemblyFunction2 => MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager
                End If
