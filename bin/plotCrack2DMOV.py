@@ -102,7 +102,7 @@ def getlaststep(fname):
   laststep = lastline.rsplit()[0] 
   return(int(laststep))
 
-def drawCrack():
+def drawCrack(options):
     ##
     ## Add pseudocolor plot of fracture field
     ##
@@ -128,11 +128,23 @@ def drawCrack():
     PseudocolorAtts.lightingFlag = 0
     SetPlotOptions(PseudocolorAtts)
 
+    AddOperator("Displace", 1)
+    SetActivePlots(0)
+    SetActivePlots(0)
+    DisplaceAtts = DisplaceAttributes()
+    DisplaceAtts.factor = options.displacementScaling
+    DisplaceAtts.variable = "Displacement"
+    SetOperatorOptions(DisplaceAtts, 1)
+    AddOperator("Isovolume", 1)
+    IsovolumeAtts = IsovolumeAttributes()
+    IsovolumeAtts.lbound = -1e+37
+    IsovolumeAtts.ubound = options.damageThreshold
+    IsovolumeAtts.variable = "Damage"
+    SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
     Query("SpatialExtents", use_actual_data=1)
     BB = GetQueryOutputValue() 
     SetView(BB)
-
     return BB
     
 def SetView(BB):
@@ -161,7 +173,7 @@ def setBGWhite():
     SetAnnotationAttributes(AnnotationAtts)
     return 0
 
-def plot(filename,stepmin=0,stepmax=0):
+def plot(options):
     import json
     import os
     import os.path
@@ -171,7 +183,7 @@ def plot(filename,stepmin=0,stepmax=0):
     if not os.path.exists('Frames'):
         os.makedirs('Frames')
 
-    prefix,ext = os.path.splitext(filename)
+    prefix,ext = os.path.splitext(options.inputfile)
 
     enerfile = enerfile = prefix+'.ener'
     print 'looking for ', enerfile
@@ -189,12 +201,12 @@ def plot(filename,stepmin=0,stepmax=0):
         stepmax = laststep
     else:
         stepmax = options.step_max
-    step_min = options.step_min
+    stepmin = options.step_min
     
     ##  
     ## Open the database
     ##
-    MyDatabase = os.path.join(filename)
+    MyDatabase = os.path.join(options.inputfile)
       
     print 'Trying to load {0}'.format(MyDatabase)
     status = OpenDatabase(MyDatabase, stepmin-1)       
@@ -202,7 +214,7 @@ def plot(filename,stepmin=0,stepmax=0):
         print "unable to open database %s"%MyDatabase
         return -1
 
-    BB = drawCrack()
+    BB = drawCrack(options)
     W = BB[1]-BB[0]
     H = BB[3]-BB[2]
     if W > H:
@@ -239,6 +251,8 @@ def parse(args=None):
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('inputfile',help='input file')
+    parser.add_argument('--displacementScaling',type=float,default=0)
+    parser.add_argument('--damageThreshold',type=float,default=.99)
     parser.add_argument('--step_min',type=int,default=1)
     parser.add_argument('--step_max',type=int,default=0)
     return parser.parse_args()
@@ -250,7 +264,7 @@ if __name__ == "__main__":
     options = parse()
     if os.path.exists(options.inputfile):   
         print('processing {0}'.format(options.inputfile)) 
-        plot(options.inputfile,options.step_min,options.step_max)   
+        plot(options)   
         sys.exit(0)
     else:
         print('Unable to find input file {0}'.format(options.inputfile))
