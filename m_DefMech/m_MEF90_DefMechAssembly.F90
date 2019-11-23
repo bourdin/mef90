@@ -4239,8 +4239,8 @@ End Do
 !!!  MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2: 
 !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
 !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
-!!!               de            =  3Gc / (8 gamma_0 ell) (1-alpha)^2 (gamma_1 I~_1 + sqrt(J~2))
-!!!               d de/ d alpha = -3Gc / (4 gamma_0 ell) (1-alpha)   (gamma_1 I~_1 + sqrt(J~2))
+!!!               de            =  3Gc  / (8 gamma_0 ell) (1-alpha)^p     (gamma_1 I~_1 + sqrt(J~2))
+!!!               d de/ d alpha = -3pGc / (8 gamma_0 ell) (1-alpha)^(p-1) (gamma_1 I~_1 + sqrt(J~2))
 !!!                            
 !!!  
 !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
@@ -4262,6 +4262,7 @@ End Do
       PetscReal                                          :: gamma0, gamma1
       PetscReal                                          :: DalphaCeGauss
       PetscReal                                          :: E,kappa,mu,Gc,alpha,ell,sigma_cs,sigma_ts,sigma_c,C1
+      PetscInt                                           :: p
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
@@ -4280,10 +4281,11 @@ End Do
       ell      = matprop%internalLength
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
+      p        = matprop%drivingForcep
       
       gamma0 = -2.0_Kr * sigma_cs * sigma_ts / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
       gamma1 = (sigma_cs - sigma_ts) / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
-      C1     = -0.75_Kr * Gc / gamma0 / ell 
+      C1     = -0.375_Kr * p * Gc / gamma0 / ell 
       Do iGauss = 1,numGauss
          !!! Compute the value of the damage field at the Gauss points
          damageGauss = 0.0_Kr
@@ -4318,7 +4320,7 @@ End Do
             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
          End If
 #endif
-         DalphaCeGauss = C1 * (1.0_Kr - damageGauss) * (gamma1 * I1Gauss + sqrtJ2Gauss)
+         DalphaCeGauss = C1 * (1.0_Kr - damageGauss)**(p-1) * (gamma1 * I1Gauss + sqrtJ2Gauss)
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * DalphaCeGauss * &
@@ -5753,8 +5755,8 @@ End Do
 !!!  MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager2: 
 !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
 !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
-!!!               ce            =  3Gc / (8 gamma_0 ell) (1-alpha)^2 (gamma_1 I~_1 + sqrt(J~2))
-!!!               d ce/ d alpha = -3Gc / (4 gamma_0 ell) (1-alpha)   (gamma_1 I~_1 + sqrt(J~2))
+!!!               ce            =  3Gc  / (8 gamma_0 ell) (1-alpha)^p     (gamma_1 I~_1 + sqrt(J~2))
+!!!               d ce/ d alpha = -3Gcp / (8 gamma_0 ell) (1-alpha)^(p-1) (gamma_1 I~_1 + sqrt(J~2))
 !!!  
 !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -5775,6 +5777,7 @@ End Do
       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss
       PetscReal                                          :: gamma0,gamma1,C1
       PetscReal                                          :: E,kappa,mu,Gc,alpha,ell,sigma_cs,sigma_ts
+      PetscInt                                           :: p
       PetscReal                                          :: CeGauss
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -5794,6 +5797,7 @@ End Do
       ell      = matprop%internalLength
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
+      p        = matprop%drivingForcep
       
       gamma0 = -2.0_Kr * sigma_cs * sigma_ts / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
       gamma1 = (sigma_cs - sigma_ts) / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
@@ -5832,7 +5836,7 @@ End Do
             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
          End If
 #endif
-         CeGauss = C1 * (1.0_Kr - damageGauss)**2 * (gamma1 * I1Gauss + sqrtJ2Gauss)
+         CeGauss = C1 * (1.0_Kr - damageGauss)**p * (gamma1 * I1Gauss + sqrtJ2Gauss)
          Do iDof2 = 1, numDofDamage
             residualLoc(iDof2) = residualLoc(iDof2) + elemDamage%Gauss_C(iGauss) * CeGauss * elemDamage%BF(iDof2,iGauss)
          End Do
