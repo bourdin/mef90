@@ -102,7 +102,7 @@ def getlaststep(fname):
   laststep = lastline.rsplit()[0] 
   return(int(laststep))
 
-def drawCrack(displacementScaling=.1,damageThreshold=.99):
+def drawCrack(displacementScaling=.1,damageThreshold=.99,BB=None):
     ##
     ## Add pseudocolor plot of fracture field
     ##
@@ -142,11 +142,14 @@ def drawCrack(displacementScaling=.1,damageThreshold=.99):
     IsovolumeAtts.variable = "Damage"
     SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
-    Query("SpatialExtents", use_actual_data=1)
-    BB = GetQueryOutputValue() 
-    SetView(BB)
 
-    return BB
+    if BB == None:
+        Query("SpatialExtents", use_actual_data=1)
+        newBB = GetQueryOutputValue() 
+    else:
+        newBB = tuple(BB)    
+    SetView(newBB)
+    return newBB
     
 
 def SetView(BB):
@@ -211,7 +214,7 @@ def plot(options):
         print ("unable to open database {0}".format(options.inputfile))
         return -1
 
-    BB = drawCrack(options.displacementScaling,options.damageThreshold)
+    BB = drawCrack(options.displacementScaling,options.damageThreshold,options.BB)
     SetAnnotations()
     DrawPlots()
 
@@ -244,6 +247,7 @@ def parse(args=None):
     parser.add_argument('--bg',choices=['white','black'],default='white')
     parser.add_argument('--displacementScaling',type=float,default=0)
     parser.add_argument('--damageThreshold',type=float,default=.99)
+    parser.add_argument('--BB',type=float,nargs=4,default=None)
     parser.add_argument('--output',default=None)
     parser.add_argument('inputfile',help='input file')
     return parser.parse_args()

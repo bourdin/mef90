@@ -173,10 +173,9 @@ def plot(filename,stepmin=0,stepmax=0):
 
     prefix,ext = os.path.splitext(filename)
 
-    enerfile = enerfile = prefix+'.ener'
-    print 'looking for ', enerfile
     laststep = 1000000
     if options.step_max == 0:
+        enerfile = enerfile = prefix+'.ener'
         if os.path.exists(enerfile):
             laststep = getlaststep(enerfile)
         else:
@@ -197,7 +196,7 @@ def plot(filename,stepmin=0,stepmax=0):
     MyDatabase = os.path.join(filename)
       
     print 'Trying to load {0}'.format(MyDatabase)
-    status = OpenDatabase(MyDatabase, stepmin-1)       
+    status = OpenDatabase(MyDatabase, step_min-1)       
     if not status:
         print "unable to open database %s"%MyDatabase
         return -1

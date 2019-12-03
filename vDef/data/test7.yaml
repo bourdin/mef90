@@ -1,7 +1,7 @@
 verbose: 0
 time:
     min: 0
-    max: 15
+    max: 1.5
     numstep: 21
 heatxfer:
     timestepping:
@@ -21,12 +21,12 @@ cs0001:
         type: NONE 
 cs0010:
     displacementBC: 1,1,1
-    boundaryDisplacement: -.5,0,0 
+    boundaryDisplacement: -5,0,0 
     damageBC: 1
     boundaryDamage: 0
 cs0020:
     displacementBC: 1,1,1
-    boundaryDisplacement: .5,0,0 
+    boundaryDisplacement: 5,0,0 
     damageBC: 1
     boundaryDamage: 0
 

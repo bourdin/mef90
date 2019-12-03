@@ -16,7 +16,7 @@ def matplotlibdefaults(palette='medium',useTex=False):
         cs = ['#5da5da', 'faa43a' , '60bd68' , 'f17cb0' , 'b2912f' , 'b276b2' , 'decf3f' , 'f15854']
 
     rcParams['axes.labelsize']   = 12
-    rcParams['axes.facecolor']   = 'none'   # axes background color
+    rcParams['axes.facecolor']   = None   # axes background color
     rcParams['axes.edgecolor']   = grey  # axes edge color
     rcParams['axes.labelcolor']  = darkgrey
     rcParams['axes.color_cycle'] = cs
@@ -67,7 +67,7 @@ def setspines():
         for j in matplotlib.pylab.figure(i).get_axes():
             j.spines['top'].set_color('none')
             j.spines['right'].set_color('none')
-            j.tick_params(axis='both',top='off',right='off',which='both',colors='#8C8C8C')
+            j.tick_params(axis='both',top=False,right=False,which='both',colors='#8C8C8C')
             #j.spines['left'].set_position(('outward',10))
             #j.spines['bottom'].set_position(('outward',10))
             #j.spines['left'].set_position(('axes', -0.05))
