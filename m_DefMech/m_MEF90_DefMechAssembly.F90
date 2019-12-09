@@ -4148,7 +4148,7 @@ End Do
       Type(MatS3D)                                       :: Ae3DGauss
       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,DalphaI1Gauss,DalphasqrtJ2Gauss,damageGauss
       PetscReal                                          :: beta0,beta1,beta2,beta3,DalphaCeGauss
-      PetscReal                                          :: E,kappa,mu,Gc,eta,alpha,ell,sigma_cs,sigma_ts
+      PetscReal                                          :: E,kappa,mu,Gc,eta,beta,ell,sigma_cs,sigma_ts
       PetscReal                                          :: stiffnessMultGauss, DalphaStiffnessMultGauss
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -4168,12 +4168,12 @@ End Do
       mu       = matprop%HookesLaw%mu
       Gc       = matprop%FractureToughness
       ell      = matprop%internalLength
-      alpha    = matprop%drivingForceAlpha
+      beta     = matprop%drivingForceBeta
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
       
       beta3 = ell * sigma_ts / mu / kappa / Gc 
-      beta0 = 3.0_Kr * Gc * mu * alpha / 8.0_Kr / ell / sigma_ts
+      beta0 = 3.0_Kr * Gc * mu * beta / 8.0_Kr / ell / sigma_ts
       beta1  =            ( (1.0_Kr / E - 3.0_Kr * beta3 * Gc / 8.0_Kr / ell) * (sigma_ts - sigma_cs) + beta3 / E *(sigma_ts**3 - sigma_cs**3) &
                            -(3.0_Kr * Gc / 8.0_Kr / ell + beta0) * (1.0_Kr / sigma_ts - 1.0_Kr / sigma_cs) ) * 0.5_Kr
       beta2  = sqrt(3.) * ( (1.0_Kr / E - 3.0_Kr * beta3 * Gc / 8.0_Kr / ell) * (sigma_ts + sigma_cs) + beta3 / E *(sigma_ts**3 + sigma_cs**3) &
@@ -4242,7 +4242,6 @@ End Do
 !!!               de            =  3Gc  / (8 gamma_0 ell) (1-alpha)^p     (gamma_1 I~_1 + sqrt(J~2))
 !!!               d de/ d alpha = -3pGc / (8 gamma_0 ell) (1-alpha)^(p-1) (gamma_1 I~_1 + sqrt(J~2))
 !!!                            
-!!!  
 !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -4339,7 +4338,9 @@ End Do
 !!!  MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3: 
 !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
 !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
-!!!  
+!!!               de            = 3Gc / (8 gamma_0) / ell / (1+\beta \ell (1-alpha)^2 I~_1^2)  (gamma_1 I~_1 + sqrt(J~2))
+!!!               d de/ d alpha = 3Gc / (4 gamma_0) * \beta (1-alpha)I~_1^2 (1+\beta\ell(1-alpha)^2 I~_1^2)^2 (gamma_1 I~_1 + sqrt(J~2))
+!!!                            
 !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
@@ -4355,10 +4356,10 @@ End Do
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numDofDisplacement,numGauss
       Type(MEF90_MATS)                                   :: AeGauss
       Type(MatS3D)                                       :: Ae3DGauss
-      PetscReal                                          :: I1Gauss,sqrtJ2Gauss,DalphaI1Gauss,damageGauss
+      PetscReal                                          :: I1Gauss,sqrtJ2Gauss,DalphaI1Gauss,DalphasqrtJ2Gauss,damageGauss
       PetscReal                                          :: gamma0, gamma1
       PetscReal                                          :: DalphaCeGauss
-      PetscReal                                          :: Gc,ell,sigma_cs,sigma_ts,sigma_c
+      PetscReal                                          :: E,kappa,mu,Gc,beta,ell,sigma_cs,sigma_ts,sigma_c,C1
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
@@ -4372,13 +4373,16 @@ End Do
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
 
+      E        = matprop%HookesLaw%YoungsModulus
       Gc       = matprop%FractureToughness
       ell      = matprop%internalLength
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
+      beta     = matprop%drivingForceBeta
       
-      gamma0 = -2.0_Kr * sigma_cs * sigma_ts  / (sigma_cs + sigma_ts) / sqrt(3.0_Kr) 
-      gamma1 =          (sigma_cs - sigma_ts) / (sigma_cs + sigma_ts) / sqrt(3.0_Kr) 
+      gamma0 = -2.0_Kr * sigma_cs * sigma_ts / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
+      gamma1 = (sigma_cs - sigma_ts) / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
+      C1     = 0.75_Kr * beta * Gc / gamma0 
       Do iGauss = 1,numGauss
          !!! Compute the value of the damage field at the Gauss points
          damageGauss = 0.0_Kr
@@ -4413,10 +4417,10 @@ End Do
             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
          End If
 #endif
-         DalphaCeGauss =  -3.0_Kr * Gc * (1.0_Kr - damageGauss) * I1Gauss**2 * (gamma1 * I1Gauss + sqrtJ2Gauss) / 4.0_Kr / gamma0 / (1.0_Kr + ell * (1.0_Kr - damageGauss)**2 * I1Gauss**2)**2 
+         DalphaCeGauss = C1 * (1.0_Kr - damageGauss) * I1Gauss**2 / (1.0_Kr + ell * (1.0_Kr + damageGauss)**2 * I1Gauss**2)**2 * (gamma1 * I1Gauss + sqrtJ2Gauss)
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) - elemDamage%Gauss_C(iGauss) * DalphaCeGauss * &
+               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * DalphaCeGauss * &
                                         elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss)
             End Do
          End Do
@@ -4424,6 +4428,99 @@ End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3
+
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3"
+! !!!
+! !!!  
+! !!!  MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3: 
+! !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
+! !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
+! !!!  
+! !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+! !!!
+
+!    Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
+!       PetscReal,Dimension(:,:),Pointer                   :: Aloc
+!       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
+!       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+!       PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
+!       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+!       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+!       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+
+!       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numDofDisplacement,numGauss
+!       Type(MEF90_MATS)                                   :: AeGauss
+!       Type(MatS3D)                                       :: Ae3DGauss
+!       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,DalphaI1Gauss,damageGauss
+!       PetscReal                                          :: gamma0, gamma1
+!       PetscReal                                          :: DalphaCeGauss
+!       PetscReal                                          :: Gc,ell,sigma_cs,sigma_ts,sigma_c
+!       PetscLogDouble                                     :: flops
+!       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+!       PetscErrorCode                                     :: ierr
+
+!       If (matprop%HookesLaw%Type /= MEF90HookesLawTypeIsotropic) Then
+!          Write(IOBuffer,'(''ERROR: unimplemented Hookes law type in'' (A),''\n'')') __FUNCT__
+!          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,IOBuffer,ierr)
+!       End If
+
+!       numDofDisplacement = size(elemDisplacement%BF,1)
+!       numDofDamage = size(elemDamage%BF,1)
+!       numGauss = size(elemDamage%BF,2)
+
+!       Gc       = matprop%FractureToughness
+!       ell      = matprop%internalLength
+!       sigma_cs = matprop%drivingForceCompressiveStrength
+!       sigma_ts = matprop%drivingForceTensileStrength
+      
+!       gamma0 = -2.0_Kr * sigma_cs * sigma_ts  / (sigma_cs + sigma_ts) / sqrt(3.0_Kr) 
+!       gamma1 =          (sigma_cs - sigma_ts) / (sigma_cs + sigma_ts) / sqrt(3.0_Kr) 
+!       Do iGauss = 1,numGauss
+!          !!! Compute the value of the damage field at the Gauss points
+!          damageGauss = 0.0_Kr
+!          Do iDof1 = 1,numDofDamage
+!             damageGauss = damageGauss + elemDamage%BF(iDof1,iGauss) * xDof(iDof1)
+!          End Do
+
+!          AeGauss = 0.0_Kr
+!          Do iDof1 = 1,numDofDisplacement
+!             AeGauss = AeGauss + elemDisplacement%GradS_BF(iDof1,iGauss) * displacementDof(iDof1)
+!          End Do
+!          AeGauss           = matprop%HookesLaw * AeGauss
+! #if MEF90_DIM == 3
+!          I1Gauss           = Moment(1,AeGauss)
+!          sqrtJ2Gauss       = sqrt(Moment(2,DeviatoricPart(AeGauss)))
+! #else
+!          If (matProp%HookesLaw%isPlaneStress) Then
+!             Ae3DGauss    = 0.0_Kr
+!             Ae3DGauss%XX = AeGauss%XX
+!             Ae3DGauss%YY = AeGauss%YY
+!             Ae3DGauss%XY = AeGauss%XY
+!             I1Gauss      = Moment(1,Ae3DGauss)
+!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
+!          Else 
+!             Ae3DGauss    = 0.0_Kr
+!             Ae3DGauss%XX = AeGauss%XX
+!             Ae3DGauss%YY = AeGauss%YY
+!             Ae3DGauss%XY = AeGauss%XY
+!             Ae3DGauss%ZZ = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + matprop%HookesLaw%mu) * 0.5_Kr * &
+!                            (AeGauss%XX + AeGauss%YY)
+!             I1Gauss      = Moment(1,Ae3DGauss)
+!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
+!          End If
+! #endif
+!          DalphaCeGauss =  -3.0_Kr * Gc * (1.0_Kr - damageGauss) * I1Gauss**2 * (gamma1 * I1Gauss + sqrtJ2Gauss) / 4.0_Kr / gamma0 / (1.0_Kr + ell * (1.0_Kr - damageGauss)**2 * I1Gauss**2)**2 
+!          Do iDoF1 = 1,numDofDamage
+!             Do iDoF2 = 1,numDofDamage
+!                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) - elemDamage%Gauss_C(iGauss) * DalphaCeGauss * &
+!                                         elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss)
+!             End Do
+!          End Do
+!       End Do
+!       !flops = 2 * numGauss * numDofDisplacement**2
+!       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+!    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3
 
 
 #undef __FUNCT__
@@ -5675,7 +5772,7 @@ End Do
       Type(MatS3D)                                       :: Ae3DGauss
       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss,stiffnessMultGauss
       PetscReal                                          :: beta0,beta1,beta2,beta3
-      PetscReal                                          :: E,kappa,mu,Gc,alpha,ell,sigma_cs,sigma_ts,CeGauss
+      PetscReal                                          :: E,kappa,mu,Gc,beta,ell,sigma_cs,sigma_ts,CeGauss
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
@@ -5694,12 +5791,12 @@ End Do
       mu       = matprop%HookesLaw%mu
       Gc       = matprop%FractureToughness
       ell      = matprop%internalLength
-      alpha    = matprop%drivingForceAlpha
+      beta    = matprop%drivingForceBeta
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
       
       beta3 = ell * sigma_ts / mu / kappa / Gc 
-      beta0 = 3.0_Kr * Gc * mu * alpha / 8.0_Kr / ell / sigma_ts
+      beta0 = 3.0_Kr * Gc * mu * beta / 8.0_Kr / ell / sigma_ts
       beta1  =            ( (1.0_Kr / E - 3.0_Kr * beta3 * Gc / 8.0_Kr / ell) * (sigma_ts - sigma_cs) + beta3 / E *(sigma_ts**3 - sigma_cs**3) &
                            -(3.0_Kr * Gc / 8.0_Kr / ell + beta0) * (1.0_Kr / sigma_ts - 1.0_Kr / sigma_cs) ) * 0.5_Kr
       beta2  = sqrt(3.) * ( (1.0_Kr / E - 3.0_Kr * beta3 * Gc / 8.0_Kr / ell) * (sigma_ts + sigma_cs) + beta3 / E *(sigma_ts**3 + sigma_cs**3) &
@@ -5776,7 +5873,7 @@ End Do
       Type(MatS3D)                                       :: Ae3DGauss
       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss
       PetscReal                                          :: gamma0,gamma1,C1
-      PetscReal                                          :: E,kappa,mu,Gc,alpha,ell,sigma_cs,sigma_ts
+      PetscReal                                          :: E,kappa,mu,Gc,ell,sigma_cs,sigma_ts
       PetscInt                                           :: p
       PetscReal                                          :: CeGauss
       PetscLogDouble                                     :: flops
@@ -5850,6 +5947,8 @@ End Do
 !!!  MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3: 
 !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
 !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
+!!!               de            = 3Gc / (8 gamma_0) / ell / (1+\beta \ell (1-alpha)^2 I~_1^2)  (gamma_1 I~_1 + sqrt(J~2))
+!!!               d de/ d alpha = 3Gc / (4 gamma_0) * \beta (1-alpha)I~_1^2 (1+\beta\ell(1-alpha)^2 I~_1^2)^2 (gamma_1 I~_1 + sqrt(J~2))
 !!!  
 !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
@@ -5867,9 +5966,9 @@ End Do
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numDofDisplacement,numGauss
       Type(MEF90_MATS)                                   :: AeGauss
       Type(MatS3D)                                       :: Ae3DGauss
-      PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss!,FGauss
-      PetscReal                                          :: gamma0,gamma1!,gamma
-      PetscReal                                          :: Gc,alpha,ell,sigma_cs,sigma_ts
+      PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss
+      PetscReal                                          :: gamma0,gamma1,C1,beta
+      PetscReal                                          :: E,kappa,mu,Gc,ell,sigma_cs,sigma_ts
       PetscReal                                          :: CeGauss
       PetscLogDouble                                     :: flops
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
@@ -5884,15 +5983,17 @@ End Do
       numDofDamage = size(elemDamage%BF,1)
       numGauss = size(elemDamage%BF,2)
 
+      E        = matprop%HookesLaw%YoungsModulus
       Gc       = matprop%FractureToughness
       ell      = matprop%internalLength
       sigma_cs = matprop%drivingForceCompressiveStrength
       sigma_ts = matprop%drivingForceTensileStrength
+      beta     = matprop%drivingForceBeta
       
-      gamma0 = -2.0_Kr * sigma_cs * sigma_ts  / (sigma_cs + sigma_ts) / sqrt(3.0_Kr)
-      gamma1 =          (sigma_cs - sigma_ts) / (sigma_cs + sigma_ts) / sqrt(3.0_Kr)
+      gamma0 = -2.0_Kr * sigma_cs * sigma_ts / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
+      gamma1 = (sigma_cs - sigma_ts) / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
+      C1     = 0.375_Kr * Gc / gamma0 / ell
       Do iGauss = 1,numGauss
-         CeGauss = 0
          !!! Compute the value of the damage field at the Gauss points
          damageGauss = 0.0_Kr
          Do iDof1 = 1,numDofDamage
@@ -5926,12 +6027,102 @@ End Do
             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
          End If
 #endif
-         CeGauss =  -3.0_Kr * Gc * (gamma1 * I1Gauss + sqrtJ2Gauss) / 8.0_Kr / gamma0 / ell / (1.0_Kr + ell * (1.0_Kr - damageGauss)**2 * I1Gauss**2)
+         CeGauss = C1 / (1.0_Kr + beta * ell * (1.0_Kr - damageGauss)**2 * I1Gauss**2) * (gamma1 * I1Gauss + sqrtJ2Gauss)
          Do iDof2 = 1, numDofDamage
-            residualLoc(iDof2) = residualLoc(iDof2) - elemDamage%Gauss_C(iGauss) * CeGauss * elemDamage%BF(iDof2,iGauss)
+            residualLoc(iDof2) = residualLoc(iDof2) + elemDamage%Gauss_C(iGauss) * CeGauss * elemDamage%BF(iDof2,iGauss)
          End Do
       End Do
    End Subroutine MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3
+
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3"
+! !!!
+! !!!  
+! !!!  MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3: 
+! !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
+! !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
+! !!!  
+! !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
+! !!!
+
+!    Subroutine MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3(residualLoc,xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage,CrackPressureCell)
+!       PetscReal,Dimension(:),Pointer                     :: residualLoc
+!       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,boundaryDisplacementDof,damageDof,temperatureDof
+!       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
+!       PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
+!       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+!       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
+!       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
+!       PetscReal,Intent(IN)                               :: CrackPressureCell
+
+!       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numDofDisplacement,numGauss
+!       Type(MEF90_MATS)                                   :: AeGauss
+!       Type(MatS3D)                                       :: Ae3DGauss
+!       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,damageGauss!,FGauss
+!       PetscReal                                          :: gamma0,gamma1!,gamma
+!       PetscReal                                          :: Gc,alpha,ell,sigma_cs,sigma_ts
+!       PetscReal                                          :: CeGauss
+!       PetscLogDouble                                     :: flops
+!       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+!       PetscErrorCode                                     :: ierr
+
+!       If (matprop%HookesLaw%Type /= MEF90HookesLawTypeIsotropic) Then
+!          Write(IOBuffer,'(''ERROR: unimplemented Hookes law type in'' (A),''\n'')') __FUNCT__
+!          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,IOBuffer,ierr)
+!       End If
+
+!       numDofDisplacement = size(elemDisplacement%BF,1)
+!       numDofDamage = size(elemDamage%BF,1)
+!       numGauss = size(elemDamage%BF,2)
+
+!       Gc       = matprop%FractureToughness
+!       ell      = matprop%internalLength
+!       sigma_cs = matprop%drivingForceCompressiveStrength
+!       sigma_ts = matprop%drivingForceTensileStrength
+      
+!       gamma0 = -2.0_Kr * sigma_cs * sigma_ts  / (sigma_cs + sigma_ts) / sqrt(3.0_Kr)
+!       gamma1 =          (sigma_cs - sigma_ts) / (sigma_cs + sigma_ts) / sqrt(3.0_Kr)
+!       Do iGauss = 1,numGauss
+!          CeGauss = 0
+!          !!! Compute the value of the damage field at the Gauss points
+!          damageGauss = 0.0_Kr
+!          Do iDof1 = 1,numDofDamage
+!             damageGauss = damageGauss + elemDamage%BF(iDof1,iGauss) * xDof(iDof1)
+!          End Do
+
+!          AeGauss = 0.0_Kr
+!          Do iDof1 = 1,numDofDisplacement
+!             AeGauss = AeGauss + elemDisplacement%GradS_BF(iDof1,iGauss) * displacementDof(iDof1)
+!          End Do
+!          AeGauss           = matprop%HookesLaw * AeGauss
+! #if MEF90_DIM == 3
+!          I1Gauss           = Moment(1,AeGauss)
+!          sqrtJ2Gauss       = sqrt(Moment(2,DeviatoricPart(AeGauss)))
+! #else
+!          If (matProp%HookesLaw%isPlaneStress) Then
+!             Ae3DGauss    = 0.0_Kr
+!             Ae3DGauss%XX = AeGauss%XX
+!             Ae3DGauss%YY = AeGauss%YY
+!             Ae3DGauss%XY = AeGauss%XY
+!             I1Gauss      = Moment(1,Ae3DGauss)
+!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
+!          Else 
+!             Ae3DGauss    = 0.0_Kr
+!             Ae3DGauss%XX = AeGauss%XX
+!             Ae3DGauss%YY = AeGauss%YY
+!             Ae3DGauss%XY = AeGauss%XY
+!             Ae3DGauss%ZZ = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + matprop%HookesLaw%mu) * 0.5_Kr * &
+!                            (AeGauss%XX + AeGauss%YY)
+!             I1Gauss      = Moment(1,Ae3DGauss)
+!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
+!          End If
+! #endif
+!          CeGauss =  -3.0_Kr * Gc * (gamma1 * I1Gauss + sqrtJ2Gauss) / 8.0_Kr / gamma0 / ell / (1.0_Kr + ell * (1.0_Kr - damageGauss)**2 * I1Gauss**2)
+!          Do iDof2 = 1, numDofDamage
+!             residualLoc(iDof2) = residualLoc(iDof2) - elemDamage%Gauss_C(iGauss) * CeGauss * elemDamage%BF(iDof2,iGauss)
+!          End Do
+!       End Do
+!    End Subroutine MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
