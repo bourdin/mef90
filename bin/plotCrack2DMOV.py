@@ -157,7 +157,6 @@ def SetView(BB):
     View2DAtts.yScale = View2DAtts.LINEAR  # LINEAR, LOG
     View2DAtts.windowValid = 1
     SetView2D(View2DAtts)
-    RecenterView()
 
 def setBGBlack():
     AnnotationAtts = GetAnnotationAttributes()

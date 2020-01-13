@@ -143,12 +143,14 @@ def drawCrack(displacementScaling=.1,damageThreshold=.99,BB=None):
     SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
 
+    print('BB is ',BB)
     if BB == None:
         Query("SpatialExtents", use_actual_data=1)
         newBB = GetQueryOutputValue() 
     else:
         newBB = tuple(BB)    
     SetView(newBB)
+    print('newBB is ',newBB)
     return newBB
     
 
@@ -162,7 +164,6 @@ def SetView(BB):
     View2DAtts.yScale = View2DAtts.LINEAR  # LINEAR, LOG
     View2DAtts.windowValid = 1
     SetView2D(View2DAtts)
-    RecenterView()
 
 def setBGBlack():
     AnnotationAtts = GetAnnotationAttributes()
@@ -215,6 +216,7 @@ def plot(options):
         return -1
 
     BB = drawCrack(options.displacementScaling,options.damageThreshold,options.BB)
+    print ('After poltting, BB is ', BB)
     SetAnnotations()
     DrawPlots()
 
