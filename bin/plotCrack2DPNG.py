@@ -143,14 +143,12 @@ def drawCrack(displacementScaling=.1,damageThreshold=.99,BB=None):
     SetOperatorOptions(IsovolumeAtts, 1)
     DrawPlots()
 
-    print('BB is ',BB)
     if BB == None:
         Query("SpatialExtents", use_actual_data=1)
         newBB = GetQueryOutputValue() 
     else:
         newBB = tuple(BB)    
     SetView(newBB)
-    print('newBB is ',newBB)
     return newBB
     
 
@@ -216,7 +214,6 @@ def plot(options):
         return -1
 
     BB = drawCrack(options.displacementScaling,options.damageThreshold,options.BB)
-    print ('After poltting, BB is ', BB)
     SetAnnotations()
     DrawPlots()
 
