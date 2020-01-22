@@ -6196,6 +6196,11 @@ End Do
                   hasLocalOperatorFunction2 = .TRUE.
                   localOperatorFunction2 => MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager3
                End If
+               If (cellSetOptions%drivingForceType == MEF90DefMech_drivingForceTypeDruckerPrager4) Then
+                  QuadratureOrder = 6
+                  hasLocalOperatorFunction2 = .TRUE.
+                  localOperatorFunction2 => MEF90DefMechOperatorDamageDrivingForceAT1DruckerPrager4
+               End If
             Case (MEF90DefMech_damageTypeAT1Elastic)
                QuadratureOrder = 2 * elemDamageType%order
                localOperatorFunction => MEF90DefMechOperatorDamageAT1ElasticLoc
@@ -6540,6 +6545,11 @@ QuadratureOrder = 8
                   QuadratureOrder = 6
                   hasLocalAssemblyFunction2 = .TRUE.
                   localAssemblyFunction2 => MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager3
+               End If
+               If (cellSetOptions%drivingForceType == MEF90DefMech_drivingForceTypeDruckerPrager4) Then
+                  QuadratureOrder = 6
+                  hasLocalAssemblyFunction2 = .TRUE.
+                  localAssemblyFunction2 => MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager4
                End If
 
             Case (MEF90DefMech_damageTypeAT1Elastic)
