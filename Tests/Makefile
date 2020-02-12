@@ -17,18 +17,18 @@ TestLinAlg: TestLinAlg.o
 	-@${RM} $<
 
 YAMLValidator.o: ${MEF90_DIR}/Tests/YAMLValidator.F90 
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
+	${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 
 #YAMLValidator: YAMLValidator.o
 #	-@echo " $@"
 #	-@${FLINKER} -o $@ $< ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 #	-@${RM} $<
 YAMLValidator:${MEF90_DIR}/bin/${PETSC_ARCH}/YAMLValidator
-	-@echo "      $@"
+	echo "      $@"
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/YAMLValidator: YAMLValidator.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
-	-@${FLINKER} -o $@ YAMLValidator.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
+	${FLINKER} -o $@ YAMLValidator.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
 TestMaterials: TestMaterials.o
 	-@echo " $@"
@@ -188,8 +188,12 @@ allclean:
 	make -C ${MEF90_DIR} clean
 	
 debug::
-	@echo FFLAGS ${FFLAGS} 
-	@echo FC_FLAGS ${FC_FLAGS}
-	@echo FCFLAGS ${FCFLAGS}
-	@echo FCPPFLAGS ${FCPPFLAGS}
+	@echo FFLAGS     ${FFLAGS} 
+	@echo FC_FLAGS   ${FC_FLAGS}
+	@echo FCFLAGS    ${FCFLAGS}
+	@echo FCPPFLAGS  ${FCPPFLAGS}
 	@echo FCPP_FLAGS ${FCPP_FLAGS}
+	@echo LDFLAGS    ${LDFLAGS}
+	@echo CLINKER    ${CLINKER}
+	@echo FLINKER    ${FLINKER}
+	@echo PETSC_LIB  ${PETSC_LIB}
