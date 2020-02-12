@@ -1,5 +1,8 @@
 all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled
 
+mef90version.h: chkpaths
+	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
+
 MEF90: mef90version.h chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
