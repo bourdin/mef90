@@ -1,4 +1,5 @@
 #!/bin/bash
+#echo Checking version against $1
 GIT=`which git`
 if [ $GIT ] 
 then
