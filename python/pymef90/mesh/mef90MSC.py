@@ -1,4 +1,4 @@
-import EXODUS
+import mef90EXODUS
 import numpy as np
 import io
 
