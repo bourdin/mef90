@@ -302,11 +302,9 @@ Module m_MEF90_DefMechCtx
    Enum,bind(c)
       enumerator  :: MEF90DefMech_drivingForceTypeNone = 0,       &
                      MEF90DefMech_drivingForceTypeDruckerPrager,  &
-                     MEF90DefMech_drivingForceTypeDruckerPrager2, &
-                     MEF90DefMech_drivingForceTypeDruckerPrager3, &
-                     MEF90DefMech_drivingForceTypeDruckerPrager4
+                     MEF90DefMech_drivingForceTypeDruckerPrager2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(8),protected   :: MEF90DefMech_drivingForceTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_drivingForceTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -392,11 +390,9 @@ Contains
       MEF90DefMech_drivingForceTypeList(1) = 'None'
       MEF90DefMech_drivingForceTypeList(2) = 'DruckerPrager'
       MEF90DefMech_drivingForceTypeList(3) = 'DruckerPrager2'
-      MEF90DefMech_drivingForceTypeList(4) = 'DruckerPrager3'
-      MEF90DefMech_drivingForceTypeList(5) = 'DruckerPrager4'
-      MEF90DefMech_drivingForceTypeList(6) = 'MEF90DefMech_drivingForceTypeList'
-      MEF90DefMech_drivingForceTypeList(7) = '_MEF90DefMech_drivingForceTypeList'
-      MEF90DefMech_drivingForceTypeList(8) = ''
+      MEF90DefMech_drivingForceTypeList(4) = 'MEF90DefMech_drivingForceTypeList'
+      MEF90DefMech_drivingForceTypeList(5) = '_MEF90DefMech_drivingForceTypeList'
+      MEF90DefMech_drivingForceTypeList(6) = ''
    End Subroutine MEF90DefMechCtxInitialize_Private
    
 #undef __FUNCT__

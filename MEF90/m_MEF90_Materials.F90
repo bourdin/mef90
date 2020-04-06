@@ -62,8 +62,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: cohesiveStiffness
       PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-Prager driving force
       PetscReal                     :: drivingForceCompressiveStrength                  ! compressive strength in Drucker-Prager driving force
-      PetscReal                     :: drivingForceBeta                                 ! beta parameter in Drucker-Prager driving force
-      PetscInt                      :: drivingForceP                                    ! p parameter in Drucker-Prager driving force
+      PetscReal                     :: drivingForceDelta                                ! delta parameter in Drucker-Prager driving force
+      PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -104,8 +104,8 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: cohesiveStiffness
       PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-Prager driving force
       PetscReal                     :: drivingForceCompressiveStrength                  ! compressive strength in Drucker-Prager driving force
-      PetscReal                     :: drivingForceBeta                                 ! beta parameter in Drucker-Prager driving force
-      PetscInt                      :: drivingForceP                                    ! p parameter in Drucker-Prager driving force
+      PetscReal                     :: drivingForceDelta                                ! delta parameter in Drucker-Prager driving force
+      PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Character(len=MEF90_MXSTRLEN) :: Name
@@ -158,8 +158,8 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! cohesive stiffness
       0.0_Kr,                                                                          & ! drivingForceTensileStrength
       0.0_Kr,                                                                          & ! drivingForceCompressiveStrength
-      1.0_Kr,                                                                          & ! drivingForceBeta
-      2,                                                                               & ! drivingForcep
+      0.0_Kr,                                                                          & ! drivingForceDelta
+      0.0_Kr,                                                                          & ! drivingForceGamma
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
       "MEF90Mathium2D")
@@ -442,8 +442,8 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
       Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceBeta,default%drivingForceBeta,'drivingForce_Beta','[unit-less] (\beta) alpha parameter in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterInt(bag,matprop%drivingForcep,default%drivingForcep,'drivingForce_p','[unit-less] (p) p parameter in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr)
 
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
@@ -519,8 +519,8 @@ Contains
 
       Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
       Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceBeta,default%drivingForceBeta,'drivingForce_Beta','[unit-less] (\beta) alpha parameter in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterInt(bag,matprop%drivingForcep,default%drivingForcep,'drivingForce_p','[unit-less] (p) p parameter in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr)
+      Call PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr)
 
       Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)

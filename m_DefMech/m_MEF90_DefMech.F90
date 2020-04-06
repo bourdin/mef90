@@ -1431,6 +1431,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
       Type(Mat)                                          :: matDisp
       Type(SectionReal)                                  :: coordSec
       Type(Vec)                                          :: CoordVec
@@ -1501,7 +1502,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !!! set coordinates in PC for GAMG
       !!! For some reason, this makes gamg convergence worse, when the null space is specified.
       !!! Will investigate later
-      !Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
+      Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
       !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
       !Allocate(coordPCPtr(size(CoordPtr)))
       !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
@@ -1509,7 +1510,13 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !Call PCSetCoordinates(pcDisp,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
       !DeAllocate(coordPCPtr)
       !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
-      !Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
+      Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
+
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      !!! SNESView seems to segfault when PC ml is used, so we setup an additional debug level so we can bypass SNESView 
+      If (MEF90GlobalOptions%verbose > 1) Then
+         Call SNESView(snesDisp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      End If
    End Subroutine MEF90DefMechCreateSNESDisplacement
 
 #undef __FUNCT__
@@ -1528,6 +1535,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
       Type(Mat)                                          :: matDamage
       PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
       Type(Vec)                                          :: residualDamage
@@ -1587,7 +1595,7 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !!! set coordinates in PC for GAMG
       !!! For some reason, this makes gamg convergence worse, when the null space is specified.
       !!! Will investigate later
-      !Call KSPGetPC(kspDamage,pcDamage,ierr);CHKERRQ(ierr)
+      Call KSPGetPC(kspDamage,pcDamage,ierr);CHKERRQ(ierr)
       !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
       !Allocate(coordPCPtr(size(CoordPtr)))
       !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
@@ -1595,7 +1603,13 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
       !Call PCSetCoordinates(pcDamage,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
       !DeAllocate(coordPCPtr)
       !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
-      !Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
+      Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
+
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+      !!! SNESView seems to segfault when PC ml is used, so we setup an additional debug level so we can bypass SNESView 
+      If (MEF90GlobalOptions%verbose > 1) Then
+         Call SNESView(snesDamage,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+      End If
    End Subroutine MEF90DefMechCreateSNESDamage
 
 #undef __FUNCT__
