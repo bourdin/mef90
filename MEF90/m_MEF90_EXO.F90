@@ -7,8 +7,6 @@ Module m_MEF90_EXO
    Use petsc
    IMPLICIT NONE
 
-   !Integer,Parameter,Public                        :: exo_cpu_ws = 8
-   !Integer,Parameter,Public                        :: exo_io_ws = 8
    Private 
    PetscInt,Public                                 :: exo_ver
 
@@ -42,15 +40,19 @@ Contains
       Real                                            :: exoVersion
       Integer                                         :: exoErr,exoUnit
       Type(DM)                                        :: tmpMesh
-      Character(len=MXSTLN),DImension(:),Pointer      :: cellSetName
+      Character(len=MXSTLN),Dimension(:),Pointer      :: cellSetName
       
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+      PetscSizeT                                      :: sizeofPetscReal
+   
+
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       !!! Open input file
       If (MEF90_MyRank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
+         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+         cpu_ws = sizeofPetscReal
+         io_ws = 0
          filename = Trim(MEF90Ctx%geometryFile)
          exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
@@ -60,9 +62,9 @@ Contains
          EndIf
       End If
       If (MEF90_NumProcs == 1) Then
-         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
       Else
-         Call DMMeshCreateExodusNG(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
+         Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
          Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
       End If
@@ -93,6 +95,7 @@ Contains
       Real                                            :: exo_version
       Integer                                         :: exoerr
       Logical                                         :: exoExists
+      PetscSizeT                                      :: sizeofPetscReal
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -111,14 +114,15 @@ Contains
    
       !!! Open output file or create it and format it depending on loading type
       If (IORank == 0) Then
+         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+         cpu_ws = sizeofPetscReal      
          Inquire(file=filename,exist=exoExists)
-         cpu_ws = 8
-         io_ws = 8
          If (.NOT. exoExists) Then
             If (GlobalOptions%verbose > 0) Then    
                Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
                Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
             EndIf
+            io_ws = sizeofPetscReal
             MEF90Ctx%fileExoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
             Select Case (GlobalOptions%FileFormat)
             Case (MEF90FileFormat_EXOSplit)
@@ -129,6 +133,7 @@ Contains
                Call EXCLOS(exoUnitIN,exoErr)
             End Select
          Else
+            io_ws  = 0
             MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
          EndIf
       End If
@@ -151,7 +156,6 @@ Contains
       Integer                                         :: IORank
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-      Integer                                         :: cpu_ws,io_ws
       Real                                            :: exo_version
       
    
@@ -187,11 +191,14 @@ Contains
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+      PetscSizeT                                      :: sizeofPetscReal
+
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (MEF90Ctx%rank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
+         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+         cpu_ws = sizeofPetscReal      
+         io_ws = 0
          filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
@@ -240,12 +247,14 @@ Contains
       Character(len=MXLNLN)                           :: dummyS
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
+      PetscSizeT                                      :: sizeofPetscReal      
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (MEF90Ctx%rank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
+         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+         cpu_ws = sizeofPetscReal      
+         io_ws = 0
          filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then
@@ -295,11 +304,13 @@ Contains
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-   
+      PetscSizeT                                      :: sizeofPetscReal
+
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (MEF90Ctx%rank == 0) Then
-         cpu_ws = 8
-         io_ws = 8
+         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+         cpu_ws = sizeofPetscReal
+         io_ws = 0
          filename = MEF90Ctx%geometryFile
          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
          If (exoerr < 0) Then

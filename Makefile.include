@@ -16,3 +16,6 @@ ifneq (${SNLP_DIR},)
 	C_FLAGS+= -I${SNLP_DIR}/include
 	SNLP_LIB:= -L${SNLP_DIR}/lib -lsnlp -lsnlpF90 -Wl,-rpath,${SNLP_DIR}/lib
 endif
+
+PETSC_FORTRAN_LIB+= -L${PETSC_DIR}/${PETSC_ARCH}/lib -lexoIIv2for32
+
