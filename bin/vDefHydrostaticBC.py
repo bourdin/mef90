@@ -65,7 +65,7 @@ def hydrostaticBC(e,t,cslist,vslist):
     
     dim = e.num_dimensions()
     X,Y,Z=e.get_coords()
-    U = np.zeros([3,len(X)],dtype=exo.c_double)
+    U = np.zeros([3,len(X)])
     
     csoffset = [e.elem_blk_info(set)[1] for set in cslist]        
     for set in cslist:
@@ -101,9 +101,16 @@ def main():
                 print '\n\t{0} was NOT generated.\n'.format(options.outputfile)
                 return -1
     
-    exoin  = exo.exodus(options.inputfile,mode='r')
-    exoout = exoin.copy(options.outputfile)
-    exoin.close()
+    try:
+        exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
+    except:
+        print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
+        print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
+        os.remove(options.outputfile)
+        exoin  = exo.exodus(options.inputfile,mode='r')
+        exoout = exoin.copy(options.outputfile)
+        exoout.close()
+        exoout  = exo.exodus(options.outputfile,mode='a',array_type='numpy')
     exoformat(exoout)
     
     dim = exoout.num_dimensions()

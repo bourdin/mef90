@@ -71,7 +71,7 @@ def displacementBC(e,t,options):
         e12 = options.sigma[2] * (1. + nu) / E
 
     X,Y,Z=e.get_coords()
-    U = np.zeros([2,len(X)],dtype=exo.c_double)
+    U = np.zeros([2,len(X)])
     
     csoffset = [e.elem_blk_info(set)[1] for set in options.cs]        
     for set in options.cs:
@@ -105,9 +105,17 @@ def main():
             else:
                 print ('\n\t{0} was NOT generated.\n'.format(options.outputfile))
                 return -1
-    exoin  = exo.exodus(options.inputfile,mode='r')
-    exoout = exoin.copy(options.outputfile)
-    exoin.close()
+    try:
+        exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
+    except:
+        print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
+        print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
+        os.remove(options.outputfile)
+        exoin  = exo.exodus(options.inputfile,mode='r')
+        exoout = exoin.copy(options.outputfile)
+        exoout.close()
+        exoout  = exo.exodus(options.outputfile,mode='a',array_type='numpy')
+
     exoformat(exoout)
     
     if not  exoout.num_dimensions() == 2:

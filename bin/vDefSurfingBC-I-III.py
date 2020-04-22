@@ -17,6 +17,7 @@ def parse(args=None):
     parser.add_argument("--initialpos",type=float,nargs=3,help="initial crack tip postion",default=[0.,0,0])
     parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where surfing boundary displacements are applied",default=[])
     parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where surfing boundary displacements are applied",default=[])
+    parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
     return parser.parse_args()
     
 def exoformat(e):
@@ -56,7 +57,7 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl,mixity):
 
     dim = e.num_dimensions()
     X,Y,Z=e.get_coords()
-    U = np.zeros([3,len(X)],dtype=exo.c_double)
+    U = np.zeros([3,len(X)])
     
     csoffset = [e.elem_blk_info(set)[1] for set in cslist]        
     for set in cslist:
@@ -84,11 +85,25 @@ def main():
     import numpy as np
     options = parse()
     
-    print options.inputfile
-    
-    exoin  = exo.exodus(options.inputfile,mode='r')
-    exoout = exoin.copy(options.outputfile)
-    exoin.close()
+    if  os.path.exists(options.outputfile):
+        if options.force:
+            os.remove(options.outputfile)
+        else:
+            if pymef90.confirm("ExodusII file {0} already exists. Overwrite?".format(options.outputfile)):
+                os.remove(options.outputfile)
+            else:
+                print ('\n\t{0} was NOT generated.\n'.format(options.outputfile))
+                return -1
+    try:
+        exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
+    except:
+        print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
+        print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
+        os.remove(options.outputfile)
+        exoin  = exo.exodus(options.inputfile,mode='r')
+        exoout = exoin.copy(options.outputfile)
+        exoout.close()
+        exoout  = exo.exodus(options.outputfile,mode='a',array_type='numpy')
     exoformat(exoout)
     
     dim = exoout.num_dimensions()

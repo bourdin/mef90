@@ -68,7 +68,14 @@ def main():
         print('outputfile: {0}'.format(outputfile))
 
         print("Copying geometry in {0}".format(outputfile))
-        exoout = exoin.copy(outputfile)
+        try:
+            exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
+        except:
+            print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
+            print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
+            os.remove(options.outputfile)
+            exoin  = exo.exodus(options.inputfile,mode='r')
+            exoout = exoin.copy(options.outputfile)
 
         print("formatting {0}".format(outputfile))
         exoout.set_global_variable_number(0)
@@ -91,7 +98,6 @@ def main():
                     exoout.put_element_variable_values(cs,f,step,exoin.get_element_variable_values(cs,f,step))
 
             step += 1
-        exoin.close()
         exoout.close()
 
         if options.outputfile == None:
