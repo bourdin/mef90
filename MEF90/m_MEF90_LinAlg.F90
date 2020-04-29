@@ -147,11 +147,15 @@
    End Interface
 
    Interface Operator (.TensP.)
-      Module Procedure TensPVect2D,TensPVect3D,TensPMat2D,TensPMat3D,TensPMatS2D,TensPMatS3D
+      Module Procedure TensPVect2D,TensPVect3D
    End Interface
    
    Interface Operator (.SymP.)
-      Module Procedure SymPVect2D,SymPVect3D,SymPMat2D,SymPMat3D,SymPMatS2D,SymPMatS3D
+      Module Procedure SymPVect2D,SymPVect3D,SymPMatS2D,SymPMatS3D
+   End Interface
+   
+   Interface Operator (.oDot.)
+      Module Procedure oDotMatS2D,oDotMatS3D
    End Interface
    
    Interface Trace
@@ -162,10 +166,6 @@
       Module Procedure DetMat2D,DetMatS2D,DetMat3D,DetMatS3D
    End Interface
 
-   Interface ValP
-      Module Procedure ValP2D,ValP2DS
-   End Interface
-   
    Interface Assignment (=)
       Module Procedure Vect2D_Get_Real,Vect3D_Get_Real,              &
          Vect2D_Get_VectR,Vect3D_Get_VectR,                          &
@@ -1429,68 +1429,6 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function TensPVect3D
    
-   Function TensPMat2D (M1,M2)
-      Type(Mat2D),Intent(IN)                      :: M1,M2
-      Type(Mat2D)                                 :: TensPMat2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      TensPMat2D%XX = M1%XX * M2%XX
-      TensPMat2D%XY = M1%XY * M2%XY
-      TensPMat2D%YX = M1%YX * M2%YX
-      TensPMat2D%YY = M1%YY * M2%YY
-      flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function TensPMat2D
-   
-   Function TensPMatS2D (M1,M2)
-      Type(MatS2D),Intent(IN)                     :: M1,M2
-      Type(MatS2D)                                :: TensPMatS2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      TensPMatS2D%XX = M1%XX * M2%XX
-      TensPMatS2D%YY = M1%YY * M2%YY
-      TensPMatS2D%XY = M1%XY * M2%XY
-      flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function TensPMatS2D
-   
-   Function TensPMat3D (M1,M2)
-      Type(Mat3D),Intent(IN)                      :: M1,M2
-      Type(Mat3D)                                 :: TensPMat3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      TensPMat3D%XX = M1%XX * M2%XX
-      TensPMat3D%XY = M1%XY * M2%XY
-      TensPMat3D%XZ = M1%XZ * M2%XZ
-      TensPMat3D%YX = M1%YX * M2%YX
-      TensPMat3D%YY = M1%YY * M2%YY
-      TensPMat3D%YZ = M1%YZ * M2%YZ
-      TensPMat3D%ZX = M1%ZX * M2%ZX
-      TensPMat3D%ZY = M1%ZY * M2%ZY
-      TensPMat3D%ZZ = M1%ZZ * M2%ZZ
-      flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function TensPMat3D
-   
-   Function TensPMatS3D (M1,M2)
-      Type(MatS3D),Intent(IN)                     :: M1,M2
-      Type(MatS3D)                                :: TensPMatS3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      TensPMatS3D%XX = M1%XX * M2%XX
-      TensPMatS3D%YY = M1%YY * M2%YY
-      TensPMatS3D%ZZ = M1%ZZ * M2%ZZ
-      TensPMatS3D%YZ = M1%YZ * M2%YZ
-      TensPMatS3D%XZ = M1%XZ * M2%XZ
-      TensPMatS3D%XY = M1%XY * M2%XY
-      flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function TensPMatS3D
-   
    ! Symmetrized product
    Function SymPVect2D (V1,V2)
       Type(Vect2D),Intent(IN)                     :: V1,V2
@@ -1506,33 +1444,116 @@ Contains
       SymPVect3D = Symmetrize(V1 .TensP. V2)
    End Function SymPVect3D
    
-   Function SymPMat2D(M1,M2)
-      Type(Mat2D),Intent(IN)                      :: M1,M2
-      Type(Mat2D)                                 :: SymPMat2D
-      
-      SymPMat2D = ((M1 .TensP. M2) + (M2 .TensP. M1)) * 0.5_Kr
-   End Function SymPMat2D
-   
    Function SymPMatS2D(M1,M2)
       Type(MatS2D),Intent(IN)                     :: M1,M2
-      Type(MatS2D)                                :: SymPMatS2D
+      Type(Tens4OS2D)                             :: SymPMatS2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
-      SymPMatS2D = M1 .TensP. M2
+      SymPMatS2D%XXXX =  M1%XX * M2%XX
+      SymPMatS2D%XXYY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
+      SymPMatS2D%XXXY = (M1%XX * M2%XY + M1%XY * M2%XX) * 0.5_Kr
+
+      SymPMatS2D%YYYY =  M1%YY * M2%YY
+      SymPMatS2D%YYXY = (M1%YY * M2%XY + M1%XY * M2%YY) * 0.5_Kr
+
+      SymPMatS2D%XYXY =  M1%XY * M2%XY
+      flops = 15.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function SymPMatS2D
-   
-   Function SymPMat3D(M1,M2)
-      Type(Mat3D),Intent(IN)                      :: M1,M2
-      Type(Mat3D)                                 :: SymPMat3D
-      
-      SymPMat3D = ((M1 .TensP. M2) + (M2 .TensP. M1)) * 0.5_Kr
-   End Function SymPMat3D
    
    Function SymPMatS3D(M1,M2)
       Type(MatS3D),Intent(IN)                     :: M1,M2
-      Type(MatS3D)                                :: SymPMatS3D
+      Type(Tens4OS3D)                             :: SymPMatS3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
-      SymPMatS3D = M1 .TensP. M2
+      SymPMatS3D%XXXX =  M1%XX * M2%XX
+      SymPMatS3D%XXYY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
+      SymPMatS3D%XXZZ = (M1%XX * M2%ZZ + M1%ZZ * M2%XX) * 0.5_Kr
+      SymPMatS3D%XXYZ = (M1%XX * M2%YZ + M1%YZ * M2%XX) * 0.5_Kr
+      SymPMatS3D%XXXZ = (M1%XX * M2%XZ + M1%XZ * M2%XX) * 0.5_Kr
+      SymPMatS3D%XXXY = (M1%XX * M2%XY + M1%XY * M2%XX) * 0.5_Kr
+
+      SymPMatS3D%YYYY =  M1%YY * M2%YY
+      SymPMatS3D%YYZZ = (M1%YY * M2%ZZ + M1%ZZ * M2%YY) * 0.5_Kr
+      SymPMatS3D%YYYZ = (M1%YY * M2%YZ + M1%YZ * M2%YY) * 0.5_Kr
+      SymPMatS3D%YYXZ = (M1%YY * M2%XZ + M1%XZ * M2%YY) * 0.5_Kr
+      SymPMatS3D%YYXY = (M1%YY * M2%XY + M1%XY * M2%YY) * 0.5_Kr
+
+      SymPMatS3D%ZZZZ =  M1%ZZ * M2%ZZ
+      SymPMatS3D%ZZYZ = (M1%ZZ * M2%YZ + M1%YZ * M2%ZZ) * 0.5_Kr
+      SymPMatS3D%ZZXZ = (M1%ZZ * M2%XZ + M1%XZ * M2%ZZ) * 0.5_Kr
+      SymPMatS3D%ZZXY = (M1%ZZ * M2%XY + M1%XY * M2%ZZ) * 0.5_Kr
+
+      SymPMatS3D%YZYZ =  M1%YZ * M2%YZ
+      SymPMatS3D%YZXZ = (M1%YZ * M2%XZ + M1%XZ * M2%YZ) * 0.5_Kr
+      SymPMatS3D%YZXY = (M1%YZ * M2%XY + M1%XY * M2%YZ) * 0.5_Kr
+
+      SymPMatS3D%XZXZ =  M1%XZ * M2%XZ
+      SymPMatS3D%XZXY = (M1%XZ * M2%XY + M1%XY * M2%XZ) * 0.5_Kr
+
+      SymPMatS3D%XYXY =  M1%XY * M2%XY
+      flops = 66.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function SymPMatS3D
+
+
+   Function oDotMatS2D(M1,M2)
+      Type(MatS2D),Intent(IN)                     :: M1,M2
+      Type(Tens4OS2D)                             :: oDotMatS2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+
+      oDotMatS2D%XXXX =  M1%XX + M2%XX
+      oDotMatS2D%XXYY =  M1%XY * M2%XY
+      oDotMatS2D%XXXY = (M1%XX * M2%XY + M1%XY * M2%XX) * 0.5_Kr
+
+      oDotMatS2D%YYYY =  M1%YY + M2%YY
+      oDotMatS2D%YYXY = (M1%XY * M2%YY + M1%YY * M2%XY) * 0.5_Kr
+      
+      oDotMatS2D%XYXY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
+      flops = 15.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function oDotMatS2D
+
+
+   Function oDotMatS3D(M1,M2)
+      Type(MatS3D),Intent(IN)                     :: M1,M2
+      Type(Tens4OS3D)                             :: oDotMatS3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      oDotMatS3D%XXXX =  M1%XX * M2%XX
+      oDotMatS3D%XXYY =  M1%XY * M2%XY
+      oDotMatS3D%XXZZ =  M1%XZ * M2%XZ
+      oDotMatS3D%XXYZ = (M1%XY * M2%XZ + M1%XZ * M2%YZ) * 0.5_Kr
+      oDotMatS3D%XXXZ = (M1%XX * M2%XZ + M1%XZ * M2%XX) * 0.5_Kr
+      oDotMatS3D%XXXY = (M1%XX * M2%XY + M1%XY * M2%XX) * 0.5_Kr
+
+      oDotMatS3D%YYYY =  M1%YY * M2%YY
+      oDotMatS3D%YYZZ =  M1%YZ * M2%YZ
+      oDotMatS3D%YYYZ = (M1%YY * M2%YZ + M1%YZ * M2%YY) * 0.5_Kr
+      oDotMatS3D%YYXZ = (M1%XY * M2%YZ + M1%YZ * M2%XY) * 0.5_Kr
+      oDotMatS3D%YYXY = (M1%XY * M2%YY + M1%YY * M2%XY) * 0.5_Kr
+
+      oDotMatS3D%ZZZZ =  M1%ZZ * M2%ZZ
+      oDotMatS3D%ZZYZ = (M1%YZ * M2%ZZ + M1%ZZ * M2%YZ) * 0.5_Kr
+      oDotMatS3D%ZZXZ = (M1%XZ * M2%ZZ + M1%ZZ * M2%XZ) * 0.5_Kr
+      oDotMatS3D%ZZXY = (M1%XZ * M2%YZ + M1%YZ * M2%XZ) * 0.5_Kr
+
+      oDotMatS3D%YZYZ = (M1%YY * M2%ZZ + M1%ZZ * M2%YY) * 0.5_Kr
+      oDotMatS3D%YZXZ = (M1%XY * M2%ZZ + M1%ZZ * M2%XY) * 0.5_Kr
+      oDotMatS3D%YZXY = (M1%XY * M2%YZ + M1%YZ * M2%XY) * 0.5_Kr
+
+      oDotMatS3D%XZXZ = (M1%XX * M2%ZZ + M1%ZZ * M2%XX) * 0.5_Kr
+      oDotMatS3D%XZXY = (M1%XX * M2%YZ + M1%YZ * M2%XX) * 0.5_Kr
+
+      oDotMatS3D%XYXY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
+      flops = 66.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function oDotMatS3D
+
    
    Function Trace2D(M1)
       Type(Mat2D),Intent(IN)                      :: M1
@@ -2381,51 +2402,6 @@ Contains
       flops = 12.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Ht_Min_Tri_2D
-   
-   Function ValP2D(M)
-      Type(Mat2D),Intent(IN)                      :: M
-      Type(Vect2D)                                :: ValP2D,VPTemp
-      PetscReal                                   :: Tmp1
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY * M%YX
-      If (Tmp1 < 0.0_Kr) Then
-         Print*,'Error in Valp2D : non diagonalizable matrix'
-         Print*,'Tmp1 = ',Tmp1
-         Print*,'M :'
-         Print*,M%XX,M%XY
-         Print*,M%YX,M%YY
-         Print*,'(M%XX - M%YY)**2', (M%XX - M%YY)**2
-         Print*,'4.0_Kr * M%XY * M%YX',4.0_Kr * M%XY * M%YX
-         Print*,'Result is (0.0,0.0)'
-         VPTemp%X = 0.0_Kr
-         VPTemp%Y = 0.0_Kr
-      Else
-         VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
-         VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
-         flops = 13.0
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-      EndIf
-      ValP2D = VPTemp
-   End Function ValP2D
-   
-   Function ValP2DS(M)
-      Type(MatS2D),Intent(IN)                     :: M
-      Type(Vect2D)                                :: ValP2DS,VPTemp
-      PetscReal                                   :: Tmp1
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY**2
-      
-      VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
-      VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
-      
-      ValP2DS= VPTemp
-      flops = 13.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function ValP2DS
    
    Function DetMat2D(M)
       Type(Mat2D),Intent(IN)                      :: M

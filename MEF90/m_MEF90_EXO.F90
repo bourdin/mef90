@@ -6,6 +6,7 @@ Module m_MEF90_EXO
    Use m_MEF90_Elements
    Use petsc
    IMPLICIT NONE
+#include "../mef90version.h"
 
    Private 
    PetscInt,Public                                 :: exo_ver
@@ -55,6 +56,8 @@ Contains
          io_ws = 0
          filename = Trim(MEF90Ctx%geometryFile)
          exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
@@ -90,14 +93,17 @@ Contains
       MPI_Comm                                        :: IOComm
       Integer                                         :: IORank
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
+      Character(len=MXSTLN)                           :: QA_rec(4)
+      Character(len=MXSTLN)                           :: date
+      Character(len=MXSTLN)                           :: time
+
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exo_version
       Integer                                         :: exoerr
       Logical                                         :: exoExists
       PetscSizeT                                      :: sizeofPetscReal
-      
-   
+
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
    
       !!! Get name of output file
@@ -135,9 +141,16 @@ Contains
          Else
             io_ws  = 0
             MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
+            QA_rec(1) = "mef90"
+            QA_rec(2) = MEF90_GITVER
+            Call date_and_time(DATE=date,TIME=time)
+            write(QA_rec(3),"(a)") date
+            write(QA_rec(4),"(a,':',a,':',a)") time(1:2),time(3:4),time(5:6)
+            call expqa (MEF90Ctx%fileExoUnit , num_QA_rec, QA_rec, ierr)
          EndIf
       End If
    End Subroutine MEF90CtxOpenEXO
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCloseEXO"

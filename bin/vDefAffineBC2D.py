@@ -105,16 +105,17 @@ def main():
             else:
                 print ('\n\t{0} was NOT generated.\n'.format(options.outputfile))
                 return -1
-    try:
-        exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
-    except:
-        print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
-        print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
-        os.remove(options.outputfile)
-        exoin  = exo.exodus(options.inputfile,mode='r')
-        exoout = exoin.copy(options.outputfile)
-        exoout.close()
-        exoout  = exo.exodus(options.outputfile,mode='a',array_type='numpy')
+    exoin  = exo.exodus(options.inputfile,mode='r')
+    exoout = exoin.copy(options.outputfile)
+    exoout.close()
+    exoout  = exo.exodus(options.outputfile,mode='a',array_type='numpy')
+    ### Adding a QA record, needed until visit fixes its exodus reader
+    import datetime
+    import os.path
+    import sys
+    QA_rec_len = 32
+    QA = [os.path.basename(sys.argv[0]),os.path.basename(__file__),datetime.date.today().strftime('%Y%m%d'),datetime.datetime.now().strftime("%H:%M:%S")]
+    exoout.put_qa_records([[ q[0:31] for q in QA],])
 
     exoformat(exoout)
     

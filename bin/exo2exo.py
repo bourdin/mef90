@@ -7,6 +7,7 @@ import pymef90
 
 
 def exo2exo(fin,fout):
+    import sys
     import warnings
     warnings.filterwarnings('ignore','.*buffer.*',)
 
@@ -161,6 +162,13 @@ def exo2exo(fin,fout):
             eout.put_node_set_params(setFixedID,num_ns_nodes, num_ns_dist_facts)
             eout.put_node_set(setFixedID,e.get_node_set_nodes(set))
             eout.put_node_set_name(setFixedID,setName)
+    ### Adding a QA record, needed until visit fixes its exodus reader
+    import datetime
+    import os.path
+    import sys
+    QA_rec_len = 32
+    QA = [os.path.basename(sys.argv[0]),os.path.basename(__file__),datetime.date.today().strftime('%Y%m%d'),datetime.datetime.now().strftime("%H:%M:%S")]
+    eout.put_qa_records([[ q[0:31] for q in QA],])
     eout.close()
     e.close()
 

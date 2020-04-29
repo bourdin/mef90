@@ -103,4 +103,11 @@ if sys.version_info[0] < 3:
             e.put_node_set(setID,vertexSets[setID]['vertex'])
             if not vertexSets[setID]['name'] == '':
                 e.put_node_set_name(setID,vertexSets[setID]['name'])
+        ### Adding a QA record, needed until visit fixes its exodus reader
+        import datetime
+        import os.path
+        import sys
+        QA_rec_len = 32
+        QA = [os.path.basename(sys.argv[0]),os.path.basename(__file__),datetime.date.today().strftime('%Y%m%d'),datetime.datetime.now().strftime("%H:%M:%S")]
+        e.put_qa_records([[ q[0:31] for q in QA],])
         e.close()
