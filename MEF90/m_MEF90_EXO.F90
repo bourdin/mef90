@@ -76,6 +76,7 @@ Contains
       End If
    End Subroutine MEF90CtxGetDMMeshEXO
 
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxOpenEXO"
 !!!
@@ -93,6 +94,7 @@ Contains
       MPI_Comm                                        :: IOComm
       Integer                                         :: IORank
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
+      Integer,parameter                               :: num_QA_rec=1
       Character(len=MXSTLN)                           :: QA_rec(4)
       Character(len=MXSTLN)                           :: date
       Character(len=MXSTLN)                           :: time
@@ -103,9 +105,8 @@ Contains
       Integer                                         :: exoerr
       Logical                                         :: exoExists
       PetscSizeT                                      :: sizeofPetscReal
-
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
    
+      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       !!! Get name of output file
       Select Case (GlobalOptions%FileFormat)
       Case (MEF90FileFormat_EXOSplit)
