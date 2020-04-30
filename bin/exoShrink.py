@@ -15,7 +15,11 @@ def parse(args=None):
     return parser.parse_args()
 
 def main():
-    import exodus as exo
+    import sys
+    if sys.version_info.major == 3:
+        import exodus3 as exo
+    else:
+        import exodus2 as exo
     import os
     options = parse()
 

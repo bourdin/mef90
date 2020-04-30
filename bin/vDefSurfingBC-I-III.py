@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+if sys.version_info.major == 3:
+    import exodus3 as exo
+else:
+    import exodus2 as exo
 
 def parse(args=None):
     import argparse
@@ -49,7 +53,6 @@ def cart2polar(x, y):
     return r, theta
         
 def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl,mixity):
-    import exodus as exo
     import numpy as np
     
     kappa = (3.0-nu)/(1.0+nu)
@@ -81,7 +84,6 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl,mixity):
     return U
 
 def main():
-    import exodus as exo
     import numpy as np
     options = parse()
     

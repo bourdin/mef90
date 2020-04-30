@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+if sys.version_info.major == 3:
+    import exodus3 as exo
+else:
+    import exodus2 as exo
 
 def parse(args=None):
     import argparse
@@ -46,7 +50,6 @@ def ramp(x,y,w,h):
         return min(max(0,-x*h/w),h)
 
 def surfingBC(e,t,cslist,vslist,w,h):
-    import exodus as exo
     import numpy as np
     
     dim = e.num_dimensions()
@@ -71,7 +74,6 @@ def surfingBC(e,t,cslist,vslist,w,h):
     return U
 
 def main():
-    import exodus as exo
     import numpy as np
     options = parse()
     

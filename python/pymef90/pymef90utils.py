@@ -53,15 +53,6 @@ def confirm(prompt=None, resp=False):
 
     """
     from sys import version_info
-    if version_info.major == 3:
-        pass
-    elif version_info.major == 2:
-        try:
-            input = raw_input
-        except NameError:
-            pass
-    else:
-        print ("Unknown python version - input function not safe")
 
     if prompt is None:
         prompt = 'Confirm'
@@ -72,7 +63,10 @@ def confirm(prompt=None, resp=False):
         prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
         
     while True:
-        ans = input(prompt)
+        if version_info.major == 3:
+            ans = input(prompt)
+        else:
+            ans = raw_input(prompt)
         if not ans:
             return resp
         if ans not in ['y', 'Y', 'n', 'N']:

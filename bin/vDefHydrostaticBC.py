@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+if sys.version_info.major == 3:
+    import exodus3 as exo
+else:
+    import exodus2 as exo
 
 def parse(args=None):
     import argparse
@@ -60,7 +64,6 @@ def cart2polar(x, y):
     return r, theta
         
 def hydrostaticBC(e,t,cslist,vslist):
-    import exodus as exo
     import numpy as np
     
     dim = e.num_dimensions()
@@ -85,7 +88,6 @@ def hydrostaticBC(e,t,cslist,vslist):
     return U
 
 def main():
-    import exodus as exo
     import numpy as np
     import os
     import pymef90

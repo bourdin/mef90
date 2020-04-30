@@ -1,5 +1,3 @@
-import sys
-
 def parse():
     import argparse
     parser = argparse.ArgumentParser()
@@ -10,7 +8,11 @@ def parse():
 
 
 def main():
-    import exodus as exo
+    import sys
+    if sys.version_info.major == 3:
+        import exodus3 as exo
+    else:
+        import exodus2 as exo
     import numpy as np
     options = parse()
     
@@ -58,5 +60,6 @@ def main():
     exoout.close()
 
 if __name__ == "__main__":
-        sys.exit(main())
+    import sys
+    sys.exit(main())
 

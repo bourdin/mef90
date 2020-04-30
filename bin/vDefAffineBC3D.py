@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+if sys.version_info.major == 3:
+    import exodus3 as exo
+else:
+    import exodus2 as exo
 
 def parse(args=None):
     import argparse
@@ -56,7 +60,6 @@ def exoformat(e,plasticity=False):
     return(0)
 
 def displacementBC(e,t,options):
-    import exodus as exo
     import numpy as np
     
     E  = options.E
@@ -90,7 +93,6 @@ def displacementBC(e,t,options):
 
 
 def main():
-    import exodus as exo
     import numpy as np
     import os
     import pymef90
