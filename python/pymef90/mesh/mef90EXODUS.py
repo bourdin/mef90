@@ -82,7 +82,6 @@ def EXODUSwrite(coords,vertexSets,cellSets,numDim,exoFile):
     for k in cellSets.keys():       #finding number of elements
         numElems += len(cellSets[k]['connect'])//EXOCellSize(cellSets[k]['elemType'])
     numNodes = len(coords[:,0])
-    print('***',numElems,len(cellSets),len(vertexSets))
     ex_pars = exo.ex_init_params(num_dim=numDim, num_nodes=numNodes,
         num_elem=numElems, num_elem_blk=len(cellSets), num_node_sets=len(vertexSets),num_side_sets=0)
     e=exo.exodus(exoFile,array_type='numpy',mode='w',init_params=ex_pars)
