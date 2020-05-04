@@ -76,8 +76,8 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
       End Subroutine MEF90DefMechEnergyLoc
    End Interface
 
-   !PetscReal,Parameter,Private                         :: cwKKL = 2.0_Kr / 3.0_Kr
-   PetscReal,Parameter,Private                         :: cwKKL = 0.7165753016381484_Kr
+   PetscReal,Parameter,Private                         :: cwKKL     = 0.7165753016381484_Kr
+   PetscReal,Parameter,Private                         :: cwLinSoft = 0.7853981634_Kr
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90gKKL"
@@ -2634,7 +2634,7 @@ Contains
 
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(boundaryDisplacementSec,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechCohesiveEnergy   
+   End Subroutine MEF90DefMechCohesiveEnergy
 
 
 #undef __FUNCT__
@@ -2743,6 +2743,106 @@ Contains
    End Subroutine MEF90DefMechPlasticDissipation
 
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefmechElasticEnergyATSet"
+   !!!
+   !!!  
+   !!!  MEF90DefmechElasticEnergyATSet:  Contribution of a cell set to elastic energy. 
+   !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
+   !!!                        is cell-based
+   !!!  
+   !!!  (c) 2019 - 2020 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine MEF90DefmechElasticEnergyATSet(energy,x,damage,plasticStrain,temperature,mesh,meshScal,cellIS,matprop,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: x,damage,plasticStrain,temperature
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemDamage
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemDamageType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,damageLoc,temperatureLoc,plasticStrainLoc
+      Type(MEF90_MATS)                                   :: plasticStrainCell
+      PetscReal                                          :: damageGauss,temperatureGauss,Stress_ZZ_planeStrain
+      PetscReal                                          :: elasticEnergyDensityGauss,stiffness
+      Type(MEF90_MATS)                                   :: inelasticStrainGauss,plasticStrainGauss
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemDisplacementType%numDof))
+         Allocate(temperatureloc(elemDamageType%numDof))
+         Allocate(damageLoc(elemDamageType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemDamageType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            plasticStrainCell = 0.0_Kr
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+               plasticStrainCell = plasticStrainLoc
+            End If
+            If (damage%v /= 0) Then
+               Call SectionRealRestrictClosure(damage,meshScal,cellID(cell),elemDamageType%numDof,damageLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               stiffness = 1.0_Kr
+               If (damage%v /= 0) Then
+                  damageGauss = 0.0_Kr
+                  Do iDoF1 = 1, elemDamageType%numDof
+                     damageGauss = damageGauss + damageLoc(iDoF1) * elemDamage(cell)%BF(iDoF1,iGauss)
+                  End Do ! iDoF1
+                  stiffness = MEF90aAT(damageGauss) + matprop%residualStiffness
+               End If
+
+               inelasticStrainGauss = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  inelasticStrainGauss = inelasticStrainGauss + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+
+               temperatureGauss   = 0.0_Kr
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemDamageType%numDof
+                     temperatureGauss = temperatureGauss + temperatureLoc(iDof1) * elemDamage(cell)%BF(iDof1,iGauss)
+                  End Do
+                  inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matprop%LinearThermalExpansion)
+               End If
+               elasticEnergyDensityGauss = 0.5_Kr * stiffness * (matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) .dotP. (inelasticStrainGauss - plasticStrainCell))
+
+#if MEF90_DIM == 2
+               if (.NOT. matprop%HookesLaw%isPlaneStress) then
+                  Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+                  elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(inelasticStrainGauss)
+               endif
+#endif
+            energy = energy + elemDamage(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
+            End Do ! Gauss
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         flops = 7 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
+         If (damage%v /= 0) Then
+            flops = flops + 2 * elemDamageType%numDof * size(elemDamage(1)%Gauss_C) * size(cellID) 
+         End If
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemDamageType%numDof * size(elemDamage(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(temperatureloc)
+         DeAllocate(damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefmechElasticEnergyATSet
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefmechElasticEnergyKKLSet"
@@ -2815,7 +2915,7 @@ Contains
                   End Do
                   inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matprop%LinearThermalExpansion)
                End If
-               elasticEnergyDensityGauss = 0.5_Kr * (matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) .dotP. (inelasticStrainGauss - plasticStrainCell))
+               elasticEnergyDensityGauss = 0.5_Kr * stiffness * (matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) .dotP. (inelasticStrainGauss - plasticStrainCell))
 
 #if MEF90_DIM == 2
                if (.NOT. matprop%HookesLaw%isPlaneStress) then
@@ -2843,6 +2943,107 @@ Contains
       End If   
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefmechElasticEnergyKKLSet
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefmechElasticEnergyLinSoftSet"
+   !!!
+   !!!  
+   !!!  MEF90DefmechElasticEnergyLinSoftSet:  Contribution of a cell set to elastic energy. 
+   !!!                        It is assumed that the temperature is interpolated on the FE space while the plastic strain 
+   !!!                        is cell-based
+   !!!  
+   !!!  (c) 2019 - 2020 Blaise Bourdin bourdin@lsu.edu
+   !!!
+   Subroutine MEF90DefmechElasticEnergyLinSoftSet(energy,x,damage,plasticStrain,temperature,mesh,meshScal,cellIS,matprop,elemDisplacement,elemDisplacementType,elemDamage,elemDamageType,ierr)
+      PetscReal,Intent(OUT)                              :: energy
+      Type(SectionReal),Intent(IN)                       :: x,damage,plasticStrain,temperature
+      Type(DM),Intent(IN)                                :: mesh,meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemDamage
+      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemDamageType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: xloc,damageLoc,temperatureLoc,plasticStrainLoc
+      Type(MEF90_MATS)                                   :: plasticStrainCell
+      PetscReal                                          :: damageGauss,temperatureGauss,Stress_ZZ_planeStrain
+      PetscReal                                          :: elasticEnergyDensityGauss,stiffness
+      Type(MEF90_MATS)                                   :: inelasticStrainGauss,plasticStrainGauss
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscLogDouble                                     :: flops
+     
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(xloc(elemDisplacementType%numDof))
+         Allocate(temperatureloc(elemDamageType%numDof))
+         Allocate(damageLoc(elemDamageType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(x,mesh,cellID(cell),elemDisplacementType%numDof,xloc,ierr);CHKERRQ(ierr)
+            If (temperature%v /= 0) Then
+               Call SectionRealRestrictClosure(temperature,meshScal,cellID(cell),elemDamageType%numDof,temperatureLoc,ierr);CHKERRQ(ierr)
+            End If
+            plasticStrainCell = 0.0_Kr
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestrict(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+               plasticStrainCell = plasticStrainLoc
+            End If
+            If (damage%v /= 0) Then
+               Call SectionRealRestrictClosure(damage,meshScal,cellID(cell),elemDamageType%numDof,damageLoc,ierr);CHKERRQ(ierr)
+            End If
+            Do iGauss = 1,size(elemDisplacement(cell)%Gauss_C)
+               stiffness = 1.0_Kr
+               If (damage%v /= 0) Then
+                  damageGauss = 0.0_Kr
+                  Do iDoF1 = 1, elemDamageType%numDof
+                     damageGauss = damageGauss + damageLoc(iDoF1) * elemDamage(cell)%BF(iDoF1,iGauss)
+                  End Do ! iDoF1
+                  stiffness = matprop%residualStiffness + (1.0_Kr - damageGauss)**2 / ( 1.0_Kr + ( matprop%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - damageGauss)**2 ) )
+               End If
+
+               inelasticStrainGauss = 0.0_Kr
+               Do iDoF1 = 1,elemDisplacementType%numDof
+                  inelasticStrainGauss = inelasticStrainGauss + xloc(iDof1) * elemDisplacement(cell)%GradS_BF(iDof1,iGauss)
+               End Do
+
+               temperatureGauss   = 0.0_Kr
+               If (temperature%v /= 0) Then
+                  Do iDoF1 = 1,elemDamageType%numDof
+                     temperatureGauss = temperatureGauss + temperatureLoc(iDof1) * elemDamage(cell)%BF(iDof1,iGauss)
+                  End Do
+                  inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matprop%LinearThermalExpansion)
+               End If
+               elasticEnergyDensityGauss = 0.5_Kr * stiffness * (matprop%HookesLaw * (inelasticStrainGauss - plasticStrainCell) .dotP. (inelasticStrainGauss - plasticStrainCell))
+
+#if MEF90_DIM == 2
+               if (.NOT. matprop%HookesLaw%isPlaneStress) then
+                  Stress_ZZ_planeStrain = ( matprop%HookesLaw%YoungsModulus - 2.0_Kr*matprop%HookesLaw%PoissonRatio*matprop%HookesLaw%mu )*trace(plasticStrainCell) + matprop%HookesLaw%lambda*trace(inelasticStrainGauss)
+                  elasticEnergyDensityGauss = elasticEnergyDensityGauss + ( Stress_ZZ_planeStrain + matprop%HookesLaw%lambda*trace(inelasticStrainGauss - plasticStrainCell) ) * trace(inelasticStrainGauss)
+               endif
+#endif
+            energy = energy + elemDamage(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
+            End Do ! Gauss
+            If (plasticStrain%v /= 0) Then
+               Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
+            End If
+         End Do ! cell
+         flops = 7 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
+         If (damage%v /= 0) Then
+            flops = flops + 2 * elemDamageType%numDof * size(elemDamage(1)%Gauss_C) * size(cellID) 
+         End If
+         If (temperature%v /= 0) Then
+            flops = flops + 2 * elemDamageType%numDof * size(elemDamage(1)%Gauss_C) * size(cellID) 
+         End If
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(xloc)
+         DeAllocate(temperatureloc)
+         DeAllocate(damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefmechElasticEnergyLinSoftSet
 
 
 #undef __FUNCT__
@@ -2933,8 +3134,8 @@ Contains
                End If
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageElasticEnergySet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
-                                             matPropSet%residualStiffness,matpropSet%HookesLaw,matpropSet%CoefficientLinSoft,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+               Call MEF90DefmechElasticEnergyLinSoftSet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+                                             matPropSet,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
@@ -2948,9 +3149,8 @@ Contains
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                
-               matpropSet%CoefficientLinSoft=0
-               Call MEF90GradDamageElasticEnergySet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
-                                             matPropSet%residualStiffness,matpropSet%HookesLaw,matpropSet%CoefficientLinSoft,matpropSet%LinearThermalExpansion,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
+               Call MEF90DefmechElasticEnergyATSet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
+                                             matPropSet,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
@@ -2964,7 +3164,6 @@ Contains
                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                
-               matpropSet%CoefficientLinSoft=0
                Call MEF90DefmechElasticEnergyKKLSet(myenergy,xSec,damageSec,plasticStrainSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              matPropSet,elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemDisplacement,ierr)
@@ -2988,7 +3187,6 @@ Contains
       End If
       Call SectionRealDestroy(xSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechElasticEnergy
-
 
 
 #undef __FUNCT__
@@ -3178,36 +3376,28 @@ Contains
 #endif
          !!! This is really twice the elastic energy density
 
-Do iDoF1 = 1,numDofDamage
-   Do iDoF2 = 1,numDofDamage
-      Aloc(iDoF2,iDof1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * (elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-         C2 * matprop%fractureToughness * matprop%internalLength * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
-   End Do
-End Do
-!!! Why did I remove the toughness anisotropy matrix here?
-
-         ! If ((N == 1.0_Kr) .OR. (cumulatedDissipatedPlasticEnergyCell == 0.0_Kr)) Then
-         !    Do iDoF1 = 1,numDofDamage
-         !       Do iDoF2 = 1,numDofDamage
-         !          Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-         !                                 (elasticEnergyDensityGauss  ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-         !                                 C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
-         !       End Do
-         !    End Do
-         ! Else
-         !    damageGauss = 0.0_Kr
-         !    Do iDoF1 = 1,numDofDamage
-         !       damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
-         !    End Do
-         !    Do iDoF1 = 1,numDofDamage
-         !       Do iDoF2 = 1,numDofDamage
-         !          Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-         !                                 (elasticEnergyDensityGauss + &
-         !                                 ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-         !                                 C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
-         !       End Do
-         !    End Do
-         ! EndIf
+         If ((N == 1.0_Kr) .OR. (cumulatedDissipatedPlasticEnergyCell == 0.0_Kr)) Then
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ( (matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
+            End Do
+         Else
+            damageGauss = 0.0_Kr
+            Do iDoF1 = 1,numDofDamage
+               damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
+            End Do
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         (elasticEnergyDensityGauss + &
+                                         ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
+            End Do
+         EndIf
 
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -3247,7 +3437,7 @@ End Do
          Do iDoF1 = 1,numDofDamage
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) *  &
-                                      C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss))
+                                      C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss))
             End Do
          End Do
       End Do
@@ -3318,7 +3508,7 @@ End Do
                Do iDoF2 = 1,numDofDamage
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ( (matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          Else
@@ -3331,7 +3521,7 @@ End Do
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + &
                                          ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          EndIf
@@ -3403,7 +3593,7 @@ End Do
                Do iDoF2 = 1,numDofDamage
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ( (matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          Else
@@ -3416,7 +3606,7 @@ End Do
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + &
                                          ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          EndIf
@@ -3445,9 +3635,9 @@ End Do
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
-      PetscReal                                          :: C2
+      PetscReal                                          :: C2,N
       PetscLogDouble                                     :: flops
       PetscErrorCode                                     :: ierr
 
@@ -3456,6 +3646,7 @@ End Do
       numGauss = size(elemDamage%BF,2)
       
       C2 = matprop%fractureToughness * matprop%internalLength * .75
+      N = matprop%DuctileCouplingPower
 
       Do iGauss = 1,numGauss
          temperatureGauss = 0.0_Kr
@@ -3474,13 +3665,28 @@ End Do
          elasticEnergyDensityGauss = (matprop%HookesLaw * inelasticStrainGauss) .DotP. DeviatoricPart(inelasticStrainGauss)
          !!! This is really twice the elastic energy density
          
-         Do iDoF1 = 1,numDofDamage
-            Do iDoF2 = 1,numDofDamage
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                      C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+         If ((N == 1.0_Kr) .OR. (cumulatedDissipatedPlasticEnergyCell == 0.0_Kr)) Then
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         elasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ( (matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
             End Do
-         End Do
+         Else
+            damageGauss = 0.0_Kr
+            Do iDoF1 = 1,numDofDamage
+               damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
+            End Do
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         (elasticEnergyDensityGauss + &
+                                         ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
+            End Do
+         End If
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -3505,9 +3711,9 @@ End Do
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: positiveElasticEnergyDensityGauss
+      PetscReal                                          :: positiveElasticEnergyDensityGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrain,positiveInelasticStrain,negativeInelasticStrain
-      PetscReal                                          :: C2
+      PetscReal                                          :: C2,N
       PetscLogDouble                                     :: flops
 
       numDofDisplacement = size(elemDisplacement%BF,1)
@@ -3515,6 +3721,7 @@ End Do
       numGauss = size(elemDamage%BF,2)
       
       C2 = matprop%fractureToughness * matprop%internalLength * .75
+      N = matprop%DuctileCouplingPower
 
       Do iGauss = 1,numGauss
          inelasticStrain = 0.0_Kr
@@ -3530,13 +3737,28 @@ End Do
          Call MasonryProjection(inelasticStrain,matprop%HookesLaw,positiveInelasticStrain,negativeInelasticStrain)
          positiveElasticEnergyDensityGauss = (matprop%HookesLaw * positiveInelasticStrain) .dotP. positiveInelasticStrain
          !!! This is really twice the elastic energy density
-         Do iDoF1 = 1,numDofDamage
-            Do iDoF2 = 1,numDofDamage
-               Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
-                                      positiveElasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                      C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+         If ((N == 1.0_Kr) .OR. (cumulatedDissipatedPlasticEnergyCell == 0.0_Kr)) Then
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         positiveElasticEnergyDensityGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ( (matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
             End Do
-         End Do
+         Else
+            damageGauss = 0.0_Kr
+            Do iDoF1 = 1,numDofDamage
+               damageGauss = damageGauss + elemDamage%BF(iDoF1,iGauss) * xDof(iDoF1)
+            End Do
+            Do iDoF1 = 1,numDofDamage
+               Do iDoF2 = 1,numDofDamage
+                  Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
+                                         (positiveElasticEnergyDensityGauss + &
+                                         ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+               End Do
+            End Do
+         End If
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -3561,7 +3783,7 @@ End Do
       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
 
       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss
+      PetscReal                                          :: elasticEnergyDensityGauss,temperatureGauss,damageGauss
       Type(MEF90_MATS)                                   :: inelasticStrainGauss
       PetscReal                                          :: C1,C2
       PetscLogDouble                                     :: flops
@@ -3711,7 +3933,7 @@ End Do
                Do iDoF2 = 1,numDofDamage
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + C1) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          Else
@@ -3724,7 +3946,7 @@ End Do
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + C1 + &
                                          ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          EndIf
@@ -3800,7 +4022,7 @@ End Do
                Do iDoF2 = 1,numDofDamage
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + C1) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          Else
@@ -3813,7 +4035,7 @@ End Do
                   Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                          (elasticEnergyDensityGauss + C1 + &
                                          ( N * (N - 1.0_Kr) *( (1.0_Kr-damageGauss)**(N - 2.0_Kr) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                         C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                         C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
                End Do
             End Do
          EndIf
@@ -3877,7 +4099,7 @@ End Do
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( &
                                       (elasticEnergyDensityGauss + C1) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                       C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
       End Do
@@ -3953,7 +4175,7 @@ End Do
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) * ( & 
                                   (elasticEnergyDensityGauss * C0 - C1 + &
                                   (N * (N - 1.0) *( (1.0_Kr-damageGauss)**(N - 2.0) ) ) * cumulatedDissipatedPlasticEnergyCell ) * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) &
-                                  + C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                  + C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
       End Do
@@ -4091,7 +4313,7 @@ End Do
             Do iDoF2 = 1,numDofDamage
                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) + elemDamage%Gauss_C(iGauss) *  ( &
                                       +C1 * D2wDamageGauss * elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                       C2 * (elemDamage%Grad_BF(iDoF1,iGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+                                       C2 * ((matprop%toughnessAnisotropyMatrix * elemDamage%Grad_BF(iDoF1,iGauss)) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)))
             End Do
          End Do
       End Do
@@ -4415,105 +4637,6 @@ End Do
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2
 
-! #undef __FUNCT__
-! #define __FUNCT__ "MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2"
-! !!!
-! !!!  
-! !!!  MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2: 
-! !!!               The nucleation driving force derived in Kumara, Bourdin, Francfort, Lopez-Pamies
-! !!!               Revisiting Nucleation in the Phase-Field Approach to Brittle Fracture
-! !!!               de            = -3Gc  / (8 gamma_0 ell) (1-alpha)^p     (gamma_1 I~_1 + sqrt(J~2))
-! !!!               d de/ d alpha =  3pGc / (8 gamma_0 ell) (1-alpha)^(p-1) (gamma_1 I~_1 + sqrt(J~2))
-! !!!                            
-! !!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
-! !!!
-
-!    Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-!       PetscReal,Dimension(:,:),Pointer                   :: Aloc
-!       PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-!       Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-!       PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-!       Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-!       Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-!       Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-!       PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDamage,numDofDisplacement,numGauss
-!       Type(MEF90_MATS)                                   :: AeGauss
-!       Type(MatS3D)                                       :: Ae3DGauss
-!       PetscReal                                          :: I1Gauss,sqrtJ2Gauss,DalphaI1Gauss,DalphasqrtJ2Gauss,damageGauss
-!       PetscReal                                          :: gamma0, gamma1
-!       PetscReal                                          :: DalphaCeGauss
-!       PetscReal                                          :: E,kappa,mu,Gc,alpha,ell,sigma_cs,sigma_ts,sigma_c,C1
-!       PetscInt                                           :: p
-!       PetscLogDouble                                     :: flops
-!       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
-!       PetscErrorCode                                     :: ierr
-
-!       If (matprop%HookesLaw%Type /= MEF90HookesLawTypeIsotropic) Then
-!          Write(IOBuffer,'(''ERROR: unimplemented Hookes law type in'' (A),''\n'')') __FUNCT__
-!          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_SUP,IOBuffer,ierr)
-!       End If
-
-!       numDofDisplacement = size(elemDisplacement%BF,1)
-!       numDofDamage = size(elemDamage%BF,1)
-!       numGauss = size(elemDamage%BF,2)
-
-!       E        = matprop%HookesLaw%YoungsModulus
-!       Gc       = matprop%FractureToughness
-!       ell      = matprop%internalLength
-!       sigma_cs = matprop%drivingForceCompressiveStrength
-!       sigma_ts = matprop%drivingForceTensileStrength
-!       p        = matprop%drivingForcep
-      
-!       gamma0 = -2.0_Kr * sigma_cs * sigma_ts / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
-!       gamma1 = (sigma_cs - sigma_ts) / sqrt(3.0_Kr) / (sigma_cs + sigma_ts)
-!       C1     = 0.375_Kr * p * Gc / gamma0 / ell 
-!       Do iGauss = 1,numGauss
-!          !!! Compute the value of the damage field at the Gauss points
-!          damageGauss = 0.0_Kr
-!          Do iDof1 = 1,numDofDamage
-!             damageGauss = damageGauss + elemDamage%BF(iDof1,iGauss) * xDof(iDof1)
-!          End Do
-
-!          AeGauss = 0.0_Kr
-!          Do iDof1 = 1,numDofDisplacement
-!             AeGauss = AeGauss + elemDisplacement%GradS_BF(iDof1,iGauss) * displacementDof(iDof1)
-!          End Do
-!          AeGauss           = matprop%HookesLaw * AeGauss
-! #if MEF90_DIM == 3
-!          I1Gauss           = Moment(1,AeGauss)
-!          sqrtJ2Gauss       = sqrt(Moment(2,DeviatoricPart(AeGauss)))
-! #else
-!          If (matProp%HookesLaw%isPlaneStress) Then
-!             Ae3DGauss    = 0.0_Kr
-!             Ae3DGauss%XX = AeGauss%XX
-!             Ae3DGauss%YY = AeGauss%YY
-!             Ae3DGauss%XY = AeGauss%XY
-!             I1Gauss      = Moment(1,Ae3DGauss)
-!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
-!          Else 
-!             Ae3DGauss    = 0.0_Kr
-!             Ae3DGauss%XX = AeGauss%XX
-!             Ae3DGauss%YY = AeGauss%YY
-!             Ae3DGauss%XY = AeGauss%XY
-!             Ae3DGauss%ZZ = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + matprop%HookesLaw%mu) * 0.5_Kr * &
-!                            (AeGauss%XX + AeGauss%YY)
-!             I1Gauss      = Moment(1,Ae3DGauss)
-!             sqrtJ2Gauss  = sqrt(Moment(2,DeviatoricPart(Ae3DGauss)))
-!          End If
-! #endif
-!          DalphaCeGauss = C1 * (1.0_Kr - damageGauss)**(p-1) * (gamma1 * I1Gauss + sqrtJ2Gauss)
-!          Do iDoF1 = 1,numDofDamage
-!             Do iDoF2 = 1,numDofDamage
-!                Aloc(iDoF2,iDoF1) = Aloc(iDoF2,iDoF1) - elemDamage%Gauss_C(iGauss) * DalphaCeGauss * &
-!                                         elemDamage%BF(iDoF1,iGauss) * elemDamage%BF(iDoF2,iGauss)
-!             End Do
-!          End Do
-!       End Do
-!       !flops = 2 * numGauss * numDofDisplacement**2
-!       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-!    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2
-
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamageAT1Loc"
@@ -4583,26 +4706,26 @@ End Do
             gradientDamageGauss = gradientDamageGauss + elemDamage%Grad_BF(iDoF1,iGauss) * xDof(iDoF1)
          End Do
 
-         ! If (N==1.0_Kr) Then
-         !    Do iDoF2 = 1,numDofDamage
-         !       residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-         !                            ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
-         !                            - cumulatedDissipatedPlasticEnergyCell + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-         !                             (( C2 * matprop%toughnessAnisotropyMatrix * gradientDamageGauss +  Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
-         !    End Do
-         ! Else
-         !    Do iDoF2 = 1,numDofDamage
-         !       residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-         !                            ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
-         !                            - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-         !                             (( C2 * matprop%toughnessAnisotropyMatrix * gradientDamageGauss +  Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
-         !    End Do
-         ! EndIf
-         Do iDoF2 = 1,numDofDamage
-            residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
-               ((damageGauss - 1.0_Kr) * elasticEnergyDensityGauss + 3.0_Kr * matprop%fractureToughness / matprop%internalLength / 8.0_Kr) * elemDamage%BF(iDoF2,iGauss) + &
-               3.0_Kr * matprop%fractureToughness * matprop%internalLength / 4.0_Kr * (gradientDamageGauss .DotP. elemDamage%Grad_BF(iDoF2,iGauss)))
-         End Do
+         If (N==1.0_Kr) Then
+            Do iDoF2 = 1,numDofDamage
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
+                                    ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
+                                    - cumulatedDissipatedPlasticEnergyCell + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
+                                     (( C2 * matprop%toughnessAnisotropyMatrix * gradientDamageGauss +  Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+            End Do
+         Else
+            Do iDoF2 = 1,numDofDamage
+               residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
+                                    ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
+                                    - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
+                                     (( C2 * matprop%toughnessAnisotropyMatrix * gradientDamageGauss +  Displacement*CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+            End Do
+         EndIf
+         ! Do iDoF2 = 1,numDofDamage
+         !    residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
+         !       ((damageGauss - 1.0_Kr) * elasticEnergyDensityGauss + 3.0_Kr * matprop%fractureToughness / matprop%internalLength / 8.0_Kr) * elemDamage%BF(iDoF2,iGauss) + &
+         !       3.0_Kr * matprop%fractureToughness * matprop%internalLength / 4.0_Kr * (gradientDamageGauss .DotP. elemDamage%Grad_BF(iDoF2,iGauss)))
+         ! End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
@@ -4733,14 +4856,14 @@ End Do
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                     ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                     - ( cumulatedDissipatedPlasticEnergyCell ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-                                     ( ( C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                     ( ( C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          Else
             Do iDoF2 = 1,numDofDamage
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                     ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                     - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-                                     ( ( C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                     ( ( C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          EndIf
       End Do
@@ -4902,7 +5025,7 @@ End Do
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                   (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) + C1) * elemDamage%BF(iDoF2,iGauss) + &
-                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  C2 * ((matprop%toughnessAnisotropyMatrix * gradientDamageGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -4971,7 +5094,7 @@ End Do
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                  ( positiveElasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                  - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1)  ) + C1 ) * elemDamage%BF(iDoF2,iGauss) + &
-                                 C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                 C2 * ((matprop%toughnessAnisotropyMatrix * gradientDamageGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -5162,14 +5285,14 @@ End Do
             Do iDoF2 = 1,numDofDamage
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * (elemDamage%BF(iDoF2,iGauss) *  &
                                                 (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) - cumulatedDissipatedPlasticEnergyCell + C1 * damageGauss) &
-                                             + ((C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                             + ((C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          Else
             Do iDoF2 = 1,numDofDamage
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                     ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                     - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 * damageGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                     ( ( C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                     ( ( C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          EndIf
       End Do
@@ -5242,14 +5365,14 @@ End Do
             Do iDoF2 = 1,numDofDamage
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * (elemDamage%BF(iDoF2,iGauss) *  &
                                                 (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) - cumulatedDissipatedPlasticEnergyCell + C1 * damageGauss) &
-                                             + ((C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                             + ((C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          Else
             Do iDoF2 = 1,numDofDamage
                residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                     ( elasticEnergyDensityGauss * (damageGauss - 1.0_Kr) &
                                     - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(N - 1.0_Kr)  ) + C1 * damageGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                     ( ( C2 * gradientDamageGauss +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                     ( ( C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss) +  DisplacementGauss * CrackPressureCell ) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
             End Do
          EndIf
       End Do
@@ -5319,7 +5442,7 @@ End Do
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                   (elasticEnergyDensityGauss * (damageGauss - 1.0_Kr)+ C1 * damageGauss) * elemDamage%BF(iDoF2,iGauss) + &
-                                  C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  C2 * ((matprop%toughnessAnisotropyMatrix * gradientDamageGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -5395,7 +5518,7 @@ End Do
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                  (C0Operator + C1 * (1.0_Kr - damageGauss) &
                                  - ( N * cumulatedDissipatedPlasticEnergyCell * (1.0_Kr - damageGauss)**(DBLE(N - 1.0))  ) ) * elemDamage%BF(iDoF2,iGauss) & 
-                                  + C2 * (gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  + C2 * ((matprop%toughnessAnisotropyMatrix * gradientDamageGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -5536,7 +5659,7 @@ End Do
          Do iDoF2 = 1,numDofDamage
             residualLoc(iDoF2) = residualLoc(iDoF2) + elemDamage%Gauss_C(iGauss) * ( &
                                   + C1 * DwDamageGauss * elemDamage%BF(iDoF2,iGauss) &
-                                  + C2 * (matprop%toughnessAnisotropyMatrix * gradientDamageGauss .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
+                                  + C2 * ((matprop%toughnessAnisotropyMatrix * gradientDamageGauss) .dotP. elemDamage%Grad_BF(iDoF2,iGauss)) )
          End Do
       End Do
       !flops = 2 * numGauss * numDofDisplacement**2
@@ -6542,6 +6665,218 @@ QuadratureOrder = 8
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDamage
 
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSurfaceEnergySetAT1"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergySetAT1:
+!!!  
+!!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSurfaceEnergySetAT1(energy,Damage,meshScal,cellIS,matprop,elemScal,elemScalType,ierr)
+      PetscReal,Intent(INOUT)                            :: energy
+      Type(SectionReal),Intent(IN)                       :: Damage
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: DamageLoc
+      PetscReal                                          :: DamageElem
+      Type(MEF90_VECT)                                   :: gradDamageElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = matprop%fractureToughness / matprop%internalLength * .375_Kr
+      C2 = matprop%fractureToughness * matprop%internalLength * .375_Kr
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Damageloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(Damage,meshScal,cellID(cell),elemScalType%numDof,DamageLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               DamageElem     = 0.0_Kr
+               gradDamageElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  DamageElem     = DamageElem     + DamageLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradDamageElem = gradDamageElem + DamageLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (DamageElem * C1 + ((matprop%toughnessAnisotropyMatrix * gradDamageElem) .dotP. gradDamageElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSurfaceEnergySetAT1
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSurfaceEnergySetAT2"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergySetAT2:
+!!!  
+!!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSurfaceEnergySetAT2(energy,Damage,meshScal,cellIS,matprop,elemScal,elemScalType,ierr)
+      PetscReal,Intent(INOUT)                            :: energy
+      Type(SectionReal),Intent(IN)                       :: Damage
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: DamageLoc
+      PetscReal                                          :: DamageElem
+      Type(MEF90_VECT)                                   :: gradDamageElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = matprop%fractureToughness / matprop%internalLength * .5_Kr
+      C2 = matprop%fractureToughness * matprop%internalLength * .5_Kr
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Damageloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(Damage,meshScal,cellID(cell),elemScalType%numDof,DamageLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               DamageElem     = 0.0_Kr
+               gradDamageElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  DamageElem     = DamageElem     + DamageLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradDamageElem = gradDamageElem + DamageLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (DamageElem**2 * C1 + ((matprop%toughnessAnisotropyMatrix * gradDamageElem) .dotP. gradDamageElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSurfaceEnergySetAT2
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSurfaceEnergySetKKL"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergySetKKL:
+!!!  
+!!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSurfaceEnergySetKKL(energy,Damage,meshScal,cellIS,matprop,elemScal,elemScalType,ierr)
+      PetscReal,Intent(INOUT)                            :: energy
+      Type(SectionReal),Intent(IN)                       :: Damage
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: DamageLoc
+      PetscReal                                          :: DamageElem
+      Type(MEF90_VECT)                                   :: gradDamageElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = matprop%fractureToughness / matprop%internalLength / 4.0_Kr / cwKKL
+      C2 = matprop%fractureToughness * matprop%internalLength / 4.0_Kr / cwKKL
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Damageloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(Damage,meshScal,cellID(cell),elemScalType%numDof,DamageLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               DamageElem     = 0.0_Kr
+               gradDamageElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  DamageElem     = DamageElem     + DamageLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradDamageElem = gradDamageElem + DamageLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (MEF90wKKL(DamageElem) * C1 + ((matprop%toughnessAnisotropyMatrix * gradDamageElem) .dotP. gradDamageElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSurfaceEnergySetKKL
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSurfaceEnergySetLinSoft"
+!!!
+!!!  
+!!!  MEF90DefMechSurfaceEnergySetLinSoft:
+!!!  
+!!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Subroutine MEF90DefMechSurfaceEnergySetLinSoft(energy,Damage,meshScal,cellIS,matprop,elemScal,elemScalType,ierr)
+      PetscReal,Intent(INOUT)                            :: energy
+      Type(SectionReal),Intent(IN)                       :: Damage
+      Type(DM),Intent(IN)                                :: meshScal
+      Type(IS),Intent(IN)                                :: cellIS
+      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
+      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
+      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscReal,Dimension(:),Pointer                     :: DamageLoc
+      PetscReal                                          :: DamageElem
+      Type(MEF90_VECT)                                   :: gradDamageElem
+      PetscInt,Dimension(:),Pointer                      :: cellID
+      PetscInt                                           :: cell
+      PetscInt                                           :: iDoF1,iGauss
+      PetscReal                                          :: C1, C2
+      PetscLogDouble                                     :: flops
+
+      
+      C1 = matprop%fractureToughness / matprop%internalLength / 4.0_Kr / cwLinSoft
+      C2 = matprop%fractureToughness * matprop%internalLength / 4.0_Kr / cwLinSoft
+      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      If (Size(cellID) > 0) Then
+         Allocate(Damageloc(elemScalType%numDof))
+         Do cell = 1,size(cellID)   
+            Call SectionRealRestrictClosure(Damage,meshScal,cellID(cell),elemScalType%numDof,DamageLoc,ierr);CHKERRQ(ierr)
+            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
+               DamageElem     = 0.0_Kr
+               gradDamageElem = 0.0_Kr
+               Do iDoF1 = 1,elemScalType%numDof
+                  DamageElem     = DamageElem     + DamageLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
+                  gradDamageElem = gradDamageElem + DamageLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
+               End Do
+               energy = energy + elemScal(cell)%Gauss_C(iGauss) * ((1.0_Kr - (1.0_Kr- DamageElem)**2 )* C1 + ((matprop%toughnessAnisotropyMatrix * gradDamageElem) .dotP. gradDamageElem) * C2)
+            End Do ! Gauss
+         End Do ! cell
+         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
+         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         DeAllocate(Damageloc)
+      End If   
+      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+   End Subroutine MEF90DefMechSurfaceEnergySetLinSoft
+
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSurfaceEnergy"
 !!!
@@ -6588,7 +6923,7 @@ QuadratureOrder = 8
             If (elemScalType%coDim == 0) Then
                QuadratureOrder = 2 * (elemScalType%order - 1)
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90DefMechSurfaceEnergySetAT1(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 
@@ -6596,7 +6931,7 @@ QuadratureOrder = 8
             If (elemScalType%coDim == 0) Then
                QuadratureOrder = 2*elemScalType%order
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageSurfaceEnergySetAT2(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90DefMechSurfaceEnergySetAT2(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 
@@ -6604,7 +6939,7 @@ QuadratureOrder = 8
             If (elemScalType%coDim == 0) Then
                QuadratureOrder = 2*elemScalType%order
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90DefMechSurfaceEnergySetKKL(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90DefMechSurfaceEnergySetKKL(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 
@@ -6612,7 +6947,7 @@ QuadratureOrder = 8
             If (elemScalType%coDim == 0) Then
                QuadratureOrder = 5 
                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-               Call MEF90GradDamageSurfaceEnergySetLinSoft(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet%internalLength,matpropSet%fractureToughness,elemScal,elemScalType,ierr)
+               Call MEF90DefMechSurfaceEnergySetLinSoft(myenergy,alphaSec,MEF90DefMechCtx%DMScal,setIS,matpropSet,elemScal,elemScalType,ierr)
                Call MEF90Element_Destroy(elemScal,ierr)
             End If
 
@@ -6627,56 +6962,6 @@ QuadratureOrder = 8
       Call SectionRealDestroy(alphaSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechSurfaceEnergy
 
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechSurfaceEnergySetKKL"
-!!!
-!!!  
-!!!  MEF90DefMechSurfaceEnergySetKKL:
-!!!  
-!!!  (c) 2014-2019 Blaise Bourdin bourdin@lsu.edu
-!!!
-   Subroutine MEF90DefMechSurfaceEnergySetKKL(energy,alpha,meshScal,cellIS,internalLength,fractureToughness,elemScal,elemScalType,ierr)
-      PetscReal,Intent(OUT)                              :: energy
-      Type(SectionReal),Intent(IN)                       :: alpha
-      Type(DM),Intent(IN)                                :: meshScal
-      Type(IS),Intent(IN)                                :: cellIS
-      PetscReal                                          :: internalLength,fractureToughness
-      Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
-      Type(MEF90Element_Type),Intent(IN)                 :: elemScalType
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      PetscReal,Dimension(:),Pointer                     :: alphaLoc
-      PetscReal                                          :: alphaElem
-      Type(MEF90_VECT)                                   :: gradAlphaElem
-      PetscInt,Dimension(:),Pointer                      :: cellID
-      PetscInt                                           :: cell
-      PetscInt                                           :: iDoF1,iGauss
-      PetscReal                                          :: C1, C2
-      PetscLogDouble                                     :: flops
-
-      C1 = fractureToughness / internalLength / 4.0_Kr / cwKKL
-      C2 = fractureToughness * internalLength / 4.0_Kr / cwKKL
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      If (Size(cellID) > 0) Then
-         Allocate(alphaloc(elemScalType%numDof))
-         Do cell = 1,size(cellID)   
-            Call SectionRealRestrictClosure(alpha,meshScal,cellID(cell),elemScalType%numDof,alphaLoc,ierr);CHKERRQ(ierr)
-            Do iGauss = 1,size(elemScal(cell)%Gauss_C)
-               alphaElem     = 0.0_Kr
-               gradAlphaElem = 0.0_Kr
-               Do iDoF1 = 1,elemScalType%numDof
-                  alphaElem     = alphaElem     + alphaLoc(iDof1) * elemScal(cell)%BF(iDoF1,iGauss)
-                  gradAlphaElem = gradAlphaElem + alphaLoc(iDof1) * elemScal(cell)%Grad_BF(iDoF1,iGauss)
-               End Do
-               energy = energy + elemScal(cell)%Gauss_C(iGauss) * (MEF90wKKL(alphaElem) * C1 + (gradAlphaElem .dotP. gradAlphaElem) * C2)
-            End Do ! Gauss
-         End Do ! cell
-         flops = (2 * elemScalType%numDof + 5 )* size(elemScal(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-         DeAllocate(alphaloc)
-      End If   
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechSurfaceEnergySetKKL
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCrackVolume"
