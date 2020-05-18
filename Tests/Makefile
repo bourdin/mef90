@@ -103,7 +103,7 @@ TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@${RM} $<
 
 TestMasonryProjection.o: ${MEF90_DIR}/Tests/TestMasonryProjection.F90 MEF90
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
 TestMasonryProjection: TestMasonryProjection.o
 	-@echo " $@"

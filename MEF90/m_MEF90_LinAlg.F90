@@ -176,10 +176,14 @@
          Tens4OS2D_Get_Real,Tens4OS3D_Get_Real,                      &
          Tens4OS2DToArray,ArrayToTens4OS2D,                          &
          Tens4OS3DToArray,ArrayToTens4OS3D,                          &
+         Mat2DGetArray,Mat3DGetArray,                                &
          MatS2DGetArray,MatS3DGetArray,                              &
+         ArrayGetMat2D,ArrayGetMat3D,                                &
          ArrayGetMatS2D,ArrayGetMatS3D,                              &
          MatS3DToMat3D,MatS2DToMat2D,                                &
-         Mat3DToMatS3D,Mat2DToMatS2D
+         Mat3DToMatS3D,Mat2DToMatS2D,                                &
+         Tens4OS2D2Array4,Tens4OS3D2Array4,                          &
+         Array42Tens4OS2D,Array42Tens4OS3D
    End Interface
   
    Interface Symmetrize
@@ -222,11 +226,15 @@
    Interface Diagonalize
       !!! Diagonalize(A,P,D) returns P,D such that A = P D P^{-1}
       !!! The diagonal entries of D are sorted in increasing order.
-      Module Procedure MatS3DEigenVectorValues,MatS2DEigenVectorValues
+      Module Procedure MatS2DEigenVectorValues,MatS3DEigenVectorValues
    End Interface
 
    Interface Moment
       Module Procedure Mat2DMoment, MatS2DMoment, Mat3DMoment, MatS3DMoment
+   End Interface
+
+   Interface Tens4OSTransform
+      Module Procedure Tens4OS2DTransform, Tens4OS3DTransform
    End Interface
 
    !Interface MatSymToMat
@@ -244,7 +252,6 @@
 
 
 Contains
-  ! Overloading "-"
    Function SumVect2D (V1,V2)
       Type(Vect2D),Intent(IN)                     :: V1
       Type(Vect2D),Intent(IN)                     :: V2
@@ -483,14 +490,14 @@ Contains
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
       
-      DifTens4OS2D%XXXX = T1%XXXX + T2%XXXX
-      DifTens4OS2D%XXYY = T1%XXYY + T2%XXYY
-      DifTens4OS2D%XXXY = T1%XXXY + T2%XXXY
+      DifTens4OS2D%XXXX = T1%XXXX - T2%XXXX
+      DifTens4OS2D%XXYY = T1%XXYY - T2%XXYY
+      DifTens4OS2D%XXXY = T1%XXXY - T2%XXXY
       
-      DifTens4OS2D%YYYY = T1%YYYY + T2%YYYY
-      DifTens4OS2D%YYXY = T1%YYXY + T2%YYXY
+      DifTens4OS2D%YYYY = T1%YYYY - T2%YYYY
+      DifTens4OS2D%YYXY = T1%YYXY - T2%YYXY
       
-      DifTens4OS2D%XYXY = T1%XYXY + T2%XYXY
+      DifTens4OS2D%XYXY = T1%XYXY - T2%XYXY
       flops = 6.0
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function DifTens4OS2D
@@ -1740,6 +1747,16 @@ Contains
       R1(6) = M1%XY
    End Subroutine VectR_Get_MatS3D
    
+   Subroutine Mat2DGetArray(M,A)
+      Type(Mat2D),Intent(OUT)                     :: M
+      PetscReal,Dimension(2,2),Intent(IN)         :: A
+      
+      M%XX = A(1,1)
+      M%XY = A(1,2)
+      M%YX = A(2,1)
+      M%YY = A(2,2)
+   End Subroutine Mat2DGetArray
+   
    Subroutine MatS2DGetArray(M,A)
       Type(MatS2D),Intent(OUT)                    :: M
       PetscReal,Dimension(2,2),Intent(IN)         :: A
@@ -1749,6 +1766,21 @@ Contains
       M%XY = A(1,2)
    End Subroutine MatS2DGetArray
    
+   Subroutine Mat3DGetArray(M,A)
+      Type(Mat3D),Intent(OUT)                     :: M
+      PetscReal,Dimension(3,3),Intent(IN)         :: A
+      
+      M%XX = A(1,1)
+      M%XY = A(1,2)
+      M%XZ = A(1,3)
+      M%YX = A(2,1)
+      M%YY = A(2,2)
+      M%YZ = A(2,3)
+      M%ZX = A(3,1)
+      M%ZY = A(3,2)
+      M%ZZ = A(3,3)
+   End Subroutine Mat3DGetArray
+
    Subroutine MatS3DGetArray(M,A)
       Type(MatS3D),Intent(OUT)                    :: M
       PetscReal,Dimension(3,3),Intent(IN)         :: A
@@ -1761,6 +1793,16 @@ Contains
       M%XY = A(1,2)
    End Subroutine MatS3DGetArray
    
+   Subroutine ArrayGetMat2D(A,M)
+      PetscReal,Dimension(2,2),Intent(OUT)        :: A
+      Type(Mat2D),Intent(IN)                      :: M
+      
+      A(1,1) = M%XX 
+      A(1,2) = M%XY 
+      A(2,1) = M%YX 
+      A(2,2) = M%YY 
+   End Subroutine ArrayGetMat2D
+   
    Subroutine ArrayGetMatS2D(A,M)
       PetscReal,Dimension(2,2),Intent(OUT)        :: A
       Type(MatS2D),Intent(IN)                     :: M
@@ -1770,6 +1812,21 @@ Contains
       A(2,1) = M%XY 
       A(2,2) = M%YY 
    End Subroutine ArrayGetMatS2D
+   
+   Subroutine ArrayGetMat3D(A,M)
+      PetscReal,Dimension(3,3),Intent(OUT)        :: A
+      Type(Mat3D),Intent(IN)                      :: M
+      
+      A(1,1) = M%XX
+      A(1,2) = M%XY
+      A(1,3) = M%XZ
+      A(2,1) = M%YX
+      A(2,2) = M%YY
+      A(2,3) = M%YZ
+      A(3,1) = M%ZX
+      A(3,2) = M%ZY
+      A(3,3) = M%ZZ
+   End Subroutine ArrayGetMat3D
    
    Subroutine ArrayGetMatS3D(A,M)
       PetscReal,Dimension(3,3),Intent(OUT)        :: A
@@ -2607,18 +2664,10 @@ Contains
       InvertTens4OS3D = TmpArray
    End Function InvertTens4OS3D
    
-   Function Tens4OS2DTransform(T,M)
-      !!! Apply the transformation given by the matrix R to a 4th order tensor
-      !!! i.e. C_{ijkl} = R_{ip}.R_{jq}.R_{kr}.R{ls} A_{pqrs}
+   Subroutine Tens4OS2D2Array4(A,T)
+      PetscReal, Dimension(2,2,2,2),Intent(OUT)   :: A
       Type(Tens4OS2D),Intent(IN)                  :: T
-      PetscReal,Dimension(:,:),Pointer            :: M
-      
-      Type(Tens4OS2D)                             :: Tens4OS2DTransform
-   
-      PetscReal,Dimension(2,2,2,2)                :: A,C
-      Integer                                     :: i,j,k,l
-      Integer                                     :: p,q,r,s
-      
+
       A(1,1,1,1) = T%XXXX
       A(1,1,1,2) = T%XXXY
       A(1,1,2,1) = T%XXXY
@@ -2635,7 +2684,84 @@ Contains
       A(2,2,1,2) = T%YYXY
       A(2,2,2,1) = T%YYXY
       A(2,2,2,2) = T%YYYY
+   End Subroutine Tens4OS2D2Array4
+
+   Subroutine Tens4OS3D2Array4(A,T)
+      PetscReal, Dimension(3,3,3,3),Intent(OUT)   :: A
+      Type(Tens4OS3D),Intent(IN)                  :: T
+
+      A(1,1,1,1) = T%XXXX 
+      A(1,1,2,2) = T%XXYY; A(2,2,1,1) = T%XXYY
+      A(1,1,3,3) = T%XXZZ; A(3,3,1,1) = T%XXZZ
+      A(1,1,2,3) = T%XXYZ; A(1,1,3,2) = T%XXYZ; A(2,3,1,1) = T%XXYZ; A(3,2,1,1) = T%XXYZ;
+      A(1,1,1,3) = T%XXXZ; A(1,1,3,1) = T%XXXZ; A(1,3,1,1) = T%XXXZ; A(3,1,1,1) = T%XXXZ;
+      A(1,1,1,2) = T%XXXY; A(1,1,2,1) = T%XXXY; A(1,2,1,1) = T%XXXY; A(2,1,1,1) = T%XXXY;
+
+      A(2,2,2,2) = T%YYYY 
+      A(2,2,3,3) = T%YYZZ; A(3,3,2,2) = T%YYZZ
+      A(2,2,2,3) = T%YYYZ; A(2,2,3,2) = T%YYYZ; A(2,3,2,2) = T%YYYZ; A(3,2,2,2) = T%YYYZ;
+      A(2,2,1,3) = T%YYXZ; A(2,2,3,1) = T%YYXZ; A(1,3,2,2) = T%YYXZ; A(3,1,2,2) = T%YYXZ;
+      A(2,2,1,2) = T%YYXY; A(2,2,2,1) = T%YYXY; A(1,2,2,2) = T%YYXY; A(2,1,2,2) = T%YYXY;
+
+      A(3,3,3,3) = T%ZZZZ 
+      A(3,3,2,3) = T%ZZYZ; A(3,3,3,2) = T%ZZYZ; A(2,3,3,3) = T%ZZYZ; A(3,2,3,3) = T%ZZYZ;
+      A(3,3,1,3) = T%ZZXZ; A(3,3,3,1) = T%ZZXZ; A(1,3,3,3) = T%ZZXZ; A(3,1,3,3) = T%ZZXZ;
+      A(3,3,1,2) = T%ZZXY; A(3,3,2,1) = T%ZZXY; A(1,2,3,3) = T%ZZXY; A(2,1,3,3) = T%ZZXY;
+
+      A(2,3,2,3) = T%YZYZ; A(2,3,3,2) = T%YZYZ; A(3,2,2,3) = T%YZYZ; A(3,2,3,2) = T%YZYZ;
+      A(2,3,1,3) = T%YZXZ; A(2,3,3,1) = T%YZXZ; A(3,2,1,3) = T%YZXZ; A(3,2,3,1) = T%YZXZ;
+      A(1,3,2,3) = T%YZXZ; A(1,3,3,2) = T%YZXZ; A(3,1,2,3) = T%YZXZ; A(3,1,3,2) = T%YZXZ;
+      A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY; A(3,2,1,2) = T%YZXY; A(3,2,2,1) = T%YZXY;
+      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY;
+
+      A(1,2,1,2) = T%XZXZ; A(1,2,2,1) = T%XZXZ; A(2,1,1,2) = T%XZXZ; A(2,1,1,2) = T%XZXZ;
+      A(1,3,1,2) = T%XZXY; A(1,3,2,1) = T%XZXY; A(3,1,1,2) = T%XZXY; A(3,1,2,1) = T%XZXY;
+      A(1,2,1,3) = T%XZXY; A(1,2,3,1) = T%XZXY; A(2,1,1,3) = T%XZXY; A(2,1,3,1) = T%XZXY;
+      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
+   End Subroutine Tens4OS3D2Array4
+
+
+   Subroutine Array42Tens4OS2D(T,A)
+      Type(Tens4OS2D),Intent(OUT)                 :: T
+      PetscReal, Dimension(2,2,2,2),Intent(IN)    :: A
+
+      T%XXXX = A(1,1,1,1) 
+      T%XXXY = A(1,1,1,2) 
+      T%XXYY = A(1,1,2,2) 
+      T%XYXY = A(1,2,1,2) 
+      T%YYXY = A(2,2,1,2) 
+      T%YYYY = A(2,2,2,2) 
+   End Subroutine Array42Tens4OS2D
+
+   Subroutine Array42Tens4OS3D(T,A)
+      Type(Tens4OS3D),Intent(OUT)                 :: T
+      PetscReal, Dimension(3,3,3,3),Intent(IN)    :: A
+
+      T%XXXX = A(1,1,1,1); T%XXYY = A(1,1,2,2); T%XXZZ = A(1,1,3,3); T%XXYZ = A(1,1,2,3); T%XXXZ = A(1,1,1,3); T%XXXY = A(1,1,1,2)
+      T%YYYY = A(2,2,2,2); T%YYZZ = A(2,2,3,3); T%YYYZ = A(2,2,2,3); T%YYXZ = A(2,2,1,3); T%YYXY = A(2,2,1,2)
+      T%ZZZZ = A(3,3,3,3); T%ZZYZ = A(3,3,2,3); T%ZZXZ = A(3,3,1,3); T%ZZXY = A(3,3,1,2)
+      T%YZYZ = A(2,3,2,3); T%YZXZ = A(2,3,1,3); T%YZXY = A(2,3,1,2)
+      T%XZXZ = A(1,3,1,3); T%XZXY = A(1,3,1,2)
+      T%XYXY = A(1,2,1,2)
+   End Subroutine Array42Tens4OS3D
+
+   Function Tens4OS2DTransform(T,M)
+      !!! Apply the transformation given by the matrix R to a 4th order tensor
+      !!! i.e. C_{ijkl} = R_{ip}.R_{jq}.R_{kr}.R{ls} A_{pqrs}
+      Type(Tens4OS2D),Intent(IN)                  :: T
+      Type(Mat2D),Intent(IN)                      :: M
       
+      Type(Tens4OS2D)                             :: Tens4OS2DTransform
+   
+      PetscReal,Dimension(2,2,2,2)                :: TT,C
+      PetscReal,Dimension(2,2)                    :: MM
+      Integer                                     :: i,j,k,l
+      Integer                                     :: p,q,r,s
+      PetscLogDouble                              :: flops
+      PetscErrorCode                              :: ierr
+      
+      TT = T
+      MM = M
       C = 0.0_Kr
       Do i = 1,2
          Do j = 1,2
@@ -2645,7 +2771,49 @@ Contains
                      Do q = 1,2
                         Do r = 1,2
                            Do s = 1,2
-                              C(i,j,k,l) = C(i,j,k,l) + M(i,p) * M(j,q) * M(k,r) * M(l,s) * A(p,q,r,s)
+                              C(i,j,k,l) = C(i,j,k,l) + MM(i,p) * MM(j,q) * MM(k,r) * MM(l,s) * TT(p,q,r,s)
+                           End Do
+                        End Do
+                     End Do
+                  End Do
+               End Do
+            End Do
+         End Do
+      End Do
+      
+      Tens4OS2DTransform = C
+      flops = 1280 ! 2**8 * 5
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+
+   End Function Tens4OS2DTransform
+   
+   Function Tens4OS3DTransform(T,M)
+      !!! Apply the transformation given by the matrix R to a 4th order tensor
+      !!! i.e. C_{ijkl} = R_{ip}.R_{jq}.R_{kr}.R{ls} A_{pqrs}
+      Type(Tens4OS3D),Intent(IN)                  :: T
+      Type(Mat3D),Intent(IN)                      :: M
+      
+      Type(Tens4OS3D)                             :: Tens4OS3DTransform
+   
+      PetscReal,Dimension(3,3,3,3)                :: TT,C
+      PetscReal,Dimension(3,3)                    :: MM
+      Integer                                     :: i,j,k,l
+      Integer                                     :: p,q,r,s
+      PetscLogDouble                              :: flops
+      PetscErrorCode                              :: ierr
+
+      TT = T
+      MM = M
+      C = 0.0_Kr
+      Do i = 1,3
+         Do j = 1,3
+            Do k = 1,3
+               Do l = 1,3
+                  Do p = 1,3
+                     Do q = 1,3
+                        Do r = 1,3
+                           Do s = 1,3
+                              C(i,j,k,l) = C(i,j,k,l) + MM(i,p) * MM(j,q) * MM(k,r) * MM(l,s) * TT(p,q,r,s)
                            End Do
                         End Do
                      End Do
@@ -2655,14 +2823,11 @@ Contains
          End Do
       End Do
        
-       Tens4OS2DTransform%XXXX = C(1,1,1,1) 
-       Tens4OS2DTransform%XXXY = C(1,1,1,2) 
-       Tens4OS2DTransform%XXYY = C(1,1,2,2) 
-       Tens4OS2DTransform%XYXY = C(1,2,1,2) 
-       Tens4OS2DTransform%YYXY = C(1,2,2,2) 
-       Tens4OS2DTransform%YYYY = C(2,2,2,2) 
-   End Function Tens4OS2DTransform
-   
+      Tens4OS3DTransform = C
+      flops = 32805 ! 3**8 * 5
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function Tens4OS3DTransform
+
    Function Tens4OS2DSquareRoot(T)
       Type(Tens4OS2D),Intent(IN)                  :: T
       Type(Tens4OS2D)                             :: Tens4OS2DSquareRoot
