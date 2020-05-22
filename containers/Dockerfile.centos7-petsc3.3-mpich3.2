@@ -1,0 +1,101 @@
+### Two stage build: 
+### centos base image:  
+###    docker build -t centos7mpich32base -f Dockerfile.centos7-petsc3.3-mpich3.2 --target centos7mpich32base .
+### add petsc:
+###    docker build -t centos7mpich32petsc33 -f Dockerfile.centos7-petsc3.3-mpich3.2 --target centos7mpich32petsc33 .
+
+### publish to dockerhub:
+### docker tag centos7mpich32base:latest bourdin/centos7mpich32base:latest
+### docker push bourdin/centos7mpich32base:latest
+### docker tag centos7mpich32petsc33:latest bourdin/centos7mpich32petsc33:<tag>
+### get tag:
+###    cd $PETSC_DIR; git describe --dirty --always --tag
+###    docker run -w /opt/HPC/petsc-3.3-mef90 centos7openmpi164petsc33:latest git describe --dirty --always --tags
+
+### Start from a basic centos7 system with mpich-3.2
+# Use an official Python runtime as a parent image
+FROM centos:7 AS centos7mpich32base
+
+# install development tools
+RUN yum -y install epel-release deltarpm ; \
+    yum -y update ; \
+    yum install -y git patch make cmake3 gmake perl m4 valgrind valgrind-devel dos2unix wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel gcc-c++ mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python mpich-3.2-devel ; \
+    ln -s /usr/bin/cmake3 /usr/bin/cmake ; \
+    mkdir -p /usr/lib64/mpich-3.2/include ; \
+    pip3 install pyaml numpy matplotlib
+
+ENV MPI_HOME /usr/lib64/mpich-3.2 
+ENV PATH $MPI_HOME/bin:$PATH 
+ENV LD_LIBRARY_PATH $MPI_HOME/lib:$LD_LIBRARY_PATH
+
+## Install gmsh
+RUN curl http://gmsh.info/bin/Linux/gmsh-4.5.6-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
+
+
+### Build petsc for a mef90 development or production environment
+FROM centos7mpich32base AS centos7mpich32petsc33
+ENV PETSC_DIR /opt/HPC/petsc-3.3-mef90 
+ENV PATH $PETSC_DIR/bin:$PETSC_DIR/$PETSC_ARCH/bin:$PATH
+#RUN mkdir -p /opt/HPC/petsc-3.3-mef90/${PETSC_ARCH}/cbind/include /opt/HPC/petsc-3.3-mef90/${PETSC_ARCH}/forbind/include
+RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} ;
+
+ENV PETSC_ARCH centos7-gcc4.8-mpich3.2-mef90-g 
+RUN cd ${PETSC_DIR} ;                 \
+    ./configure                       \
+    COPTFLAGS='-g'                    \
+    CXXOPTFLAGS='-g'                  \
+    FOPTFLAGS='-g'                    \
+    --download-exodusii=1             \
+    --download-f-blas-lapack=1        \
+    --download-chaco=1                \
+    --download-hdf5=1                 \
+    --download-hypre=1                \
+    --download-metis=1                \
+    --download-ml=1                   \
+    --download-netcdf=1               \
+    --download-parmetis=1             \
+    --download-sowing=1               \
+    --download-triangle=1             \
+    --download-yaml=1                 \
+    --with-boost=1                    \
+    --with-clanguage=C++              \
+    --with-debugging=1                \
+    --with-fortran-datatypes=1        \
+    --with-gnu-compilers=1            \
+    --with-mpi-dir=$MPI_HOME          \
+    --with-shared-libraries=1         \
+    --with-sieve=1                    \
+    --with-c2html=0                   \
+    --with-x11=0;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
+
+ENV PETSC_ARCH centos7-gcc4.8-mpich3.2-mef90-O 
+RUN cd ${PETSC_DIR} ;                 \
+    rm -Rf externalpackages ;         \
+    ./configure                       \
+    COPTFLAGS='-g -O3 -march=native'  \
+    CXXOPTFLAGS='-g -O3 -march=native'\
+    FOPTFLAGS='-g -O3 -march=native'  \
+    --download-exodusii=1             \
+    --download-f-blas-lapack=1        \
+    --download-chaco=1                \
+    --download-hdf5=1                 \
+    --download-hypre=1                \
+    --download-metis=1                \
+    --download-ml=1                   \
+    --download-netcdf=1               \
+    --download-parmetis=1             \
+    --download-sowing=1               \
+    --download-triangle=1             \
+    --download-yaml=1                 \
+    --with-boost=1                    \
+    --with-clanguage=C++              \
+    --with-debugging=0                \
+    --with-fortran-datatypes=1        \
+    --with-gnu-compilers=1            \
+    --with-mpi-dir=$MPI_HOME          \
+    --with-shared-libraries=1         \
+    --with-sieve=1                    \
+    --with-c2html=0                   \
+    --with-x11=0;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all

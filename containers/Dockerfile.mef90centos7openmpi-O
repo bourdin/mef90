@@ -1,0 +1,34 @@
+#publish with docker push bourdin/mef90centos7openmpiO:tagname
+
+FROM centos7openmpi164petsc33 AS mef90centos7openmpiO
+
+ENV MPI_HOME /usr/lib64/openmpi-1.6.4
+ENV PATH $MPI_HOME/bin:$PATH 
+ENV LD_LIBRARY_PATH $MPI_HOME/lib:$LD_LIBRARY_PATH
+
+ENV PETSC_ARCH centos7-gcc4.8-openmpi1.6.4-mef90-O 
+ENV PETSC_DIR /opt/HPC/petsc-3.3-mef90 
+ENV PATH $PETSC_DIR/bin:$PETSC_DIR/$PETSC_ARCH/bin:$PATH
+
+ENV MEF90_DIR /opt/HPC/mef90
+ENV SNLP_DIR /opt/HPC/snlp-${PETSC_ARCH}
+
+RUN git clone https://github.com/bourdin/SNLP.git /opt/HPC/src/snlp ; \
+    git clone https://github.com/bourdin/mef90 $MEF90_DIR
+
+RUN cd /opt/HPC/src/snlp; make clean; make; make install
+RUN cd $MEF90_DIR; make vDef
+
+
+ENV PATH $MEF90_DIR/bin/$PETSC_ARCH:$MEF90_DIR/bin:$PATH
+ENV PYTHONPATH $MEF90_DIR/python:$PYTHONPATH
+
+
+RUN echo export MEF90_DIR=$MEF90_DIR >> /root/.bashrc; \
+    echo export SNLP_DIR=$SNLP_DIR   >> /root/.bashrc; \
+    echo export PATH=${MPI_HOME}/bin:${PETSC_DIR}/bin:${PETSC_DIR}/${PETSC_ARCH}/bin:${MEF90_DIR}/bin:${MEF90_DIR}/bin/${PETSC_ARCH}:${PATH}  >> /root/.bashrc; \
+    echo export PYTHONPATH=${MEF90_DIR}/python:${PYTHONPATH} >> /root/.bashrc
+
+#RUN useradd -m -U mef90
+#RUN chown -R mef90:mef90 /opt/HPC
+#USER mef90
