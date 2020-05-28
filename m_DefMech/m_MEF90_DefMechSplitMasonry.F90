@@ -1,12 +1,17 @@
 #include "../MEF90/mef90.inc"
+#include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
 #include "finclude/petscdef.h"
-
    Use m_MEF90
-   
-   Implicit none
+   Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
+   implicit none
 
-#define MEF90_MasonryTol 0.0001_Kr
+   Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHMASONRYSPLIT
+   Contains
+      Procedure, pass(self)                            :: EED   => EEDMasonry
+      Procedure, pass(self)                            :: DEED  => DEEDMasonry
+      Procedure, pass(self)                            :: D2EED => D2EEDMasonry
+   end Type
 
 Contains
 #undef __FUNCT__
@@ -21,7 +26,8 @@ Contains
 !!!  
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine EEDMasonry(Strain,HookesLaw,EEDPlus,EEDMinus)
+   Subroutine EEDMasonry(self,Strain,HookesLaw,EEDPlus,EEDMinus)
+      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       PetscReal, Intent(OUT)                             :: EEDPlus,EEDMinus
@@ -76,7 +82,8 @@ Contains
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine DEEDMasonry(Strain,HookesLaw,DEEDPlus,DEEDMinus)
+   Subroutine DEEDMasonry(self,Strain,HookesLaw,DEEDPlus,DEEDMinus)
+      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(OUT)                       :: DEEDPlus,DEEDMinus
@@ -94,7 +101,6 @@ Contains
 
       E  = HookesLaw%YoungsModulus 
       nu = HookesLaw%PoissonRatio
-      ! SigmaPlus = 0.0_Kr
       StrainPlus = 0.0_Kr
       DEEDPlus   = 0.0_Kr
       DEEDMinus  = 0.0_Kr
@@ -108,13 +114,6 @@ Contains
          DEEDPlus  = HookesLaw * Strain
          DEEDMinus = 0.0_Kr
       Else If ((1.0_Kr + alpha) * D%YY + alpha * D%XX >= 0.0_Kr) Then
-         ! If (HookesLaw%isPlaneStress) Then
-         !    SigmaPlus%XX = E * nu / (1.0_Kr - nu**2) * (nu * D%XX + D%YY)
-         !    SigmaPlus%YY = E * nu / (1.0_Kr - nu**2) * (D%XX + nu * D%YY)
-         ! Else
-         !    SigmaPlus%XX = E * nu**2 / (1.0_Kr - nu**2) / (1.0_Kr - 2.0_Kr * nu) * (nu * D%XX + (1.0_Kr - nu) * D%YY)
-         !    SigmaPlus%YY = E * nu / (1.0_Kr + nu) / (1.0_Kr - 2.0_Kr * nu) * (nu * D%XX + (1.0_Kr - nu) * D%YY)
-         ! End If
          !!! Compute the projection of the strain in the principal basis
          StrainPlus%XX = 0.0_Kr
          StrainPlus%YY = alpha / (1.0_Kr + alpha) * D%XX + D%YY
@@ -164,7 +163,8 @@ Contains
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine D2EEDMasonry(Strain,HookesLaw,D2EEDPlus,D2EEDMinus)
+   Subroutine D2EEDMasonry(self,Strain,HookesLaw,D2EEDPlus,D2EEDMinus)
+      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_HOOKESLAW),Intent(OUT)                  :: D2EEDPlus,D2EEDMinus

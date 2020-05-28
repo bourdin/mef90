@@ -1,41 +1,59 @@
- Module m_MEF90_LinAlg
+Module m_MEF90_LinAlg_class
+   implicit none
+   private
+   public :: mef90Vect
+   public :: mef90Mat 
+   public :: mef90Tens4OS
+
+!!!
+!!!  
+!!!  m_MEF90_LinAlg_class: Starting a OO implementation of the basic classes in m_MEF90_LinAlg
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   type, abstract :: mef90Vect
+   end type
+   type, abstract :: mef90Mat
+   end type
+   type, abstract :: mef90Tens4OS
+   end type
+End module m_MEF90_LinAlg_class
+
+Module m_MEF90_LinAlg
 #include "finclude/petscdef.h"
+   Use m_MEF90_LinAlg_class
    Use m_MEF90_Parameters
    Use m_MEF90_Utils
    Use petsc
    
    IMPLICIT NONE
  
-   Type Vect2D
-      Sequence
+   Type, Extends(mef90Vect) :: Vect2D
       PetscReal          :: X
       PetscReal          :: Y
    End Type Vect2D
  
-   Type Vect3D
-      Sequence
+   Type, Extends(mef90Vect) :: Vect3D
       PetscReal          :: X
       PetscReal          :: Y
       PetscReal          :: Z
    End Type Vect3D
  
-   Type Mat2D
-      Sequence
+   Type, Extends(mef90Mat) :: Mat2D
       PetscReal          :: XX
       PetscReal          :: XY
       PetscReal          :: YX
       PetscReal          :: YY
    End Type Mat2D
  
-   Type MatS2D
-      Sequence
+   Type, Extends(mef90Mat) :: MatS2D
       PetscReal          :: XX
       PetscReal          :: YY
       PetscReal          :: XY
    End Type MatS2D
  
-   Type Mat3D
-      Sequence
+   Type, Extends(mef90Mat) :: Mat3D
       PetscReal          :: XX
       PetscReal          :: XY
       PetscReal          :: XZ
@@ -47,8 +65,7 @@
       PetscReal          :: ZZ
    End Type Mat3D
  
-   Type MatS3D
-      Sequence
+   Type, Extends(mef90Mat) :: MatS3D
       PetscReal          :: XX
       PetscReal          :: YY
       PetscReal          :: ZZ
@@ -62,16 +79,14 @@
  !! - the terms are stored in alphabetical order
  !! 2014-07: Changed ordering to rows of the upper triangular part
  !!          and naming to be consistent with Voigt notations
-   Type Tens4OS2D
-      Sequence
+   Type, Extends(mef90Tens4OS) :: Tens4OS2D
       PetscReal          :: XXXX,XXYY,XXXY
       PetscReal          ::      YYYY,YYXY
       PetscReal          ::           XYXY
       
    End Type Tens4OS2D
  
-   Type Tens4OS3D
-      Sequence
+   Type, Extends(mef90Tens4OS) :: Tens4OS3D
       PetscReal          :: XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
       PetscReal          ::      YYYY,YYZZ,YYYZ,YYXZ,YYXY
       PetscReal          ::           ZZZZ,ZZYZ,ZZXZ,ZZXY

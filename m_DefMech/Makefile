@@ -14,19 +14,55 @@ m_MEF90_DefMech.o: ${BASE_DIR}/m_MEF90_DefMech.F90 m_MEF90_DefMechCtx.o m_MEF90_
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-m_MEF90_DefMechSplitMasonry2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechCtx.o
+m_MEF90_DefMechATClass.o: ${BASE_DIR}/m_MEF90_DefMechATClass.F90
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_DefMechAT1.o: ${BASE_DIR}/m_MEF90_DefMechAT1.F90 m_MEF90_DefMechATClass.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_DefMechAT.o: ${BASE_DIR}/m_MEF90_DefMechAT.F90 m_MEF90_DefMechAT1.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_DefMechSplitClass2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitClass.F90
 	@echo "      $< MEF90_DIM=2"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
-m_MEF90_DefMechSplitMasonry3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechCtx.o
+m_MEF90_DefMechSplitClass3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitClass.F90
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
-m_MEF90_DefMechAssembly2D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechSplitMasonry2D.o m_MEF90_DefMechCtx.o
+m_MEF90_DefMechSplit2D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitMasonry2D.o m_MEF90_DefMechSplitNone2D.o
 	@echo "      $< MEF90_DIM=2"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
-m_MEF90_DefMechAssembly3D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechSplitMasonry3D.o m_MEF90_DefMechCtx.o
+m_MEF90_DefMechSplit3D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90  m_MEF90_DefMechSplitMasonry3D.o m_MEF90_DefMechSplitNone3D.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechSplitNone2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitNone.F90 m_MEF90_DefMechSplitClass2D.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechSplitNone3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitNone.F90 m_MEF90_DefMechSplitClass3D.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechSplitMasonry2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechSplitClass2D.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechSplitMasonry3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechSplitClass3D.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechAssembly2D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechSplit2D.o m_MEF90_DefMechAT.o m_MEF90_DefMechCtx.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechAssembly3D.o: ${BASE_DIR}/m_MEF90_DefMechAssembly.F90 m_MEF90_DefMechSplit3D.o m_MEF90_DefMechAT.o m_MEF90_DefMechCtx.o
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 

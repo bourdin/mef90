@@ -6,7 +6,6 @@ Module m_MEF90_Materials_Types
    IMPLICIT NONE
 
    Type MEF90HookesLaw2D
-      Sequence
       Type(Tens4OS2D)    :: fullTensor
       PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
@@ -14,7 +13,6 @@ Module m_MEF90_Materials_Types
    End Type MEF90HookesLaw2D
 
    Type MEF90HookesLaw3D
-      Sequence
       Type(Tens4OS3D)    :: fullTensor
       PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
@@ -28,7 +26,6 @@ Module m_MEF90_Materials_Types
    End Type MEF90HookesLaw3D
 
    Type MEF90MatProp2D_Type
-      Sequence
       PetscReal                     :: Density                                          ! rho
       PetscReal                     :: FractureToughness                                ! Gc
       Type(MatS2D)                  :: toughnessAnisotropyMatrix                        ! 
@@ -70,7 +67,6 @@ Module m_MEF90_Materials_Types
    End Type MEF90MatProp2D_Type
 
    Type MEF90MatProp3D_Type
-      Sequence
       PetscReal                     :: Density                                          ! rho
       PetscReal                     :: FractureToughness                                ! Gc
       Type(MatS3D)                  :: toughnessAnisotropyMatrix                        ! 

@@ -6,7 +6,7 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
 
    Use m_MEF90
    Use m_MEF90_DefMechCtx
-   Use MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
+   Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
    
    Implicit none
    Private

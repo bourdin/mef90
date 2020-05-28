@@ -35,4 +35,5 @@
 #define SIZEOFMATPROP       sizeofMEF90MatProp2D
 #define MEF90_MAT_IDENTITY  MEF90Mat2DIdentity
 #define MEF90_MATS_IDENTITY MEF90MatS2DIdentity
+#define MEF90_DEFMECHSPLIT  MEF90DefMechSplit2D
 #endif
