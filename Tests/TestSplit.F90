@@ -1,8 +1,9 @@
-Program TestMasonryProjection
+Program TestSplit
 #include "../MEF90/mef90.inc"
+#include "../m_DefMech/mef90DefMech.inc"
 #include "finclude/petscdef.h"
    Use m_MEF90
-   Use MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
+   Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 
    IMPLICIT NONE
 
@@ -23,6 +24,8 @@ Program TestMasonryProjection
    Integer,Parameter                :: sizeOfMatS = SIZEOFMEF90_MATS
    Integer,Parameter                :: dim = MEF90_DIM
 
+   Class(MEF90_DEFMECHSPLIT),Allocatable :: Split
+
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
    Call MEF90Initialize(ierr)
    Call PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr);CHKERRQ(ierr)
@@ -37,6 +40,10 @@ Program TestMasonryProjection
    Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,'-E',E,flg,ierr);CHKERRQ(ierr);
    nu = .3_Kr
    Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,'-nu',nu,flg,ierr);CHKERRQ(ierr);
+
+
+   Write(*,*) 'Masonry split:'
+   split = MEF90_DEFMECHMASONRYSPLIT()
 
    A%type = MEF90HookesLawTypeIsotropic
    A%YoungsModulus = E
@@ -59,10 +66,6 @@ Program TestMasonryProjection
       Call PetscRandomGetValue(RdmCtx,M%XX,ierr);CHKERRQ(ierr)
       Call PetscRandomGetValue(RdmCtx,M%YY,ierr);CHKERRQ(ierr)
       Call PetscRandomGetValue(RdmCtx,M%XY,ierr);CHKERRQ(ierr)
-      ! M%XX = cos(2.* i * PETSC_PI / (n-1.))
-      ! M%YY = sin(2.* i * PETSC_PI / (n-1.))
-      ! Write(*,'(''theta: '',F12.5)') 360. * i / (n-1.)
-
 #if MEF90_DIM == 3
       Call PetscRandomGetValue(RdmCtx,M%ZZ,ierr);CHKERRQ(ierr)
       Call PetscRandomGetValue(RdmCtx,M%YZ,ierr);CHKERRQ(ierr)
@@ -72,9 +75,9 @@ Program TestMasonryProjection
       Call Diagonalize(A*M,Pinv,D)
 
       EED = 0.5_Kr * (A * M) .dotP. M
-      Call EEDMasonry(M,A,EEDPlus,EEDMinus)
-      Call DEEDMasonry(M,A,Sigmaplus,Sigmaminus)
-      Call D2EEDMasonry(M,A,APlus,AMinus)
+      Call Split%EED(M,A,EEDPlus,EEDMinus)
+      Call Split%DEED(M,A,Sigmaplus,Sigmaminus)
+      Call Split%D2EED(M,A,APlus,AMinus)
       Write(*,'(A,<sizeOfMatS>(E12.5,2x))') '                   A^+ M: ', APlus * M
       Write(*,'(A,<sizeOfMatS>(E12.5,2x))') '                 Sigma^+: ', SigmaPlus
       Call Diagonalize(SigmaPlus,Pinv,DPlus)
@@ -109,4 +112,4 @@ Program TestMasonryProjection
    Call PetscRandomDestroy(RdmCtx,ierr);CHKERRQ(ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize()
-End Program TestMasonryProjection
+End Program TestSplit

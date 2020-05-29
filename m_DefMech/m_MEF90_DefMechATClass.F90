@@ -13,22 +13,23 @@ Module m_MEF90_DefMechAT_class
 !!!
 
    Type, abstract :: MEF90_DefMechAT_Type
-      PetscInt                                          :: aOrder
-      PetscInt                                          :: wOrder      
+      PetscReal                                        :: cw
+      PetscInt                                         :: aOrder
+      PetscInt                                         :: wOrder  
    Contains
-      Procedure(ATInterface), pass(self), deferred      :: ATa
-      Procedure(ATInterface), pass(self), deferred      :: ATDa
-      Procedure(ATInterface), pass(self), deferred      :: ATD2a
-      Procedure(ATInterface), pass(self), deferred      :: ATw
-      Procedure(ATInterface), pass(self), deferred      :: ATDw
-      Procedure(ATInterface), pass(self), deferred      :: ATD2w
+      Procedure(ATInterface), pass(self), deferred     :: a
+      Procedure(ATInterface), pass(self), deferred     :: Da
+      Procedure(ATInterface), pass(self), deferred     :: D2a
+      Procedure(ATInterface), pass(self), deferred     :: w
+      Procedure(ATInterface), pass(self), deferred     :: Dw
+      Procedure(ATInterface), pass(self), deferred     :: D2w
    End Type
 
    Abstract Interface
       PetscReal function ATInterface(self,alpha)
          import :: MEF90_DefMechAT_Type
-         Class(MEF90_DefMechAT_Type),Intent(IN)         :: self
-         PetscReal                                      :: alpha
+         Class(MEF90_DefMechAT_Type),Intent(IN)        :: self
+         PetscReal                                     :: alpha
       End function ATInterface
    End Interface
 End Module m_MEF90_DefMechAT_class
