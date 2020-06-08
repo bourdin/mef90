@@ -232,94 +232,6 @@ Contains
       STOP 
    End Subroutine MEF90DefMechBilinearFormNull
    
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementElasticLoc"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDisplacementElasticLoc:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechBilinearFormDisplacementElasticLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: Aloc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numGauss
-      Type(MEF90_MATS)                                   :: sigma
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-      !Aloc = 0.0_Kr
-      Do iGauss = 1,numGauss
-         Do iDoF1 = 1,numDofDisplacement
-            sigma = matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss) 
-            Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-               End If            
-            End Do
-         End Do
-      End Do
-      flops = 2 * numGauss * numDofDisplacement**2
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementElasticLoc
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATLoc"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDisplacementATLoc:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechBilinearFormDisplacementATLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: ALoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: stiffness
-      Type(MEF90_MATS)                                   :: sigma
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-
-      Do iGauss = 1,numGauss
-         stiffness = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffness = (1.0_Kr - stiffness)**2 + matProp%residualStiffness
-         Do iDoF1 = 1,numDofDisplacement
-            sigma = stiffness * (matProp%HookesLaw * elemDisplacement%GradS_BF(iDoF1,iGauss))
-            Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-               If (matprop%cohesiveStiffness /= 0.0_Kr) Then
-                  ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * matprop%cohesivestiffness * (elemDisplacement%BF(iDoF1,iGauss) .DotP. elemDisplacement%BF(iDoF2,iGauss))
-               End If            
-            End Do
-         End Do
-      End Do
-      flops = numGauss * ( 4. * numDofDisplacement**2 + 2. * numDofDamage + 3.)
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATLoc
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc"
@@ -519,73 +431,6 @@ Contains
       !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
 
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc"
-!!!
-!!!  
-!!!  MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc(ALoc,xDof,displacementDof,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matprop,elemDisplacement,elemDamage)
-      PetscReal,Dimension(:,:),Pointer                   :: ALoc
-      PetscReal,Dimension(:),Pointer                     :: xDof,displacementDof,damageDof,temperatureDof
-      Type(MEF90_MATS),Intent(IN)                        :: plasticStrainCell
-      PetscReal,Intent(IN)                               :: cumulatedDissipatedPlasticEnergyCell
-      Type(MEF90_MATPROP),Intent(IN)                     :: matprop
-      Type(MEF90_ELEMENT_ELAST),Intent(IN)               :: elemDisplacement
-      Type(MEF90_ELEMENT_SCAL),Intent(IN)                :: elemDamage
-
-      PetscInt                                           :: i,iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
-      PetscReal                                          :: stiffness
-      Type(MEF90_MATS)                                   :: sigma,inelasticStrain
-      PetscReal, Dimension(MEF90_DIM)                    :: PpalStrain
-      Type(MEF90_MATS),Dimension(MEF90_DIM)              :: PpalDirection
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDofDisplacement = size(elemDisplacement%BF,1)
-      numDofDamage = size(elemDamage%BF,1)
-      numGauss = size(elemDisplacement%BF,2)
-
-      Do iGauss = 1,numGauss
-         stiffness = 0.0_Kr
-         Do iDoF1 = 1,numDofDamage
-            stiffness = stiffness + damageDof(iDoF1) * elemDamage%BF(iDoF1,iGauss)
-         End Do
-         stiffness = (1.0_Kr - stiffness + matProp%residualStiffness)**2
-   
-         inelasticStrain = 0.0_Kr
-         If (Associated(temperatureDof)) Then
-            Do iDoF1 = 1,numDofDamage
-               inelasticStrain = inelasticStrain - temperatureDof(iDoF1) * elemDamage%BF(iDoF1,iGauss) * matProp%LinearThermalExpansion
-            End Do         
-         End If
-         Do iDoF1 = 1,numDofDisplacement
-            inelasticStrain = inelasticStrain + xDof(iDoF1) * elemDisplacement%GradS_BF(iDoF1,iGauss)
-         End Do
-         inelasticStrain = inelasticStrain - plasticStrainCell
-
-         Call SpectralDecomposition(inelasticStrain,PpalStrain,PpalDirection)
-         Do iDoF1 = 1,numDofDisplacement
-            sigma = 0.0_Kr
-            Do i = 1,MEF90_DIM 
-               If (PpalStrain(i) < 0.0_Kr) Then
-                  sigma = sigma + (PpalStrain(i) * PpalDirection(i))
-               Else
-                  sigma = sigma + Stiffness * (PpalStrain(i) * PpalDirection(i))
-               End If
-            End Do
-            sigma = matProp%HookesLaw * sigma
-            Do iDoF2 = 1,numDofDisplacement
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement%Gauss_C(iGauss) * (sigma .DotP. elemDisplacement%GradS_BF(iDoF2,iGauss))
-            End Do
-         End Do
-      End Do
-      !flops = numGauss * ( 2. * numDofDisplacement**2 + 3. * numDofDamage + 2.)
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Subroutine MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacementLinSoftLoc"
@@ -1158,6 +1003,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(residualLoc(ElemDisplacementType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
+            Allocate(damageDof(ElemDamageType%numDof))
             If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
                Allocate(displacementPreviousStepDof(ElemDisplacementType%numDof))
             Else
@@ -1168,7 +1014,6 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
             Else
                Nullify(boundaryDisplacementDof)
             End If
-            Allocate(damageDof(ElemDamageType%numDof))
             If (Associated(MEF90DefMechCtx%temperature)) Then
                Allocate(temperatureDof(ElemDamageType%numDof))
             Else
@@ -1217,7 +1062,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
                   Call SectionRealRestrictClosure(displacementpreviousStepSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementPreviousStepDof,ierr);CHKERRQ(ierr)
                End If
 
-               !!! Loop over Gauss point, evaluate fields and assemble the residual
+               !!! Loop over Gauss point, evaluate fields and assemble the cell contribution to the residual
                numDofDisplacement = size(elemDisplacement(cell)%BF,1)
                numDofDamage = size(elemDamage(cell)%BF,1)
                numGauss = size(elemDisplacement(cell)%BF,2)
@@ -1253,7 +1098,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
                   ! End If
 #endif
 
-                  call Split%DEED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
+                  Call Split%DEED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
                   If (cellIsElastic) Then
                      stressGauss = stressGaussPlus + stressGaussMinus
                   Else
@@ -1326,7 +1171,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                End If
-            End Do
+            End Do ! cell
 
             DeAllocate(displacementDof)
             If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
@@ -1467,8 +1312,6 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
       PetscReal,Dimension(:),Pointer                     :: displacementDOF,damageDof,temperatureDof,nullPtr
       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc
       Type(MEF90_MATS)                                   :: plasticStrainCell
-      PetscReal,Dimension(:),Pointer                     :: cumulatedDissipatedPlasticEnergyLoc
-      PetscReal                                          :: cumulatedDissipatedPlasticEnergyCell
       Type(IS)                                           :: VertexSetGlobalIS,CellSetGlobalIS,setIS,setISdof
       PetscInt,dimension(:),Pointer                      :: setID
       PetscInt                                           :: set,QuadratureOrder
@@ -1482,7 +1325,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
       PetscInt                                           :: cell,v,numBC,numDoF,numCell,c,dim
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscReal,Dimension(:,:),Pointer                   :: Aloc
-      PetscInt                                           :: iGauss,iDoF1,iDoF2
+      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDofDisplacement,numDofDamage,numGauss
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
       
@@ -1491,6 +1334,14 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange,cohesiveStiffness
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
+      PetscBool                                          :: cellIsElastic
+      PetscReal                                          :: cellDampingCoefficient
+      Type(MEF90_HOOKESLAW)                              :: AGaussPlus,AGaussMinus,AGauss
+      Type(MEF90_MATS)                                   :: inelasticStrainGauss,AGradS_BF1
+      PetscReal                                          :: damageGauss,temperatureGauss
+      Type(MEF90_VECT)                                   :: BF1
     
       Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       If (GlobalOptions%solverType == MEF90DefMech_SolverTypeQuasiNewton2) Then
@@ -1547,55 +1398,25 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
          !!! Go through cells and call local assembly functions
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          If ((Size(cellID) > 0) .AND. (ElemDisplacementType%coDim == 0)) Then
-         !!! Call proper local assembly depending on the type of damage law
+            !!! get the ATModel and split objects
+            Call MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic)
+            Call MEF90DefMechGetSplit(cellSetOptions,Split)
+QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%order
 
-            !!! select the proper local assembly routine, compute proper integration order
-            Select Case (cellSetOptions%damageType)
-            Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT2)
-               QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * ElemDamageType%order
-               Select Case(cellSetOptions%unilateralContactType)
-               Case (MEF90DefMech_unilateralContactTypeNone,MEF90DefMech_unilateralContactTypeBrittleDuctile,MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATLoc
+            !!! Allocate elements 
+            Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
-               Case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHDLoc
-
-               Case (MEF90DefMech_unilateralContactTypePositiveHydrostatic)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralHydrostaticLoc
-
-               Case (MEF90DefMech_unilateralContactTypeDeviatoric)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralDeviatoricLoc
-
-               Case (MEF90DefMech_unilateralContactTypeMasonry)
-                  ! due to the lag technique used for the implementation of Masonry, the Bilinear form is that of an elasticity problem
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
-
-               Case (MEF90DefMech_unilateralContactTypePrincipalStrains)
-                  localAssemblyFunction => MEF90DefMechBilinearFormDisplacementATUnilateralPSLoc
-               End Select
-
-            Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeKKLElastic)
-               QuadratureOrder = 2 * (elemDisplacementType%order - 1)
-               localAssemblyFunction => MEF90DefMechBilinearFormDisplacementElasticLoc
-
-            Case (MEF90DefMech_damageTypeLinSoft)
-               QuadratureOrder = 5 !* (elemDisplacementType%order - 1) + 5 * ElemDamageType%order
-               localAssemblyFunction => MEF90DefMechBilinearFormDisplacementLinSoftLoc
-
-
-            End Select
             !!! Allocate storage for fields at dof and Gauss points
-            !!! Leaving plasticstrain aside until I can remember how it is supposed to be dealt with
             Allocate(Aloc(ElemDisplacementType%numDof,ElemDisplacementType%numDof))
             Allocate(displacementDof(ElemDisplacementType%numDof))
             Allocate(damageDof(ElemDamageType%numDof))
             If (Associated(MEF90DefMechCtx%temperature)) Then
                Allocate(temperatureDof(ElemDamageType%numDof))
             End If
+
+            cellDampingCoefficient = globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep + matpropSet%cohesiveStiffness
             
-            !!! Allocate elements 
-            Call MEF90Element_Create(mesh,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(mesh,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Do cell = 1,size(cellID)
                !!! Get value of each field at each Dof of the local element
                Call SectionRealRestrictClosure(displacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementDof,ierr);CHKERRQ(ierr)
@@ -1605,26 +1426,70 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
                End If
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-                  Call SectionRealRestrict(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
                   plasticStrainCell = plasticStrainLoc
-                  cumulatedDissipatedPlasticEnergyCell = cumulatedDissipatedPlasticEnergyLoc(1)
                Else
                   plasticStrainCell = 0.0_Kr
-                  cumulatedDissipatedPlasticEnergyCell = 0.0_Kr
                End If
                   
-               Aloc = 0.0_Kr
-               If (globalOptions%dampingCoefficientDisplacement * MEF90DefMechCtx%timeStep /= 0.0_Kr) Then
-                  Call MEF90_MassMatrixAssembleLoc(Aloc,globalOptions%dampingCoefficientDisplacement / MEF90DefMechCtx%timeStep,elemDisplacement(cell))
-               End If
-               Call localAssemblyFunction(Aloc,displacementDof,nullPtr,damageDof,temperatureDof,plasticStrainCell,cumulatedDissipatedPlasticEnergyCell,matpropSet,elemDisplacement(cell),elemDamage(cell))
-               Call DMmeshAssembleMatrix(A,mesh,displacementSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
+               !!! Loop over Gauss point, evaluate fields and assemble the cell contribution to the bilinear form
+               numDofDisplacement = size(elemDisplacement(cell)%BF,1)
+               numDofDamage = size(elemDamage(cell)%BF,1)
+               numGauss = size(elemDisplacement(cell)%BF,2)
 
+               Aloc = 0.0_Kr
+               Do iGauss = 1,numGauss
+                  If (.NOT. cellIsElastic) Then
+                     damageGauss = 0.0_Kr
+                     Do iDof1 = 1,numDofDamage
+                        damageGauss = damageGauss + damageDof(iDoF1) * elemDamage(cell)%BF(iDoF1,iGauss)
+                     End Do ! iDof1
+                  End If ! cellIsElastic
+
+                  inelasticStrainGauss = 0.0_Kr
+                  Do iDof1 = 1,numDofDisplacement
+                     inelasticStrainGauss = inelasticStrainGauss + displacementDof(iDoF1) * elemDisplacement(cell)%GradS_BF(iDoF1,iGauss)
+                  End Do ! iDoF1
+
+                  temperatureGauss = 0.0_Kr
+                  If (Associated(temperatureDof)) Then
+                     Do iDoF1 = 1,numDofDamage
+                        temperatureGauss = temperatureGauss + temperatureDoF(iDoF1) * elemDamage(cell)%BF(iDoF1,iGauss)
+                     End Do ! iDof1
+                     inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  End If ! Associated(temperatureDof)
+#if MEF90_DIM == 2
+!!! We need something along these lines
+               !!! Adding terms in planestrain for plasticity with tr(p) = 0
+               ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
+               !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
+               ! End If
+#endif
+                  Call Split%D2EED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,AGaussPlus,AGaussMinus)
+                  If (cellIsElastic) Then
+                     AGauss = AGaussPlus + AGaussMinus
+                  Else
+                     AGauss = ATModel%a(damageGauss) * AGaussPlus + AGaussMinus
+                  End If ! cellIsElastic
+                  Do iDoF1 = 1,numDofDisplacement
+                     AGradS_BF1 = AGauss * elemDisplacement(cell)%GradS_BF(iDoF1,iGauss)
+                     Do iDoF2 = 1,numDofDisplacement
+                        ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement(cell)%Gauss_C(iGauss) * (AGradS_BF1 .DotP. elemDisplacement(cell)%GradS_BF(iDoF2,iGauss))
+                     End Do ! iDoF2
+                  End Do ! iDoF1
+                  If (cellDampingCoefficient /= 0.0_Kr) Then
+                     Do iDoF1 = 1,numDofDisplacement
+                        BF1 = cellDampingCoefficient * elemDisplacement(cell)%BF(iDoF1,iGauss)
+                        Do iDoF2 = 1,numDofDisplacement
+                              ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + elemDisplacement(cell)%Gauss_C(iGauss) * (BF1 .DotP. elemDisplacement(cell)%BF(iDoF2,iGauss))
+                        End Do ! iDoF1
+                     End Do ! iDoF2
+                  End If ! cellDampingCoefficient
+                  Call DMmeshAssembleMatrix(A,mesh,displacementSec,cellID(cell),ALoc,ADD_VALUES,ierr);CHKERRQ(ierr)
+               End Do ! iGauss
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
-                  Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
                End If
-            End Do
+            End Do ! cell
 
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
@@ -1634,7 +1499,7 @@ QuadratureOrder = 2 * (elemDisplacementType%order - 1) + 2 * elemDamageType%orde
             Call MEF90Element_Destroy(elemDisplacement,ierr)
             Call MEF90Element_Destroy(elemDamage,ierr)
             DeAllocate(Aloc)    
-         End If 
+         End If ! coDim
 
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

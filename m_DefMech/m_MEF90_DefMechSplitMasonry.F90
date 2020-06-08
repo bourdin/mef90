@@ -11,7 +11,7 @@ Module MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDMasonry
       Procedure, pass(self)                            :: DEED  => DEEDMasonry
       Procedure, pass(self)                            :: D2EED => D2EEDMasonry
-   end Type
+   End Type
 
 Contains
 #undef __FUNCT__
