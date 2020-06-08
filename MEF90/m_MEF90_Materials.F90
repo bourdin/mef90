@@ -314,8 +314,16 @@ Module m_MEF90_Materials
       Module Procedure MEF90MatPropBagSetFromOptions2D,MEF90MatPropBagSetFromOptions3D
    End Interface
 
+   Interface  Operator (+)
+      Module Procedure MEF90HookesLaw2DSum,MEF90HookesLaw3DSum
+   End Interface
+
+   Interface  Operator (-)
+      Module Procedure MEF90HookesLaw2DDiff,MEF90HookesLaw3DDiff
+   End Interface
+
    Interface  Operator (*)
-      Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D,MEF90HookesLaw2DXMat2D,MEF90HookesLaw3DXMat3D
+      Module Procedure MEF90HookesLaw2DXMatS2D,MEF90HookesLaw3DXMatS3D,MEF90HookesLaw2DXMat2D,MEF90HookesLaw3DXMat3D, ScalarXMEF90HookesLaw2D, ScalarXMEF90HookesLaw3D
    End Interface
 
    Interface MasonryProjection
@@ -721,6 +729,221 @@ Contains
    End Subroutine MEF90HookeLawIsoENu3D
 
 !!! Overloading linear algebra functions with Hookes Laws.
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DSum"
+!!!
+!!!
+!!!  MEF90HookesLaw2DSum:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MEF90HookesLaw2DSum(A,B)
+      Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
+      Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DSum
+
+      PetscErrorCode                               :: ierr
+
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+         If (A%isPlaneStress == B%isPlaneStress) Then
+            MEF90HookesLaw2DSum%type          = MEF90HookesLawTypeIsotropic
+            MEF90HookesLaw2DSum%lambda        = A%lambda + B%lambda
+            MEF90HookesLaw2DSum%mu            = A%mu + B%mu
+            MEF90HookesLaw2DSum%isPlaneStress = A%isPlaneStress
+         Else
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible planar Hooke law type in "//__FUNCT__,ierr)
+         End If
+         If (A%isPlaneStress) Then
+            MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu) * 0.5_Kr
+            MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
+            MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
+            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+         Else
+            MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + 2.0_Kr * MEF90HookesLaw2DSum%mu) * 0.5_Kr
+            MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
+            MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
+            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+         End If
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+         MEF90HookesLaw2DSum%type       = MEF90HookesLawTypeFull
+         MEF90HookesLaw2DSum%fullTensor = A%fullTensor + B%fullTensor
+      Else
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible Hooke law type in "//__FUNCT__,ierr)
+      End If
+   End Function MEF90HookesLaw2DSum
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw3DSum"
+!!!
+!!!
+!!!  MEF90HookesLaw3DSum:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MEF90HookesLaw3DSum(A,B)
+      Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
+      Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DSum
+
+      PetscErrorCode                               :: ierr
+
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw3DSum%lambda        = A%lambda + B%lambda
+         MEF90HookesLaw3DSum%mu            = A%mu + B%mu
+         MEF90HookesLaw3DSum%PoissonRatio  = MEF90HookesLaw3DSum%lambda / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu) * 0.5_Kr
+         MEF90HookesLaw3DSum%YoungsModulus = MEF90HookesLaw3DSum%mu * (3.0_Kr * MEF90HookesLaw3DSum%lambda + 2.0_Kr * MEF90HookesLaw3DSum%mu) / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu)
+         MEF90HookesLaw3DSum%BulkModulus   = MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu * 2.0_Kr / 3.0_Kr
+         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+         MEF90HookesLaw3DSum%type       = MEF90HookesLawTypeFull
+         MEF90HookesLaw3DSum%fullTensor = A%fullTensor + B%fullTensor
+      Else
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible Hooke law type in "//__FUNCT__,ierr)
+      End If
+   End Function MEF90HookesLaw3DSum
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw2DDiff"
+!!!
+!!!
+!!!  MEF90HookesLaw2DDiff:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MEF90HookesLaw2DDiff(A,B)
+      Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
+      Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DDiff
+
+      PetscErrorCode                               :: ierr
+
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+         If (A%isPlaneStress == B%isPlaneStress) Then
+            MEF90HookesLaw2DDiff%type          = MEF90HookesLawTypeIsotropic
+            MEF90HookesLaw2DDiff%lambda        = A%lambda - B%lambda
+            MEF90HookesLaw2DDiff%mu            = A%mu - B%mu
+            MEF90HookesLaw2DDiff%isPlaneStress = A%isPlaneStress
+         Else
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible planar Hooke law type in "//__FUNCT__,ierr)
+         End If
+         If (A%isPlaneStress) Then
+            MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu) * 0.5_Kr
+            MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
+            MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
+            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+         Else
+            MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + 2.0_Kr * MEF90HookesLaw2DDiff%mu) * 0.5_Kr
+            MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
+            MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
+            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+         End If
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+         MEF90HookesLaw2DDiff%type       = MEF90HookesLawTypeFull
+         MEF90HookesLaw2DDiff%fullTensor = A%fullTensor - B%fullTensor
+      Else
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible Hooke law type in "//__FUNCT__,ierr)
+      End If
+   End Function MEF90HookesLaw2DDiff
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLaw3DDiff"
+!!!
+!!!
+!!!  MEF90HookesLaw3DDiff:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function MEF90HookesLaw3DDiff(A,B)
+      Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
+      Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DDiff
+
+      PetscErrorCode                               :: ierr
+
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw3DDiff%lambda        = A%lambda - B%lambda
+         MEF90HookesLaw3DDiff%mu            = A%mu - B%mu
+         MEF90HookesLaw3DDiff%PoissonRatio  = MEF90HookesLaw3DDiff%lambda / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu) * 0.5_Kr
+         MEF90HookesLaw3DDiff%YoungsModulus = MEF90HookesLaw3DDiff%mu * (3.0_Kr * MEF90HookesLaw3DDiff%lambda + 2.0_Kr * MEF90HookesLaw3DDiff%mu) / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu)
+         MEF90HookesLaw3DDiff%BulkModulus   = MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu * 2.0_Kr / 3.0_Kr
+         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+         MEF90HookesLaw3DDiff%type       = MEF90HookesLawTypeFull
+         MEF90HookesLaw3DDiff%fullTensor = A%fullTensor - B%fullTensor
+      Else
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Incompatible Hooke law type in "//__FUNCT__,ierr)
+      End If
+   End Function MEF90HookesLaw3DDiff
+
+#undef __FUNCT__
+#define __FUNCT__ "ScalarXMEF90HookesLaw2D"
+!!!
+!!!
+!!!  ScalarXMEF90HookesLaw2D:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function ScalarXMEF90HookesLaw2D(t,A)
+      PetscReal, Intent(IN)                        :: t
+      Type(MEF90HookesLaw2D), Intent(IN)           :: A
+      Type(MEF90HookesLaw2D)                       :: ScalarXMEF90HookesLaw2D
+
+      PetscErrorCode                               :: ierr
+
+      If (A%type == MEF90HookesLawTypeIsotropic) Then
+         ScalarXMEF90HookesLaw2D%type          = MEF90HookesLawTypeIsotropic
+         ScalarXMEF90HookesLaw2D%lambda        = t * A%lambda
+         ScalarXMEF90HookesLaw2D%mu            = t * A%mu
+         ScalarXMEF90HookesLaw2D%isPlaneStress = A%isPlaneStress
+         If (A%isPlaneStress) Then
+            ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
+            ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
+            ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
+            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+         Else
+            ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
+            ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
+            ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
+            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+         End If
+      Else 
+         ScalarXMEF90HookesLaw2D%type       = MEF90HookesLawTypeFull
+         ScalarXMEF90HookesLaw2D%fullTensor = t * A%fullTensor
+      End If
+   End Function ScalarXMEF90HookesLaw2D
+
+
+#undef __FUNCT__
+#define __FUNCT__ "ScalarXMEF90HookesLaw3D"
+!!!
+!!!
+!!!  ScalarXMEF90HookesLaw3D:
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   Function ScalarXMEF90HookesLaw3D(t,A)
+      PetscReal, Intent(IN)                        :: t
+      Type(MEF90HookesLaw3D), Intent(IN)           :: A
+      Type(MEF90HookesLaw3D)                       :: ScalarXMEF90HookesLaw3D
+
+      PetscErrorCode                               :: ierr
+
+      If (A%type == MEF90HookesLawTypeIsotropic) Then
+         ScalarXMEF90HookesLaw3D%type          = MEF90HookesLawTypeIsotropic
+         ScalarXMEF90HookesLaw3D%lambda        = t * A%lambda
+         ScalarXMEF90HookesLaw3D%mu            = t * A%mu
+         ScalarXMEF90HookesLaw3D%PoissonRatio  = ScalarXMEF90HookesLaw3D%lambda / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu) * 0.5_Kr
+         ScalarXMEF90HookesLaw3D%YoungsModulus = ScalarXMEF90HookesLaw3D%mu * (3.0_Kr * ScalarXMEF90HookesLaw3D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw3D%mu) / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu)
+         ScalarXMEF90HookesLaw3D%BulkModulus   = ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu * 2.0_Kr / 3.0_Kr
+         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+      Else 
+         ScalarXMEF90HookesLaw3D%type       = MEF90HookesLawTypeFull
+         ScalarXMEF90HookesLaw3D%fullTensor = t * A%fullTensor
+      End If
+   End Function ScalarXMEF90HookesLaw3D
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMatS2D"
 !!!
