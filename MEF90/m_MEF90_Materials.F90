@@ -744,9 +744,9 @@ Contains
 
       PetscErrorCode                               :: ierr
 
-      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw2DSum%type             = MEF90HookesLawTypeIsotropic
          If (A%isPlaneStress == B%isPlaneStress) Then
-            MEF90HookesLaw2DSum%type          = MEF90HookesLawTypeIsotropic
             MEF90HookesLaw2DSum%lambda        = A%lambda + B%lambda
             MEF90HookesLaw2DSum%mu            = A%mu + B%mu
             MEF90HookesLaw2DSum%isPlaneStress = A%isPlaneStress
@@ -764,7 +764,7 @@ Contains
             MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
             Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
          End If
-      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DSum%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw2DSum%fullTensor = A%fullTensor + B%fullTensor
       Else
@@ -787,14 +787,15 @@ Contains
 
       PetscErrorCode                               :: ierr
 
-      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw3DSum%type          = MEF90HookesLawTypeIsotropic
          MEF90HookesLaw3DSum%lambda        = A%lambda + B%lambda
          MEF90HookesLaw3DSum%mu            = A%mu + B%mu
          MEF90HookesLaw3DSum%PoissonRatio  = MEF90HookesLaw3DSum%lambda / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu) * 0.5_Kr
          MEF90HookesLaw3DSum%YoungsModulus = MEF90HookesLaw3DSum%mu * (3.0_Kr * MEF90HookesLaw3DSum%lambda + 2.0_Kr * MEF90HookesLaw3DSum%mu) / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu)
          MEF90HookesLaw3DSum%BulkModulus   = MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu * 2.0_Kr / 3.0_Kr
          Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
-      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DSum%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DSum%fullTensor = A%fullTensor + B%fullTensor
       Else
@@ -817,9 +818,9 @@ Contains
 
       PetscErrorCode                               :: ierr
 
-      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw2DDiff%type             = MEF90HookesLawTypeIsotropic
          If (A%isPlaneStress == B%isPlaneStress) Then
-            MEF90HookesLaw2DDiff%type          = MEF90HookesLawTypeIsotropic
             MEF90HookesLaw2DDiff%lambda        = A%lambda - B%lambda
             MEF90HookesLaw2DDiff%mu            = A%mu - B%mu
             MEF90HookesLaw2DDiff%isPlaneStress = A%isPlaneStress
@@ -837,7 +838,7 @@ Contains
             MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
             Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
          End If
-      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DDiff%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw2DDiff%fullTensor = A%fullTensor - B%fullTensor
       Else
@@ -860,14 +861,15 @@ Contains
 
       PetscErrorCode                               :: ierr
 
-      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (MEF90HookesLawTypeIsotropic)) Then
+      If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
+         MEF90HookesLaw3DDiff%type          = MEF90HookesLawTypeIsotropic
          MEF90HookesLaw3DDiff%lambda        = A%lambda - B%lambda
          MEF90HookesLaw3DDiff%mu            = A%mu - B%mu
          MEF90HookesLaw3DDiff%PoissonRatio  = MEF90HookesLaw3DDiff%lambda / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu) * 0.5_Kr
          MEF90HookesLaw3DDiff%YoungsModulus = MEF90HookesLaw3DDiff%mu * (3.0_Kr * MEF90HookesLaw3DDiff%lambda + 2.0_Kr * MEF90HookesLaw3DDiff%mu) / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu)
          MEF90HookesLaw3DDiff%BulkModulus   = MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu * 2.0_Kr / 3.0_Kr
          Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
-      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (MEF90HookesLawTypeFull)) Then
+      Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DDiff%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DDiff%fullTensor = A%fullTensor - B%fullTensor
       Else

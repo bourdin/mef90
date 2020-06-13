@@ -9,6 +9,8 @@ MEF90_DEFMECH_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechCtx.o       
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitNone3D.o    \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitMasonry2D.o \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitMasonry3D.o \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitHD2D.o      \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitHD3D.o      \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplit2D.o        \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplit3D.o        \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechATClass.o        \

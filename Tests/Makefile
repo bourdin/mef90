@@ -110,10 +110,18 @@ TestATClass: TestATClass.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-TestSplit.o: ${MEF90_DIR}/Tests/TestSplit.F90 MEF90
+TestMasonry.o: ${MEF90_DIR}/Tests/TestMasonry.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
-TestSplit: TestSplit.o
+TestMasonry: TestMasonry.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
+TestHD.o: ${MEF90_DIR}/Tests/TestHD.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+TestHD: TestHD.o
 	-@echo " $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
@@ -184,17 +192,17 @@ runTestMEF90Ctx: TestMEF90Ctx
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out SquareNG-tri3*
-	
+
 MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:
 	make -C ${MEF90_DIR} m_HeatXfer
-	
+
 clean::
 	-@rm -f TestMaterials TestMEF90Ctx testHeatXfer testLeak
 allclean:
 	make -C ${MEF90_DIR} clean
-	
+
 debug::
 	@echo FFLAGS     ${FFLAGS} 
 	@echo FC_FLAGS   ${FC_FLAGS}

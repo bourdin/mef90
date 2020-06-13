@@ -33,6 +33,7 @@ Contains
       MEF90_DefMechAT1_Constructor%cw                = 2.0_Kr / 3.0_Kr
       MEF90_DefMechAT1_Constructor%aorder            = 2
       MEF90_DefMechAT1_Constructor%worder            = 1
+      MEF90_DefMechAT1_Constructor%type              = 'MEF90_DefMechAT1'
    End Function MEF90_DefMechAT1_Constructor
 
 #undef __FUNCT__
