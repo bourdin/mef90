@@ -1,19 +1,37 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
-Module MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
+Module MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
 #include "finclude/petscdef.h"
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
+#define MEF90_DEFMECHSPLITMASONBY_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitMasonry_Constructor,MEF90_DIM)D
    implicit none
 
-   Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHMASONRYSPLIT
+   Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITMASONRY
    Contains
       Procedure, pass(self)                            :: EED   => EEDMasonry
       Procedure, pass(self)                            :: DEED  => DEEDMasonry
       Procedure, pass(self)                            :: D2EED => D2EEDMasonry
    End Type
 
+   interface MEF90_DEFMECHSPLITMASONRY
+      module procedure MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR
+   end interface
+
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR"
+!!!
+!!!  
+!!!  MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR: the default constructor for a MEF90_DEFMECHSPLITMASONRY
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+   Type(MEF90_DEFMECHSPLITMASONRY) Function MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR()
+      MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%damageOrder  = 0
+      MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%strainOrder  = 2
+      MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%type         = 'MEF90DefMech_unilateralContactTypeMasonry'
+   End Function MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR
+
 #undef __FUNCT__
 #define __FUNCT__ "EEDMasonry"
 !!!
@@ -27,7 +45,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine EEDMasonry(self,Strain,HookesLaw,EEDPlus,EEDMinus)
-      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
+      Class(MEF90_DEFMECHSPLITMASONRY),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       PetscReal, Intent(OUT)                             :: EEDPlus,EEDMinus
@@ -36,9 +54,12 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: nu,alpha
       PetscErrorCode                                     :: ierr
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
+         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
       Call Diagonalize(Strain,Pinv,D)
       !!! D is the strain tensor in the principal basis
@@ -83,7 +104,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine DEEDMasonry(self,Strain,HookesLaw,DEEDPlus,DEEDMinus)
-      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
+      Class(MEF90_DEFMECHSPLITMASONRY),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_MATS),Intent(OUT)                       :: DEEDPlus,DEEDMinus
@@ -92,10 +113,14 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: alpha,E,nu
       PetscErrorCode                                     :: ierr
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
+         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
+
       Call Diagonalize(Strain,Pinv,D)
       !!! D is the strain tensor in the principal basis
 
@@ -164,7 +189,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine D2EEDMasonry(self,Strain,HookesLaw,D2EEDPlus,D2EEDMinus)
-      Class(MEF90_DEFMECHMASONRYSPLIT),Intent(IN)        :: self
+      Class(MEF90_DEFMECHSPLITMASONRY),Intent(IN)        :: self
       Type(MEF90_MATS),Intent(IN)                        :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_HOOKESLAW),Intent(OUT)                  :: D2EEDPlus,D2EEDMinus
@@ -174,10 +199,14 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: E, nu,alpha
       PetscErrorCode                                     :: ierr
+      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__,ierr)
+         Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
+         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
+
       Call Diagonalize(Strain,Pinv,D)
       !!! D is the strain tensor in the principal basis
 
@@ -294,4 +323,4 @@ Contains
 #endif
    End Subroutine D2EEDMasonry
 
-End Module MEF90_APPEND(m_MEF90_DefMechMasonry,MEF90_DIM)D
+End Module MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D

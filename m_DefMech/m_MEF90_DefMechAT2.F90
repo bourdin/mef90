@@ -30,7 +30,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Type(MEF90_DefMechAT2_Type) Function MEF90_DefMechAT2_Constructor()
-      MEF90_DefMechAT2_Constructor%cw                = 2.0_Kr
+      MEF90_DefMechAT2_Constructor%cw                = 0.5_Kr
       MEF90_DefMechAT2_Constructor%aorder            = 2
       MEF90_DefMechAT2_Constructor%worder            = 2
       MEF90_DefMechAT2_Constructor%type              = 'MEF90_DefMechAT2'

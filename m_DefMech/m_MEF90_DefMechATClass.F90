@@ -16,6 +16,7 @@ Module m_MEF90_DefMechAT_class
       PetscReal                                        :: cw
       PetscInt                                         :: aOrder
       PetscInt                                         :: wOrder  
+      Character(len=MEF90_MXSTRLEN)                    :: type
    Contains
       Procedure(ATInterface), pass(self), deferred     :: a
       Procedure(ATInterface), pass(self), deferred     :: Da

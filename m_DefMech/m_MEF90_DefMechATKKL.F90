@@ -39,6 +39,7 @@ Contains
       MEF90_DefMechKKL_Constructor%cw                = 0.7165753016381484_Kr
       MEF90_DefMechKKL_Constructor%aorder            = 3
       MEF90_DefMechKKL_Constructor%worder            = 1
+      MEF90_DefMechKKL_Constructor%type              = 'MEF90_DefMechKKL'
    End Function MEF90_DefMechKKL_Constructor
 
 #undef __FUNCT__

@@ -970,15 +970,15 @@ contains
                   !!! If PetscReal is not the same as c_double, this call will fail
                   !!! Brittle in traction, Ductile in compression
                   Select Case(cellSetOptions%unilateralContactType)
-                  Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
-                        If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
-                           plasticStrainLoc = plasticStrainOldLoc
-                           Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
-                           plasticStrainPreviousLoc = plasticStrainLoc
-                           Call SectionRealRestore(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
-                        Else
-                           exit_code = SNLPL1SQP(s,plasticStrainLoc)
-                        End if
+                  ! Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
+                  !       If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
+                  !          plasticStrainLoc = plasticStrainOldLoc
+                  !          Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
+                  !          plasticStrainPreviousLoc = plasticStrainLoc
+                  !          Call SectionRealRestore(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
+                  !       Else
+                  !          exit_code = SNLPL1SQP(s,plasticStrainLoc)
+                  !       End if
                   Case default
                      if (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) then
                         exit_code = SNLPL1SQP(s,plasticStrainLoc)

@@ -42,11 +42,11 @@ m_MEF90_DefMechSplitClass3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitClass.F90
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
-m_MEF90_DefMechSplit2D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitMasonry2D.o m_MEF90_DefMechSplitHD2D.o m_MEF90_DefMechSplitNone2D.o
+m_MEF90_DefMechSplit2D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitMasonry2D.o m_MEF90_DefMechSplitHD2D.o m_MEF90_DefMechSplitNone2D.o m_MEF90_DefMechSplitDeviatoric2D.o m_MEF90_DefMechSplitHydrostatic2D.o
 	@echo "      $< MEF90_DIM=2"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
-m_MEF90_DefMechSplit3D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90  m_MEF90_DefMechSplitMasonry3D.o m_MEF90_DefMechSplitHD3D.o m_MEF90_DefMechSplitNone3D.o
+m_MEF90_DefMechSplit3D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90  m_MEF90_DefMechSplitMasonry3D.o m_MEF90_DefMechSplitHD3D.o m_MEF90_DefMechSplitNone3D.o m_MEF90_DefMechSplitDeviatoric3D.o m_MEF90_DefMechSplitHydrostatic3D.o
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
@@ -71,6 +71,22 @@ m_MEF90_DefMechSplitHD2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitHD.F90 m_MEF90_DefMe
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF90_DefMechSplitHD3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitHD.F90 m_MEF90_DefMechSplitClass3D.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechSplitDeviatoric2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitDeviatoric.F90 m_MEF90_DefMechSplitClass2D.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechSplitDeviatoric3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitDeviatoric.F90 m_MEF90_DefMechSplitClass3D.o
+	@echo "      $< MEF90_DIM=3"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
+
+m_MEF90_DefMechSplitHydrostatic2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitHydrostatic.F90 m_MEF90_DefMechSplitClass2D.o
+	@echo "      $< MEF90_DIM=2"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
+
+m_MEF90_DefMechSplitHydrostatic3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitHydrostatic.F90 m_MEF90_DefMechSplitClass3D.o
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 

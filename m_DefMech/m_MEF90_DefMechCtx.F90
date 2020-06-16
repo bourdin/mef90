@@ -101,6 +101,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscEnum                              :: damageType
       PetscEnum                              :: plasticityType
       PetscEnum                              :: unilateralContactType
+      PetscReal                              :: unilateralContactHydrostaticDeviatoricGamma
       PetscInt                               :: drivingForceType
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
@@ -290,18 +291,16 @@ Module m_MEF90_DefMechCtx
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,                     &
                      MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric,        &
-                     MEF90DefMech_unilateralContactTypeBrittleDuctile,               &
-                     MEF90DefMech_unilateralContactTypePositiveHydrostatic,          &
-                     MEF90DefMech_unilateralContactTypeHybridHydrostaticDeviatoric,  &
+                     MEF90DefMech_unilateralContactTypeHydrostatic,                  &
                      MEF90DefMech_unilateralContactTypeDeviatoric,                   &
                      MEF90DefMech_unilateralContactTypePrincipalStrains,             &
                      MEF90DefMech_unilateralContactTypeMasonry
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(11),protected   :: MEF90DefMech_unilateralContactTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_unilateralContactTypeList
 
    Enum,bind(c)
       enumerator  :: MEF90DefMech_drivingForceTypeNone = 0,       &
-                     MEF90DefMech_drivingForceTypeDruckerPrager,  &
+                     MEF90_DefMechDrivingForceTypeDruckerPrager,  &
                      MEF90DefMech_drivingForceTypeDruckerPrager2
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_drivingForceTypeList
@@ -377,15 +376,13 @@ Contains
 
       MEF90DefMech_unilateralContactTypeList(1) = 'None'
       MEF90DefMech_unilateralContactTypeList(2) = 'HydrostaticDeviatoric'
-      MEF90DefMech_unilateralContactTypeList(3) = 'BrittleDuctile'
-      MEF90DefMech_unilateralContactTypeList(4) = 'PositiveHydrostatic'
-      MEF90DefMech_unilateralContactTypeList(5) = 'HybridHydrostaticDeviatoric'
-      MEF90DefMech_unilateralContactTypeList(6) = 'Deviatoric'
-      MEF90DefMech_unilateralContactTypeList(7) = 'PrincipalStrains'
-      MEF90DefMech_unilateralContactTypeList(8) = 'Masonry'
-      MEF90DefMech_unilateralContactTypeList(9) = 'MEF90DefMech_unilateralContactTypeList'
-      MEF90DefMech_unilateralContactTypeList(10) = '_MEF90DefMech_unilateralContactTypeList'
-      MEF90DefMech_unilateralContactTypeList(11) = ''
+      MEF90DefMech_unilateralContactTypeList(3) = 'Hydrostatic'
+      MEF90DefMech_unilateralContactTypeList(4) = 'Deviatoric'
+      MEF90DefMech_unilateralContactTypeList(5) = 'PrincipalStrains'
+      MEF90DefMech_unilateralContactTypeList(6) = 'Masonry'
+      MEF90DefMech_unilateralContactTypeList(7) = 'MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(8) = '_MEF90DefMech_unilateralContactTypeList'
+      MEF90DefMech_unilateralContactTypeList(9) = ''
 
       MEF90DefMech_drivingForceTypeList(1) = 'None'
       MEF90DefMech_drivingForceTypeList(2) = 'DruckerPrager'
@@ -931,6 +928,7 @@ Contains
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma,default%unilateralContactHydrostaticDeviatoricGamma,'unilateralContact_hydrostatocDeviatoric_gama','[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%drivingForceType,MEF90DefMech_drivingForceTypeList,default%drivingForceType,'drivingForce_type','Type of nucleation driving force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)
