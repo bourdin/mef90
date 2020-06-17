@@ -9,7 +9,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
    implicit none
 
    Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITHD
-   PetscReal                                           :: gamma
+      PetscReal                                        :: gamma
    Contains
       Procedure, pass(self)                            :: EED   => EEDHD
       Procedure, pass(self)                            :: DEED  => DEEDHD

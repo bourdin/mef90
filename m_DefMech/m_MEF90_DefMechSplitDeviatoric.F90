@@ -29,7 +29,7 @@ Contains
 !!!
    Type(MEF90_DEFMECHSPLITDEVIATORIC) Function MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR()
 
-      MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR%damageOrder = 3
+      MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR%damageOrder = 0
       MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR%strainOrder = 2
       MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR%type        = 'MEF90DefMech_unilateralContactTypeDeviatoric'
    End Function MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR
@@ -59,8 +59,9 @@ Contains
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
 
-      EEDMinus  = (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr ! Ae^s.e^s /2
+      EEDMinus  = trace(Strain)**2 * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr ! Ae^s.e^s /2
       EEDPlus   = ((HookesLaw * Strain) .dotP. Strain) * 0.5_Kr - EEDMinus
+      Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
    End Subroutine
 
 #undef __FUNCT__
@@ -87,9 +88,9 @@ Contains
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
 
-      DEEDMinus = ((HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr) * MEF90_MATS_IDENTITY
-      DEEDPlus  =  (HookesLaw * Strain) - DEEDMinus
-      Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
+      DEEDMinus = (trace(Strain) * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)) * MEF90_MATS_IDENTITY
+      DEEDPlus  = (HookesLaw * Strain) - DEEDMinus
+      Call PetscLogFlops(4._pflop,ierr);CHKERRQ(ierr)
    End Subroutine
 
 #undef __FUNCT__

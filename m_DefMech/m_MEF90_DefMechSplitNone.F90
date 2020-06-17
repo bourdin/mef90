@@ -97,6 +97,9 @@ Contains
       D2EEDPlus = HookesLaw
 
       D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+#if MEF90_DIM==2
+      D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
+#endif
       D2EEDMinus%YoungsModulus = 0.0_Kr
       D2EEDMinus%PoissonRatio  = 0.0_Kr
       D2EEDMinus%lambda        = 0.0_Kr 

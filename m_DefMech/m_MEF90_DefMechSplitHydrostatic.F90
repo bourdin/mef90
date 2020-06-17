@@ -9,6 +9,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
    implicit none
 
    Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITHYDROSTATIC
+      PetscReal                                        :: gamma
    Contains
       Procedure, pass(self)                            :: EED   => EEDHydrostatic
       Procedure, pass(self)                            :: DEED  => DEEDHydrostatic
@@ -27,8 +28,10 @@ Contains
 !!!  MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR: the default constructor for a MEF90_DEFMECHSPLITHydrostatic
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DEFMECHSPLITHYDROSTATIC) Function MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR()
+   Type(MEF90_DEFMECHSPLITHYDROSTATIC) Function MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR(gamma)
+      PetscReal,Intent(IN)                             :: gamma
 
+      MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR%gamma       = gamma
       MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR%damageOrder = 3
       MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR%strainOrder = 2
       MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR%type        = 'MEF90DefMech_unilateralContactTypeHydrostatic'
@@ -59,7 +62,8 @@ Contains
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
 
-      EEDPlus   = (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr ! Ae^s.e^s /2
+      EEDPlus   = MEF90_DefMechSplit_SmoothPositiveSquare(trace(Strain),self%gamma) * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr
+      ! Ae^s.e^s /2
       EEDMinus  = ((HookesLaw * Strain) .dotP. Strain) * 0.5_Kr - EEDPlus
    End Subroutine
 
@@ -87,7 +91,7 @@ Contains
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
       End If
 
-      DEEDPlus  = ((HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr) * MEF90_MATS_IDENTITY
+      DEEDPlus  = MEF90_DefMechSplit_DSmoothPositiveSquare(trace(Strain),self%gamma) * ((HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr) * MEF90_MATS_IDENTITY
       DEEDMinus =  (HookesLaw * Strain) - DEEDPlus
       Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
    End Subroutine
@@ -120,7 +124,7 @@ Contains
       D2EEDPlus%fullTensor  = 0.0_Kr
       D2EEDPlus%Type        = MEF90HookesLawTypeIsotropic
       D2EEDPlus%Type        = MEF90HookesLawTypeIsotropic
-      D2EEDPlus%lambda      = (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr
+      D2EEDPlus%lambda      = MEF90_DefMechSplit_D2SmoothPositiveSquare(trace(Strain),self%gamma) * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr
       D2EEDPlus%mu          = 0.0_Kr
 #if MEF90_DIM == 2
       If (HookesLaw%isPlaneStress) Then

@@ -2337,6 +2337,7 @@ Contains
             C1 =  matpropSet%fractureToughness / matpropSet%internalLength * 0.25_Kr / ATModel%cw
             C2 = (matpropSet%fractureToughness * matpropSet%internalLength * 0.25_Kr / ATModel%cw) * matPropSet%toughnessAnisotropyMatrix
             Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+
             If (Size(cellID) > 0) Then
                Allocate(Damageloc(elemScalType%numDof))
                Do cell = 1,size(cellID)   
@@ -2353,15 +2354,15 @@ Contains
                End Do ! cell
                DeAllocate(Damageloc)
             End If   
+
             Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
             Call MEF90Element_Destroy(elemScal,ierr)
-            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
-            myenergySet = 0.0_Kr
             Call MPI_AllReduce(myenergy,myenergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
             energy(set) = myenergySet
          End If ! coDim
       End Do ! set
+      Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
 
       Call SectionRealDestroy(DamageSec,ierr);CHKERRQ(ierr)

@@ -128,7 +128,7 @@ def main():
     T = np.linspace(options.time_min,options.time_max,options.time_numstep)
     for step in range(options.time_numstep):
         t = T[step]
-        print "writing step",step+1,t
+        print ("writing step",step+1,t)
         exoout.put_time(step+1,t)
         U = displacementBC(exoout,t,options)
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])

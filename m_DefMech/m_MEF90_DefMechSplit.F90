@@ -31,7 +31,7 @@ Contains
       Case(MEF90DefMech_unilateralContactTypeDeviatoric)
          Split = MEF90_DEFMECHSPLITDEVIATORIC()
       Case(MEF90DefMech_unilateralContactTypeHydrostatic)
-         Split = MEF90_DEFMECHSPLITHYDROSTATIC()
+         Split = MEF90_DEFMECHSPLITHYDROSTATIC(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
       Case default
          Print*,__FUNCT__,': Unimplemented split Type',cellSetOptions%unilateralContactType
          STOP  
