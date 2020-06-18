@@ -124,15 +124,14 @@ Contains
       D2EEDMinus%lambda = (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr
       D2EEDMinus%mu     = 0.0_Kr
 #if MEF90_DIM == 2
+      D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
+      D2EEDMinus%YoungsModulus = 2.0_Kr * D2EEDMinus%mu * (1.0_Kr + D2EEDMinus%PoissonRatio)
+      D2EEDMinus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
       If (HookesLaw%isPlaneStress) Then
          D2EEDMinus%PoissonRatio  = D2EEDMinus%lambda / (D2EEDMinus%lambda + D2EEDMinus%mu) * 0.5_Kr
-         D2EEDMinus%YoungsModulus = 2.0_Kr * D2EEDMinus%mu * (1.0_Kr + D2EEDMinus%PoissonRatio)
-         D2EEDMinus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
          Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
       Else
          D2EEDMinus%PoissonRatio  = D2EEDMinus%lambda / (D2EEDMinus%lambda + 2.0_Kr * D2EEDMinus%mu) * 0.5_Kr
-         D2EEDMinus%YoungsModulus = 2.0_Kr * D2EEDMinus%mu * (1.0_Kr + D2EEDMinus%PoissonRatio)
-         D2EEDMinus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
          Call PetscLogFlops(17._pflop,ierr);CHKERRQ(ierr)
       End If
 #else
