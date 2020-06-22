@@ -315,7 +315,6 @@ Contains
          Call PetscBagDestroy(HeatXferCtx%VertexSetOptionsBag(set),ierr);CHKERRQ(ierr)
       End Do
       DeAllocate(HeatXferCtx%VertexSetOptionsBag)
-      
    End Subroutine MEF90HeatXferCtxDestroy
 
 #undef __FUNCT__

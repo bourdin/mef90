@@ -1387,6 +1387,8 @@ Contains
                Call SectionRealUpdate(stressSec,cellID(cell),stressCellPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
             End Do ! cell
          End If ! cell coDim
+         Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+         Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
       End Do ! set
       deAllocate(stressCellPtr)
       !!! No need to complete since stressSec is cell-based
@@ -1407,7 +1409,7 @@ Contains
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       End If
       Call SectionRealDestroy(stressSec,ierr);CHKERRQ(ierr)
-
+      Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechStress
 
 

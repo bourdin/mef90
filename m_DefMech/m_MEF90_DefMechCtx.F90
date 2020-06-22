@@ -398,7 +398,7 @@ Contains
 !!!  
 !!!  MEF90DefMechCtxCreate:
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    Subroutine MEF90DefMechCtxCreate(DefMechCtx,Mesh,MEF90Ctx,ierr)

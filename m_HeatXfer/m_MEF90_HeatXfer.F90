@@ -66,6 +66,7 @@ Contains
          Case (MEF90Scaling_CST)
             Call MEF90HeatXferSetfluxCst(MEF90HeatXferCtx%flux,MEF90HeatXferCtx,ierr)
       End Select
+
       Select case (MEF90HeatXferGlobalOptions%externalTempScaling)
          Case (MEF90Scaling_File)
             Call VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
@@ -76,6 +77,7 @@ Contains
          Case (MEF90Scaling_CST)
             Call MEF90HeatXferSetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr)
       End Select
+
       Select case (MEF90HeatXferGlobalOptions%boundaryTempScaling)
          Case (MEF90Scaling_File)
             Call DMGetLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
@@ -136,7 +138,7 @@ Contains
          Call ISDestroy(setISdof,ierr);CHKERRQ(ierr)
       End Do
       Call ISRestoreIndicesF90(cellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(cellSetGlobalIS,ierr);CHKERRQ(ierr)
+      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
       Call VecAssemblyBegin(x,ierr);CHKERRQ(ierr)
       Call VecAssemblyEnd(x,ierr);CHKERRQ(ierr)
    End Subroutine MEF90HeatXferSetFluxCst
