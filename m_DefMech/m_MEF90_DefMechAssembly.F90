@@ -1321,7 +1321,7 @@ Contains
          elemDamageType       = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
-         If (Size(cellID) > 0) Then
+         If ((Size(cellID) > 0) .AND. (elemDamageType%coDim == 0)) Then
             !!! get the ATModel and split objects
             Call MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic)
             Call MEF90DefMechGetSplit(cellSetOptions,Split)
@@ -1386,6 +1386,8 @@ Contains
                stressCellPtr = stressCell
                Call SectionRealUpdate(stressSec,cellID(cell),stressCellPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
             End Do ! cell
+            Call MEF90Element_Destroy(elemDamage,ierr)
+            Call MEF90Element_Destroy(elemDisplacement,ierr)
          End If ! cell coDim
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -1396,19 +1398,17 @@ Contains
       
       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call SectionRealDestroy(stressSec,ierr);CHKERRQ(ierr)
-      If (Associated(MEF90DefMechCtx%temperature)) Then
-         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
-      End If
 
+      Call SectionRealDestroy(stressSec,ierr);CHKERRQ(ierr)
       If (Associated(MEF90DefMechCtx%damage)) Then
          Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
       End If
-
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
       End If
-      Call SectionRealDestroy(stressSec,ierr);CHKERRQ(ierr)
+      If (Associated(MEF90DefMechCtx%temperature)) Then
+         Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      End If
       Call SectionRealDestroy(displacementSec,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechStress
 

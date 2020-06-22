@@ -204,7 +204,6 @@ Program vDef
    Call MPI_Bcast(numfield,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)   
    If (numfield == 0) Then
       Call MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
-      !!! Will have to figure out this one
    End If
    
    !
@@ -359,17 +358,18 @@ Program vDef
                         Call PetscLogStagePush(logStageDisplacement,ierr);CHKERRQ(ierr)
                         Call VecCopy(MEF90DefMechCtx%displacement,displacementAltMinOld,ierr);CHKERRQ(ierr)
                         Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
-                        !!! Over relaxation on u, skipping the first alternate minimization step
-                        If (AltMinIter > 1) Then
-                           SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
-                           Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
-                        EndIf
-
                         Call SNESGetConvergedReason(MEF90DefMechCtx%snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
                         If (snesDispConvergedReason < 0) Then  
                            Write(IOBuffer,400) "displacement",snesDispConvergedReason
                            Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         End If
+
+                        !!! Over relaxation on u, skipping the first alternate minimization step
+                        If ((AltMinIter > 1) .AND. (SOROmega /= 1.0_Kr)) Then
+                           SOROmega = abs(MEF90DefMechGlobalOptions%SOROmega)
+                           Call VecAXPBY(MEF90DefMechCtx%displacement,1.0_Kr - SOROmega,SOROmega,displacementAltMinOld,ierr);CHKERRQ(ierr)
+                        EndIf
+
                         Call PetscLogStagePop(ierr);CHKERRQ(ierr)
 
                         Call PetscLogStagePush(logStageDamage,ierr);CHKERRQ(ierr)
@@ -382,7 +382,7 @@ Program vDef
                         End If
                         !!! Over relaxation of the damage variable
                         If (AltMinIter > 1) Then
-                           If (MEF90DefMechGlobalOptions%SOROmega > 1.0_Kr) Then
+                           If ((MEF90DefMechGlobalOptions%SOROmega > 0.0_Kr) .AND. (MEF90DefMechGlobalOptions%SOROmega /= 1.0)) Then
                               mySOROmega = MEF90DefMechGlobalOptions%SOROmega
                               !!! LIMITED SOR
                               Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
@@ -403,7 +403,7 @@ Program vDef
                               Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
                               Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
                               Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
-                           Else If (MEF90DefMechGlobalOptions%SOROmega < -1.0_Kr) Then
+                           Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
                               !!! PROJECTED SOR
                               SOROmega = -MEF90DefMechGlobalOptions%SOROmega
                               Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
@@ -471,12 +471,10 @@ Program vDef
          surfaceEnergy(step)  = sum(surfaceEnergySet)
          cohesiveEnergy(step) = sum(cohesiveEnergySet)
          totalMechanicalEnergy(step) = elasticEnergy(step) - forceWork(step) + cohesiveEnergy(step) + surfaceEnergy(step)
-         Call PetscLogStagePop(ierr);CHKERRQ(ierr)
 
          !!!
          !!! Print and save energies
          !!!
-         Call PetscLogStagePush(logStageIO,ierr);CHKERRQ(ierr)
          Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
          Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
          Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
@@ -496,6 +494,9 @@ Program vDef
          Write(IOBuffer,500) step,time(step),elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
          Call PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr);CHKERRQ(ierr)
          Call PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
+         Call PetscLogStagePop(ierr);CHKERRQ(ierr)
+
+         Call PetscLogStagePush(logStageIO,ierr);CHKERRQ(ierr)
          !!!
          !!! Save results and boundary Values
          !!!
