@@ -10,7 +10,8 @@ def parse(args=None):
     parser = argparse.ArgumentParser(description='Remove non-essential_fields from a .gen file.')
     parser.add_argument('inputfile',help='input file')
     parser.add_argument('-o','--outputfile',help='output file',default=None)
-    parser.add_argument('--remove',help='list of variables to be deleted',nargs='*',default=[])
+    parser.add_argument('--deletevariables',help='list of variables to be deleted',nargs='*',default=[])
+    parser.add_argument('--deleteafterstep',type=int,help='last step to keep',default=None)
     parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
     return parser.parse_args()
 
@@ -24,31 +25,39 @@ def main():
     options = parse()
 
 
-    exoin  = exo.exodus(options.inputfile,mode='r')
+    exoin  = exo.exodus(options.inputfile,mode='r',array_type='numpy')
     nodalFields = exoin.get_node_variable_names()
     zonalFields = exoin.get_element_variable_names()
 
-    if options.remove == []:
+    if options.deletevariables == []:
         print('nodal fields: {0}'.format(nodalFields))
         print('zonal fields: {0}'.format(zonalFields))
 
     keepNodalFields = nodalFields
-    for deleteField in options.remove:
+    for deleteField in options.deletevariables:
         keepNodalFields = [field for field in keepNodalFields if not field.lower().startswith(deleteField.lower())]
     deleteNodalFields = [field for field in nodalFields if not field in keepNodalFields]
 
     keepZonalFields = zonalFields
-    for deleteField in options.remove:
+    for deleteField in options.deletevariables:
         keepZonalFields = [field for field in keepZonalFields if not field.lower().startswith(deleteField.lower())]
     deleteZonalFields = [field for field in zonalFields if not field in keepZonalFields]
 
+    originalTimes = exoin.get_times()
+    if options.deleteafterstep:
+        keepTimes = originalTimes[:min(options.deleteafterstep,len(originalTimes))]
+    else:
+        keepTimes = originalTimes
 
-    if len(deleteNodalFields+deleteZonalFields) > 0:
+
+    if len(deleteNodalFields+deleteZonalFields) > 0 or not len(originalTimes) == len(keepTimes):
         print('\nDeleting the following fields:')
         for f in deleteNodalFields:
             print('\t{0} (nodal)'.format(f))
         for f in deleteZonalFields:
             print('\t{0} (zonal)'.format(f))
+        if not len(originalTimes) == len(keepTimes):
+            print('\nDeleting steps after {0}'.format(options.deleteafterstep))
 
         if options.outputfile == None or options.inputfile == options.outputfile:
             if not options.force:
@@ -73,13 +82,20 @@ def main():
 
         print("Copying geometry in {0}".format(outputfile))
         try:
-            exoout = exo.copy_mesh(options.inputfile,options.outputfile, array_type='numpy')
+            exoout = exo.copy_mesh(options.inputfile,outputfile, array_type='numpy')
         except:
             print('\n\nCopying the background mesh using exodus.copy_mesh failed, trying again using exodus.copy.')
             print('Note that the resulting file may not readable with paraview < 5.8.0 or visit\n\n')
             os.remove(options.outputfile)
             exoin  = exo.exodus(options.inputfile,mode='r')
-            exoout = exoin.copy(options.outputfile)
+            exoout = exoin.copy(outputfile)
+            ### Adding a QA record, needed until visit fixes its exodus reader
+            import datetime
+            import os.path
+            import sys
+            QA_rec_len = 32
+            QA = [os.path.basename(sys.argv[0]),os.path.basename(__file__),datetime.date.today().strftime('%Y%m%d'),datetime.datetime.now().strftime("%H:%M:%S")]
+            exoout.put_qa_records([[ q[0:31] for q in QA],])
 
         print("formatting {0}".format(outputfile))
         exoout.set_global_variable_number(0)
@@ -92,7 +108,7 @@ def main():
         exoout.set_element_variable_truth_table([True] * exoout.numElemBlk.value * len(keepZonalFields))
 
         step = 1
-        for t in exoin.get_times():
+        for t in keepTimes:
             print("processing time step {0}: t={1:.2e}".format(step,t))
             exoout.put_time(step,t)
             for f in keepNodalFields:
