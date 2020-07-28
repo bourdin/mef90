@@ -897,7 +897,7 @@ contains
                End select
 
                If (cellSetOptions%damageType == MEF90DefMech_damageTypeLinSoft) Then
-                  PlasticityCtx%CoefficientLinSoft = matpropSet%CoefficientLinSoft
+                  PlasticityCtx%CoefficientLinSoft = cellSetOptions%DamageATLinSoftk
                Else
                   PlasticityCtx%CoefficientLinSoft = 0.0_Kr
                End If

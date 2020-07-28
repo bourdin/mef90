@@ -34,7 +34,6 @@ Module m_MEF90_Materials_Types
       Type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
       Type(MEF90HookesLaw2D)        :: HookesLaw                                        ! A
       PetscReal                     :: internalLength                                   ! l
-      PetscReal                     :: CoefficientLinSoft                               ! k
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: residualYieldStress                              ! residual yield stress
@@ -75,7 +74,6 @@ Module m_MEF90_Materials_Types
       Type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
       Type(MEF90HookesLaw3D)        :: HookesLaw                                        ! A
       PetscReal                     :: internalLength                                   ! l
-      PetscReal                     :: CoefficientLinSoft                               ! k
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: residualYieldStress                              ! residual yield stress
@@ -129,7 +127,6 @@ Module m_MEF90_Materials_Types
          MEF90HookesLawTypeIsotropic,                                                  & ! type
          .FALSE.),                                                                     & ! isPlaneStress
       1.0_Kr,                                                                          & ! Internal Length
-      0.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0e-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
       0.0_Kr,                                                                          & ! Residual Yield Stress
@@ -181,7 +178,6 @@ Module m_MEF90_Materials_Types
 #endif
       ),                                                                               & ! 
       1.0_Kr,                                                                          & ! Internal Length
-      2.0_Kr,                                                                          & ! CoefficientLinSoft
       1.0e-9,                                                                          & ! Residual Stiffness
       1.0_Kr,                                                                          & ! Yield Stress
       0.0_Kr,                                                                          & ! Residual Yield Stress
@@ -410,7 +406,6 @@ Contains
       End Select
 
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] (eta) residual yield stress',ierr)
@@ -487,7 +482,6 @@ Contains
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
       Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientLinSoft,default%CoefficientLinSoft,'CoefficientLinSoft','[] (k) Linear softening coefficient for LinSoft',ierr)
 
       Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
       Call PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] percentage of the yield stress',ierr)

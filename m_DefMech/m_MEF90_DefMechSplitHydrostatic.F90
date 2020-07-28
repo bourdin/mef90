@@ -48,7 +48,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!    
    Subroutine EEDHydrostatic(self,Strain,HookesLaw,EEDPlus,EEDMinus)
-      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)   :: self
+      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)  :: self
       Type(MEF90_MATS),Intent(IN)                      :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                 :: HookesLaw
       PetscReal, Intent(OUT)                           :: EEDPlus,EEDMinus
@@ -77,7 +77,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine DEEDHydrostatic(self,Strain,HookesLaw,DEEDPlus,DEEDMinus)
-      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)   :: self
+      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)  :: self
       Type(MEF90_MATS),Intent(IN)                      :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                 :: HookesLaw
       Type(MEF90_MATS),Intent(OUT)                     :: DEEDPlus,DEEDMinus
@@ -106,7 +106,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine D2EEDHydrostatic(self,Strain,HookesLaw,D2EEDPlus,D2EEDMinus)
-      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)   :: self
+      Class(MEF90_DEFMECHSPLITHYDROSTATIC),Intent(IN)  :: self
       Type(MEF90_MATS),Intent(IN)                      :: Strain
       Type(MEF90_HOOKESLAW),Intent(IN)                 :: HookesLaw
       Type(MEF90_HOOKESLAW),Intent(OUT)                :: D2EEDPlus,D2EEDMinus

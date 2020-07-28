@@ -3,6 +3,7 @@
 module m_MEF90_DefMechAT
 #include "finclude/petscdef.h"
    use m_MEF90_DefMechAT1
+   use m_MEF90_DefMechAT1exp
    use m_MEF90_DefMechAT2
    use m_MEF90_DefMechATKKL
    use m_MEF90_DefMechCtx
@@ -25,15 +26,19 @@ Contains
       Select Case (cellSetOptions%damageType)
       Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT1Elastic)
          ATModel = MEF90_DefMechAT1_Type()
+      Case (MEF90DefMech_damageTypeAT1exp,MEF90DefMech_damageTypeAT1expElastic)
+         ATModel = MEF90_DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
       Case (MEF90DefMech_damageTypeAT2,MEF90DefMech_damageTypeAT2Elastic)
          ATModel = MEF90_DefMechAT2_Type()
+      Case (MEF90DefMech_damageTypeKKL,MEF90DefMech_damageTypeKKLElastic)
+         ATModel = MEF90_DefMechATKKL_Type()
       Case default
-         Print*,__FUNCT__,': Unimplemented damage Type, only AT1 and AT2 implemented',cellSetOptions%damageType
+         Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
          STOP  
       End Select
       !!!  Check if the block is elastic 
       Select Case (cellSetOptions%damageType)
-      Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT2Elastic)
+      Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT1expElastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeKKLElastic)
          isElastic = .TRUE.
       End Select
    End Subroutine MEF90DefMechGetATModel
