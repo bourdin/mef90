@@ -102,6 +102,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscEnum                              :: plasticityType
       PetscEnum                              :: unilateralContactType
       PetscReal                              :: unilateralContactHydrostaticDeviatoricGamma
+      PetscBool                              :: unilateralContactHybrid
       PetscReal                              :: DamageATLinSoftk
       PetscReal                              :: DamageAT1expb
       PetscInt                               :: drivingForceType
@@ -937,6 +938,7 @@ Contains
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma,default%unilateralContactHydrostaticDeviatoricGamma,'unilateralContact_hydrostaticDeviatoric_gamma','[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterBool(bag,DefMechCellSetOptions%unilateralContactHybrid,default%unilateralContactHybrid,'unilateralContact_hybrid','Use hybrid unilateral contact formulation (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterEnum(bag,DefMechCellSetOptions%drivingForceType,MEF90DefMech_drivingForceTypeList,default%drivingForceType,'drivingForce_type','Type of nucleation driving force',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr);CHKERRQ(ierr)

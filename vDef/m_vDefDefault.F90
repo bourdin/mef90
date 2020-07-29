@@ -102,8 +102,9 @@ module m_vDefDefault
                                                          MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
                                                          1.0D-5,                                            & ! unilateralContactHydrostatocDeviatoricGamma
+                                                         PETSC_FALSE,                                       & ! unilateralContactHybrid
                                                          1.0_Kr,                                            & ! DamageATLinSoftk
-                                                         1.25_Kr,                                           & !DamageAT1expb
+                                                         1.25_Kr,                                           & ! DamageAT1expb
                                                          MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement

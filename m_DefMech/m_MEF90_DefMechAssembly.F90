@@ -250,8 +250,11 @@ Contains
          If (Size(cellID) > 0) Then
             !!! get the ATModel and split objects
             Call MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic)
-            Call MEF90DefMechGetSplit(cellSetOptions,Split)
-
+            If (cellSetOptions%unilateralContactHybrid) Then
+               Split = MEF90_DEFMECHSPLITNONE()
+            Else
+               Call MEF90DefMechGetSplit(cellSetOptions,Split)
+            End If
             !!! Allocate elements 
             QuadratureOrder = max(2*elemDisplacementType%order,split%damageOrder + split%strainOrder)
             Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
@@ -649,7 +652,11 @@ Contains
          If ((Size(cellID) > 0) .AND. (ElemDisplacementType%coDim == 0)) Then
             !!! get the ATModel and split objects
             Call MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic)
-            Call MEF90DefMechGetSplit(cellSetOptions,Split)
+            If (cellSetOptions%unilateralContactHybrid) Then
+               Split = MEF90_DEFMECHSPLITNONE()
+            Else
+               Call MEF90DefMechGetSplit(cellSetOptions,Split)
+            End If
             QuadratureOrder = split%damageOrder + split%strainOrder
 
             !!! Allocate elements 
