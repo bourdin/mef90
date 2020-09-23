@@ -62,7 +62,7 @@ Program HeatXfer
    Type(SNES)                                         :: snesTemp
    Type(TS)                                           :: tsTemp
    Type(TSAdapt)                                      :: tsAdaptTemp
-   Type(Vec)                                          :: residualTemp
+   Type(Vec)                                          :: residualTemp,localVec
 
    PetscReal                                          :: tsTempInitialStep,tsTempInitialTime
    PetscInt                                           :: tsTempmaxIter
@@ -146,7 +146,19 @@ Program HeatXfer
    !!!
    !!! Actual computations / time stepping
    !!!
-   Do step = 1,MEF90GlobalOptions%timeNumStep
+   If (MEF90GlobalOptions%timeSkip > 0) Then
+      Call DMGetLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+      Call VecLoadExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                               MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90HeatXferGlobalOptions%TempOffset,ierr);CHKERRQ(ierr)
+      Call DMLocalToGlobalBegin(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
+      Call DMLocalToGlobalEnd(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
+      Call DMRestoreLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+      If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeTransient) Then
+         Call TSSetTime(tsTemp,time(MEF90GlobalOptions%timeSkip),ierr);CHKERRQ(ierr)
+      End If
+   End If
+
+   Do step = MEF90GlobalOptions%timeSkip+1,MEF90GlobalOptions%timeNumStep
 
       Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
       Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
