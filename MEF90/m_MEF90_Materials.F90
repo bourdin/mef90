@@ -733,7 +733,7 @@ Contains
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
          MEF90HookesLaw2DSum%type             = MEF90HookesLawTypeIsotropic
-         If (A%isPlaneStress == B%isPlaneStress) Then
+         If (A%isPlaneStress .EQV. B%isPlaneStress) Then
             MEF90HookesLaw2DSum%lambda        = A%lambda + B%lambda
             MEF90HookesLaw2DSum%mu            = A%mu + B%mu
             MEF90HookesLaw2DSum%isPlaneStress = A%isPlaneStress
@@ -815,7 +815,7 @@ Contains
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
          MEF90HookesLaw2DDiff%type             = MEF90HookesLawTypeIsotropic
-         If (A%isPlaneStress == B%isPlaneStress) Then
+         If (A%isPlaneStress .EQV. B%isPlaneStress) Then
             MEF90HookesLaw2DDiff%lambda        = A%lambda - B%lambda
             MEF90HookesLaw2DDiff%mu            = A%mu - B%mu
             MEF90HookesLaw2DDiff%isPlaneStress = A%isPlaneStress

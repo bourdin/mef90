@@ -2069,7 +2069,7 @@ Contains
       T%XZXY = A(5,6) * .5_Kr
    
       T%XYXY = A(6,6) * .5_Kr
-      Call PetscLogFlops(15_PFlop,ierr);CHKERRQ(ierr)
+      Call PetscLogFlops(15.0_PFlop,ierr);CHKERRQ(ierr)
    End Subroutine ArrayToTens4OS3D
 
    !!! Overloading euclidian norm of derived types
