@@ -11,12 +11,14 @@ Additionally, some utilities requires the following python modules:
   * JSON and argparse
 
 In all that follows, it is assumed that the environment variable MEF90_DIR points to the root of the mef90 installation:
+```bash
     [bourdin@head ~]$ echo $MEF90_DIR
     /home/bourdin/Development/mef90/mef90-sieve
     [bourdin@head ~]$ ls $MEF90_DIR
     bin       Makefile.include  mef90version.h  patches  tags        ThermoElasticity
     HeatXfer  m_DefMech         m_HeatXfer      python   TestMeshes  vDef
     Makefile  MEF90             objs            sanson   Tests
+```
 The actual content of the $MEF90_DIR folder may be somewhat different from the one shown here.
 
 ## Building PETSc-3.3:
