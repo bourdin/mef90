@@ -42,13 +42,13 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
 
     
 ### Configure petsc-3.3. 
-  mef90 requires the following external packages: netcdf and exodusii, metis and parmetis, chaco, boost, triangle. 
+  mef90 requires the following external packages: `netcdf` and `exodusii`, `metis` and `parmetis`, `chaco`, `boost`, `triangle`. 
   multi-threaded build require a recent version of cmake.
   the ml and hypre preconditioners are not mandatory but can drastically improve solver performances in some problems.
   petsc must be configured with fortran datatypes, sieve, and C++ as the C language.
 
   As part of its setup, petsc will download and compile dependencies. On a system without internet access, one can get a list of all packages that need download then compile petsc. This is a 2 steps process:
-  1. Run the configure script with --with-packages-download-dir=<directory> option. This will return a list of packages required and their location (for some reason, the location of the requested MPI will not show up)
+  1. Run the configure script with `--with-packages-download-dir=<directory>` option. This will return a list of packages required and their location (for some reason, the location of the requested MPI will not show up)
   2. Download the packages from a machine with internet access and place them in the directory specified in step 1 of the build system.
   3. Re-run the command from step 1.
 
