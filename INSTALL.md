@@ -33,11 +33,10 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
     ```
    * set the PETSC_ARCH environment variable to a meaningful value. this value will be used by mef90 in order to allow out of tree build. 
      *IMPORTANT*: when using the gcc compiler family, PETSC_ARCH *MUST* contain the string "gcc". mef90 tests for this string in order to set the proper compiler options for free-form fortran source code.
-
-    ```bash
+     ```bash
        [bourdin@head petsc-3.3-mef90]$ echo $PETSC_ARCH
        Linux-gcc4.4-mef90-O
-    ```
+     ```
 
     
 ### Configure petsc-3.3. 
@@ -66,14 +65,14 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
      hypre ['http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hypre-2.8.0b.tar.gz']
      sowing ['http://ftp.mcs.anl.gov/pub/petsc/externalpackages/sowing-1.1.26-p1.tar.gz']
      ml ['http://ftp.mcs.anl.gov/pub/petsc/externalpackages/ml-6.2-p3.tar.gz']
-    ``` 
-     Then run the script again
+  ``` 
+  Then run the script again
 
 
 #### Linux system
 
    * On a RHEL linux system with the GNU compiler suite, the following configuration is a good starting point for a build with optimization
-    ```bash
+     ```bash
        ./configure                         \
          COPTFLAGS='-O3 -march=native'     \
          CXXOPTFLAGS='-O3 -march=native'   \
@@ -94,10 +93,10 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
          --with-mpi-dir=$MPI_HOME          \
          --with-shared-libraries=1         \
          --with-sieve
-  ```
+     ```
   
    * With the intel compilers, and MKL, I use
-   ```bash
+     ```bash
       ./configure                           \
           --COPTFLAGS=-O3                   \
           --CXXOPTFLAGS=-O3                 \
@@ -126,7 +125,7 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
           --with-shared-libraries=1         \
           --with-sieve                      \
           --with-vendor-compilers=intel
-      ```
+     ```
 The version of sowing included in this patched version of petsc requires a recent version of gcc and will not compile with the intel compiler, which is why one needs to explicitly specify the path of a recent gcc.
 
 #### On a macOS system with gcc 10.2 (tested on intel-based macOS catalina and big sur) 
@@ -165,8 +164,8 @@ Once these are installed, configure petsc (with debugging) with
        --with-shared-libraries=1                 \
        --with-sieve                              \
        --with-x11=1                              
-      ```
-    or substitute your favorite compiler optimizations and disable debugging for an optimized build
+```
+or substitute your favorite compiler optimizations and disable debugging for an optimized build
 
 In case of problems with X11, try `--with-x=0`
 
