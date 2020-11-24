@@ -16,85 +16,99 @@
 # Use an official Python runtime as a parent image
 FROM centos:7 AS centos7openmpi164base
 
-# install development tools
-RUN yum -y install epel-release deltarpm ; \
-    yum -y update ; \
-    yum install -y git patch make cmake3 gmake perl m4 valgrind valgrind-devel dos2unix wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel compat-openmpi16-devel gcc-c++ mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python ; \
-    ln -s /usr/bin/cmake3 /usr/bin/cmake ; \
+### install the Software Collection development tools for gcc-9 and other development tools
+RUN yum -y install deltarpm ;\
+    yum -y update; \
+    yum -y install centos-release-scl epel-release; \
+    yum -y install devtoolset-9-gcc* devtoolset-9-gdb devtoolset-9-valgrind devtoolset-9-valgrind-devel ;\
+    yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python compat-openmpi16-devel
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake  ; \
+    mkdir -p /usr/lib64/compat-openmpi16/include ; \
     pip3 install pyaml numpy matplotlib
 
 ENV MPI_HOME /usr/lib64/compat-openmpi16
-ENV PATH $MPI_HOME/bin:$PATH 
-ENV LD_LIBRARY_PATH $MPI_HOME/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH /opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/compat-openmpi16/lib
+ENV MANPATH /opt/rh/devtoolset-9/root/usr/share/man
+ENV PATH /opt/rh/devtoolset-9/root/usr/bin:/usr/lib64/compat-openmpi16/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PCP_DIR /opt/rh/devtoolset-9/root
+ENV PKG_CONFIG_PATH /opt/rh/devtoolset-9/root/usr/lib64/pkgconfig
+ENV X_SCLS devtoolset-9
+
+
 
 ## Install gmsh
-RUN curl http://gmsh.info/bin/Linux/gmsh-4.5.6-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
+RUN curl http://gmsh.info/bin/Linux/gmsh-4.7.1-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
 
+RUN  mkdir -p /opt/HPC/
 
 ### Build petsc for a mef90 development or production environment
 FROM centos7openmpi164base AS centos7openmpi164petsc33
+
 ENV PETSC_DIR /opt/HPC/petsc-3.3-mef90 
-ENV PATH $PETSC_DIR/bin:$PETSC_DIR/$PETSC_ARCH/bin:$PATH
-#RUN mkdir -p /opt/HPC/petsc-3.3-mef90/${PETSC_ARCH}/cbind/include /opt/HPC/petsc-3.3-mef90/${PETSC_ARCH}/forbind/include
-RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} ;
+ENV PATH $PETSC_DIR/bin:$PATH
+
+RUN mkdir -p /opt/HPC
+RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} 
 
 ENV PETSC_ARCH centos7-gcc4.8-openmpi1.6.4-mef90-g 
-RUN cd ${PETSC_DIR} ;                 \
-    ./configure                       \
-    COPTFLAGS='-g'                    \
-    CXXOPTFLAGS='-g'                  \
-    FOPTFLAGS='-g'                    \
-    --download-exodusii=1             \
-    --download-f-blas-lapack=1        \
-    --download-chaco=1                \
-    --download-hdf5=1                 \
-    --download-hypre=1                \
-    --download-metis=1                \
-    --download-ml=1                   \
-    --download-netcdf=1               \
-    --download-parmetis=1             \
-    --download-sowing=1               \
-    --download-triangle=1             \
-    --download-yaml=1                 \
-    --with-boost=1                    \
-    --with-clanguage=C++              \
-    --with-debugging=1                \
-    --with-fortran-datatypes=1        \
-    --with-gnu-compilers=1            \
-    --with-mpi-dir=$MPI_HOME          \
-    --with-shared-libraries=1         \
-    --with-sieve=1                    \
-    --with-c2html=0                   \
-    --with-x11=0;                     \
+RUN cd ${PETSC_DIR} ;                     \
+    ./configure                           \
+    COPTFLAGS='-g'                        \
+    CXXOPTFLAGS='-g'                      \
+    FOPTFLAGS='-g'                        \
+    FFLAGS='-Wno-aliasing'                \
+    CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
+    CFLAGS='-Wno-unused-variable'         \
+    --download-exodusii=1                 \
+    --download-f-blas-lapack=1            \
+    --download-chaco=1                    \
+    --download-hypre=1                    \
+    --download-metis=1                    \
+    --download-ml=1                       \
+    --download-netcdf=1                   \
+    --download-parmetis=1                 \
+    --download-sowing=1                   \
+    --download-yaml=1                     \
+    --with-boost=1                        \
+    --with-clanguage=C++                  \
+    --with-debugging=1                    \
+    --with-fortran-datatypes=1            \
+    --with-gnu-compilers=1                \
+    --with-mpi-dir=$MPI_HOME              \
+    --with-shared-libraries=1             \
+    --with-sieve=1                        \
+    --with-c2html=0                       \
+    --with-x11=0;                         \
     make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
 
 ENV PETSC_ARCH centos7-gcc4.8-openmpi1.6.4-mef90-O 
-RUN cd ${PETSC_DIR} ;                 \
-    rm -Rf externalpackages ;         \
-    ./configure                       \
-    COPTFLAGS='-g -O3 -march=native'  \
-    CXXOPTFLAGS='-g -O3 -march=native'\
-    FOPTFLAGS='-g -O3 -march=native'  \
-    --download-exodusii=1             \
-    --download-f-blas-lapack=1        \
-    --download-chaco=1                \
-    --download-hdf5=1                 \
-    --download-hypre=1                \
-    --download-metis=1                \
-    --download-ml=1                   \
-    --download-netcdf=1               \
-    --download-parmetis=1             \
-    --download-sowing=1               \
-    --download-triangle=1             \
-    --download-yaml=1                 \
-    --with-boost=1                    \
-    --with-clanguage=C++              \
-    --with-debugging=0                \
-    --with-fortran-datatypes=1        \
-    --with-gnu-compilers=1            \
-    --with-mpi-dir=$MPI_HOME          \
-    --with-shared-libraries=1         \
-    --with-sieve=1                    \
-    --with-c2html=0                   \
-    --with-x11=0;                     \
+RUN cd ${PETSC_DIR} ;                     \
+    rm -Rf externalpackages ;             \
+    ./configure                           \
+    COPTFLAGS='-g -O3 -march=native'      \
+    CXXOPTFLAGS='-g -O3 -march=native'    \
+    FOPTFLAGS='-g -O3 -march=native'      \
+    FFLAGS='-Wno-aliasing'                \
+    CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
+    CFLAGS='-Wno-unused-variable'         \
+    --download-exodusii=1                 \
+    --download-f-blas-lapack=1            \
+    --download-chaco=1                    \
+    --download-hypre=1                    \
+    --download-metis=1                    \
+    --download-ml=1                       \
+    --download-netcdf=1                   \
+    --download-parmetis=1                 \
+    --download-sowing=1                   \
+    --download-yaml=1                     \
+    --with-boost=1                        \
+    --with-clanguage=C++                  \
+    --with-debugging=0                    \
+    --with-fortran-datatypes=1            \
+    --with-gnu-compilers=1                \
+    --with-mpi-dir=$MPI_HOME              \
+    --with-shared-libraries=1             \
+    --with-sieve=1                        \
+    --with-c2html=0                       \
+    --with-x11=0;                         \
     make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
