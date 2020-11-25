@@ -1,6 +1,6 @@
-#publish with docker push bourdin/mef90centos7mpichO:tagname
+#publish with docker push bourdin/mef90centos7mpicho:tagname
 
-FROM centos7mpich32petsc33 AS mef90centos7mpichO
+FROM centos7mpich32petsc33 AS mef90centos7mpicho
 
 ENV MPI_HOME /usr/lib64/mpich-3.2 
 ENV PATH $MPI_HOME/bin:$PATH 

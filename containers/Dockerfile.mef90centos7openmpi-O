@@ -1,6 +1,6 @@
-#publish with docker push bourdin/mef90centos7openmpiO:tagname
+#publish with docker push bourdin/mef90centos7openmpio:tagname
 
-FROM centos7openmpi164petsc33 AS mef90centos7openmpiO
+FROM centos7openmpi164petsc33 AS mef90centos7openmpio
 
 ENV MPI_HOME /usr/lib64/openmpi-1.6.4
 ENV PATH $MPI_HOME/bin:$PATH 
