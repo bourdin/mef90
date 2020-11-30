@@ -295,7 +295,7 @@ Contains
                   Call SectionRealRestrict(forceSec,cellID(cell),forceLoc,ierr);CHKERRQ(ierr)
                   forceCell = forceLoc
                End If
-               If ((Associated(MEF90DefMechCtx%pressureForce)) .AND. (ElemDisplacementType%coDim == 0)) Then
+               If ((Associated(MEF90DefMechCtx%pressureForce)) .AND. (ElemDisplacementType%coDim == 1)) Then
                   Call SectionRealRestrict(pressureForceSec,cellID(cell),pressureForceLoc,ierr);CHKERRQ(ierr)
                   ForceCell = forceCell + pressureForceLoc(1) * elemDisplacement(cell)%outerNormal
                End If
@@ -422,7 +422,7 @@ Contains
                If (Associated(MEF90DefMechCtx%force)) Then
                   Call SectionRealRestore(forceSec,cellID(cell),forceLoc,ierr);CHKERRQ(ierr)
                End If
-               If ((Associated(MEF90DefMechCtx%pressureForce)) .AND. (ElemDisplacementType%coDim == 0)) Then
+               If ((Associated(MEF90DefMechCtx%pressureForce)) .AND. (ElemDisplacementType%coDim == 1)) Then
                   Call SectionRealRestore(pressureForceSec,cellID(cell),pressureForceLoc,ierr);CHKERRQ(ierr)
                End If
                If (Associated(MEF90DefMechCtx%CrackPressure)) Then
@@ -880,7 +880,7 @@ Contains
          End If
 
          !!! pressure force work
-         If ((globalOptions%pressureForceScaling /= MEF90Scaling_Null) .AND. (elemDisplacementType%coDim > 0)) Then
+         If ((globalOptions%pressureForceScaling /= MEF90Scaling_Null) .AND. (elemDisplacementType%coDim == 1)) Then
             Call MEF90ElasticityPressureWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
          End If
          
