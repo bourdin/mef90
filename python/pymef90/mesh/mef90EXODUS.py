@@ -54,8 +54,10 @@ def EXODUSwrite(coords,vertexSets,cellSets,numDim,exoFile):
         cellCoDim2 = cell1D
 
     #in 3D, cellCoDim2 cells need to be converted into a vertex set
+    convertedSets = []
     for setID in cellSets.keys():
         if cellSets[setID]['elemType'].upper() in cellCoDim2:
+            print("Converting set {0} of codimension 2 into a vertex set".format(setID))
             vs = []
             for v in cellSets[setID]['connect']:
                 if v not in vs:
@@ -66,7 +68,9 @@ def EXODUSwrite(coords,vertexSets,cellSets,numDim,exoFile):
             vertexSets[setID] = {}
             vertexSets[setID]['vertex'] = vs
             vertexSets[setID]['name']   = cellSets[setID]['name']
-            cellSets.pop(setID,'None')
+            convertedSets.append(setID)
+    for setID in convertedSets:
+        cellSets.pop(setID,'None')
 
     # reorder cells so that sets of codimension 0 are written first in the mesh
     blocksOrder = []
