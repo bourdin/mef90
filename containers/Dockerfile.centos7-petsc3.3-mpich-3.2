@@ -1,8 +1,8 @@
 ### Two stage build: 
 ### centos base image:  
-###    docker build -t centos7mpich32base -f Dockerfile.centos7-petsc3.3-mpich3.2 --target centos7mpich32base .
+###    docker build -t centos7mpich32base -f Dockerfile.centos7-petsc3.3-mpich-3.2 --target centos7mpich32base .
 ### add petsc:
-###    docker build -t centos7mpich32petsc33 -f Dockerfile.centos7-petsc3.3-mpich3.2 --target centos7mpich32petsc33 .
+###    docker build -t centos7mpich32petsc33 -f Dockerfile.centos7-petsc3.3-mpich-3.2 --target centos7mpich32petsc33 .
 
 ### publish to dockerhub:
 ### docker tag centos7mpich32base:latest bourdin/centos7mpich32base:latest
@@ -45,7 +45,7 @@ ENV PATH $PETSC_DIR/bin:$PATH
 RUN mkdir -p /opt/HPC
 RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} ;
 
-ENV PETSC_ARCH centos7-gcc4.8-mpich3.2-mef90-g 
+ENV PETSC_ARCH centos7-gcc9.3.1-mpich3.2-mef90-g 
 RUN cd ${PETSC_DIR} ;                 \
     ./configure                       \
     COPTFLAGS='-g'                    \
@@ -73,7 +73,7 @@ RUN cd ${PETSC_DIR} ;                 \
     --with-x11=0;                     \
     make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
 
-ENV PETSC_ARCH centos7-gcc4.8-mpich3.2-mef90-O 
+ENV PETSC_ARCH centos7-gcc9.3.1-mpich3.2-mef90-O 
 RUN cd ${PETSC_DIR} ;                 \
     rm -Rf externalpackages ;         \
     ./configure                       \

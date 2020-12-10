@@ -42,7 +42,7 @@ centos7mpich32base: Dockerfile.centos7-petsc3.3-mpich-3.2
 	-@echo "Building centos mpich base container"
 	-@docker build -t $@ -f Dockerfile.centos7-petsc3.3-mpich-3.2 --target $@ .
 
-centos7mpich32petsc33: Dockerfile.centos7-petsc3.3-mpich-3.2 centos7mpich164base
+centos7mpich32petsc33: Dockerfile.centos7-petsc3.3-mpich-3.2 centos7mpich32base
 	-@echo "Building mpich PETSC-3.3 container"
 	-@docker build -t $@ -f Dockerfile.centos7-petsc3.3-mpich-3.2 --target $@ .
 	-@docker tag $@:latest bourdin/$@:`docker run -w /opt/HPC/petsc-3.3-mef90 $@:latest git describe --dirty --always --tags`

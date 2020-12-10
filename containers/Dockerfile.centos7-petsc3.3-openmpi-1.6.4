@@ -50,7 +50,7 @@ ENV PATH $PETSC_DIR/bin:$PATH
 RUN mkdir -p /opt/HPC
 RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} 
 
-ENV PETSC_ARCH centos7-gcc4.8-openmpi1.6.4-mef90-g 
+ENV PETSC_ARCH centos7-gcc9.3.1-openmpi1.6.4-mef90-g 
 RUN cd ${PETSC_DIR} ;                     \
     ./configure                           \
     COPTFLAGS='-g'                        \
@@ -81,7 +81,7 @@ RUN cd ${PETSC_DIR} ;                     \
     --with-x11=0;                         \
     make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
 
-ENV PETSC_ARCH centos7-gcc4.8-openmpi1.6.4-mef90-O 
+ENV PETSC_ARCH centos7-gcc9.3.1-openmpi1.6.4-mef90-O 
 RUN cd ${PETSC_DIR} ;                     \
     rm -Rf externalpackages ;             \
     ./configure                           \

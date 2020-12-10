@@ -6,7 +6,7 @@ ENV MPI_HOME /usr/lib64/mpich-3.2
 ENV PATH $MPI_HOME/bin:$PATH 
 ENV LD_LIBRARY_PATH $MPI_HOME/lib:$LD_LIBRARY_PATH
 
-ENV PETSC_ARCH centos7-gcc4.8-mpich3.2-mef90-O 
+ENV PETSC_ARCH centos7-gcc9.3.1-mpich3.2-mef90-O 
 ENV PETSC_DIR /opt/HPC/petsc-3.3-mef90 
 ENV PATH $PETSC_DIR/bin:$PETSC_DIR/$PETSC_ARCH/bin:$PATH
 
