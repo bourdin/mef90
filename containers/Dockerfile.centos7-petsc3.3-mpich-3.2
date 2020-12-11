@@ -33,8 +33,12 @@ ENV PCP_DIR /opt/rh/devtoolset-9/root
 ENV PKG_CONFIG_PATH /opt/rh/devtoolset-9/root/usr/lib64/pkgconfig
 ENV X_SCLS devtoolset-9
 
-### Install gmsh
-RUN curl http://gmsh.info/bin/Linux/gmsh-4.7.1-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local 
+## Build gmsh
+RUN curl http://gmsh.info/src/gmsh-4.7.1-source.tgz | tar zxvf - -C /tmp; \
+    mkdir -p /tmp/gmsh-4.7.1-source/build; \
+    cd /tmp/gmsh-4.7.1-source/build;       \
+    cmake3 -DENABLE_SOLVER=OFF -DENABLE_METIS=OFF -DENABLE_BAMG=OFF -DENABLE_CAIRO=OFF -DENABLE_ONELAB=OFF -DENABLE_DOMHEX=OFF -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..;\
+    make; make install
 
 
 ### Build petsc for a mef90 development or production environment
