@@ -1,35 +1,35 @@
 ### Two stage build: 
 ### centos base image:  
-###    docker build -t centos7openmpi164base -f Dockerfile.centos7-petsc3.3-openmpi-1.6.4 --target centos7openmpi164base .
+###    docker build -t centos7openmpi313base -f Dockerfile.centos7-petsc3.3-openmpi-3.1.3 --target centos7openmpi313base .
 ### add petsc:
-###    docker build -t centos7openmpi164petsc33 -f Dockerfile.centos7-petsc3.3-openmpi-1.6.4 --target centos7openmpi164petsc33 .
+###    docker build -t centos7openmpi313petsc33 -f Dockerfile.centos7-petsc3.3-openmpi-3.1.3 --target centos7openmpi313petsc33 .
 
 ### publish to dockerhub:
-### docker tag centos7openmpi164base:latest bourdin/centos7openmpi164base:latest
-### docker push bourdin/centos7openmpi164base:latest
-### docker tag centos7openmpi164petsc33:latest bourdin/centos7openmpi164petsc33:<tag>
+### docker tag centos7openmpi313base:latest bourdin/centos7openmpi313base:latest
+### docker push bourdin/centos7openmpi313base:latest
+### docker tag centos7openmpi313petsc33:latest bourdin/centos7openmpi313petsc33:<tag>
 ### get tag:
 ###    cd $PETSC_DIR; git describe --dirty --always --tag
-###    docker run -w /opt/HPC/petsc-3.3-mef90 centos7openmpi164petsc33:latest git describe --dirty --always --tags
+###    docker run -w /opt/HPC/petsc-3.3-mef90 centos7openmpi313petsc33:latest git describe --dirty --always --tags
 
-### Start from a basic centos7 system with openmpi 1.6.4
+### Start from a basic centos7 system with openmpi 3.1.3
 # Use an official Python runtime as a parent image
-FROM centos:7 AS centos7openmpi164base
+FROM centos:7 AS centos7openmpi313base
 
 ### install the Software Collection development tools for gcc-9 and other development tools
 RUN yum -y install deltarpm ;\
     yum -y update; \
     yum -y install centos-release-scl epel-release; \
     yum -y install devtoolset-9-gcc* devtoolset-9-gdb devtoolset-9-valgrind devtoolset-9-valgrind-devel ;\
-    yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python compat-openmpi16-devel
+    yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGU libXrender libXcursor libXft libXinerama python3 python3-devel python openmpi3 openmpi3-devel
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake  ; \
-    mkdir -p /usr/lib64/compat-openmpi16/include ; \
+    mkdir -p /usr/lib64/openmpi3/include ; \
     pip3 install pyaml numpy matplotlib
 
-ENV MPI_HOME /usr/lib64/compat-openmpi16
-ENV LD_LIBRARY_PATH /opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/compat-openmpi16/lib
+ENV MPI_HOME /usr/lib64/openmpi3
+ENV LD_LIBRARY_PATH /opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/openmpi3/lib
 ENV MANPATH /opt/rh/devtoolset-9/root/usr/share/man
-ENV PATH /opt/rh/devtoolset-9/root/usr/bin:/usr/lib64/compat-openmpi16/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH /opt/rh/devtoolset-9/root/usr/bin:/usr/lib64/openmpi3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV PCP_DIR /opt/rh/devtoolset-9/root
 ENV PKG_CONFIG_PATH /opt/rh/devtoolset-9/root/usr/lib64/pkgconfig
 ENV X_SCLS devtoolset-9
@@ -46,7 +46,7 @@ RUN curl http://gmsh.info/src/gmsh-4.7.1-source.tgz | tar zxvf - -C /tmp; \
 RUN  mkdir -p /opt/HPC/
 
 ### Build petsc for a mef90 development or production environment
-FROM centos7openmpi164base AS centos7openmpi164petsc33
+FROM centos7openmpi313base AS centos7openmpi313petsc33
 
 ENV PETSC_DIR /opt/HPC/petsc-3.3-mef90 
 ENV PATH $PETSC_DIR/bin:$PATH
@@ -54,7 +54,7 @@ ENV PATH $PETSC_DIR/bin:$PATH
 RUN mkdir -p /opt/HPC
 RUN git clone --single-branch --branch mef90-3.3 https://gitlab.com/blaisebourdin/petsc.git ${PETSC_DIR} 
 
-ENV PETSC_ARCH centos7-gcc9.3.1-openmpi1.6.4-mef90-g 
+ENV PETSC_ARCH centos7-gcc9.3.1-openmpi3.1.3-mef90-g 
 RUN cd ${PETSC_DIR} ;                     \
     ./configure                           \
     COPTFLAGS='-g'                        \
@@ -85,7 +85,7 @@ RUN cd ${PETSC_DIR} ;                     \
     --with-x11=0;                         \
     make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
 
-ENV PETSC_ARCH centos7-gcc9.3.1-openmpi1.6.4-mef90-O 
+ENV PETSC_ARCH centos7-gcc9.3.1-openmpi3.1.3-mef90-O 
 RUN cd ${PETSC_DIR} ;                     \
     rm -Rf externalpackages ;             \
     ./configure                           \
