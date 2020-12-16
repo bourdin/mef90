@@ -1,0 +1,13 @@
+Bootstrap: docker
+From: bourdin/mef90centos7openmpio
+
+%runscript
+vDef -geometry input.gen -result output.gen -options_file_yaml options.yaml -log_summary
+
+%help
+Singularity container image for mef90/vDef developed by Blaise Bourdin https://github.com/bourdin/mef90
+Optimized PETSc 3.3
+MPI: OpenMPI 3.1.3
+
+basic usage:
+$ singularity exec mef90centos7openmpi-O-fromDocker.sif mpirun -np 4 vDef -geometry <geometry> -result <result> -options_file_yaml <options file>

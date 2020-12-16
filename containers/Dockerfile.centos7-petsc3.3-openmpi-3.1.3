@@ -89,9 +89,9 @@ ENV PETSC_ARCH centos7-gcc9.3.1-openmpi3.1.3-mef90-O
 RUN cd ${PETSC_DIR} ;                     \
     rm -Rf externalpackages ;             \
     ./configure                           \
-    COPTFLAGS='-g -O3 -march=native'      \
-    CXXOPTFLAGS='-g -O3 -march=native'    \
-    FOPTFLAGS='-g -O3 -march=native'      \
+    COPTFLAGS='-g -O3'                    \
+    CXXOPTFLAGS='-g -O3'                  \
+    FOPTFLAGS='-g -O3'                    \
     FFLAGS='-Wno-aliasing'                \
     CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
     CFLAGS='-Wno-unused-variable'         \

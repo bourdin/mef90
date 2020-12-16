@@ -81,9 +81,9 @@ ENV PETSC_ARCH centos7-gcc9.3.1-mpich3.2-mef90-O
 RUN cd ${PETSC_DIR} ;                 \
     rm -Rf externalpackages ;         \
     ./configure                       \
-    COPTFLAGS='-g -O3 -march=native'  \
-    CXXOPTFLAGS='-g -O3 -march=native'\
-    FOPTFLAGS='-g -O3 -march=native'  \
+    COPTFLAGS='-g -O3'                \
+    CXXOPTFLAGS='-g -O3'              \
+    FOPTFLAGS='-g -O3'                \
     --download-exodusii=1             \
     --download-f-blas-lapack=1        \
     --download-chaco=1                \
