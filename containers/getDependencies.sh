@@ -39,7 +39,7 @@ if [ -d snlp ]; then
 	git pull
 	cd ..
 else
-	git clone https://bitbucket.org/bourdin/snlp.git
+	git clone https://github.com/bourdin/snlp.git
 fi
 
 cd ..
