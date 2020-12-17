@@ -1,0 +1,118 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+tarball /opt/HPC/tarball
+
+%post
+export MPI_HOME=/usr/lib64/openmpi3 
+export LD_LIBRARY_PATH=/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/openmpi3/lib
+export MANPATH=/opt/rh/devtoolset-9/root/usr/share/man
+export PATH=/opt/rh/devtoolset-9/root/usr/bin:/usr/lib64/openmpi3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PCP_DIR=/opt/rh/devtoolset-9/root
+export PKG_CONFIG_PATH=/opt/rh/devtoolset-9/root/usr/lib64/pkgconfig
+export X_SCLS=devtoolset-9
+export PETSC_DIR=/opt/HPC/petsc-3.3-mef90 
+
+yum -y install deltarpm
+yum -y update
+yum -y install centos-release-scl epel-release
+yum -y install devtoolset-9-gcc* devtoolset-9-gdb devtoolset-9-valgrind devtoolset-9-valgrind-devel
+yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python openmpi3 openmpi3-devel
+ln -s /usr/bin/cmake3 /usr/bin/cmake
+mkdir -p /usr/lib64/openmpi3/include
+pip3 install pyaml numpy matplotlib
+
+### GMSH
+curl http://gmsh.info/src/gmsh-4.7.1-source.tgz | tar zxvf - -C /tmp
+mkdir -p /tmp/gmsh-4.7.1-source/build
+cd /tmp/gmsh-4.7.1-source/build
+cmake3 -DENABLE_SOLVER=OFF -DENABLE_METIS=OFF -DENABLE_BAMG=OFF -DENABLE_CAIRO=OFF -DENABLE_ONELAB=OFF -DENABLE_DOMHEX=OFF -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
+make
+make install
+
+### PETSc-debug
+cp -aR /opt/HPC/tarball/petsc-3.3-mef90 $PETSC_DIR
+export PETSC_ARCH=centos7-gcc9.3.1-openmpi3.1.3-mef90-g
+cd $PETSC_DIR
+./configure                               \
+    COPTFLAGS='-g'                        \
+    CXXOPTFLAGS='-g'                      \
+    FOPTFLAGS='-g'                        \
+    FFLAGS='-Wno-aliasing'                \
+    CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
+    CFLAGS='-Wno-unused-variable'         \
+    --download-exodusii=1                 \
+    --download-f-blas-lapack=1            \
+    --download-chaco=1                    \
+    --download-hypre=1                    \
+    --download-metis=1                    \
+    --download-ml=1                       \
+    --download-netcdf=1                   \
+    --download-parmetis=1                 \
+    --download-sowing=1                   \
+    --download-yaml=1                     \
+    --with-boost=1                        \
+    --with-clanguage=C++                  \
+    --with-debugging=1                    \
+    --with-fortran-datatypes=1            \
+    --with-gnu-compilers=1                \
+    --with-mpi-dir=$MPI_HOME              \
+    --with-shared-libraries=1             \
+    --with-sieve=1                        \
+    --with-c2html=0                       \
+    --with-x11=0
+make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
+
+### PETSC-optimized
+export PETSC_ARCH=centos7-gcc9.3.1-openmpi3.1.3-mef90-O
+cd $PETSC_DIR
+rm -Rf externalpackages
+./configure                               \
+    COPTFLAGS='-g -O3'                    \
+    CXXOPTFLAGS='-g -O3'                  \
+    FOPTFLAGS='-g -O3'                    \
+    FFLAGS='-Wno-aliasing'                \
+    CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
+    CFLAGS='-Wno-unused-variable'         \
+    --download-exodusii=1                 \
+    --download-f-blas-lapack=1            \
+    --download-chaco=1                    \
+    --download-hypre=1                    \
+    --download-metis=1                    \
+    --download-ml=1                       \
+    --download-netcdf=1                   \
+    --download-parmetis=1                 \
+    --download-sowing=1                   \
+    --download-yaml=1                     \
+    --with-boost=1                        \
+    --with-clanguage=C++                  \
+    --with-debugging=0                    \
+    --with-fortran-datatypes=1            \
+    --with-gnu-compilers=1                \
+    --with-mpi-dir=$MPI_HOME              \
+    --with-shared-libraries=1             \
+    --with-sieve=1                        \
+    --with-c2html=0                       \
+    --with-x11=0
+make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
+
+%environment
+export MPI_HOME=/usr/lib64/openmpi3 
+export LD_LIBRARY_PATH=/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/openmpi3/lib
+export MANPATH=/opt/rh/devtoolset-9/root/usr/share/man
+export PATH=/opt/rh/devtoolset-9/root/usr/bin:/usr/lib64/openmpi3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PCP_DIR=/opt/rh/devtoolset-9/root
+export PKG_CONFIG_PATH=/opt/rh/devtoolset-9/root/usr/lib64/pkgconfig
+export X_SCLS=devtoolset-9
+export PETSC_ARCH=centos7-gcc9.3.1-openmpi3.1.3-mef90-O 
+export PETSC_DIR=/opt/HPC/petsc-3.3-mef90 
+
+export PATH=$PETSC_DIR/bin:$PETSC_DIR/$PETSC_ARCH/bin:$PATH
+
+%apprun test
+cd $PETSC_DIR; make PETSC_ARCH=centos7-gcc9.3.1-openmpi3.1.3-mef90-g test; make PETSC_ARCH=centos7-gcc9.3.1-openmpi3.1.3-mef90-O test
+
+%%help
+Base singularity container for vDef containing petsc buiilt with openMPI 3.1.2 and gmsh 4.7.1
+MPI: OpenMPI 3.1.3
