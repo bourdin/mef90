@@ -37,11 +37,13 @@ ENV X_SCLS devtoolset-9
 
 
 ## Build gmsh
-RUN curl http://gmsh.info/src/gmsh-4.7.1-source.tgz | tar zxvf - -C /tmp; \
-    mkdir -p /tmp/gmsh-4.7.1-source/build; \
-    cd /tmp/gmsh-4.7.1-source/build;       \
-    cmake3 -DENABLE_SOLVER=OFF -DENABLE_METIS=OFF -DENABLE_BAMG=OFF -DENABLE_CAIRO=OFF -DENABLE_ONELAB=OFF -DENABLE_DOMHEX=OFF -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..;\
-    make; make install
+#RUN curl http://gmsh.info/src/gmsh-4.7.1-source.tgz | tar zxvf - -C /tmp; \
+#    mkdir -p /tmp/gmsh-4.7.1-source/build; \
+#    cd /tmp/gmsh-4.7.1-source/build;       \
+#    cmake3 -DENABLE_SOLVER=OFF -DENABLE_METIS=OFF -DENABLE_BAMG=OFF -DENABLE_CAIRO=OFF -DENABLE_ONELAB=OFF -DENABLE_DOMHEX=OFF -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..;\
+#    make; make install
+### Get gmsh 4.5.5 (the most recent binary version compatible with centos 7)
+RUN curl http://gmsh.info/bin/Linux/gmsh-4.5.5-Linux64.tgz | tar zxvf - --strip-components=1 -C /usr/local
 
 RUN  mkdir -p /opt/HPC/
 
