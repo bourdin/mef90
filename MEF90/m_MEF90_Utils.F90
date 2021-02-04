@@ -232,60 +232,60 @@ Contains
       Call ISRestoreIndicesF90(setIS,setIdx,ierr);CHKERRQ(ierr)   
    End Subroutine MEF90VecSetValuesISdof      
 
-#undef __FUNCT__
-#define __FUNCT__ "MEF90AskInt"
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90AskInt"
 
-   Subroutine MEF90AskInt(val,msg,ArgUnit,IsBatch)
-      PetscInt                                  :: Val
-      Character(len=*)                          :: msg 
-      PetscInt                                  :: argunit
-      PetscBool                                 :: IsBatch
+!    Subroutine MEF90AskInt(val,msg,ArgUnit,IsBatch)
+!       PetscInt                                  :: Val
+!       Character(len=*)                          :: msg 
+!       PetscInt                                  :: argunit
+!       PetscBool                                 :: IsBatch
 
-      Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
-      PetscInt                                  :: ierr   
+!       Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
+!       PetscInt                                  :: ierr   
       
-      If (IsBatch) Then
-         If (MEF90_MyRank == 0) Then
-            Read(ArgUnit,*) Val
-         End If
-         Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
-      Else
-         Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Val
-            Write(ArgUnit,"(I4,t60,A)") val,Trim(msg)
-         End If
-         Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
-      End If
-   End Subroutine MEF90AskInt   
+!       If (IsBatch) Then
+!          If (MEF90_MyRank == 0) Then
+!             Read(ArgUnit,*) Val
+!          End If
+!          Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+!       Else
+!          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
+!          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+!          If (MEF90_MyRank == 0) Then
+!             Read(*,*) Val
+!             Write(ArgUnit,"(I4,t60,A)") val,Trim(msg)
+!          End If
+!          Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+!       End If
+!    End Subroutine MEF90AskInt   
    
-#undef __FUNCT__
-#define __FUNCT__ "MEF90AskReal"
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90AskReal"
 
-   Subroutine MEF90AskReal(val,msg,ArgUnit,IsBatch)
-      PetscReal                                 :: Val
-      Character(len=*)                          :: msg 
-      PetscInt                                  :: argunit
-      PetscBool                                 :: IsBatch
+!    Subroutine MEF90AskReal(val,msg,ArgUnit,IsBatch)
+!       PetscReal                                 :: Val
+!       Character(len=*)                          :: msg 
+!       PetscInt                                  :: argunit
+!       PetscBool                                 :: IsBatch
 
-      Character(len=MEF90_MXSTRLEN)             :: IOBuffer      
-      PetscInt                                  :: ierr
-      If (IsBatch) Then
-         If (MEF90_MyRank == 0) Then
-            Read(ArgUnit,*) Val
-         End If
-         Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
-      Else
-         Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-         Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
-         If (MEF90_MyRank == 0) Then
-            Read(*,*) Val
-            Write(ArgUnit,"(ES12.5,t60,A)") val,Trim(msg)
-         End If
-         Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
-      End If
-   End Subroutine MEF90AskReal
+!       Character(len=MEF90_MXSTRLEN)             :: IOBuffer      
+!       PetscInt                                  :: ierr
+!       If (IsBatch) Then
+!          If (MEF90_MyRank == 0) Then
+!             Read(ArgUnit,*) Val
+!          End If
+!          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+!       Else
+!          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
+!          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+!          If (MEF90_MyRank == 0) Then
+!             Read(*,*) Val
+!             Write(ArgUnit,"(ES12.5,t60,A)") val,Trim(msg)
+!          End If
+!          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+!       End If
+!    End Subroutine MEF90AskReal
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90FilePrefix"
