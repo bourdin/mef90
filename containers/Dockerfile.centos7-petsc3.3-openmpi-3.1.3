@@ -24,7 +24,7 @@ RUN yum -y install deltarpm ;\
     yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGU libXrender libXcursor libXft libXinerama python3 python3-devel python openmpi3 openmpi3-devel
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake  ; \
     mkdir -p /usr/lib64/openmpi3/include ; \
-    pip3 install pyaml numpy matplotlib
+    pip3 install cython pyaml numpy
 
 ENV MPI_HOME /usr/lib64/openmpi3
 ENV LD_LIBRARY_PATH /opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/opt/rh/devtoolset-9/root/usr/lib64/dyninst:/opt/rh/devtoolset-9/root/usr/lib/dyninst:/opt/rh/devtoolset-9/root/usr/lib64:/opt/rh/devtoolset-9/root/usr/lib:/usr/lib64/openmpi3/lib
