@@ -63,8 +63,8 @@ Note the ```-v ${HOME}/mef90Demo:/home/mef90``` argument binds the folder ```${H
     In this example, ```vDef``` will run on 4 cores (the ```-np 4``` option of ```mpirun```) and the result files will be placed in the ```/home/mef90/``` folder f the container, which corresponds to the ```${HOME}/mef90Demo``` folder of the host.
 
 * Viewing results:
-    * An energy plot can be generated in ```/home/mef90/``` using the command
+    <!-- * An energy plot can be generated in ```/home/mef90/``` using the command
     ```
     plotener.py /home/mef90/UniaxialTension2D_out.ener -o /home/mef90/UniaxialTension2D_out.pdf
-    ```
+    ``` -->
     The evolution of the phase field variable can be viewed using [visit](http://visit.llnl.gov) or [paraview](http://www.paraview.org) (or any other software capable of handling exodusII files) to render a pseudo-color plot of the ```Damage``` variable.
