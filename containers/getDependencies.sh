@@ -16,7 +16,7 @@ echo 'Downloading ml      '; curl -O http://ftp.mcs.anl.gov/pub/petsc/externalpa
 echo 'Downloading parmetis'; curl -O http://ftp.mcs.anl.gov/pub/petsc/externalpackages/parmetis-4.0.2-p3.tar.gz
 echo 'Downloading hdf5    '; curl -O http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hdf5-1.8.8-p1.tar.gz
 echo 'Downloading metis   '; curl -O http://ftp.mcs.anl.gov/pub/petsc/externalpackages/metis-5.0.2-p3.tar.gz
-echo 'Downloading gmsh    '; curl -O http://gmsh.info/bin/Linux/gmsh-4.7.1-source.tgz
+echo 'Downloading gmsh    '; curl -O http://gmsh.info/bin/Linux/gmsh-4.5.5-Linux64.tgz
 
 if [ -d petsc-3.3-mef90 ]; then
 	cd petsc-3.3-mef90
