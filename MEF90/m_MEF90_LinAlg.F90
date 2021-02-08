@@ -2442,6 +2442,55 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Ht_Min_Tri_2D
    
+<<<<<<< HEAD
+=======
+   Function ValP2D(M)
+      Type(Mat2D),Intent(IN)                      :: M
+      Type(Vect2D)                                :: ValP2D,VPTemp
+      PetscReal                                   :: Tmp1
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY * M%YX
+      If (Tmp1 < 0.0_Kr) Then
+         Print*,'Error in Valp2D : non diagonalizable matrix'
+         Print*,'Tmp1 = ',Tmp1
+         Print*,'M :'
+         Print*,M%XX,M%XY
+         Print*,M%YX,M%YY
+         Print*,'(M%XX - M%YY)**2', (M%XX - M%YY)**2
+         Print*,'4.0_Kr * M%XY * M%YX',4.0_Kr * M%XY * M%YX
+         Print*,'Result is (0.0,0.0)'
+         VPTemp%X = 0.0_Kr
+         VPTemp%Y = 0.0_Kr
+         flops = 5.0
+      Else
+         VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
+         VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
+         flops = 13.0
+      EndIf
+      ValP2D = VPTemp
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function ValP2D
+   
+   Function ValP2DS(M)
+      Type(MatS2D),Intent(IN)                     :: M
+      Type(Vect2D)                                :: ValP2DS,VPTemp
+      PetscReal                                   :: Tmp1
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
+      
+      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY**2
+      
+      VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
+      VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
+      
+      ValP2DS = VPTemp
+      flops = 13.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function ValP2DS
+   
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
    Function DetMat2D(M)
       Type(Mat2D),Intent(IN)                      :: M
       PetscReal                                   :: DetMat2D

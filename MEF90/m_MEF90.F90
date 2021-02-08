@@ -36,10 +36,15 @@ Contains
 
       Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
        
+<<<<<<< HEAD
       Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: git changeset ",MEF90_GITVER,"\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# Copyright (c) 1998-2020 B. Bourdin <bourdin@lsu.edu> and co-authors\n"
+=======
+      !Call PetscLogBegin(ierr);CHKERRQ(ierr)
+      Write(IOBuffer,*) "# MEF90: hg changeset ",MEF90_HGVER,"\n"
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# See CONTRIBUTORS.txt for a list of contributors\n"
       Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)

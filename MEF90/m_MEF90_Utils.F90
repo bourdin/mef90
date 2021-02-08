@@ -151,6 +151,7 @@ Contains
 !      DeAllocate(vertexSetIdx)
 !      Call ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
 !   End Subroutine MEF90ISCreateCelltoVertex
+<<<<<<< HEAD
    
 ! #undef __FUNCT__
 ! #define __FUNCT__ "MEF90AskInt"
@@ -230,6 +231,11 @@ Contains
          MEF90FilePrefix = sChop(1:i-1)
       end if
    end function MEF90FilePrefix
+=======
+   
+#undef __FUNCT__
+#define __FUNCT__ "MEF90AskInt"
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
 
 
 #undef __FUNCT__

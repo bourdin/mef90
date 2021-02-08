@@ -22,6 +22,7 @@ Module m_MEF90_EXO
 
 Contains
 <<<<<<< HEAD
+<<<<<<< HEAD
 #undef __FUNCT__
 <<<<<<< HEAD
 #define __FUNCT__ "MEF90CtxGetDMMeshEXO"
@@ -87,12 +88,17 @@ Contains
 !#undef __FUNCT__
 !#define __FUNCT__ "MEF90CtxOpenEXO"
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+!#undef __FUNCT__
+!#define __FUNCT__ "MEF90CtxOpenEXO"
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
 !!!
 !!!  
 !!!  MEF90CtxOpenEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
+<<<<<<< HEAD
 <<<<<<< HEAD
    Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
@@ -161,6 +167,8 @@ Contains
       End If
    End Subroutine MEF90CtxOpenEXO
 =======
+=======
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
 !   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
 !      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
 !      Type(tDM), Intent(IN)                           :: Mesh
@@ -218,8 +226,11 @@ Contains
 !      End If
 !   102 Format(A,'.gen')
 !   End Subroutine MEF90CtxOpenEXO
+<<<<<<< HEAD
 >>>>>>> 7aedf22 (Updated geometry initialization)
 
+=======
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCloseEXO"
@@ -239,9 +250,12 @@ Contains
       Character(len=MEF90_MXSTRLEN)                   :: filename
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
 <<<<<<< HEAD
+<<<<<<< HEAD
       Real                                            :: exo_version
 =======
 >>>>>>> f87946a (Updated m_MEF90_Materials, started work on elements)
+=======
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
@@ -275,11 +289,15 @@ Contains
       Integer                                         :: cpu_ws,io_ws,exoID
       Real                                            :: exoVersion
 <<<<<<< HEAD
+<<<<<<< HEAD
       Integer                                         :: junk1,junk2,junk3,junk4,exoerr
       Real                                            :: dummyR
 =======
       Integer                                         :: junk1,junk2,junk3,exoerr
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+      Integer                                         :: junk1,junk2,junk3,exoerr
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
       Character(len=MXLNLN)                           :: dummyS
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
@@ -308,10 +326,14 @@ Contains
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
             STOP
 <<<<<<< HEAD
+<<<<<<< HEAD
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
 =======
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
          EndIf
          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
       End If
@@ -349,8 +371,12 @@ Contains
       Integer                                         :: cpu_ws,io_ws,exoID
       Real                                            :: exoVersion
 <<<<<<< HEAD
+<<<<<<< HEAD
       Integer                                         :: junk1,junk2,junk3,junk4,exoerr
       Real                                            :: dummyR
+=======
+      Integer                                         :: junk1,junk2,junk3,exoerr
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
       Character(len=MXLNLN)                           :: dummyS
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
@@ -382,10 +408,14 @@ Contains
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
             STOP
 <<<<<<< HEAD
+<<<<<<< HEAD
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
 =======
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
          EndIf
          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
       End If
@@ -423,11 +453,15 @@ Contains
       Integer                                         :: cpu_ws,io_ws,exoID
       Real                                            :: exoVersion
 <<<<<<< HEAD
+<<<<<<< HEAD
       Integer                                         :: junk1,junk2,junk3,junk4,exoerr
       Real                                            :: dummyR
 =======
       Integer                                         :: junk1,junk2,junk3,exoerr
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+      Integer                                         :: junk1,junk2,junk3,exoerr
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
       Character(len=MXLNLN)                           :: dummyS
       Integer                                         :: numSet,set,numDim
       PetscInt,Dimension(:),Pointer                   :: setID
@@ -455,10 +489,14 @@ Contains
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
             STOP
 <<<<<<< HEAD
+<<<<<<< HEAD
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
 =======
             !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
 >>>>>>> 7aedf22 (Updated geometry initialization)
+=======
+            !SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
+>>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
          EndIf
          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk3,exoerr)
       End If
