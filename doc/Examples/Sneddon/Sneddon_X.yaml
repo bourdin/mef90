@@ -1,8 +1,9 @@
 verbose: 1
 CrackPressure:
-   scaling: constant
+    scaling: constant
+    Offset: 4
 boundaryDisplacement:
-   scaling: constant
+    scaling: constant
 time:
     #interpolation: exo
     min: 0.01
@@ -17,8 +18,6 @@ heatxfer:
         type: null
 temperature:
     offset: 0
-CrackPressure:
-    Offset: 4
 cs0001:
     fracturetoughness: 1.
     residualstiffness: 0.

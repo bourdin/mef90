@@ -1,6 +1,7 @@
 verbose: 1
 CrackPressure:
    scaling: constant
+   Offset: 4
 boundaryDisplacement:
    scaling: constant
 time:
@@ -16,9 +17,7 @@ heatxfer:
     timestepping:
         type: null
 temperature:
-    offset: 0
-CrackPressure:
-    Offset: 4
+    offset: 0    
 disp:
     snes:
         type: ksponly

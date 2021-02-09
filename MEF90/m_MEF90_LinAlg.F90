@@ -1081,8 +1081,8 @@ Contains
    
    ! Overloading "/"
    Function Vect2DQuot(V1,D1)
-      PetscReal,Intent(IN)                        :: D1
       Type(Vect2D),Intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
       Type(Vect2D)                                :: Vect2DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1094,8 +1094,8 @@ Contains
    End Function Vect2DQuot
    
    Function Vect3DQuot(V1,D1)
-      PetscReal,Intent(IN)                        :: D1
       Type(Vect3D),Intent(IN)                     :: V1
+      PetscReal,Intent(IN)                        :: D1
       Type(Vect3D)                                :: Vect3DQuot
       PetscLogDouble                              :: flops
       PetscInt                                    :: ierr
@@ -1967,7 +1967,7 @@ Contains
       A(3,1) = A(3,1)
       A(3,2) = A(2,3)
       A(3,3) = T%XYXY * 2.0_Kr
-      Call PetscLogFlops(3_PFlop,ierr);CHKERRQ(ierr)
+      Call PetscLogFlops(3.0_PFlop,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS2DToArray
 
    Subroutine ArrayToTens4OS2D(T,A)
@@ -1984,7 +1984,7 @@ Contains
       T%YYXY = A(2,3) * .5_Kr 
 
       T%XYXY = A(3,3) * .5_Kr 
-      Call PetscLogFlops(3_PFlop,ierr);CHKERRQ(ierr)
+      Call PetscLogFlops(3.0_PFlop,ierr);CHKERRQ(ierr)
    End Subroutine ArrayToTens4OS2D
 
    Subroutine Tens4OS3DToArray(A,T)
@@ -2034,7 +2034,7 @@ Contains
       A(6,4) = A(4,6)
       A(6,5) = A(5,6)
       A(6,6) = T%XYXY * 2.0_Kr
-      Call PetscLogFlops(15_PFlop,ierr);CHKERRQ(ierr)
+      Call PetscLogFlops(15.0_PFlop,ierr);CHKERRQ(ierr)
    End Subroutine Tens4OS3DToArray
 
    Subroutine ArrayToTens4OS3D(T,A)

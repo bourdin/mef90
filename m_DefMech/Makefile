@@ -34,7 +34,11 @@ m_MEF90_DefMechATKKL.o: ${BASE_DIR}/m_MEF90_DefMechATKKL.F90 m_MEF90_DefMechATCl
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-m_MEF90_DefMechAT.o: ${BASE_DIR}/m_MEF90_DefMechAT.F90 m_MEF90_DefMechAT1.o m_MEF90_DefMechAT1Exp.o m_MEF90_DefMechATKKL.o m_MEF90_DefMechAT2.o m_MEF90_DefMechATKKL.o
+m_MEF90_DefMechATLinSoft.o: ${BASE_DIR}/m_MEF90_DefMechATLinSoft.F90 m_MEF90_DefMechATClass.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_DefMechAT.o: ${BASE_DIR}/m_MEF90_DefMechAT.F90 m_MEF90_DefMechAT1.o m_MEF90_DefMechAT1Exp.o m_MEF90_DefMechATKKL.o m_MEF90_DefMechAT2.o m_MEF90_DefMechATKKL.o m_MEF90_DefMechATLinSoft.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

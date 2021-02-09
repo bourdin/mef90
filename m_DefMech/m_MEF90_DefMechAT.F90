@@ -6,6 +6,7 @@ module m_MEF90_DefMechAT
    use m_MEF90_DefMechAT1exp
    use m_MEF90_DefMechAT2
    use m_MEF90_DefMechATKKL
+   use m_MEF90_DefMechATLinSoft
    use m_MEF90_DefMechCtx
 
 Contains
@@ -32,13 +33,15 @@ Contains
          ATModel = MEF90_DefMechAT2_Type()
       Case (MEF90DefMech_damageTypeKKL,MEF90DefMech_damageTypeKKLElastic)
          ATModel = MEF90_DefMechATKKL_Type()
+      Case (MEF90DefMech_damageTypeLinSoft,MEF90DefMech_damageTypeLinSoftElastic)
+         ATModel = MEF90_DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
       Case default
          Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
          STOP  
       End Select
       !!!  Check if the block is elastic 
       Select Case (cellSetOptions%damageType)
-      Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT1expElastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeKKLElastic)
+      Case (MEF90DefMech_damageTypeAT1Elastic,MEF90DefMech_damageTypeAT1expElastic,MEF90DefMech_damageTypeAT2Elastic,MEF90DefMech_damageTypeKKLElastic,MEF90DefMech_damageTypeLinSoftElastic)
          isElastic = .TRUE.
       End Select
    End Subroutine MEF90DefMechGetATModel

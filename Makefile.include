@@ -6,9 +6,10 @@ endif
 ifneq (,${findstring ntel,${PETSC_ARCH}})
   FC_FLAGS+= -diag-disable 6380
 endif
-#ifneq (,${findstring intel,${PETSC_ARCH}})
+#ifneq (,${findstring ntel,${PETSC_ARCH}})
 #   FLINKER+= -Wl,-no_pie
 #endif
+
 MEF90_INCLUDE=${MEF90_DIR}/objs/${PETSC_ARCH}
 
 ifneq (${SNLP_DIR},)
