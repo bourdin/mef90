@@ -40,7 +40,6 @@ Program vDef
    PetscReal,Dimension(:),Pointer                     :: damageArray,damageAltMinOldArray,damageLBArray,damageUBArray
    PetscInt                                           :: iDof
    PetscReal                                          :: SOROmega,mySOROmega
-   Type(Vec)                                          :: plasticStrainOld,plasticStrainPrevious
    SNESConvergedReason                                :: snesDamageConvergedReason
    Type(Vec)                                          :: residualDamage,localVec
    PetscInt                                           :: AltMinIter
@@ -67,10 +66,7 @@ Program vDef
    PetscInt                                           :: AltMinStep = 0
    
    PetscReal                                          :: alphaMaxChange,alphaMin,alphaMax
-   
-   Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
-   Type(Vec)                                          :: cumulatedDissipatedPlasticEnergyVariation
-   PetscLogStage                                      :: logStageHeat,logStageDamage,logStageDisplacement,logStagePlasticity,logStageEnergy,logStageIO
+   PetscLogStage                                      :: logStageHeat,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO
       
 
 
@@ -81,7 +77,6 @@ Program vDef
    Call PetscLogStageRegister('HeatXfer    ',logStageHeat,ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('Damage      ',logStageDamage,ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('Displacement',logStageDisplacement,ierr);CHKERRQ(ierr)
-   Call PetscLogStageRegister('Plasticity  ',logStagePlasticity,ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('Energy      ',logStageEnergy,ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('IO          ',logStageIO,ierr);CHKERRQ(ierr)
 
@@ -139,15 +134,7 @@ Program vDef
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,MEF90DefMechCtx%snesDamage,residualDamage,ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
-   
-   !!!cumulatedDissipatedPlasticEnergy Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-
-   
-   Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-   
+      
    !!! Create sections, vectors, and solvers for HeatXfer Context
    If (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) Then
       Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
@@ -206,40 +193,42 @@ Program vDef
       Call MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
    End If
    
-   !!! 
-   !!! Reload state if time_skip > 0
-   !!!
-   If (MEF90GlobalOptions%timeSkip > 0) Then
-      If ((MEF90HeatXferGlobalOptions%tempOffset > 0) .AND. (Associated(MEF90HeatXferCtx%temperature))) Then
-         Call DMGetLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-         Call VecLoadExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-                                  MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90HeatXferGlobalOptions%TempOffset,ierr);CHKERRQ(ierr)
-         Call DMLocalToGlobalBegin(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
-         Call DMLocalToGlobalEnd(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
-         Call DMRestoreLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-         If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeTransient) Then
-            Call TSSetTime(tsTemp,time(MEF90GlobalOptions%timeSkip),ierr);CHKERRQ(ierr)
-         End If
-      End If
-
-      Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                               MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%DisplacementOffset,ierr);CHKERRQ(ierr)
-      Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
-      Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
-      Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-
-      Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-                               MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%DamageOffset,ierr);CHKERRQ(ierr)
-      Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr)
-      Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr)
-      Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-   End If
    !!!
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
+      !!! 
+      !!! Reload state if time_skip > 0
+      !!!
+      If (MEF90GlobalOptions%timeSkip > 0) Then
+         If ((MEF90HeatXferGlobalOptions%tempOffset > 0) .AND. (Associated(MEF90HeatXferCtx%temperature))) Then
+            Call DMGetLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            Call VecLoadExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
+                                     MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90HeatXferGlobalOptions%TempOffset,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr);CHKERRQ(ierr)
+            Call DMRestoreLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+            If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeTransient) Then
+               Call TSSetTime(tsTemp,time(MEF90GlobalOptions%timeSkip),ierr);CHKERRQ(ierr)
+            End If
+         End If
+   
+         Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+         Call VecLoadExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%DisplacementOffset,ierr);CHKERRQ(ierr)
+         Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+         Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMVect,localVec,INSERT_VALUES,MEF90DefMechCtx%Displacement,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
+   
+         Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+         Call VecLoadExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+                                  MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%DamageOffset,ierr);CHKERRQ(ierr)
+         Call DMLocalToGlobalBegin(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr)
+         Call DMLocalToGlobalEnd(MEF90DefMechCtx%DMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%Damage,ierr);CHKERRQ(ierr)
+         Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
+      End If
+
+      !!! Start iterations
       step = MEF90GlobalOptions%timeSkip+1
 
       mainloopQS: Do
@@ -452,12 +441,6 @@ Program vDef
                         Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
                         Call PetscLogStagePop(ierr);CHKERRQ(ierr)
 
-                        Call PetscLogStagePush(logStagePlasticity,ierr);CHKERRQ(ierr)
-                        Call VecCopy(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
-                        Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-                        Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-                        Call PetscLogStagePop(ierr);CHKERRQ(ierr)
-
                         If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
                            EXIT
                         End If
@@ -574,13 +557,6 @@ Program vDef
    Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageAltMinOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(displacementAltMinOld,ierr);CHKERRQ(ierr)
-
-   Call VecDestroy(plasticStrainOld,ierr);CHKERRQ(ierr)
-   Call VecDestroy(plasticStrainPrevious,ierr);CHKERRQ(ierr)
-   Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-
 
    DeAllocate(elasticEnergySet)
    DeAllocate(surfaceEnergySet)

@@ -16,7 +16,6 @@ Module m_MEF90_DefMech
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
       MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy,             &
       MEF90DefMechCrackVolume2D              => MEF90DefMechCrackVolume,               &
-      MEF90DefMechCrackPressureRescaling2D   => MEF90DefMechCrackPressureRescaling,    &
       MEF90DefMechStress2D                   => MEF90DefMechStress
    Use m_MEF90_DefMechPlasticity2D, &
       MEF90DefMechPlasticStrainUpdate2D      => MEF90DefMechPlasticStrainUpdate
@@ -31,7 +30,6 @@ Module m_MEF90_DefMech
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
       MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy,             &
       MEF90DefMechCrackVolume3D              => MEF90DefMechCrackVolume,               &
-      MEF90DefMechCrackPressureRescaling3D   => MEF90DefMechCrackPressureRescaling,    &
       MEF90DefMechStress3D                   => MEF90DefMechStress
    Use m_MEF90_DefMechPlasticity3D, &
       MEF90DefMechPlasticStrainUpdate3D      => MEF90DefMechPlasticStrainUpdate
@@ -58,7 +56,6 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechCohesiveEnergy
    Public :: MEF90DefMechPlasticDissipation
    Public :: MEF90DefMechCrackVolume
-   Public :: MEF90DefMechCrackPressureRescaling
    Public :: MEF90DefMechStress
    Public :: MEF90DefMechPlasticStrainUpdate
 
@@ -1006,33 +1003,6 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
          Call MEF90DefMechCrackVolume3D(x,MEF90DefMechCtx,CrackVolume,ierr)
       End If      
    End Subroutine MEF90DefMechCrackVolume
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCrackPressureRescaling"
-!!!
-!!!  
-!!!  MEF90DefMechCrackPressureRescaling: 
-!!!  
-!!!  (c) 2016 erwan
-!!!
-
-   Subroutine MEF90DefMechCrackPressureRescaling(x,CrackPressure,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,timeStep,ierr)
-      Type(Vec),Intent(IN)                               :: x
-      Type(Vec),Intent(INOUT)                            :: CrackPressure
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscReal,dimension(:),Pointer                     :: CrackVolumeSet
-      PetscReal,Intent(IN)                               :: timeStep
-            PetscBool,Dimension(:),Pointer,Intent(IN)    :: ActivatedCrackPressureBlocksList
-      PetscErrorCode,Intent(OUT)                         :: ierr
-
-      PetscInt                                           :: dim      
-      Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
-      If (dim == 2) Then
-         Call MEF90DefMechCrackPressureRescaling2D(x,CrackPressure,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,timeStep,ierr)
-      Else If (dim == 3) Then
-         Call MEF90DefMechCrackPressureRescaling3D(x,CrackPressure,MEF90DefMechCtx,CrackVolumeSet,ActivatedCrackPressureBlocksList,timeStep,ierr)
-      End If      
-   End Subroutine MEF90DefMechCrackPressureRescaling
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
