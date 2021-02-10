@@ -483,7 +483,7 @@ Contains
       !!!      
       filename = trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.ener'
       Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
-      Call PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            cohesive energy surface energy  total energy   dissipation plastic \n",ierr);CHKERRQ(ierr)
+      Call PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n",ierr);CHKERRQ(ierr)
       Call PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr);CHKERRQ(ierr)
       
       Call DMmeshGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
@@ -495,7 +495,7 @@ Contains
          Call PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
          Write(IOBuffer,102) set
          Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
-         Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),"# step     load            elastic energy  work            cohesive energy surface energy  total energy   dissipation plastic \n",ierr);CHKERRQ(ierr)
+         Call PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),"# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation\n",ierr);CHKERRQ(ierr)
          Call PetscViewerFlush(DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
       End Do
       Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

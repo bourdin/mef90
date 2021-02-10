@@ -53,7 +53,7 @@ Program vDefHF
           
    PetscBool                                          :: flg
    Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
-   Type(PetscViewer)                                  :: logViewer
+   Type(PetscViewer)                                  :: logViewer,pressureViewer
    Integer                                            :: numfield
    
    Integer                                            :: step
@@ -220,6 +220,11 @@ Program vDefHF
 
    Call VecDuplicate(MEF90DefMechCtx%CrackPressure,CrackPressureMask,ierr);CHKERRQ(ierr)
 
+   !!! Create a viewer for the volume-pressure curve
+   Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.pres',pressureViewer, ierr);CHKERRQ(ierr)
+   Call PetscViewerASCIIPrintf(pressureViewer,"# Iteration   volume   pressure\n",ierr);CHKERRQ(ierr)
+   Call PetscViewerFlush(pressureViewer,ierr);CHKERRQ(ierr)
+
    !!! Actual computations / time stepping
    !!!
    If (.NOT. MEF90GlobalOptions%dryrun) Then
@@ -258,7 +263,7 @@ Program vDefHF
          End If
 
          Call PetscLogStagePush(logStageHeat,ierr);CHKERRQ(ierr)
-      !!! Solve for temperature
+         !!! Solve for temperature
          Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
          Case (MEF90HeatXfer_timeSteppingTypeSteadyState) 
             Write(IOBuffer,100) step,time(step)
@@ -413,15 +418,15 @@ Program vDefHF
                      CrackVolumeSet = 0.0_Kr
                      Call MEF90DefMechCrackVolume(MEF90DefMechCtx%displacement,MEF90DefMechCtx,CrackVolumeSet,ierr);CHKERRQ(ierr)
                      CrackVolumeSave(I3) = sum(CrackVolumeSet,MASK=ActivatedCrackPressureBlocksList)
-
-                     InjectedVolumeRelativeError = abs( time(step) - CrackVolumeSave(I3) )/( 1.0_Kr+time(step) )
+                     InjectedVolumeRelativeError = abs(time(step) - CrackVolumeSave(I3)) / (1.0_Kr + time(step))
 
                      !!!! Condition to exit loop for the secant method
                      If (InjectedVolumeRelativeError .LE. MEF90DefMechGlobalOptions%InjectedVolumeAtol ) Then
                         EXIT
                      End IF
                   End Do SecantMthd
-                  Write(IOBuffer,302) CrackVolumeIter,CrackVolumeSave(I3),CrackPressureSave(I3)
+                  Write(IOBuffer,302) CrackPressureSave(I3)
+                  Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)               
                Else
                   Call SNESSolve(MEF90DefMechCtx%snesDisp,PETSC_NULL_OBJECT,MEF90DefMechCtx%displacement,ierr);CHKERRQ(ierr)
                   Call SNESGetConvergedReason(MEF90DefMechCtx%snesDisp,snesDispConvergedReason,ierr);CHKERRQ(ierr)
@@ -436,7 +441,6 @@ Program vDefHF
                      WorkControlled(step) = sum(forceWorkSet,MASK=ActivatedWorkControlledBlocksList)
                      WorkControlledRescaling = sqrt(time(step)/WorkControlled(step))
                      Call VecScale(MEF90DefMechCtx%pressureForce,WorkControlledRescaling,ierr);CHKERRQ(ierr)
-                     
                      ErrorEstimationWorkControlled=((abs(time(step)-WorkControlled(step)))/(1.0_Kr+time(step)))
                   End If
                End If
@@ -469,6 +473,10 @@ Program vDefHF
                   Call PetscLogStagePop(ierr);CHKERRQ(ierr)
                End If
             End Do AltMin
+            Write(IOBuffer,303) step,CrackVolumeSave(I3),CrackPressureSave(I3)
+            Call PetscViewerASCIIPrintf(pressureViewer,IOBuffer,ierr);CHKERRQ(ierr)
+            Call PetscViewerFlush(pressureViewer,ierr);CHKERRQ(ierr)
+
             If (AltMinIter == MEF90DefMechGlobalOptions%maxit) then
                Write(IOBuffer,412) MEF90DefMechGlobalOptions%maxit
                Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
@@ -503,7 +511,7 @@ Program vDefHF
                Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
 
-               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set) 
+               Write(IOBuffer,500) step,time(step),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
                Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
             End Do
@@ -600,6 +608,7 @@ Program vDefHF
 
    Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
    Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+   Call PetscViewerDestroy(pressureViewer,ierr);CHKERRQ(ierr)
    Call MEF90CtxDestroy(MEF90Ctx,ierr)
    Call MEF90Finalize(ierr)
    Call PetscFinalize(ierr)
@@ -610,13 +619,14 @@ Program vDefHF
 200 Format("\nMechanics: step ",I4,", t=",ES12.5,"\n")
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
-208 Format("   Alt. Min. step ",I5," ")
-209 Format("      alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+208 Format("   Alt. Min. step ",I5)
+209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 301 Format("   CrackPressure Iter",I5, " error ", ES12.5, "\n")
-302 Format("      Pressure line search converged in ",I2, " iterations, volume ", ES12.5, ", pressure " , ES12.5,"\n" )
+302 Format(" crack pressure " , ES12.5)
+303 Format(I6, 2(ES16.5), "\n")
 308 Format("   Alt. Proj. step ",I5," ")
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 410 Format(" [ERROR]: ",A," TSSolve failed with TSConvergedReason ",I2,". \n Check http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedReason.html for error code meaning.\n")
 412 Format(" [ERROR]: Alternate minimizations algorithm did NOT converge in ", I5, "iterations.\n")
-500 Format(I6, 7(ES16.5), "\n")
+500 Format(I6, 6(ES16.5), "\n")
 End Program vDefHF
