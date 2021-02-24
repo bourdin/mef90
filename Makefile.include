@@ -1,8 +1,3 @@
-ifneq (,${findstring gcc,${PETSC_ARCH}})
-   FC_FLAGS+= -ffree-line-length-none -ffixed-line-length-none -ffree-form
-   FC_FLAGS+= -Wno-unused-dummy-argument
-   FC_FLAGS+= -Wno-unused-function
-endif
 ifneq (,${findstring ntel,${PETSC_ARCH}})
   FC_FLAGS+= -diag-disable 6380
 endif
@@ -18,5 +13,4 @@ ifneq (${SNLP_DIR},)
 	SNLP_LIB:= -L${SNLP_DIR}/lib -lsnlp -lsnlpF90 -Wl,-rpath,${SNLP_DIR}/lib
 endif
 
-PETSC_FORTRAN_LIB+= -L${PETSC_DIR}/${PETSC_ARCH}/lib -lexoIIv2for32
 
