@@ -76,9 +76,10 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
    * On a RHEL linux system with the GNU compiler suite, the following configuration is a good starting point for a build with optimization
      ```bash
        ./configure                         \
-         COPTFLAGS='-O3 -march=native'     \
-         CXXOPTFLAGS='-O3 -march=native'   \
-         FOPTFLAGS='-O3 -march=native'     \
+         --COPTFLAGS='-O3 -march=native'   \
+         --CXXOPTFLAGS='-O3 -march=native' \
+         --FOPTFLAGS='-O3 -march=native'   \
+         --FFLAGS="-ffree-line-length-none -fallow-argument-mismatch" \
          --download-boost=1                \
          --download-chaco=1                \
          --download-exodusii=1             \
@@ -131,7 +132,7 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
 The version of sowing included in this patched version of petsc requires a recent version of gcc and will not compile with the intel compiler, which is why one needs to explicitly specify the path of a recent gcc.
 
 #### On a macOS system with gcc 10.2 (tested on intel-based macOS catalina and big sur) 
-The version of boost included with petsc-3.3 does not compile with the system clang compilers, hence using a version of MPI compiled with the system C++ compiler (such as the one from homebrew) is not possible. Instead, it is recommended to let pets compile its own version of MPICH using gcc.
+The version of boost included with petsc-3.3 does not compile with the system clang compilers, hence using a version of MPI compiled with the system C++ compiler (such as the one from homebrew) is not possible. Instead, it is recommended to let petsc compile its own version of MPICH using gcc.
 
 The `autoconf automake cmake gcc make` packages need to be installed (with homebrew for instance):
   
