@@ -57,6 +57,7 @@ RUN cd ${PETSC_DIR} ;                 \
     COPTFLAGS='-g'                    \
     CXXOPTFLAGS='-g'                  \
     FOPTFLAGS='-g'                    \
+    FFLAGS="-ffree-line-length-none"  \
     --download-exodusii=1             \
     --download-f-blas-lapack=1        \
     --download-chaco=1                \
@@ -86,6 +87,7 @@ RUN cd ${PETSC_DIR} ;                 \
     COPTFLAGS='-g -O3'                \
     CXXOPTFLAGS='-g -O3'              \
     FOPTFLAGS='-g -O3'                \
+    FFLAGS="-ffree-line-length-none"  \
     --download-exodusii=1             \
     --download-f-blas-lapack=1        \
     --download-chaco=1                \
