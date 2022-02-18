@@ -1321,6 +1321,8 @@ Contains
             End Do ! cell
             Call MEF90Element_Destroy(elemDamage,ierr)
             Call MEF90Element_Destroy(elemDisplacement,ierr)
+            DeAllocate(displacementDof)
+            DeAllocate(damageDof)
          End If ! cell coDim
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

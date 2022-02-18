@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled
+all: MEF90 m_HeatXfer HeatXfer m_DefMech vDef
 
 mef90version.h: chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
