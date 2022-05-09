@@ -103,9 +103,9 @@ Contains
       PetscErrorCode,intent(OUT)       :: ierr
       Type(tIS)                        :: tmplabels
       
-      Call ISAllGather(labels,tmplabels,ierr);CHKERRQ(ierr)
-      Call ISSortRemoveDups(tmplabels,ierr);CHKERRQ(ierr)
-      Call ISDestroy(labels,ierr);CHKERRQ(ierr)
+      PetscCall(ISAllGather(labels,tmplabels,ierr))
+      PetscCall(ISSortRemoveDups(tmplabels,ierr))
+      PetscCall(ISDestroy(labels,ierr))
       labels%v = tmplabels%v
       
       ierr = 0
@@ -131,25 +131,25 @@ Contains
 !      PetscInt,Dimension(:),Pointer                   :: cellSetIdx,vertexSetIdx,cone
 !      PetscInt                                        :: numVertices,cell,v,coneSize
 !      
-!      Call ISGetIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
+!      PetscCall(ISGetIndicesF90(cellSetIS,cellSetIdx,ierr))
 !      numVertices = 0
 !      Do cell = 1,size(cellSetIdx)
-!         Call DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr);CHKERRQ(ierr)
+!         PetscCall(DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr))
 !         numVertices = numVertices + coneSize
 !      End Do ! cell
 !      Allocate(vertexSetIdx(numVertices))
 !      Do cell = 1,size(cellSetIdx)
-!         Call DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr);CHKERRQ(ierr)
-!         Call DMMeshGetConeF90(mesh,cellSetIdx(cell),Cone,ierr);CHKERRQ(ierr)
+!         PetscCall(DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr))
+!         PetscCall(DMMeshGetConeF90(mesh,cellSetIdx(cell),Cone,ierr))
 !         Do v = 1,coneSize
 !            vertexSetIdx((cell-1)*coneSize+v) = Cone(v)
 !         End Do ! v
-!         Call DMMeshRestoreConeF90(mesh,cellSetIdx(cell),Cone,ierr);CHKERRQ(ierr)
+!         PetscCall(DMMeshRestoreConeF90(mesh,cellSetIdx(cell),Cone,ierr))
 !      End Do ! cell
-!      Call PetscSortRemoveDupsInt(numVertices,vertexSetIdx,ierr);CHKERRQ(ierr)
-!      Call ISCreateGeneral(Comm,numVertices,vertexSetIdx,PETSC_COPY_VALUES,vertexSetIS,ierr);CHKERRQ(ierr)
+!      PetscCall(PetscSortRemoveDupsInt(numVertices,vertexSetIdx,ierr))
+!      PetscCall(ISCreateGeneral(Comm,numVertices,vertexSetIdx,PETSC_COPY_VALUES,vertexSetIS,ierr))
 !      DeAllocate(vertexSetIdx)
-!      Call ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr);CHKERRQ(ierr)
+!      PetscCall(ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr))
 !   End Subroutine MEF90ISCreateCelltoVertex
    
 ! #undef __FUNCT__
@@ -168,15 +168,15 @@ Contains
 !          If (MEF90_MyRank == 0) Then
 !             Read(ArgUnit,*) Val
 !          End If
-!          Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+!          PetscCallMPI(MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr))
 !       Else
 !          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-!          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+!          PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
 !          If (MEF90_MyRank == 0) Then
 !             Read(*,*) Val
 !             Write(ArgUnit,"(I4,t60,A)") val,Trim(msg)
 !          End If
-!          Call MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr)
+!          PetscCallMPI(MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr))
 !       End If
 !    End Subroutine MEF90AskInt   
    
@@ -195,15 +195,15 @@ Contains
 !          If (MEF90_MyRank == 0) Then
 !             Read(ArgUnit,*) Val
 !          End If
-!          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+!          PetscCallMPI(MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr))
 !       Else
 !          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-!          Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+!          PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
 !          If (MEF90_MyRank == 0) Then
 !             Read(*,*) Val
 !             Write(ArgUnit,"(ES12.5,t60,A)") val,Trim(msg)
 !          End If
-!          Call MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr)
+!          PetscCallMPI(MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr))
 !       End If
 !    End Subroutine MEF90AskReal
 
@@ -275,15 +275,15 @@ Contains
 !      PetscInt                         :: i, j, iErr
 !      PetscInt                         :: MySize, MaxSize
 !
-!      Call MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr)
+!      PetscCallMPI(MPI_Comm_Rank(PETSC_COMM_WORLD, rank, iErr))
 !
 !      MySize = Size(dMyVals)
-!      Call MPI_AllReduce(MySize, MaxSize, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
+!      PetscCallMPI(MPI_AllReduce(MySize, MaxSize, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr))
 !      If (MaxSize>0) Then
 !         MyMinVal = MinVal(dMyVals)
 !         MyMaxVal = MaxVal(dMyVals)
-!         Call MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, dComm, iErr)
-!         Call MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr)
+!         PetscCallMPI(MPI_AllReduce(MyMinVal, GlobMinVal, 1, MPIU_INTEGER, MPI_MIN, dComm, iErr))
+!         PetscCallMPI(MPI_AllReduce(MyMaxVal, GlobMaxVal, 1, MPIU_INTEGER, MPI_MAX, dComm, iErr))
 !         Allocate(ValCount1(GlobMinVal:GlobMaxVal))
 !         Allocate(ValCount1(GlobMinVal:GlobMaxVal))
 !         ValCount1 = .FALSE.
@@ -291,7 +291,7 @@ Contains
 !            ValCount1(dMyVals(i)) = .TRUE.
 !         End Do
 !
-!         Call MPI_AllReduce(ValCount1, ValCount2, GlobMaxVal-GlobMinVal+1, MPI_LOGICAL, MPI_LOR, dComm, iErr)
+!         PetscCallMPI(MPI_AllReduce(ValCount1, ValCount2, GlobMaxVal-GlobMinVal+1, MPI_LOGICAL, MPI_LOR, dComm, iErr))
 !         !!! This is suboptimal. I could gather only to CPU 0 and do everything else on CPU 0 before broadcasting
 !         
 !         UniqCount = Count(ValCount2)
