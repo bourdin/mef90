@@ -11,17 +11,7 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       MPI_Comm                                        :: IOcomm
       Integer                                         :: rank
-<<<<<<< HEAD
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: inputmesh      
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
-=======
-<<<<<<< HEAD
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
-=======
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: inputmesh      
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
       Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
    End Type MEF90Ctx_Type
@@ -215,15 +205,9 @@ Contains
       
          MEF90Ctx%comm = comm
          Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
-<<<<<<< HEAD
-         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-inputmesh',MEF90Ctx%inputmesh,flg,ierr);CHKERRQ(ierr)
-         If (.NOT. flg) Then
-            Call PetscPrintf(PETSC_COMM_WORLD,"no input mesh given (-inputmesh)\n",ierr);CHKERRQ(ierr)
-=======
-<<<<<<< HEAD
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr);CHKERRQ(ierr)
+         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr);CHKERRQ(ierr)
          If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
             Call PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr);CHKERRQ(ierr)
             Call PetscFinalize(ierr)
@@ -231,13 +215,10 @@ Contains
          End If
          If (hasPrefix .AND. hasResult) Then
             Call PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr);CHKERRQ(ierr)
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
             Call PetscFinalize(ierr)
             STOP
             !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
          End If
-<<<<<<< HEAD
-=======
          If (hasPrefix) Then
             !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
             MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
@@ -247,18 +228,6 @@ Contains
                MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
             End If
          End If
-=======
-         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-inputmesh',MEF90Ctx%inputmesh,flg,ierr);CHKERRQ(ierr)
-         If (.NOT. flg) Then
-            Call PetscPrintf(PETSC_COMM_WORLD,"no input mesh given (-inputmesh)\n",ierr);CHKERRQ(ierr)
-            Call PetscFinalize(ierr)
-            STOP
-            !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
-         End If
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
-         Call MEF90GetFilePrefix(MEF90Ctx%inputmesh,MEF90Ctx%prefix)
-
          Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
          Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
 

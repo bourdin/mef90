@@ -1,6 +1,30 @@
- Module m_MEF90_LinAlg
+Module m_MEF90_LinAlg_class
+   implicit none
+   private
+   public :: mef90Vect
+   public :: mef90Mat 
+   public :: mef90Tens4OS
+
+!!!
+!!!  
+!!!  m_MEF90_LinAlg_class: Starting a OO implementation of the basic classes in m_MEF90_LinAlg
+!!!
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!
+
+   type, abstract :: mef90Vect
+   end type
+   type, abstract :: mef90Mat
+   end type
+   type, abstract :: mef90Tens4OS
+   end type
+End module m_MEF90_LinAlg_class
+
+Module m_MEF90_LinAlg
 #include "petsc/finclude/petsc.h"
+   Use m_MEF90_LinAlg_class
    Use m_MEF90_Parameters
+   Use m_MEF90_Utils
    Use petsc
    
    IMPLICIT NONE
@@ -189,7 +213,7 @@
       Module Procedure HydrostaticPart2D,HydrostaticPart2DS,HydrostaticPart3D,HydrostaticPart3DS
    End Interface
 
-   Interface MEF90MatRaRt
+   Interface MatRaRt
       Module Procedure RaRtMat2D,RaRtMatS2D,RaRtMat3D,RaRtMatS3D
    End Interface
 
@@ -927,11 +951,12 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
-
    Function Tens4OS2DXMat2D(T1,M1)
       Type(Tens4OS2D),Intent(IN)                  :: T1
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D)                                :: Tens4OS2DXMat2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
       Tens4OS2DXMat2D = T1 * symmetrize(M1)
    End Function Tens4OS2DXMat2D
@@ -944,11 +969,11 @@ Contains
 !!!  
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
-
    Function Tens4OS3DXMat3D(T1,M1)
       Type(Tens4OS3D),Intent(IN)                  :: T1
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D)                                :: Tens4OS3DXMat3D
+      PetscInt                                    :: ierr
       
       Tens4OS3DXMat3D =  T1 * symmetrize(M1)
    End Function Tens4OS3DXMat3D
@@ -1263,6 +1288,8 @@ Contains
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat2DDotMatS2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
       Mat2DDotMatS2D = symmetrize(M1) .DotP. M2
    End Function Mat2DDotMatS2D
@@ -1279,6 +1306,8 @@ Contains
       Type(MatS2D),Intent(IN)                     :: M1
       Type(Mat2D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS2DDotMat2D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
       MatS2DDotMat2D = M1 .DotP. symmetrize(M2)
    End Function MatS2DDotMat2D
@@ -1295,6 +1324,8 @@ Contains
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat3DDotMatS3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
       Mat3DDotMatS3D = symmetrize(M1) .DotP. M2
    End Function Mat3DDotMatS3D
@@ -1311,6 +1342,8 @@ Contains
       Type(MatS3D),Intent(IN)                     :: M1
       Type(Mat3D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS3DDotMat3D
+      PetscLogDouble                              :: flops
+      PetscInt                                    :: ierr
       
       MatS3DDotMat3D = M1 .DotP. symmetrize(M2)
    End Function MatS3DDotMat3D
@@ -2442,55 +2475,6 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Ht_Min_Tri_2D
    
-<<<<<<< HEAD
-=======
-   Function ValP2D(M)
-      Type(Mat2D),Intent(IN)                      :: M
-      Type(Vect2D)                                :: ValP2D,VPTemp
-      PetscReal                                   :: Tmp1
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY * M%YX
-      If (Tmp1 < 0.0_Kr) Then
-         Print*,'Error in Valp2D : non diagonalizable matrix'
-         Print*,'Tmp1 = ',Tmp1
-         Print*,'M :'
-         Print*,M%XX,M%XY
-         Print*,M%YX,M%YY
-         Print*,'(M%XX - M%YY)**2', (M%XX - M%YY)**2
-         Print*,'4.0_Kr * M%XY * M%YX',4.0_Kr * M%XY * M%YX
-         Print*,'Result is (0.0,0.0)'
-         VPTemp%X = 0.0_Kr
-         VPTemp%Y = 0.0_Kr
-         flops = 5.0
-      Else
-         VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
-         VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
-         flops = 13.0
-      EndIf
-      ValP2D = VPTemp
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function ValP2D
-   
-   Function ValP2DS(M)
-      Type(MatS2D),Intent(IN)                     :: M
-      Type(Vect2D)                                :: ValP2DS,VPTemp
-      PetscReal                                   :: Tmp1
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
-      
-      Tmp1 = (M%XX - M%YY)**2 + 4.0_Kr * M%XY**2
-      
-      VPTemp%X = (M%XX + M%YY  + SQRT(Tmp1)) * 0.5_Kr
-      VPTemp%Y = (M%XX + M%YY  - SQRT(Tmp1)) * 0.5_Kr
-      
-      ValP2DS = VPTemp
-      flops = 13.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
-   End Function ValP2DS
-   
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
    Function DetMat2D(M)
       Type(Mat2D),Intent(IN)                      :: M
       PetscReal                                   :: DetMat2D
@@ -2927,8 +2911,9 @@ Contains
       Type(MatS2D),Dimension(2),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A
+      PetscReal,Dimension(n,n)                    :: A,Pt
       Integer                                     :: i
+      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2950,8 +2935,9 @@ Contains
       Type(MatS3D),Dimension(3),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A
+      PetscReal,Dimension(n,n)                    :: A,Pt      
       Integer                                     :: i
+      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2979,7 +2965,9 @@ Contains
       Type(MatS3D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -3013,12 +3001,15 @@ Contains
       Type(MatS2D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A     
+      PetscReal,Dimension(n,n)                    :: A,Pt      
+      Integer                                     :: i
+      PetscReal                                   :: d
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
       PetscInt,Dimension(5*n+3)                   :: iwork
       PetscInt                                    :: info
+      PetscErrorCode                              :: ierr
 
       A = M
       Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)

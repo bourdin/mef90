@@ -21,14 +21,7 @@ Module m_MEF90_EXO
    Public :: EXOWriteCase
 
 Contains
-<<<<<<< HEAD
-
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
 #undef __FUNCT__
-<<<<<<< HEAD
 #define __FUNCT__ "MEF90CtxGetDMMeshEXO"
 !!!
 !!!  
@@ -38,7 +31,7 @@ Contains
 !!!
    Subroutine MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      Type(DM),Intent(OUT)                            :: Mesh
+      Type(tDM),Intent(OUT)                            :: Mesh
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
@@ -46,7 +39,7 @@ Contains
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exoVersion
       Integer                                         :: exoErr,exoUnit
-      Type(DM)                                        :: tmpMesh
+      Type(tDM)                                        :: tmpMesh
       Character(len=MXSTLN),Dimension(:),Pointer      :: cellSetName
       
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
@@ -67,7 +60,7 @@ Contains
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer,ierr);
+            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
          EndIf
       End If
       If (MEF90_NumProcs == 1) Then
@@ -85,27 +78,13 @@ Contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxOpenEXO"
-=======
-#define __FUNCT__ "MEF90EXOCtxOpenEXO"
->>>>>>> f87946a (Updated m_MEF90_Materials, started work on elements)
-=======
 !#undef __FUNCT__
-!#define __FUNCT__ "MEF90CtxOpenEXO"
->>>>>>> 7aedf22 (Updated geometry initialization)
-=======
-!#undef __FUNCT__
-!#define __FUNCT__ "MEF90CtxOpenEXO"
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
 !!!
 !!!  
 !!!  MEF90CtxOpenEXO:
 !!!  
 !!!  (c) 2012-2017 Blaise Bourdin bourdin@lsu.edu
 !!!
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
    Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
       Type(tDM), Intent(IN)                           :: Mesh
@@ -172,10 +151,6 @@ Contains
          EndIf
       End If
    End Subroutine MEF90CtxOpenEXO
-=======
-=======
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
 !   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
 !      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
 !      Type(tDM), Intent(IN)                           :: Mesh
@@ -233,14 +208,6 @@ Contains
 !      End If
 !   102 Format(A,'.gen')
 !   End Subroutine MEF90CtxOpenEXO
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 7aedf22 (Updated geometry initialization)
-
-=======
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCloseEXO"
@@ -259,18 +226,7 @@ Contains
       Integer                                         :: IORank
       Character(len=MEF90_MXSTRLEN)                   :: filename
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-<<<<<<< HEAD
       Real                                            :: exo_version      
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-      Real                                            :: exo_version
-=======
->>>>>>> f87946a (Updated m_MEF90_Materials, started work on elements)
-=======
->>>>>>> ec7108ef52899adc8bba9219478bb352c4f5f6f5
-      
->>>>>>> 606c9a87784e588a8a281f4ace711afc80c18238
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       Select Case (GlobalOptions%FileFormat)
@@ -287,10 +243,6 @@ Contains
       End If
    End Subroutine MEF90CtxCloseEXO
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 7aedf22 (Updated geometry initialization)
 #undef __FUNCT__
 #define __FUNCT__ "EXOGetCellSetElementType_Scal"
    Subroutine EXOGetCellSetElementType_Scal(MEF90Ctx,elemType,ierr)

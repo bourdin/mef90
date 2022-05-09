@@ -746,7 +746,7 @@ Contains
          Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
          End If
          If (A%isPlaneStress) Then
             MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu) * 0.5_Kr
@@ -765,7 +765,7 @@ Contains
       Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw2DSum
 
@@ -799,7 +799,7 @@ Contains
       Else
          Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw3DSum
 
@@ -828,7 +828,7 @@ Contains
          Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
          End If
          If (A%isPlaneStress) Then
             MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu) * 0.5_Kr
@@ -847,7 +847,7 @@ Contains
       Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+            SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw2DDiff
 
@@ -881,7 +881,7 @@ Contains
       Else
          Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw3DDiff
 
