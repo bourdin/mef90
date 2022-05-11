@@ -1308,7 +1308,7 @@ Contains
 
                   Call Split%DEED(inelasticStrainGauss,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
                   If (cellIsElastic) Then
-                     stressCell = stressCell + stressGaussPlus + stressGaussMinus * elemDisplacement(cell)%Gauss_C(iGauss)
+                     stressCell = stressCell + (stressGaussPlus + stressGaussMinus) * elemDisplacement(cell)%Gauss_C(iGauss)
                   Else
                      stressCell = stressCell + (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus) * elemDisplacement(cell)%Gauss_C(iGauss)
                   End If
