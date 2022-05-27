@@ -10,6 +10,7 @@ Module m_MEF90_LinAlg_class
 !!!  m_MEF90_LinAlg_class: Starting a OO implementation of the basic classes in m_MEF90_LinAlg
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    type, abstract :: mef90Vect
@@ -277,7 +278,7 @@ Contains
       SumVect2D%X = V1%X + V2%X
       SumVect2D%Y = V1%Y + V2%Y
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumVect2D
 
    Function SumVect3D (V1,V2)
@@ -290,7 +291,7 @@ Contains
       SumVect3D%Y = V1%Y + V2%Y
       SumVect3D%Z = V1%Z + V2%Z
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumVect3D
 
    Function SumMat2D (M1,M2)
@@ -304,7 +305,7 @@ Contains
       SumMat2D%YX = M1%YX + M2%YX
       SumMat2D%YY = M1%YY + M2%YY
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumMat2D
    
    Function SumMatS2D (M1,M2)
@@ -317,7 +318,7 @@ Contains
       SumMatS2D%XY = M1%XY + M2%XY
       SumMatS2D%YY = M1%YY + M2%YY
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumMatS2D
    
    Function SumMat3D (M1,M2)
@@ -336,7 +337,7 @@ Contains
       SumMat3D%ZY = M1%ZY + M2%ZY
       SumMat3D%ZZ = M1%ZZ + M2%ZZ
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumMat3D
    
    Function SumMatS3D (M1,M2)
@@ -352,7 +353,7 @@ Contains
       SumMatS3D%XZ = M1%XZ + M2%XZ
       SumMatS3D%XY = M1%XY + M2%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumMatS3D
    
    Function SumTens4OS2D (T1,T2)
@@ -371,7 +372,7 @@ Contains
       SumTens4OS2D%XYXY = T1%XYXY + T2%XYXY
       
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumTens4OS2D
    
    Function SumTens4OS3D (T1,T2)
@@ -407,7 +408,7 @@ Contains
           
       SumTens4OS3D%XYXY = T1%XYXY + T2%XYXY  
       flops = 21.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SumTens4OS3D
 
    ! Overloading "-"
@@ -421,7 +422,7 @@ Contains
       DifVect2D%X = V1%X-V2%X
       DifVect2D%Y = V1%Y-V2%Y
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifVect2D
    
    Function DifVect3D (V1,V2)
@@ -434,7 +435,7 @@ Contains
       DifVect3D%Y = V1%Y - V2%Y
       DifVect3D%Z = V1%Z - V2%Z
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifVect3D
    
    Function DifMat2D (M1,M2)
@@ -448,7 +449,7 @@ Contains
       DifMat2D%YX = M1%YX - M2%YX
       DifMat2D%YY = M1%YY - M2%YY
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifMat2D
    
    Function DifMatS2D (M1,M2)
@@ -461,7 +462,7 @@ Contains
       DifMatS2D%YY = M1%YY - M2%YY
       DifMatS2D%XY = M1%XY - M2%XY
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifMatS2D
    
    Function DifMat3D (M1,M2)
@@ -480,7 +481,7 @@ Contains
       DifMat3D%ZY = M1%ZY - M2%ZY
       DifMat3D%ZZ = M1%ZZ - M2%ZZ
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifMat3D
    
    Function DifMatS3D (M1,M2)
@@ -496,7 +497,7 @@ Contains
       DifMatS3D%XZ = M1%XZ - M2%XZ
       DifMatS3D%XY = M1%XY - M2%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifMatS3D
    
    Function DifTens4OS2D (T1,T2)
@@ -514,7 +515,7 @@ Contains
       
       DifTens4OS2D%XYXY = T1%XYXY - T2%XYXY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifTens4OS2D
    
    Function DifTens4OS3D (T1,T2)
@@ -550,7 +551,7 @@ Contains
       
       DifTens4OS3D%XYXY = T1%XYXY - T2%XYXY  
       flops = 21.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DifTens4OS3D
 
    ! Overloading "*"
@@ -564,7 +565,7 @@ Contains
       DbleXVect2D%X = D1 * V1%X
       DbleXVect2D%Y = D1 * V1%Y
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXVect2D
    
    Function Vect2DXDble(V1,D1)
@@ -577,7 +578,7 @@ Contains
       Vect2DXDble%X = D1 * V1%X
       Vect2DXDble%Y = D1 * V1%Y
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Vect2DXDble
    
    Function DbleXVect3D(D1,V1)
@@ -591,7 +592,7 @@ Contains
       DbleXVect3D%Y = D1 * V1%Y
       DbleXVect3D%Z = D1 * V1%Z
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXVect3D
    
    Function Vect3DXDble(V1,D1)
@@ -605,7 +606,7 @@ Contains
       Vect3DXDble%Y = D1 * V1%Y
       Vect3DXDble%Z = D1 * V1%Z
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Vect3DXDble
    
    Function DbleXMat2D(D1,M1)
@@ -620,7 +621,7 @@ Contains
       DbleXMat2D%YX = D1 * M1%YX
       DbleXMat2D%YY = D1 * M1%YY
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXMat2D
    
    Function Mat2DXDble(M1,D1)
@@ -635,7 +636,7 @@ Contains
       Mat2DXDble%YX = D1 * M1%YX
       Mat2DXDble%YY = D1 * M1%YY
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat2DXDble
    
    Function DbleXMatS2D(D1,M1)
@@ -649,7 +650,7 @@ Contains
       DbleXMatS2D%YY = D1 * M1%YY
       DbleXMatS2D%XY = D1 * M1%XY
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXMatS2D
    
    Function MatS2DXDble(M1,D1)
@@ -663,7 +664,7 @@ Contains
       MatS2DXDble%YY = D1 * M1%YY
       MatS2DXDble%XY = D1 * M1%XY
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS2DXDble
    
    Function DbleXMat3D(D1,M1)
@@ -683,7 +684,7 @@ Contains
       DbleXMat3D%ZY = D1 * M1%ZY
       DbleXMat3D%ZZ = D1 * M1%ZZ
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXMat3D
    
    Function Mat3DXDble(M1,D1)
@@ -703,7 +704,7 @@ Contains
       Mat3DXDble%ZY = D1 * M1%ZY
       Mat3DXDble%ZZ = D1 * M1%ZZ
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat3DXDble
    
    Function DbleXMatS3D(D1,M1)
@@ -720,7 +721,7 @@ Contains
       DbleXMatS3D%XZ = D1 * M1%XZ
       DbleXMatS3D%XY = D1 * M1%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXMatS3D
    
    Function MatS3DXDble(M1,D1)
@@ -737,7 +738,7 @@ Contains
       MatS3DXDble%XZ = D1 * M1%XZ
       MatS3DXDble%XY = D1 * M1%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS3DXDble
    
    Function DbleXTens4OS2D (D1,T1)
@@ -756,7 +757,7 @@ Contains
       
       DbleXTens4OS2D%YYYY = D1 * T1%YYYY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXTens4OS2D
    
    Function DbleXTens4OS3D (D1,T1)
@@ -793,7 +794,7 @@ Contains
           
       DbleXTens4OS3D%XYXY = D1 * T1%XYXY  
       flops = 21.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DbleXTens4OS3D
    
    Function Tens4OS2DXDble (T1,D1)
@@ -812,7 +813,7 @@ Contains
       
       Tens4OS2DXDble%YYYY = D1 * T1%YYYY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS2DXDble
    
    Function Tens4OS3DXDble (T1,D1)
@@ -849,7 +850,7 @@ Contains
           
       Tens4OS3DXDble%XYXY = D1 * T1%XYXY  
       flops = 21.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS3DXDble
 
    Function  MatXVect2D(M1,V1)
@@ -862,7 +863,7 @@ Contains
       MatXVect2D%X = M1%XX * V1%X + M1%XY * V1%Y
       MatXVect2D%Y = M1%YX * V1%X + M1%YY * V1%Y
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatXVect2D
    
    Function  MatXVect2DS(M1,V1)
@@ -875,7 +876,7 @@ Contains
       MatXVect2DS%X = M1%XX * V1%X + M1%XY * V1%Y
       MatXVect2DS%Y = M1%XY * V1%X + M1%YY * V1%Y
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatXVect2DS
    
    Function  MatXVect3D(M1,V1)
@@ -889,7 +890,7 @@ Contains
       MatXVect3D%Y = M1%YX * V1%X + M1%YY * V1%Y + M1%YZ * V1%Z
       MatXVect3D%Z = M1%ZX * V1%X + M1%ZY * V1%Y + M1%ZZ * V1%Z
       flops = 15.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatXVect3D
    
    Function  MatXVect3DS(M1,V1)
@@ -903,7 +904,7 @@ Contains
       MatXVect3DS%Y = M1%XY * V1%X + M1%YY * V1%Y + M1%YZ * V1%Z
       MatXVect3DS%Z = M1%XZ * V1%X + M1%YZ * V1%Y + M1%ZZ * V1%Z
       flops = 15.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatXVect3DS
    
    Function Tens4OS2DXMatS2D(T1,M1)
@@ -917,7 +918,7 @@ Contains
       Tens4OS2DXMatS2D%YY = T1%XXYY * M1%XX + T1%YYYY * M1%YY + T1%YYXY * M1%XY * 2.0_Kr
       Tens4OS2DXMatS2D%XY = T1%XXXY * M1%XX + T1%YYXY * M1%YY + T1%XYXY * M1%XY * 2.0_Kr
       flops = 18.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS2DXMatS2D
    
    Function Tens4OS3DXMatS3D(T1,M1)
@@ -940,7 +941,7 @@ Contains
       Tens4OS3DXMatS3D%XY =  T1%XXXY * M1%XX + T1%YYXY * M1%YY + T1%ZZXY * M1%ZZ &
                           + (T1%YZXY * M1%YZ + T1%XZXY * M1%XZ + T1%XYXY * M1%XY) * 2.0_Kr
       flops = 66.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS3DXMatS3D
    
 #undef __FUNCT__
@@ -989,7 +990,7 @@ Contains
       Mat2DXMat2D%YX = M1%YX * M2%XX + M1%YY * M2%YX
       Mat2DXMat2D%YY = M1%YX * M2%XY + M1%YY * M2%YY
       flops = 12.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat2DXMat2D
 
    Function Mat2DXMatS2D(M1,M2)
@@ -1004,7 +1005,7 @@ Contains
       Mat2DXMatS2D%YX = M1%YX * M2%XX + M1%YY * M2%XY
       Mat2DXMatS2D%YY = M1%YX * M2%XY + M1%YY * M2%YY
       flops = 12.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat2DXMatS2D
    
    Function MatS2DXMatS2D(M1,M2)
@@ -1018,7 +1019,7 @@ Contains
       MatS2DXMatS2D%YX = M1%XY * M2%XX + M1%YY * M2%XY
       MatS2DXMatS2D%YY = M1%XY * M2%XY + M1%YY * M2%YY
       flops = 12.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS2DXMatS2D
       
    Function Mat3DXMat3D(M1,M2)
@@ -1037,7 +1038,7 @@ Contains
       Mat3DXMat3D%ZY = M1%ZX * M2%XY + M1%ZY * M2%YY + M1%ZZ * M2%ZY
       Mat3DXMat3D%ZZ = M1%ZX * M2%XZ + M1%ZY * M2%YZ + M1%ZZ * M2%ZZ
       flops = 45.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat3DXMat3D
 
    Function Mat3DXMatS3D(M1,M2)
@@ -1057,7 +1058,7 @@ Contains
       Mat3DXMatS3D%ZY = M1%ZX * M2%XY + M1%ZY * M2%YY + M1%ZZ * M2%YZ
       Mat3DXMatS3D%ZZ = M1%ZX * M2%XZ + M1%ZY * M2%YZ + M1%ZZ * M2%ZZ
       flops = 45.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat3DXMatS3D
    
    Function MatS3DXMatS3D(M1,M2)
@@ -1076,7 +1077,7 @@ Contains
       MatS3DXMatS3D%ZY = M1%XZ * M2%XY + M1%YZ * M2%YY + M1%ZZ * M2%YZ
       MatS3DXMatS3D%ZZ = M1%XZ * M2%XZ + M1%YZ * M2%YZ + M1%ZZ * M2%ZZ
       flops = 45.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS3DXMatS3D
    
    ! Overloading "/"
@@ -1090,7 +1091,7 @@ Contains
       Vect2DQuot%X = V1%X / D1
       Vect2DQuot%Y = V1%Y / D1
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Vect2DQuot
    
    Function Vect3DQuot(V1,D1)
@@ -1104,7 +1105,7 @@ Contains
       Vect3DQuot%Y = V1%Y / D1
       Vect3DQuot%Z = V1%Z / D1
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Vect3DQuot
    
    Function Mat2DQuot(M1,D1)
@@ -1119,7 +1120,7 @@ Contains
       Mat2DQuot%YX = M1%YX / D1
       Mat2DQuot%YY = M1%YY / D1
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat2DQuot
    
    Function MatS2DQuot(M1,D1)
@@ -1133,7 +1134,7 @@ Contains
       MatS2DQuot%YY = M1%YY / D1
       MatS2DQuot%XY = M1%XY / D1
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS2DQuot
    
    Function Mat3DQuot(M1,D1)
@@ -1153,7 +1154,7 @@ Contains
       Mat3DQuot%ZY = M1%ZY / D1
       Mat3DQuot%ZZ = M1%ZZ / D1
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Mat3DQuot
    
    Function MatS3DQuot(M1,D1)
@@ -1170,7 +1171,7 @@ Contains
       MatS3DQuot%XZ = M1%XZ / D1
       MatS3DQuot%XY = M1%XY / D1
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function MatS3DQuot
    
    Function Tens4OS2DQuot(T1,D1)
@@ -1189,7 +1190,7 @@ Contains
       
       Tens4OS2DQuot%YYYY = T1%YYYY / D1
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS2DQuot
    
    Function Tens4OS3DQuot (T1,D1)
@@ -1226,7 +1227,7 @@ Contains
           
       Tens4OS3DQuot%XYXY = T1%XYXY / D1  
       flops = 21.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS3DQuot
   
    ! dot product in 2D and 3D
@@ -1238,7 +1239,7 @@ Contains
       
       DotP2D = V1%X * V2%X + V1%Y * V2%Y
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DotP2D
    
    Function DotP3D(V1,V2)
@@ -1249,7 +1250,7 @@ Contains
       
       DotP3D = V1%X * V2%X + V1%Y * V2%Y + V1%Z * V2%Z
       flops = 5.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DotP3D
    
    Function ContP2D(M1,M2)
@@ -1261,7 +1262,7 @@ Contains
       
       ContP2D = M1%XX * M2%XX + M1%XY * M2%XY + M1%YX * M2%YX + M1%YY * M2%YY
       flops = 7.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function ContP2D
    
    Function ContP2DS(M1,M2)
@@ -1273,7 +1274,7 @@ Contains
       
       ContP2DS = M1%XX * M2%XX + M1%YY * M2%YY + 2.0_Kr * M1%XY * M2%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function ContP2DS
 
 #undef __FUNCT__
@@ -1359,7 +1360,7 @@ Contains
            &    M1%YX * M2%YX + M1%YY * M2%YY + M1%YZ * M2%YZ + &
            &    M1%ZX * M2%ZX + M1%ZY * M2%ZY + M1%ZZ * M2%ZZ
       flops = 17.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function ContP3D
    
    Function ContP3DS(M1,M2)
@@ -1372,7 +1373,7 @@ Contains
       ContP3DS = M1%XX * M2%XX + M1%YY * M2%YY + M1%ZZ * M2%ZZ + 2.0_Kr * M1%YZ * M2%YZ &
                + 2.0_Kr * M1%XZ * M2%XZ + 2.0_Kr * M1%XY * M2%XY
       flops = 14.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function ContP3DS
    
    ! cross product 3D
@@ -1386,7 +1387,7 @@ Contains
       CrossP3D%Y =  V1%Z * V2%X - V1%X * V2%Z
       CrossP3D%Z =  V1%X * V2%Y - V1%Y * V2%X
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function CrossP3D
    
    ! Transpose
@@ -1429,7 +1430,7 @@ Contains
       TensPVect2D%YX = V1%Y * V2%X
       TensPVect2D%YY = V1%Y * V2%Y
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function TensPVect2D
    
    Function TensPVect3D (V1,V2)
@@ -1448,7 +1449,7 @@ Contains
       TensPVect3D%ZY = V1%Z * V2%Y
       TensPVect3D%ZZ = V1%Z * V2%Z
       flops = 9.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function TensPVect3D
    
    ! Symmetrized product
@@ -1481,7 +1482,7 @@ Contains
 
       SymPMatS2D%XYXY =  M1%XY * M2%XY
       flops = 15.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SymPMatS2D
    
    Function SymPMatS3D(M1,M2)
@@ -1517,7 +1518,7 @@ Contains
 
       SymPMatS3D%XYXY =  M1%XY * M2%XY
       flops = 66.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function SymPMatS3D
 
 
@@ -1536,7 +1537,7 @@ Contains
       
       oDotMatS2D%XYXY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
       flops = 15.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function oDotMatS2D
 
 
@@ -1573,7 +1574,7 @@ Contains
 
       oDotMatS3D%XYXY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_Kr
       flops = 66.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function oDotMatS3D
 
    
@@ -1967,7 +1968,7 @@ Contains
       A(3,1) = A(3,1)
       A(3,2) = A(2,3)
       A(3,3) = T%XYXY * 2.0_Kr
-      Call PetscLogFlops(3.0_PFlop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(3.0_PFlop,ierr))
    End Subroutine Tens4OS2DToArray
 
    Subroutine ArrayToTens4OS2D(T,A)
@@ -1984,7 +1985,7 @@ Contains
       T%YYXY = A(2,3) * .5_Kr 
 
       T%XYXY = A(3,3) * .5_Kr 
-      Call PetscLogFlops(3.0_PFlop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(3.0_PFlop,ierr))
    End Subroutine ArrayToTens4OS2D
 
    Subroutine Tens4OS3DToArray(A,T)
@@ -2034,7 +2035,7 @@ Contains
       A(6,4) = A(4,6)
       A(6,5) = A(5,6)
       A(6,6) = T%XYXY * 2.0_Kr
-      Call PetscLogFlops(15.0_PFlop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(15.0_PFlop,ierr))
    End Subroutine Tens4OS3DToArray
 
    Subroutine ArrayToTens4OS3D(T,A)
@@ -2069,7 +2070,7 @@ Contains
       T%XZXY = A(5,6) * .5_Kr
    
       T%XYXY = A(6,6) * .5_Kr
-      Call PetscLogFlops(15.0_PFlop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(15.0_PFlop,ierr))
    End Subroutine ArrayToTens4OS3D
 
    !!! Overloading euclidian norm of derived types
@@ -2119,7 +2120,7 @@ Contains
       Symmetrize2D%YY = M1%YY
       Symmetrize2D%XY = (M1%XY + M1%YX) * 0.5_Kr
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Symmetrize2D
    
    Function Symmetrize3D(M1)
@@ -2136,7 +2137,7 @@ Contains
       Symmetrize3D%XZ = (M1%XZ + M1%ZX) * 0.5_Kr
       Symmetrize3D%XY = (M1%XY + M1%YX) * 0.5_Kr
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Symmetrize3D
    
    Subroutine MatS2DToMat2D(M1,M2)
@@ -2271,7 +2272,7 @@ Contains
       DeviatoricPart2D%YX = M1%YX
       DeviatoricPart2D%YY = M1%YY - M1_Trace * 0.5_Kr
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DeviatoricPart2D
 
 
@@ -2288,7 +2289,7 @@ Contains
       DeviatoricPart2DS%YY = M1%YY - M1_Trace * 0.5_Kr
       DeviatoricPart2DS%XY = M1%XY
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DeviatoricPart2DS
 
    Function DeviatoricPart3D(M1)
@@ -2312,7 +2313,7 @@ Contains
       DeviatoricPart3D%ZY = M1%ZY
       DeviatoricPart3D%ZZ = M1%ZZ - M1_Trace / 3.0_Kr
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DeviatoricPart3D
 
 
@@ -2333,7 +2334,7 @@ Contains
       DeviatoricPart3DS%XZ = M1%XZ
       DeviatoricPart3DS%XY = M1%XY
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DeviatoricPart3DS
 
    Function HydrostaticPart2D(M1)
@@ -2350,7 +2351,7 @@ Contains
       HydrostaticPart2D%YX = 0.0_Kr
       HydrostaticPart2D%YY = M1_Trace * 0.5_Kr
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function HydrostaticPart2D
 
 
@@ -2367,7 +2368,7 @@ Contains
       HydrostaticPart2DS%YY = M1_Trace * 0.5_Kr
       HydrostaticPart2DS%XY = 0.0_Kr
       flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function HydrostaticPart2DS
 
    Function HydrostaticPart3D(M1)
@@ -2391,7 +2392,7 @@ Contains
       HydrostaticPart3D%ZY = 0.0_Kr
       HydrostaticPart3D%ZZ = M1_Trace / 3.0_Kr
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function HydrostaticPart3D
 
 
@@ -2412,7 +2413,7 @@ Contains
       HydrostaticPart3DS%XZ = 0.0_Kr
       HydrostaticPart3DS%XY = 0.0_Kr
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function HydrostaticPart3DS
 
 !====================================================================
@@ -2433,7 +2434,7 @@ Contains
       Vol_Tetra_3D = ABS(C1%X * (C2%Y * C3%Z - C2%Z * C3%Y) - C1%Y * (C2%X * C3%Z - C2%Z * C3%X)  &
                        + C1%Z * (C2%X * C3%Y - C2%Y * C3%X) ) / 6.0_Kr
       flops = 18.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Vol_Tetra_3D
    
    Function Area_Tri_2D(S1,S2,S3)
@@ -2448,7 +2449,7 @@ Contains
       C2 = S3-S1
       Area_Tri_2D = ABS(C1%X * C2%Y - C1%Y * C2%X) * 0.5_Kr
       flops = 4.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Area_Tri_2D
    
    Function Ht_Min_Tri_2D(S1,S2,S3)
@@ -2472,7 +2473,7 @@ Contains
       
       Ht_Min_Tri_2D = Min (H1,H2,H3)
       flops = 12.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Ht_Min_Tri_2D
    
    Function DetMat2D(M)
@@ -2483,7 +2484,7 @@ Contains
       
       DetMat2D = M%XX * M%YY - M%XY * M%YX
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DetMat2D
    
    Function DetMatS2D(M)
@@ -2494,7 +2495,7 @@ Contains
       
       DetMatS2D = M%XX * M%YY - M%XY * M%XY
       flops = 3.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DetMatS2D
    
    
@@ -2506,7 +2507,7 @@ Contains
       
       DetMat3D = M%XX * (M%YY * M%ZZ - M%ZY * M%YZ) - M%YX * (M%XY * M%ZZ - M%ZY * M%XZ) + M%ZX * (M%XY * M%YZ - M%YY * M%XZ)
       flops = 14.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DetMat3D
    
    Function DetMatS3D(M)
@@ -2517,7 +2518,7 @@ Contains
       
       DetMatS3D = M%XX * (M%YY * M%ZZ - M%YZ * M%YZ) - M%XY * (M%XY * M%ZZ - M%YZ * M%XZ) + M%XZ * (M%XY * M%YZ - M%YY * M%XZ)
       flops = 14.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function DetMatS3D
 
    Function InvertMat2D(M)
@@ -2537,7 +2538,7 @@ Contains
       
       InvertMat2D = CofMt / DetM
       flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function InvertMat2D
 
    Function InvertMatS2D(M)
@@ -2556,7 +2557,7 @@ Contains
       
       InvertMatS2D = CofMt / DetM
       flops = 5.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function InvertMatS2D
 
    Function InvertMat3D(M)
@@ -2582,7 +2583,7 @@ Contains
        
       InvertMat3D = CofMt / DetM
       flops = 46.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function InvertMat3D
    
    Function InvertMatS3D(M)
@@ -2605,7 +2606,7 @@ Contains
        
       InvertMatS3D = CofMt / DetM
       flops = 35.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function InvertMatS3D
 
 #undef __FUNCT__
@@ -2626,7 +2627,7 @@ Contains
       n = (/ Coord(1)%Y-Coord(2)%Y, Coord(2)%X-Coord(1)%X /)
       n = n / norm(n)
       flops = 2
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Subroutine simplexNormal2D
 
 #undef __FUNCT__
@@ -2727,12 +2728,12 @@ Contains
       A(2,3,1,3) = T%YZXZ; A(2,3,3,1) = T%YZXZ; A(3,2,1,3) = T%YZXZ; A(3,2,3,1) = T%YZXZ;
       A(1,3,2,3) = T%YZXZ; A(1,3,3,2) = T%YZXZ; A(3,1,2,3) = T%YZXZ; A(3,1,3,2) = T%YZXZ;
       A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY; A(3,2,1,2) = T%YZXY; A(3,2,2,1) = T%YZXY;
-      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY;
+      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,1,2,3) = T%YZXY; A(2,1,3,2) = T%YZXY;
 
-      A(1,2,1,2) = T%XZXZ; A(1,2,2,1) = T%XZXZ; A(2,1,1,2) = T%XZXZ; A(2,1,1,2) = T%XZXZ;
+      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
       A(1,3,1,2) = T%XZXY; A(1,3,2,1) = T%XZXY; A(3,1,1,2) = T%XZXY; A(3,1,2,1) = T%XZXY;
       A(1,2,1,3) = T%XZXY; A(1,2,3,1) = T%XZXY; A(2,1,1,3) = T%XZXY; A(2,1,3,1) = T%XZXY;
-      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
+      A(1,3,1,3) = T%XZXZ; A(1,3,3,1) = T%XZXZ; A(3,1,1,3) = T%XZXZ; A(3,1,3,1) = T%XZXZ;
    End Subroutine Tens4OS3D2Array4
 
 
@@ -2798,7 +2799,7 @@ Contains
       
       Tens4OS2DTransform = C
       flops = 1280 ! 2**8 * 5
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
 
    End Function Tens4OS2DTransform
    
@@ -2840,7 +2841,7 @@ Contains
        
       Tens4OS3DTransform = C
       flops = 32805 ! 3**8 * 5
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(flops,ierr))
    End Function Tens4OS3DTransform
 
    Function Tens4OS2DSquareRoot(T)
@@ -3055,7 +3056,7 @@ Contains
       Case(2)
          Mat2DMoment = (A%XX**2 + 2*A%XY*A%YX + A%YY**2) / 2.0_Kr
          flops = 7.
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(flops,ierr))
       Case default
          Ak = A
          do i = 1, k-1
@@ -3091,7 +3092,7 @@ Contains
       Case(2)
          MatS2DMoment = (A%XX**2 + 2*A%XY**2 + A%YY**2) / 2.0_Kr
          flops = 7.
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(flops,ierr))
       Case default
          Ak = A
          do i = 1, k-1
@@ -3127,7 +3128,7 @@ Contains
       Case(2)
          Mat3DMoment = (A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%XY*A%YX + 2*A%XZ*A%ZX + 2*A%YZ*A%ZY) / 2.0_Kr
          flops = 15.0
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(flops,ierr))
       Case default
          Ak = A
          do i = 1, k-1
@@ -3163,7 +3164,7 @@ Contains
       Case(2)
          MatS3DMoment = (A%XX**2 + A%YY**2 + A%ZZ**2 + 2*A%YZ**2 + 2*A%XZ**2 + 2*A%XY**2) / 2.0_Kr
          flops = 15.
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(flops,ierr))
       Case default
          Ak = A
          do i = 1, k-1

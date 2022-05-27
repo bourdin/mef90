@@ -370,6 +370,7 @@ Contains
 !!!  PetscBagRegisterMEF90MatProp2D:
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
@@ -380,66 +381,66 @@ Contains
 
       Type(MEF90MatProp2D_Type),pointer      :: matprop
 
-      Call PetscBagGetDataMEF90MatProp2D(bag,matprop,ierr)
-      Call PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr)
-      Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
+      PetscCall(PetscBagGetDataMEF90MatProp2D(bag,matprop,ierr))
+      PetscCall(PetscBagSetName(bag,trim(name),"MatProp2D object: material properties",ierr))
+      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix), ierr))
 
-      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      PetscCall(PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
-      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
-      Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr)
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr))
          Case(MEF90HookesLawTypeIsotropic)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr)
-            Call PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'hookeslaw_planeStress','Use plane stress elasticity',ierr);CHKERRQ(ierr)
+            PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
+            PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
+            PetscCall(PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'hookeslaw_planeStress','Use plane stress elasticity',ierr))
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
 
-      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] (eta) residual yield stress',ierr)
-      Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] (eta) residual yield stress',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr))
 
-      Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr))
+      PetscCall(PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr))
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -450,6 +451,7 @@ Contains
 !!!  PetscBagRegisterMEF90MatProp3D:
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
@@ -459,64 +461,64 @@ Contains
       PetscErrorCode,intent(OUT)             :: ierr
 
       Type(MEF90MatProp3D_Type),pointer      :: matprop
-      Call PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr)
-      Call PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr)
-      Call PetscBagSetOptionsPrefix(bag,trim(prefix), ierr)
+      PetscCall(PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr))
+      PetscCall(PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr))
+      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix), ierr))
 
-      Call PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr)
-      Call PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr)
-      Call PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr)
+      PetscCall(PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      Call PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr)
-      Call PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      Call PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      Call PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr)
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
-      Call PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            Call PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr)
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr))
          Case(MEF90HookesLawTypeIsotropic)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr)
-            Call PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr)
+            PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
+            PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
             matprop%HookesLaw%fulltensor = -1.D+30
       End Select
-      Call PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] percentage of the yield stress',ierr)
-      Call PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr)
-      Call PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] percentage of the yield stress',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffM,default%CoeffM,'CoeffM','[unit-less] (M) coefficient M in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffN,default%CoeffN,'CoeffN','[unit-less] (N) coefficient N in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoeffL,default%CoeffL,'CoeffL','[unit-less] (L) coefficient L in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%YieldTau0,default%YieldTau0,'YieldTau0','[N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualYieldTau0,default%residualYieldTau0,'residualYieldTau0','[unit-less] residual stress threshold in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%phi1,default%phi1,'phi1','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%phi2,default%phi2,'phi2','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%Phi,default%Phi,'Phi','[radians] Bunge-Euler angle in the Hill yield criterion',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%delta,default%delta,'delta','[unit-less] residual in the definition of the porosity, Gurson and Green criteria',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr)
-      Call PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%cohesiveStiffness,default%cohesiveStiffness,'cohesiveStiffness','[N.m^(-4)] (k) cohesive stiffness in Winkler-type models',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%residualStiffness,default%residualStiffness,'residualStiffness','[unit-less] (eta) residual stiffness',ierr))
 
-      Call PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr)
-      Call PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceTensileStrength,default%drivingForceTensileStrength,'drivingForce_tensileStrength','[N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceCompressiveStrength,default%drivingForceCompressiveStrength,'drivingForce_CompressiveStrength','[N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceDelta,default%drivingForceDelta,'drivingForce_Delta','[unit-less] (\delta) delta parameter in Drucker-Prager driving Force',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%drivingForceGamma,default%drivingForceGamma,'drivingForce_Gamma','[m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force',ierr))
 
-      Call PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr))
+      PetscCall(PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr))
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
@@ -528,6 +530,7 @@ Contains
 !!!  MEF90MatPropBagSetFromOptionsierr:
 !!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
@@ -537,35 +540,34 @@ Contains
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       
-      DMLabel                                  :: label
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMGetLabel(Mesh,'Cell Sets',label,ierr);CHKERRQ(ierr)
-      Call DMLabelGetValueIS(label,setIS,ierr);CHKERRQ(ierr)
-      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+      PetscCall(DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr))
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr) 
+      PetscCall(ISGetLocalSize(setIS,numSet,ierr))
+      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
             Write(IOBuffer,102) setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
-         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,MEF90MatPropBag(set),ierr)
-         Call PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr);CHKERRQ(ierr)
+         PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,MEF90MatPropBag(set),ierr))
+         PetscCall(PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr))
          If (MEF90GlobalOptions%verbose > 0) Then
-            Call PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+            PetscCall(PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr))
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n",ierr))
          End If
       End Do
-      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISDestroy(setIS,ierr))
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
 102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
@@ -578,6 +580,7 @@ Contains
 !!!  MEF90MatPropBagSetFromOptions3D:
 !!!
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
@@ -593,28 +596,28 @@ Contains
       Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      Call DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr);CHKERRQ(ierr) 
-      Call ISGetLocalSize(setIS,numSet,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+      PetscCall(DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr))
+      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr) 
+      PetscCall(ISGetLocalSize(setIS,numSet,ierr))
+      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
          Write(setName,100) setID(set)
          Write(setprefix,101) setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
             Write(IOBuffer,102) setID(set),trim(setprefix)
-            Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
-         Call PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp3D,MEF90MatPropBag(set),ierr)
-         Call PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr);CHKERRQ(ierr)
+         PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp3D,MEF90MatPropBag(set),ierr))
+         PetscCall(PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set),setName,setprefix,defaultMaterial,ierr))
          If (MEF90GlobalOptions%verbose > 0) Then
-            Call PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(PETSC_COMM_WORLD,"\n",ierr);CHKERRQ(ierr)
+            PetscCall(PetscBagView(MEF90MatPropBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr))
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n",ierr))
          End If
       End Do
-      Call ISRestoreIndicesF90(setIS,setID,ierr);CHKERRQ(ierr)
-      Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
+      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISDestroy(setIS,ierr))
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
 102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
@@ -728,6 +731,7 @@ Contains
 !!!  MEF90HookesLaw2DSum:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DSum(A,B)
@@ -745,26 +749,26 @@ Contains
             MEF90HookesLaw2DSum%isPlaneStress = A%isPlaneStress
          Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
          End If
          If (A%isPlaneStress) Then
             MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu) * 0.5_Kr
             MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
             MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
-            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + 2.0_Kr * MEF90HookesLaw2DSum%mu) * 0.5_Kr
             MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
             MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
-            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DSum%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw2DSum%fullTensor = A%fullTensor + B%fullTensor
       Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw2DSum
@@ -776,6 +780,7 @@ Contains
 !!!  MEF90HookesLaw3DSum:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DSum(A,B)
@@ -792,13 +797,13 @@ Contains
          MEF90HookesLaw3DSum%PoissonRatio  = MEF90HookesLaw3DSum%lambda / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu) * 0.5_Kr
          MEF90HookesLaw3DSum%YoungsModulus = MEF90HookesLaw3DSum%mu * (3.0_Kr * MEF90HookesLaw3DSum%lambda + 2.0_Kr * MEF90HookesLaw3DSum%mu) / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu)
          MEF90HookesLaw3DSum%BulkModulus   = MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu * 2.0_Kr / 3.0_Kr
-         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DSum%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DSum%fullTensor = A%fullTensor + B%fullTensor
       Else
          Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw3DSum
@@ -810,6 +815,7 @@ Contains
 !!!  MEF90HookesLaw2DDiff:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DDiff(A,B)
@@ -827,26 +833,26 @@ Contains
             MEF90HookesLaw2DDiff%isPlaneStress = A%isPlaneStress
          Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
          End If
          If (A%isPlaneStress) Then
             MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu) * 0.5_Kr
             MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
             MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
-            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + 2.0_Kr * MEF90HookesLaw2DDiff%mu) * 0.5_Kr
             MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
             MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
-            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DDiff%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw2DDiff%fullTensor = A%fullTensor - B%fullTensor
       Else
             Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
             SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw2DDiff
@@ -858,6 +864,7 @@ Contains
 !!!  MEF90HookesLaw3DDiff:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DDiff(A,B)
@@ -874,13 +881,13 @@ Contains
          MEF90HookesLaw3DDiff%PoissonRatio  = MEF90HookesLaw3DDiff%lambda / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu) * 0.5_Kr
          MEF90HookesLaw3DDiff%YoungsModulus = MEF90HookesLaw3DDiff%mu * (3.0_Kr * MEF90HookesLaw3DDiff%lambda + 2.0_Kr * MEF90HookesLaw3DDiff%mu) / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu)
          MEF90HookesLaw3DDiff%BulkModulus   = MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu * 2.0_Kr / 3.0_Kr
-         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DDiff%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DDiff%fullTensor = A%fullTensor - B%fullTensor
       Else
          Write(IOBuffer,*) "Incompatible planar Hooke law type in "//__FUNCT__//'\n'
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
    End Function MEF90HookesLaw3DDiff
@@ -910,12 +917,12 @@ Contains
             ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
             ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
             ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
-            Call PetscLogFlops(9._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
             ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
             ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
-            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else 
          ScalarXMEF90HookesLaw2D%type       = MEF90HookesLawTypeFull
@@ -931,6 +938,7 @@ Contains
 !!!  ScalarXMEF90HookesLaw3D:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function ScalarXMEF90HookesLaw3D(t,A)
@@ -947,7 +955,7 @@ Contains
          ScalarXMEF90HookesLaw3D%PoissonRatio  = ScalarXMEF90HookesLaw3D%lambda / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu) * 0.5_Kr
          ScalarXMEF90HookesLaw3D%YoungsModulus = ScalarXMEF90HookesLaw3D%mu * (3.0_Kr * ScalarXMEF90HookesLaw3D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw3D%mu) / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu)
          ScalarXMEF90HookesLaw3D%BulkModulus   = ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu * 2.0_Kr / 3.0_Kr
-         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else 
          ScalarXMEF90HookesLaw3D%type       = MEF90HookesLawTypeFull
          ScalarXMEF90HookesLaw3D%fullTensor = t * A%fullTensor
@@ -961,6 +969,7 @@ Contains
 !!!  MEF90HookesLaw2DXMatS2D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DXMatS2D(A,X)
@@ -978,7 +987,7 @@ Contains
             MEF90HookesLaw2DXMatS2D%XX = C1 * X%XX       + A%lambda * X%YY
             MEF90HookesLaw2DXMatS2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMatS2D%XY = C2 * X%XY
-            Call PetscLogFlops(10._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(10._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMatS2D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
@@ -992,6 +1001,7 @@ Contains
 !!!  MEF90HookesLaw2DXMatS3D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DXMatS3D(A,X)
@@ -1013,7 +1023,7 @@ Contains
             MEF90HookesLaw3DXMatS3D%XZ = C2 * X%XZ
             MEF90HookesLaw3DXMatS3D%XY = C2 * X%XY
 
-            Call PetscLogFlops(21._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(21._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw3DXMatS3D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
@@ -1027,6 +1037,7 @@ Contains
 !!!  MEF90HookesLaw2DXMat2D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DXMat2D(A,X)
@@ -1045,7 +1056,7 @@ Contains
             MEF90HookesLaw2DXMat2D%XY = C2 * X%XY
             MEF90HookesLaw2DXMat2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMat2D%YX = C2 * X%YX
-            Call PetscLogFlops(11._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(12._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMat2D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
@@ -1059,6 +1070,7 @@ Contains
 !!!  MEF90HookesLaw2DXMat3D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DXMat3D(A,X)
@@ -1084,7 +1096,7 @@ Contains
             MEF90HookesLaw3DXMat3D%XZ = C2 * X%XZ
             MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
             MEF90HookesLaw3DXMat3D%ZZ = A%lambda * X%XX + A%lambda * X%YY + C1 * X%ZZ
-            Call PetscLogFlops(24._pflop,ierr);CHKERRQ(ierr)
+            PetscCall(PetscLogFlops(24._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw3DXMat3D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg

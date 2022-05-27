@@ -547,14 +547,14 @@ Contains
 
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Scal%shortID,MEF90_P2_Lagrange_2D_Scal%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(2))
                Allocate(BB(4))
                Allocate(BBinv(4))
                Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
+                  PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
@@ -566,22 +566,22 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          Case (MEF90_P1_Lagrange_2DBoundary_Scal%shortID,MEF90_P2_Lagrange_2DBoundary_Scal%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(2))
                allocate(innerNormal(2))
                Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr)
+                  PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
                   Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          !Case (MEF90_Q1_Lagrange_2D_Scal%shortID,MEF90_Q2_Lagrange_2D_Scal%shortID,MEF90_Q1_Lagrange_2DBoundary_Scal%shortID,MEF90_Q2_Lagrange_2DBoundary_Scal%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -612,14 +612,14 @@ Contains
 
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_2D_Vect%shortID,MEF90_P2_Lagrange_2D_Vect%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(2))
                Allocate(BB(4))
                Allocate(BBinv(4))
                Do_Elem_iE: Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
+                  PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
@@ -631,22 +631,22 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          Case (MEF90_P1_Lagrange_2DBoundary_Vect%shortID,MEF90_P2_Lagrange_2DBoundary_Vect%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(2))
                allocate(innerNormal(2))
                Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr)
+                  PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
                   Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          !Case (MEF90_Q1_Lagrange_2D_Vect%shortID,MEF90_Q2_Lagrange_2D_Vect%shortID,MEF90_Q1_Lagrange_2DBoundary_Scal%shortID,MEF90_Q2_Lagrange_2DBoundary_Scal%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -677,14 +677,14 @@ Contains
 
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Scal%shortID,MEF90_P2_Lagrange_3D_Scal%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(3))
                Allocate(BB(9))
                Allocate(BBinv(9))
                Do_Elem_iE: Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
+                  PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
@@ -697,22 +697,22 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          Case (MEF90_P1_Lagrange_3DBoundary_Scal%shortID,MEF90_P2_Lagrange_3DBoundary_Scal%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(3))
                allocate(innerNormal(3))
                Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr)
+                  PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
                   Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          !Case (MEF90_Q1_Lagrange_3D_Scal%shortID,MEF90_Q2_Lagrange_3D_Scal%shortID,MEF90_Q1_Lagrange_3DBoundary_Scal%shortID,MEF90_Q2_Lagrange_3DBoundary_Scal%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -743,14 +743,14 @@ Contains
 
       Select Case (elemType%shortID)
          Case (MEF90_P1_Lagrange_3D_Vect%shortID,MEF90_P2_Lagrange_3D_Vect%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(3))
                Allocate(BB(9))
                Allocate(BBinv(9))
                Do_Elem_iE: Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
+                  PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
@@ -763,22 +763,22 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          Case (MEF90_P1_Lagrange_3DBoundary_Vect%shortID,MEF90_P2_Lagrange_3DBoundary_Vect%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(3))
                allocate(innerNormal(3))
                Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr)
+                  PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
                   Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
+            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
          !Case (MEF90_Q1_Lagrange_3D_Vect%shortID,MEF90_Q2_Lagrange_3D_Vect%shortID,MEF90_Q1_Lagrange_3DBoundary_Vect%shortID,MEF90_Q2_Lagrange_3DBoundary_Vect%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element

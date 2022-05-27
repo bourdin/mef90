@@ -96,6 +96,7 @@ Contains
 !!!  MEF90Ctx_InitializePrivate:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90CtxInitialize_Private(ierr)
@@ -105,7 +106,7 @@ Contains
       character(len=1),pointer                     :: dummychar(:)
       PetscSizeT                                   :: sizeofchar
    
-      Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
+      PetscCall(PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr))
       sizeofMEF90CtxGlobalOptions = size(transfer(MEF90CtxGlobalOptions,dummychar))*sizeofchar
 
       MEF90ScalingList(1) = 'constant'
@@ -143,6 +144,7 @@ Contains
 !!!  PetscBagGetDataMEF90CtxGlobalOptions:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
@@ -150,7 +152,7 @@ Contains
       Type(MEF90CtxGlobalOptions_Type),pointer        :: data
       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      Call PetscBagGetData(bag,data,ierr)
+      PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90CtxGlobalOptions
    
 #undef __FUNCT__
@@ -160,6 +162,7 @@ Contains
 !!!  PetscBagRegisterMEF90CtxGlobalOptions:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag,name,prefix,default,ierr)
@@ -170,18 +173,18 @@ Contains
 
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90CtxGlobalOptions
       
-      Call PetscBagGetDataMEF90CtxGlobalOptions(bag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
-      Call PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr);CHKERRQ(ierr)
-      Call PetscBagSetOptionsPrefix(bag,trim(prefix),ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterBool(bag,MEF90CtxGlobalOptions%dryrun,default%dryrun,'dryrun','Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr);CHKERRQ(ierr)
-      Call PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(bag,MEF90CtxGlobalOptions,ierr))
+      PetscCall(PetscBagSetName(bag,trim(name),"MEF90 Global options object",ierr))
+      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
+      PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%verbose,default%verbose,'verbose','Verbosity: level',ierr))
+      PetscCall(PetscBagRegisterBool(bag,MEF90CtxGlobalOptions%dryrun,default%dryrun,'dryrun','Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%timeInterpolation,MEF90TimeInterpolationList,default%timeInterpolation,'time_interpolation','Time: interpolation type',ierr))
+      PetscCall(PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMin,default%timeMin,'time_min','Time: min',ierr))
+      PetscCall(PetscBagRegisterReal(bag,MEF90CtxGlobalOptions%timeMax,default%timeMax,'time_max','Time: max',ierr))
+      PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr))
+      PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr))
+      PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr))
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__
@@ -191,6 +194,7 @@ Contains
 !!!  MEF90CtxCreate:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
@@ -204,18 +208,18 @@ Contains
          PetscBool                                    :: hasPrefix,hasGeometry,hasResult
       
          MEF90Ctx%comm = comm
-         Call MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr)
-         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr);CHKERRQ(ierr)
-         Call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr);CHKERRQ(ierr)
+         PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr))
+         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr))
+         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr))
+         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr))
          If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
-            Call PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr);CHKERRQ(ierr)
-            Call PetscFinalize(ierr)
+            PetscCall(PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr))
+            PetscCall(PetscFinalize(ierr))
             STOP
          End If
          If (hasPrefix .AND. hasResult) Then
-            Call PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr);CHKERRQ(ierr)
-            Call PetscFinalize(ierr)
+            PetscCall(PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr))
+            PetscCall(PetscFinalize(ierr))
             STOP
             !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
          End If
@@ -228,21 +232,21 @@ Contains
                MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
             End If
          End If
-         Call PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
-         Call PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr);CHKERRQ(ierr)
+         PetscCall(PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr))
+         PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr))
 
-         Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+         PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
          If (GlobalOptions%verbose > 0) Then
             Write(IOBuffer,*) 'MEF90 Global Context: \n'
-            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
             Write(IOBuffer,100) trim(MEF90Ctx%geometryFile)
-            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
             Write(IOBuffer,101) trim(MEF90Ctx%resultFile)
-            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
             Write(IOBuffer,102) trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
-            Call PetscPrintf(comm,IOBuffer,ierr);CHKERRQ(ierr)
-            Call PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-            Call PetscPrintf(comm,"\n",ierr);CHKERRQ(ierr)
+            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
+            PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr))
+            PetscCall(PetscPrintf(comm,"\n",ierr))
          End If
          If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
             MEF90Ctx%IOComm = MEF90Ctx%comm
@@ -262,6 +266,7 @@ Contains
 !!!  MEF90CtxDestroy:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90CtxDestroy(MEF90Ctx,ierr)
@@ -270,11 +275,11 @@ Contains
 
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
 
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
       If (GlobalOptions%dryrun) Then
-         Call PetscOptionsLeft(PETSC_NULL_OPTIONS,ierr);CHKERRQ(ierr)
+         PetscCall(PetscOptionsLeft(PETSC_NULL_OPTIONS,ierr))
       End If
-      Call PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr))
    End Subroutine MEF90CtxDestroy
 
 #undef __FUNCT__
@@ -300,7 +305,7 @@ Contains
       Integer                                         :: j,CycleLength 
 
       i = 0 ! silence gfortran silly warning
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
       Select Case(GlobalOptions%timeInterpolation)
       Case (MEF90TimeInterpolation_linear)
          Allocate(t(GlobalOptions%timeNumStep))
@@ -350,9 +355,9 @@ Contains
                   SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
                End If
             Else
-               Call MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+               PetscCallMPI(MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr))
                Allocate(t(GlobalOptions%timeNumStep))
-               Call MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr)
+               PetscCallMPI(MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr))
             End If            
             GlobalOptions%timeMin = t(1)
             GlobalOptions%timeMax = t(GlobalOptions%timeNumStep)
@@ -368,9 +373,9 @@ Contains
          End Select
       End Select
       If ((GlobalOptions%verbose > 0) .AND. (MEF90Ctx%rank == 0)) Then
-         Call PetscPrintf(PETSC_COMM_SELF,"Time values array:\n",ierr);CHKERRQ(ierr)  
-         Call PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_SELF,ierr);CHKERRQ(ierr)
-         Call PetscPrintf(PETSC_COMM_SELF,"===\n",ierr);CHKERRQ(ierr)  
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,"Time values array:\n",ierr))
+         PetscCall(PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_SELF,ierr))
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,"===\n",ierr))
       End If
    End Subroutine MEF90CtxGetTime
 End Module m_MEF90_Ctx
