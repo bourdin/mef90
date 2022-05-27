@@ -13,14 +13,12 @@ Module m_MEF90_Elements
    ! not sure how to make the enumerator public short of listing them one after each other.
    Public :: MEF90Element_Create
    Public :: MEF90Element_Destroy
-   Public :: MEF90Element_View
 
    Public :: MEF90Element_Type
-   Public :: MEF90Element1D
-   Public :: MEF90Element2D_Vect,MEF90Element2D_Scal,MEF90Element2D_Elast 
-   Public :: MEF90Element3D_Vect,MEF90Element3D_Scal,MEF90Element3D_Elast 
+   Public :: MEF90Element2D_Vect,MEF90Element2D_Scal
+   Public :: MEF90Element3D_Vect,MEF90Element3D_Scal
    Public :: MEF90Element_TypeFindByID,MEF90Element_TypeFindByName
-   Public :: EXO2MEF90ElementType_Scal,EXO2MEF90ElementType_Vect,EXO2MEF90ElementType_Elast
+   Public :: EXO2MEF90ElementType_Scal,EXO2MEF90ElementType_Vect
    
    Type MEF90Element_Type
       ! name is the element name in english language
@@ -53,28 +51,20 @@ Module m_MEF90_Elements
       enumerator  :: &
          MEF90_P1_Lagrange_2D_Scal_ShortID = 1,       &  ! 1
          MEF90_P1_Lagrange_3D_Scal_ShortID,           &  ! 2
-         MEF90_P1_Lagrange_2D_Elast_ShortID,          &  ! 3
-         MEF90_P1_Lagrange_3D_Elast_ShortID,          &  ! 4
-         MEF90_P1_Lagrange_2D_Vect_ShortID,           &  ! 5
-         MEF90_P1_Lagrange_3D_Vect_ShortID,           &  ! 6
-         MEF90_P1_Lagrange_2DBoundary_Scal_ShortID,   &  ! 7
-         MEF90_P1_Lagrange_3DBoundary_Scal_ShortID,   &  ! 8
-         MEF90_P1_Lagrange_2DBoundary_Elast_ShortID,  &  ! 9
-         MEF90_P1_Lagrange_3DBoundary_Elast_ShortID,  &  ! 10
-         MEF90_P1_Lagrange_2DBoundary_Vect_ShortID,   &  ! 11 
-         MEF90_P1_Lagrange_3DBoundary_Vect_ShortID,   &  ! 12 
-         MEF90_P2_Lagrange_2D_Scal_ShortID,           &  ! 13
-         MEF90_P2_Lagrange_3D_Scal_ShortID,           &  ! 14
-         MEF90_P2_Lagrange_2D_Elast_ShortID,          &  ! 15
-         MEF90_P2_Lagrange_3D_Elast_ShortID,          &  ! 16
-         MEF90_P2_Lagrange_2D_Vect_ShortID,           &  ! 17
-         MEF90_P2_Lagrange_3D_Vect_ShortID,           &  ! 18
-         MEF90_P2_Lagrange_2DBoundary_Scal_ShortID,   &  ! 19
-         MEF90_P2_Lagrange_3DBoundary_Scal_ShortID,   &  ! 20
-         MEF90_P2_Lagrange_2DBoundary_Elast_ShortID,  &  ! 21
-         MEF90_P2_Lagrange_3DBoundary_Elast_ShortID,  &  ! 22
-         MEF90_P2_Lagrange_2DBoundary_Vect_ShortID,   &  ! 23 
-         MEF90_P2_Lagrange_3DBoundary_Vect_ShortID       ! 24 
+         MEF90_P1_Lagrange_2D_Vect_ShortID,           &  ! 3
+         MEF90_P1_Lagrange_3D_Vect_ShortID,           &  ! 4
+         MEF90_P1_Lagrange_2DBoundary_Scal_ShortID,   &  ! 5
+         MEF90_P1_Lagrange_3DBoundary_Scal_ShortID,   &  ! 6
+         MEF90_P1_Lagrange_2DBoundary_Vect_ShortID,   &  ! 7 
+         MEF90_P1_Lagrange_3DBoundary_Vect_ShortID,   &  ! 8 
+         MEF90_P2_Lagrange_2D_Scal_ShortID,           &  ! 9
+         MEF90_P2_Lagrange_3D_Scal_ShortID,           &  ! 10
+         MEF90_P2_Lagrange_2D_Vect_ShortID,           &  ! 11
+         MEF90_P2_Lagrange_3D_Vect_ShortID,           &  ! 12
+         MEF90_P2_Lagrange_2DBoundary_Scal_ShortID,   &  ! 13
+         MEF90_P2_Lagrange_3DBoundary_Scal_ShortID,   &  ! 14
+         MEF90_P2_Lagrange_2DBoundary_Vect_ShortID,   &  ! 15 
+         MEF90_P2_Lagrange_3DBoundary_Vect_ShortID       ! 16 
    End Enum      
 
    !!! 
@@ -93,20 +83,6 @@ Module m_MEF90_Elements
       4,6,4,                              &  ! numVertex,numEdge,numFace
       1,0,0,0,4,                          &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,1                               &  ! dim,codim,order                         
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D_Elast = MEF90Element_Type(   &
-      "MEF90_P1_Lagrange_2D_Elast",       &  ! name
-      MEF90_P1_Lagrange_2D_Elast_ShortID, &  ! shortID
-      3,3,0,                              &  ! numVertex,numEdge,numFace
-      2,0,0,0,6,                          &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      2,0,1                               &  ! dim,codim,order                             
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D_Elast = MEF90Element_Type(   &
-      "MEF90_P1_Lagrange_3D_Elast",       &  ! name
-      MEF90_P1_Lagrange_3D_Elast_ShortID, &  ! shortID
-      4,6,4,                              &  ! numVertex,numEdge,numFace
-      3,0,0,0,12,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      3,0,1                               &  ! dim,codim,order                             
    )
    Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D_Vect = MEF90Element_Type(   &
       "MEF90_P1_Lagrange_2D_Vect",        &  ! name
@@ -150,20 +126,6 @@ Module m_MEF90_Elements
       3,0,0,0,9,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,1,1                                        &  ! dim,codim,order                             
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary_Elast = MEF90Element_Type(   &
-      "MEF90_P1_Lagrange_2DBoundary_Elast",        &  ! name
-      MEF90_P1_Lagrange_2DBoundary_Elast_ShortID,  &  ! shortID
-      2,1,0,                                       &  ! numVertex,numEdge,numFace
-      2,0,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      2,1,1                                        &  ! dim,codim,order                             
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary_Elast = MEF90Element_Type(   &
-      "MEF90_P1_Lagrange_3DBoundary_Elast",        &  ! name
-      MEF90_P1_Lagrange_3DBoundary_Elast_ShortID,  &  ! shortID
-      3,3,0,                                       &  ! numVertex,numEdge,numFace
-      3,0,0,0,9,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      3,1,1                                        &  ! dim,codim,order                             
-   )
    !!!
    !!! Quadratic Lagrange elements
    !!!
@@ -179,20 +141,6 @@ Module m_MEF90_Elements
       MEF90_P2_Lagrange_3D_Scal_ShortID,  &  ! shortID
       4,6,4,                              &  ! numVertex,numEdge,numFace
       1,1,0,0,10,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      3,0,2                               &  ! dim,codim,order                             
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Elast = MEF90Element_Type(   &
-      "MEF90_P2_Lagrange_2D_Elast",       &  ! name
-      MEF90_P2_Lagrange_2D_Elast_ShortID, &  ! shortID
-      3,3,0,                              &  ! numVertex,numEdge,numFace
-      2,2,0,0,12,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      2,0,2                               &  ! dim,codim,order                             
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D_Elast = MEF90Element_Type(   &
-      "MEF90_P2_Lagrange_3D_Elast",       &  ! name
-      MEF90_P2_Lagrange_3D_Elast_ShortID, &  ! shortID
-      4,6,4,                              &  ! numVertex,numEdge,numFace
-      3,3,0,0,30,                         &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,0,2                               &  ! dim,codim,order                             
    )
    Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D_Vect = MEF90Element_Type(   &
@@ -237,85 +185,49 @@ Module m_MEF90_Elements
       3,3,0,0,18,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
       3,1,2                                        &  ! dim,codim,order                             
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary_Elast = MEF90Element_Type(   &
-      "MEF90_P2_Lagrange_2DBoundary_Elast",        &  ! name
-      MEF90_P2_Lagrange_2DBoundary_Elast_ShortID,  &  ! shortID
-      2,1,0,                                       &  ! numVertex,numEdge,numFace
-      2,2,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      2,1,2                                        &  ! dim,codim,order                             
-   )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary_Elast = MEF90Element_Type(   &
-      "MEF90_P2_Lagrange_3DBoundary_Elast",        &  ! name
-      MEF90_P2_Lagrange_3DBoundary_Elast_ShortID,  &  ! shortID
-      3,3,0,                                       &  ! numVertex,numEdge,numFace
-      3,3,0,0,18,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
-      3,1,2                                        &  ! dim,codim,order                             
-   )
 
-   Integer,Parameter,Public :: MEF90_numKnownElements = 24       
+   Integer,Parameter,Public :: MEF90_numKnownElements = 16       
    Type(MEF90Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90knownElements = [ &
       MEF90_P1_Lagrange_2D_Scal,          &  ! 1
       MEF90_P1_Lagrange_3D_Scal,          &  ! 2
-      MEF90_P1_Lagrange_2D_Elast,         &  ! 3
-      MEF90_P1_Lagrange_3D_Elast,         &  ! 4
-      MEF90_P1_Lagrange_2D_Vect,          &  ! 5
-      MEF90_P1_Lagrange_3D_Vect,          &  ! 6
-      MEF90_P1_Lagrange_2DBoundary_Scal,  &  ! 7
-      MEF90_P1_Lagrange_3DBoundary_Scal,  &  ! 8
-      MEF90_P1_Lagrange_2DBoundary_Elast, &  ! 9
-      MEF90_P1_Lagrange_3DBoundary_Elast, &  ! 10
-      MEF90_P1_Lagrange_2DBoundary_Vect,  &  ! 11
-      MEF90_P1_Lagrange_3DBoundary_Vect,  &  ! 12
-      MEF90_P2_Lagrange_2D_Scal,          &  ! 13
-      MEF90_P2_Lagrange_3D_Scal,          &  ! 14
-      MEF90_P2_Lagrange_2D_Elast,         &  ! 15
-      MEF90_P2_Lagrange_3D_Elast,         &  ! 16
-      MEF90_P2_Lagrange_2D_Vect,          &  ! 17
-      MEF90_P2_Lagrange_3D_Vect,          &  ! 18
-      MEF90_P2_Lagrange_2DBoundary_Scal,  &  ! 19
-      MEF90_P2_Lagrange_3DBoundary_Scal,  &  ! 20
-      MEF90_P2_Lagrange_2DBoundary_Elast, &  ! 21
-      MEF90_P2_Lagrange_3DBoundary_Elast, &  ! 22
-      MEF90_P2_Lagrange_2DBoundary_Vect,  &  ! 23
-      MEF90_P2_Lagrange_3DBoundary_Vect   &  ! 24
+      MEF90_P1_Lagrange_2D_Vect,          &  ! 3
+      MEF90_P1_Lagrange_3D_Vect,          &  ! 4
+      MEF90_P1_Lagrange_2DBoundary_Scal,  &  ! 5
+      MEF90_P1_Lagrange_3DBoundary_Scal,  &  ! 6
+      MEF90_P1_Lagrange_2DBoundary_Vect,  &  ! 7
+      MEF90_P1_Lagrange_3DBoundary_Vect,  &  ! 8
+      MEF90_P2_Lagrange_2D_Scal,          &  ! 9
+      MEF90_P2_Lagrange_3D_Scal,          &  ! 10
+      MEF90_P2_Lagrange_2D_Vect,          &  ! 11
+      MEF90_P2_Lagrange_3D_Vect,          &  ! 12
+      MEF90_P2_Lagrange_2DBoundary_Scal,  &  ! 13
+      MEF90_P2_Lagrange_3DBoundary_Scal,  &  ! 14
+      MEF90_P2_Lagrange_2DBoundary_Vect,  &  ! 15
+      MEF90_P2_Lagrange_3DBoundary_Vect   &  ! 16
    ]
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = [ &
       "P1_Lagrange_2D_Scal         ",     &  ! 1
       "P1_Lagrange_3D_Scal         ",     &  ! 2
-      "P1_Lagrange_2D_Elast        ",     &  ! 3
-      "P1_Lagrange_3D_Elast        ",     &  ! 4
-      "P1_Lagrange_2D_Vect         ",     &  ! 5
-      "P1_Lagrange_3D_Vect         ",     &  ! 6
-      "P1_Lagrange_2DBoundary_Scal ",     &  ! 7
-      "P1_Lagrange_3DBoundary_Scal ",     &  ! 8
-      "P1_Lagrange_2DBoundary_Elast",     &  ! 9
-      "P1_Lagrange_3DBoundary_Elast",     &  ! 10
-      "P1_Lagrange_2DBoundary_Vect ",     &  ! 11
-      "P1_Lagrange_3DBoundary_Vect ",     &  ! 12
-      "P2_Lagrange_2D_Scal         ",     &  ! 13
-      "P2_Lagrange_3D_Scal         ",     &  ! 14
-      "P2_Lagrange_2D_Elast        ",     &  ! 15
-      "P2_Lagrange_3D_Elast        ",     &  ! 16
-      "P2_Lagrange_2D_Vect         ",     &  ! 17
-      "P2_Lagrange_3D_Vect         ",     &  ! 18
-      "P2_Lagrange_2DBoundary_Scal ",     &  ! 19
-      "P2_Lagrange_3DBoundary_Scal ",     &  ! 20
-      "P2_Lagrange_2DBoundary_Elast",     &  ! 21
-      "P2_Lagrange_3DBoundary_Elast",     &  ! 22
-      "P2_Lagrange_2DBoundary_Vect ",     &  ! 23
-      "P2_Lagrange_3DBoundary_Vect ",     &  ! 24
+      "P1_Lagrange_2D_Vect         ",     &  ! 3
+      "P1_Lagrange_3D_Vect         ",     &  ! 4
+      "P1_Lagrange_2DBoundary_Scal ",     &  ! 5
+      "P1_Lagrange_3DBoundary_Scal ",     &  ! 6
+      "P1_Lagrange_2DBoundary_Vect ",     &  ! 7
+      "P1_Lagrange_3DBoundary_Vect ",     &  ! 8
+      "P2_Lagrange_2D_Scal         ",     &  ! 9
+      "P2_Lagrange_3D_Scal         ",     &  ! 10
+      "P2_Lagrange_2D_Vect         ",     &  ! 11
+      "P2_Lagrange_3D_Vect         ",     &  ! 12
+      "P2_Lagrange_2DBoundary_Scal ",     &  ! 13
+      "P2_Lagrange_3DBoundary_Scal ",     &  ! 14
+      "P2_Lagrange_2DBoundary_Vect ",     &  ! 15
+      "P2_Lagrange_3DBoundary_Vect ",     &  ! 16
       "MEF90_knownElementNames     ",     &
       "prefix_                     ",     &
       C_NULL_CHAR//"                           "]
 
       
-   Type MEF90Element1D
-      PetscReal,Dimension(:,:),Pointer             :: BF
-      PetscReal,Dimension(:,:),Pointer             :: Der_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
-   End Type MEF90Element1D
- 
    Type MEF90Element2D_Scal
       PetscReal,Dimension(:,:),Pointer             :: BF
       Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF
@@ -325,24 +237,11 @@ Module m_MEF90_Elements
  
    Type MEF90Element2D_Vect
       Type (Vect2D),Dimension(:,:),Pointer         :: BF
-      Type (Mat2D),Dimension(:,:),Pointer          :: Der_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
-      Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element2D_Vect
- 
-   Type MEF90Element2D_Elast
-      Type (Vect2D),Dimension(:,:),Pointer         :: BF
+      Type (Mat2D),Dimension(:,:),Pointer          :: Grad_BF
       Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element2D_Elast
- 
-   Type MEF90Element3D_Vect
-      Type (Vect3D),Dimension(:,:),Pointer         :: BF
-      Type (Mat3D),Dimension(:,:),Pointer          :: Der_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
-      Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element3D_Vect
+   End Type MEF90Element2D_Vect
  
    Type MEF90Element3D_Scal
       PetscReal,Dimension(:,:),Pointer             :: BF
@@ -351,32 +250,28 @@ Module m_MEF90_Elements
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3D_Scal
  
-   Type MEF90Element3D_Elast
+   Type MEF90Element3D_Vect
       Type (Vect3D),Dimension(:,:),Pointer         :: BF
+      Type (Mat3D),Dimension(:,:),Pointer          :: Grad_BF
       Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element3D_Elast
-
+   End Type MEF90Element3D_Vect
+ 
    Interface MEF90Element_Create
-      Module Procedure Element2D_Scal_InitSet,Element2D_Vect_InitSet,Element2D_Elast_InitSet, &
-                       Element3D_Scal_InitSet,Element3D_Vect_InitSet,Element3D_Elast_InitSet, &
-                       Element2D_Scal_InitSet_ByShortID,Element2D_Vect_InitSet_ByShortID,Element2D_Elast_InitSet_ByShortID,&
-                       Element3D_Scal_InitSet_ByShortID,Element3D_Vect_InitSet_ByShortID,Element3D_Elast_InitSet_ByShortID
+      Module Procedure Element2D_Scal_InitSet,Element2D_Vect_InitSet, &
+                       Element3D_Scal_InitSet,Element3D_Vect_InitSet, &
+                       Element2D_Scal_InitSet_ByShortID,Element2D_Vect_InitSet_ByShortID,&
+                       Element3D_Scal_InitSet_ByShortID,Element3D_Vect_InitSet_ByShortID
    End Interface MEF90Element_Create
    
    Interface MEF90Element_Destroy
-      Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,Element2D_Elast_Destroy,&
-                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,Element3D_Elast_Destroy,&
-                       Element2D_Scal_DestroySet,Element2D_Vect_DestroySet,Element2D_Elast_DestroySet,& 
-                       Element3D_Scal_DestroySet,Element3D_Vect_DestroySet,Element3D_Elast_DestroySet   
+      Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,&
+                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,&
+                       Element2D_Scal_DestroySet,Element2D_Vect_DestroySet,& 
+                       Element3D_Scal_DestroySet,Element3D_Vect_DestroySet
    End Interface MEF90Element_Destroy
-   
-   Interface MEF90Element_View
-      Module Procedure Element2D_Scal_View,Element2D_Vect_View,Element2D_Elast_View, &
-                       Element3D_Scal_View,Element3D_Vect_View,Element3D_Elast_View
-   End Interface MEF90Element_View
-   
+      
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "EXO2MEF90ElementType_Scal"
@@ -474,53 +369,6 @@ Contains
       End Select
    End Subroutine EXO2MEF90ElementType_Vect
 
-#undef __FUNCT__
-#define __FUNCT__ "EXO2MEF90ElementType_Elast"
-   Subroutine EXO2MEF90ElementType_Elast(exoName,dim,elemType,ierr)
-      Character(len=*),Intent(IN)                 :: EXOName
-      PetscInt,Intent(IN)                         :: dim
-      Type(MEF90Element_Type),Intent(OUT)         :: elemType
-      PetscErrorCode,Intent(OUT)                  :: ierr
-
-      ierr = 0
-      Select Case(trim(exoName))
-         Case("TETRA","TETRA4")
-            elemType = MEF90_P1_Lagrange_3D_Elast
-         Case("TETRA10")
-            elemType = MEF90_P2_Lagrange_3D_Elast
-         Case("TRI","TRI3","TRIANGLE","TRISHELL","TRISHELL3")
-            If (dim == 2) Then
-               elemType = MEF90_P1_Lagrange_2D_Elast
-            Else
-               elemType = MEF90_P1_Lagrange_3DBoundary_Elast
-            End If
-         Case("TRI6","TRISHELL6")
-            If (dim == 2) Then
-               elemType = MEF90_P2_Lagrange_2D_Elast
-            Else
-               elemType = MEF90_P2_Lagrange_3DBoundary_Elast
-            End If
-         !Case("QUAD","QUAD4","SHELL","SHELL4")
-         !   If (dim == 2) Then
-         !      elemType = MEF90_Q1_Lagrange_2D_Elast
-         !   Else
-         !      elemType = MEF90_Q1_Lagrange_3DBoundary_Elast
-         !   End If
-         !Case("QUAD9","SHELL9")
-         !   If (dim == 2) Then
-         !      elemType = MEF90_Q2_Lagrange_2D_Elast
-         !   Else
-         !      elemType = MEF90_Q2_Lagrange_3DBoundary_Elast
-         !   End If
-         Case("BAR","BAR2","BEAM2")
-            elemType = MEF90_P1_Lagrange_2DBoundary_Elast
-         Case("BAR3","BEAM3")
-            elemType = MEF90_P2_Lagrange_2DBoundary_Elast
-         Case default
-            Write(*,*) __FUNCT__,': Element ',trim(exoName),'not recognized. Set type manually.'
-            ierr = PETSC_ERR_ARG_UNKNOWN_TYPE
-      End Select
-   End Subroutine EXO2MEF90ElementType_Elast
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Element_TypeFindByID"
@@ -599,22 +447,6 @@ Contains
    End Subroutine Element2D_Vect_InitSet_ByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_InitSet_ByName"
-   Subroutine Element2D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(tDM),intent(IN)                             :: mesh
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Character(len=*), Intent(IN)                     :: elemName
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      Type(MEF90Element_Type)                          :: elemType
-
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element2D_Elast_InitSet_ByName
-
-#undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByName"
    Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(tDM),intent(IN)                             :: mesh
@@ -647,22 +479,6 @@ Contains
    End Subroutine Element3D_Vect_InitSet_ByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_InitSet_ByName"
-   Subroutine Element3D_Elast_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
-      Type(tDM),intent(IN)                             :: mesh
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Character(len=*), Intent(IN)                     :: elemName
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      Type(MEF90Element_Type)                          :: elemType
-
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element3D_Elast_InitSet_ByName
-
-#undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet_ByShortID"
    Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
@@ -687,18 +503,6 @@ Contains
    End Subroutine Element2D_Vect_InitSet_ByShortID
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_InitSet_ByShortID"
-   Subroutine Element2D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(tDM),intent(IN)                             :: mesh
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      Call Element2D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
-   End Subroutine Element2D_Elast_InitSet_ByShortID
-
-#undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet_ByShortID"
    Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
@@ -721,18 +525,6 @@ Contains
       
       Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element3D_Vect_InitSet_ByShortID
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_InitSet_ByShortID"
-   Subroutine Element3D_Elast_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
-      Type(tDM),intent(IN)                             :: mesh
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      Call Element3D_Elast_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
-   End Subroutine Element3D_Elast_InitSet_ByShortID
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_InitSet"
@@ -865,71 +657,6 @@ Contains
    End Subroutine Element2D_Vect_InitSet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_InitSet"
-   Subroutine Element2D_Elast_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(tDM),intent(IN)                             :: dm
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      PetscInt                                         :: iELoc
-      PetscInt,Dimension(:),Pointer                    :: CellID
-      PetscReal, Dimension(:), Pointer                 :: v0,BB,BBinv
-      PetscReal                                        :: detBBinv
-      Type(Mat2D)                                      :: Bt
-      PetscReal                                        :: length
-      PetscReal,dimension(:),pointer                   :: centroid,innerNormal
-      Type(Vect2D)                                     :: outerNormal
-
-      Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_2D_Elast%shortID,MEF90_P2_Lagrange_2D_Elast%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-            Allocate(dElem(size(cellID)),stat=ierr)
-            If (size(CellID) > 0) Then
-               Allocate(v0(2))
-               Allocate(BB(4))
-               Allocate(BBinv(4))
-               Do_Elem_iE: Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
-                  Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
-                  Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(4)*0.5_Kr
-                  detBBinv = 4.0_Kr * detBBinv
-                  Call Element_P_Lagrange_2D_Elast_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
-               End Do Do_Elem_iE
-               DeAllocate(BBinv)
-               DeAllocate(BB)
-               DeAllocate(v0)
-            End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         Case (MEF90_P1_Lagrange_2DBoundary_Elast%shortID,MEF90_P2_Lagrange_2DBoundary_Elast%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-            Allocate(dElem(size(cellID)),stat=ierr)
-            If (size(CellID) > 0) Then
-               allocate(centroid(2))
-               allocate(innerNormal(2))
-               Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr)
-                  outerNormal = -innerNormal
-                  Call Element_P_Lagrange_2DBoundary_Elast_Init(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
-               End Do
-               DeAllocate(innerNormal)
-               DeAllocate(centroid)
-            End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         !Case (MEF90_Q1_Lagrange_2D_Elast%shortID,MEF90_Q2_Lagrange_2D_Elast%shortID,MEF90_Q1_Lagrange_2DBoundary_Scal%shortID,MEF90_Q2_Lagrange_2DBoundary_Scal%shortID)
-         !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
-         !   !!! Initialize element
-         Case Default
-            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
-            ierr = PETSC_ERR_SUP
-      End Select
-   End Subroutine Element2D_Elast_InitSet
-
-#undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_InitSet"
    Subroutine Element3D_Scal_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(tDM),intent(IN)                             :: dm
@@ -1060,72 +787,6 @@ Contains
             ierr = PETSC_ERR_SUP
       End Select
    End Subroutine Element3D_Vect_InitSet
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_InitSet"
-   Subroutine Element3D_Elast_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-      Type(tDM),intent(IN)                             :: dm
-      Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Elast),Dimension(:),Pointer  :: dElem
-      PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
-      PetscErrorCode,Intent(OUT)                       :: ierr
-      
-      PetscInt                                         :: iELoc
-      PetscInt,Dimension(:),Pointer                    :: CellID
-      PetscReal, Dimension(:), Pointer                 :: v0,BB,BBinv
-      PetscReal                                        :: detBBinv
-      Type(Mat3D)                                      :: Bt
-      PetscReal                                        :: area
-      PetscReal,dimension(:),pointer                   :: centroid,innerNormal
-      Type(Vect3D)                                     :: outerNormal
-
-      Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_3D_Elast%shortID,MEF90_P2_Lagrange_3D_Elast%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-            Allocate(dElem(size(cellID)),stat=ierr)
-            If (size(CellID) > 0) Then
-               Allocate(v0(3))
-               Allocate(BB(9))
-               Allocate(BBinv(9))
-               Do_Elem_iE: Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr)
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
-                  Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
-                  Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
-                  Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
-                  detBBinv = 8.0_Kr * detBBinv
-                  Call Element_P_Lagrange_3D_Elast_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
-               End Do Do_Elem_iE
-               DeAllocate(BBinv)
-               DeAllocate(BB)
-               DeAllocate(v0)
-            End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         Case (MEF90_P1_Lagrange_3DBoundary_Elast%shortID,MEF90_P2_Lagrange_3DBoundary_Elast%shortID)
-            Call ISGetIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-            Allocate(dElem(size(cellID)),stat=ierr)
-            If (size(CellID) > 0) Then
-               allocate(centroid(3))
-               allocate(innerNormal(3))
-               Do iELoc = 1,size(CellID)
-                  call DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr)
-                  outerNormal = -innerNormal
-                  Call Element_P_Lagrange_3DBoundary_Elast_Init(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
-               End Do
-               DeAllocate(innerNormal)
-               DeAllocate(centroid)
-            End If
-            Call ISRestoreIndicesF90(CellIS,CellID,ierr);CHKERRQ(ierr)
-         !Case (MEF90_Q1_Lagrange_3D_Elast%shortID,MEF90_Q2_Lagrange_3D_Elast%shortID,MEF90_Q1_Lagrange_3DBoundary_Elast%shortID,MEF90_Q2_Lagrange_3DBoundary_Elast%shortID)
-         !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
-         !   !!! Initialize element
-         Case Default
-            Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
-            ierr = PETSC_ERR_SUP
-      End Select
-   End Subroutine Element3D_Elast_InitSet
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_2D_Scal_Init"
@@ -1447,31 +1108,40 @@ Contains
    
       Type(MEF90Element2D_Scal)              :: Elem_Scal
       PetscInt                               :: dim = 2 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,i,iDof,iG
       
       
       Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
+
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Grad_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%Der_BF(:,:)%XX = 0.0_Kr
-      dElem%Der_BF(:,:)%XY = 0.0_Kr
-      dElem%Der_BF(:,:)%YX = 0.0_Kr
-      dElem%Der_BF(:,:)%YY = 0.0_Kr
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            dElem%BF(iDof,iG)       = 0.0_Kr
+            delem%Grad_BF(iDof,iG)  = 0.0_Kr
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
+      End Do
       
       Do i = 0,Num_DoF-1
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
-         dElem%Der_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%Der_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y
-         dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
+
+         dElem%Grad_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Grad_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Grad_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Grad_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
+
+         dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y / 2.0_Kr
+         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
+         dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
       
       Call MEF90Element_Destroy(Elem_Scal,ierr)
@@ -1495,101 +1165,28 @@ Contains
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
+      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Grad_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+         
       dElem%Gauss_C = Elem_Scal%Gauss_C
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            dElem%BF(iDof,iG)       = 0.0_Kr
+            delem%Grad_BF(iDof,iG)  = 0.0_Kr
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
+      End Do
 
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)      
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
       Do idof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
       End Do
 
-      Allocate(delem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Do iDof = 1, num_dof * dim
-         Do iG = 1, Nb_Gauss
-            delem%Der_BF(iDof,iG) = 0.0_Kr
-         End Do
-      End Do
       dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
 
-#undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2D_Elast_Init"
-   Subroutine Element_P_Lagrange_2D_Elast_Init(dElem,Bt,DetBt,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Elast)             :: dElem
-      Type(Mat2D),Intent(IN)                 :: Bt
-      PetscReal,Intent(IN)                   :: DetBt
-      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
-      PetscErrorCode,Intent(OUT)             :: ierr
-   
-      Type(MEF90Element2D_Scal)              :: Elem_Scal
-      PetscInt                               :: dim = 2 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
-      
-      
-      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,Bt,DetBt,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF  = Size(Elem_Scal%BF,1) 
-      Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-         
-      dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%GradS_BF(:,:)%XX = 0.0_Kr
-      dElem%GradS_BF(:,:)%XY = 0.0_Kr
-      dElem%GradS_BF(:,:)%YY = 0.0_Kr
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
-         dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y / 2.0_Kr
-         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X / 2.0_Kr
-         dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
-      End Do
-      dElem%outerNormal = Elem_Scal%outerNormal
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_2D_Elast_Init
-
-#undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Elast_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Elast_Init(dElem,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Elast)             :: dElem
-      PetscReal,Intent(IN)                   :: length
-      Type(Vect2D),Intent(IN)                :: outerNormal
-      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
-      PetscErrorCode,Intent(OUT)             :: ierr
-   
-      Type(MEF90Element2D_Scal)              :: Elem_Scal
-      PetscInt                               :: dim = 2 
-      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
-      
-      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF  = Size(Elem_Scal%BF,1) 
-      Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      dElem%Gauss_C = Elem_Scal%Gauss_C
-
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)         
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      Do iDof = 0,Num_DoF-1
-         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
-         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
-      End Do
-      
-      Allocate(delem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Do iDof = 1, num_dof * dim
-         Do iG = 1, Nb_Gauss
-            delem%GradS_BF(iDof,iG) = 0.0_Kr
-         End Do
-      End Do
-      dElem%outerNormal = Elem_Scal%outerNormal
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_2DBoundary_Elast_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element_P_Lagrange_3D_Scal_Init"
@@ -2086,7 +1683,7 @@ Contains
    
       Type(MEF90Element3D_Scal)              :: Elem_Scal
       PetscInt                               :: dim = 3 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
+      PetscInt                               :: Num_DoF,Nb_Gauss,i,iDof,iG
       
       
       Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
@@ -2094,35 +1691,43 @@ Contains
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Allocate(dElem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Grad_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
-      dElem%Der_BF(:,:)%XX = 0.0_Kr
-      dElem%Der_BF(:,:)%XY = 0.0_Kr
-      dElem%Der_BF(:,:)%XZ = 0.0_Kr
-      dElem%Der_BF(:,:)%YX = 0.0_Kr
-      dElem%Der_BF(:,:)%YY = 0.0_Kr
-      dElem%Der_BF(:,:)%YZ = 0.0_Kr
-      dElem%Der_BF(:,:)%ZX = 0.0_Kr
-      dElem%Der_BF(:,:)%ZY = 0.0_Kr
-      dElem%Der_BF(:,:)%ZZ = 0.0_Kr
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            dElem%BF(iDof,iG)       = 0.0_Kr
+            delem%Grad_BF(iDof,iG)  = 0.0_Kr
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
+      End Do
       
       Do i = 0,Num_DoF-1
          dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
          dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
-         dElem%Der_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%Der_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y
-         dElem%Der_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z
-         dElem%Der_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%Der_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
-         dElem%Der_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z
-         dElem%Der_BF(i*dim+3,:)%ZX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%Der_BF(i*dim+3,:)%ZY = Elem_Scal%Grad_BF(i+1,:)%Y
-         dElem%Der_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
+         dElem%Grad_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Grad_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Grad_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z
+         dElem%Grad_BF(i*dim+2,:)%YX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Grad_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Grad_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z
+         dElem%Grad_BF(i*dim+3,:)%ZX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%Grad_BF(i*dim+3,:)%ZY = Elem_Scal%Grad_BF(i+1,:)%Y
+         dElem%Grad_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
+
+         dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
+         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
+         dElem%GradS_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
+
+         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
+         dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y 
+         dElem%GradS_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
+         
+         dElem%GradS_BF(i*dim+3,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
+         dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
+         dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
       Call MEF90Element_Destroy(Elem_Scal,ierr)
    End Subroutine Element_P_Lagrange_3D_Vect_Init
@@ -2145,118 +1750,27 @@ Contains
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      dElem%Gauss_C = Elem_Scal%Gauss_C
-         
       Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
-      Do iDof = 0,Num_DoF-1
-         dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
-         dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
-         dElem%BF(iDof*dim+3,:)%Z = Elem_Scal%BF(iDof+1,:)
-      End Do
-
-      Allocate(delem%Der_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Do iDof = 1, num_dof * dim
-         Do iG = 1, Nb_Gauss
-            delem%Der_BF(iDof,iG) = 0.0_Kr
-         End Do
-      End Do
-      dElem%outerNormal = Elem_Scal%outerNormal
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
-
-#undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3D_Elast_Init"
-   Subroutine Element_P_Lagrange_3D_Elast_Init(dElem,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element3D_Elast)             :: dElem
-      Type(Mat3D),Intent(IN)                 :: Bt
-      PetscReal,Intent(IN)                   :: detBinv
-      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
-      PetscErrorCode,Intent(OUT)             :: ierr
-   
-      Type(MEF90Element3D_Scal)              :: Elem_Scal
-      PetscInt                               :: dim = 3 
-      PetscInt                               :: Num_DoF,Nb_Gauss,i
-      
-      
-      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF  = Size(Elem_Scal%BF,1) 
-      Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
+      Allocate(dElem%Grad_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
       Allocate(dElem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
          
       dElem%Gauss_C = Elem_Scal%Gauss_C
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
-      dElem%GradS_BF(:,:)%XX = 0.0_Kr
-      dElem%GradS_BF(:,:)%YY = 0.0_Kr
-      dElem%GradS_BF(:,:)%ZZ = 0.0_Kr
-      dElem%GradS_BF(:,:)%YZ = 0.0_Kr
-      dElem%GradS_BF(:,:)%XZ = 0.0_Kr
-      dElem%GradS_BF(:,:)%XY = 0.0_Kr
-      
-      Do i = 0,Num_DoF-1
-         dElem%BF(i*dim+1,:)%X = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+2,:)%Y = Elem_Scal%BF(i+1,:)
-         dElem%BF(i*dim+3,:)%Z = Elem_Scal%BF(i+1,:)
-         dElem%GradS_BF(i*dim+1,:)%XX = Elem_Scal%Grad_BF(i+1,:)%X
-         dElem%GradS_BF(i*dim+1,:)%XY = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
-         dElem%GradS_BF(i*dim+1,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
-
-         dElem%GradS_BF(i*dim+2,:)%XY = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
-         dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y 
-         dElem%GradS_BF(i*dim+2,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Z * 0.5_Kr
-         
-         dElem%GradS_BF(i*dim+3,:)%XZ = Elem_Scal%Grad_BF(i+1,:)%X * 0.5_Kr
-         dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
-         dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
+      Do iDof = 1, num_dof * dim
+         Do iG = 1, Nb_Gauss
+            dElem%BF(iDof,iG)       = 0.0_Kr
+            delem%Grad_BF(iDof,iG)  = 0.0_Kr
+            delem%GradS_BF(iDof,iG) = 0.0_Kr
+         End Do
       End Do
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_3D_Elast_Init
-   
-#undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Elast_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Elast_Init(dElem,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element3D_Elast)             :: dElem
-      PetscReal,Intent(IN)                   :: area
-      Type(Vect3D),Intent(IN)                :: outerNormal
-      PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
-      PetscErrorCode,Intent(OUT)             :: ierr
-   
-      Type(MEF90Element3D_Scal)              :: Elem_Scal
-      PetscInt                               :: dim = 3 
-      PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
-      
-      
-      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Num_DoF   = Size(Elem_Scal%BF,1) 
-      Nb_Gauss = Size(Elem_Scal%BF,2)
-      Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)         
-      dElem%Gauss_C = Elem_Scal%Gauss_C
-      
-      Allocate(dElem%BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      dElem%BF(:,:)%X = 0.0_Kr
-      dElem%BF(:,:)%Y = 0.0_Kr
-      dElem%BF(:,:)%Z = 0.0_Kr
       Do iDof = 0,Num_DoF-1
          dElem%BF(iDof*dim+1,:)%X = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+2,:)%Y = Elem_Scal%BF(iDof+1,:)
          dElem%BF(iDof*dim+3,:)%Z = Elem_Scal%BF(iDof+1,:)
       End Do
-      
-      Allocate(delem%GradS_BF(Num_DoF * dim,Nb_Gauss),stat=ierr)
-      Do iDof = 1, num_dof * dim
-         Do iG = 1, Nb_Gauss
-            delem%GradS_BF(iDof,iG) = 0.0_Kr
-         End Do
-      End Do
+
       dElem%outerNormal = Elem_Scal%outerNormal
       Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_3DBoundary_Elast_Init
+   End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_Destroy"
@@ -2276,7 +1790,7 @@ Contains
    End Subroutine Element2D_Scal_Destroy
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Destroy"
+#define __FUNCT__ "Element2D_Vect_Destroy"
    Subroutine Element2D_Vect_Destroy(dElem,ierr)
       Type(MEF90Element2D_Vect)              :: dElem
       PetscErrorCode,Intent(OUT)             :: ierr
@@ -2284,22 +1798,8 @@ Contains
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF,stat=ierr)
       End If
-      If (Associated(dElem%Der_BF)) Then
-         DeAllocate(dElem%Der_BF,stat=ierr)
-      End If
-      If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C,stat=ierr)
-      End If
-   End Subroutine Element2D_Vect_Destroy
-   
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_Destroy"
-   Subroutine Element2D_Elast_Destroy(dElem,ierr)
-      Type(MEF90Element2D_Elast)             :: dElem
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF,stat=ierr)
+      If (Associated(dElem%Grad_BF)) Then
+         DeAllocate(dElem%Grad_BF,stat=ierr)
       End If
       If (Associated(dElem%GradS_BF)) Then
          DeAllocate(dElem%GradS_BF,stat=ierr)
@@ -2307,8 +1807,8 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element2D_Elast_Destroy
-   
+   End Subroutine Element2D_Vect_Destroy
+      
 #undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_Destroy"
    Subroutine Element3D_Scal_Destroy(dElem,ierr)
@@ -2334,22 +1834,8 @@ Contains
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF,stat=ierr)
       End If
-      If (Associated(dElem%Der_BF)) Then
-         DeAllocate(dElem%Der_BF,stat=ierr)
-      End If
-      If (Associated(dElem%Gauss_C)) Then
-         DeAllocate(dElem%Gauss_C,stat=ierr)
-      End If
-   End Subroutine Element3D_Vect_Destroy
-   
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_Destroy"
-   Subroutine Element3D_Elast_Destroy(dElem,ierr)
-      Type(MEF90Element3D_Elast)             :: dElem
-      PetscErrorCode,Intent(OUT)             :: ierr
-
-      If (Associated(dElem%BF)) Then
-         DeAllocate(dElem%BF,stat=ierr)
+      If (Associated(dElem%Grad_BF)) Then
+         DeAllocate(dElem%Grad_BF,stat=ierr)
       End If
       If (Associated(dElem%GradS_BF)) Then
          DeAllocate(dElem%GradS_BF,stat=ierr)
@@ -2357,8 +1843,8 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element3D_Elast_Destroy
-
+   End Subroutine Element3D_Vect_Destroy
+   
 #undef __FUNCT__
 #define __FUNCT__ "Element2D_Scal_DestroySet"
    Subroutine Element2D_Scal_DestroySet(dElem,ierr)
@@ -2388,20 +1874,6 @@ Contains
    End Subroutine Element2D_Vect_DestroySet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Elast_DestroySet"
-   Subroutine Element2D_Elast_DestroySet(dElem,ierr)
-      Type(MEF90Element2D_Elast),dimension(:),Pointer   :: dElem
-      PetscErrorCode,Intent(OUT)                        :: ierr
-      
-      PetscInt                                          :: cell
-      
-      Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
-      End Do
-      DeAllocate(dElem,stat=ierr)
-   End Subroutine Element2D_Elast_DestroySet
-
-#undef __FUNCT__
 #define __FUNCT__ "Element3D_Scal_DestroySet"
    Subroutine Element3D_Scal_DestroySet(dElem,ierr)
       Type(MEF90Element3D_Scal),dimension(:),Pointer    :: dElem
@@ -2428,455 +1900,5 @@ Contains
       End Do
       DeAllocate(dElem,stat=ierr)
    End Subroutine Element3D_Vect_DestroySet
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Elast_DestroySet"
-   Subroutine Element3D_Elast_DestroySet(dElem,ierr)
-      Type(MEF90Element3D_Elast),dimension(:),Pointer   :: dElem
-      PetscErrorCode,Intent(OUT)                        :: ierr
-      
-      PetscInt                                          :: cell
-        
-      Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
-      End Do
-      DeAllocate(dElem,stat=ierr)
-   End Subroutine Element3D_Elast_DestroySet
-
-!!!
-!!! ELEMENT VIEWERS
-!!!
-
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_View"
-   Subroutine Element2D_Scal_View(dElem,viewer,ierr)
-      Type(MEF90Element2D_Scal)              :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-                
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF \n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        Grad_BF (X,Y)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Grad_BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Grad_BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element2D_Scal_View
    
-#undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_View"
-   Subroutine Element2D_Vect_View(dElem,viewer,ierr)
-      Type(MEF90Element2D_Vect)              :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF (X,Y)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        Der_BF (XX,XY,YX,YY)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%XX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%XY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%YX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%YY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element2D_Vect_View
-   
-   Subroutine Element2D_Elast_View(dElem,viewer,ierr)
-      Type(MEF90Element2D_Elast)             :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF (X,Y)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        GradS_BF (XX,YY,XY)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%XX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%YY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%XY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element2D_Elast_View
-
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_View"
-   Subroutine Element3D_Scal_View(dElem,viewer,ierr)
-      Type(MEF90Element3D_Scal)              :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-                
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF \n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        Grad_BF (X,Y,Z)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Grad_BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Grad_BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Grad_BF(iDoF,iG)%Z
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)         
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element3D_Scal_View
-   
-#undef __FUNCT__
-#define __FUNCT__ "Element3D_View"
-   Subroutine Element3D_Vect_View(dElem,viewer,ierr)
-      Type(MEF90Element3D_Vect)              :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF (X,Y,Z)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Z
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        Der_BF (XX,XY,XZ,YX,YY,YZ,ZX,ZY,ZZ)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%XX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%XY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%XZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%YX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%YY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%YZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%ZX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%ZY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%Der_BF(iDoF,iG)%ZZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element3D_Vect_View
-   
-   Subroutine Element3D_Elast_View(dElem,viewer,ierr)
-      Type(MEF90Element3D_Elast)             :: dElem
-      Type(tPetscViewer)                     :: viewer
-      PetscErrorCode,Intent(OUT)             :: ierr
-      
-      PetscInt                               :: Nb_Gauss,Nb_DoF,iDoF,iG
-      Character(len=512)                     :: CharBuffer
-
-      Nb_DoF   = size(dElem%BF,1)
-      Nb_Gauss = size(dElem%BF,2)
-      Write(CharBuffer,102) Nb_DoF
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-      Write(CharBuffer,103) Nb_Gauss
-      Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-      Nb_Gauss = Size(dElem%BF,2)
-      Do iDoF = 1,Nb_DoF
-         Write(CharBuffer,104) iDoF
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        BF (X,Y,Z)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%X
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Y
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n   '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%BF(iDoF,iG)%Z
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-
-         Write(CharBuffer,200) '        GradS_BF (XX,YY,ZZ,YZ,XZ,XY)\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%XX
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%YY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n'
-         Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%ZZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%YZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%XZ
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-         Do iG = 1,Nb_Gauss
-            Write(CharBuffer,201) dElem%GradS_BF(iDoF,iG)%XY
-            Call PetscViewerASCIIPrintf(viewer,CharBuffer,ierr);CHKERRQ(ierr)
-         End Do
-         Write(CharBuffer,*) '\n    '
-      End Do
-102 Format('    Nb_DoF   ',I9,'\n')
-103 Format('    Nb_Gauss ',I9,'\n')
-104 Format('    *** DoF  ',I9,'\n')
-200 Format(A)
-201 Format('   ',F5.2)
-   End Subroutine Element3D_Elast_View
 End Module m_MEF90_Elements
