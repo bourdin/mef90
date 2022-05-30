@@ -2727,12 +2727,12 @@ Contains
       A(2,3,1,3) = T%YZXZ; A(2,3,3,1) = T%YZXZ; A(3,2,1,3) = T%YZXZ; A(3,2,3,1) = T%YZXZ;
       A(1,3,2,3) = T%YZXZ; A(1,3,3,2) = T%YZXZ; A(3,1,2,3) = T%YZXZ; A(3,1,3,2) = T%YZXZ;
       A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY; A(3,2,1,2) = T%YZXY; A(3,2,2,1) = T%YZXY;
-      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY;
+      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,1,2,3) = T%YZXY; A(2,1,3,2) = T%YZXY;
 
-      A(1,2,1,2) = T%XZXZ; A(1,2,2,1) = T%XZXZ; A(2,1,1,2) = T%XZXZ; A(2,1,1,2) = T%XZXZ;
+      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
       A(1,3,1,2) = T%XZXY; A(1,3,2,1) = T%XZXY; A(3,1,1,2) = T%XZXY; A(3,1,2,1) = T%XZXY;
       A(1,2,1,3) = T%XZXY; A(1,2,3,1) = T%XZXY; A(2,1,1,3) = T%XZXY; A(2,1,3,1) = T%XZXY;
-      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
+      A(1,3,1,3) = T%XZXZ; A(1,3,3,1) = T%XZXZ; A(3,1,1,3) = T%XZXZ; A(3,1,3,1) = T%XZXZ;
    End Subroutine Tens4OS3D2Array4
 
 

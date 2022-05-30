@@ -1308,7 +1308,7 @@ Contains
 
                   Call Split%DEED(inelasticStrainGauss,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
                   If (cellIsElastic) Then
-                     stressCell = stressCell + stressGaussPlus + stressGaussMinus * elemDisplacement(cell)%Gauss_C(iGauss)
+                     stressCell = stressCell + (stressGaussPlus + stressGaussMinus) * elemDisplacement(cell)%Gauss_C(iGauss)
                   Else
                      stressCell = stressCell + (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus) * elemDisplacement(cell)%Gauss_C(iGauss)
                   End If
@@ -1321,6 +1321,8 @@ Contains
             End Do ! cell
             Call MEF90Element_Destroy(elemDamage,ierr)
             Call MEF90Element_Destroy(elemDisplacement,ierr)
+            DeAllocate(displacementDof)
+            DeAllocate(damageDof)
          End If ! cell coDim
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)

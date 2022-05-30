@@ -661,6 +661,7 @@ Program CoupledPlasticityDamage
    DeAllocate(heatFluxWorkSet)
    DeAllocate(plasticDissipationSet)
    DeAllocate(ActivatedCrackPressureBlocksList)
+   DeAllocate(ActivatedWorkControlledBlocksList)
    
    DeAllocate(elasticEnergy)
    DeAllocate(forceWork)

@@ -56,7 +56,6 @@ Contains
          io_ws = 0
          filename = Trim(MEF90Ctx%geometryFile)
          exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
 
          If (exoerr < 0) Then
             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'

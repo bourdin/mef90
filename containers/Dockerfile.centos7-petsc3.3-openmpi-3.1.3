@@ -62,7 +62,7 @@ RUN cd ${PETSC_DIR} ;                     \
     COPTFLAGS='-g'                        \
     CXXOPTFLAGS='-g'                      \
     FOPTFLAGS='-g'                        \
-    FFLAGS='-Wno-aliasing'                \
+    FFLAGS='-Wno-aliasing -ffree-line-length-none'                \
     CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
     CFLAGS='-Wno-unused-variable'         \
     --download-exodusii=1                 \
@@ -94,7 +94,7 @@ RUN cd ${PETSC_DIR} ;                     \
     COPTFLAGS='-g -O3'                    \
     CXXOPTFLAGS='-g -O3'                  \
     FOPTFLAGS='-g -O3'                    \
-    FFLAGS='-Wno-aliasing'                \
+    FFLAGS='-Wno-aliasing -ffree-line-length-none'                \
     CXXFLAGS='-Wno-unused-local-typedefs -Wno-unused-variable' \
     CFLAGS='-Wno-unused-variable'         \
     --download-exodusii=1                 \
