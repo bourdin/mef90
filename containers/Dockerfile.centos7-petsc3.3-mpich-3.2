@@ -21,7 +21,8 @@ RUN yum -y install deltarpm ;\
     yum -y update; \
     yum -y install centos-release-scl epel-release; \
     yum -y install devtoolset-9-gcc* devtoolset-9-gdb devtoolset-9-valgrind devtoolset-9-valgrind-devel ;\
-    yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python mpich-3.2-devel
+    yum -y install git patch make cmake3 gmake perl m4 wget man sudo which zlib zlib-devel blas blas-devel lapack lapack-devel boost-devel mesa-libGLU libXrender libXcursor libXft libXinerama python3 python3-devel python mpich-3.2-devel ; \
+    yum -y install autoconf automake valgrind vim libtool
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake  ; \
     mkdir -p /usr/lib64/mpich-3.2/include ; \
     pip3 install cython pyaml numpy 
