@@ -18,7 +18,6 @@ Module m_MEF90_EXO
    Public :: EXOGetCellSetElementType_Scal      
    Public :: EXOGetCellSetElementType_Vect      
    Public :: EXOGetCellSetElementType_Elast      
-   Public :: EXOWriteCase
 
 Contains
 #undef __FUNCT__
@@ -39,7 +38,7 @@ Contains
       Integer                                         :: cpu_ws,io_ws
       Real                                            :: exoVersion
       Integer                                         :: exoErr,exoUnit
-      Type(tDM)                                        :: tmpMesh
+      Type(tDM)                                       :: tmpMesh
       Character(len=MXSTLN),Dimension(:),Pointer      :: cellSetName
       
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
@@ -49,7 +48,7 @@ Contains
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       !!! Open input file
-      If (MEF90_MyRank == 0) Then
+      If (MEF90Ctx%rank == 0) Then
          Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
          cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
          io_ws = 0
@@ -63,14 +62,14 @@ Contains
             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
          EndIf
       End If
-      If (MEF90_NumProcs == 1) Then
+      If (MEF90Ctx%numProcs == 1) Then
          Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
       Else
          Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
          Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
          Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
       End If
-      If (MEF90_MyRank == 0) Then
+      If (MEF90Ctx%rank == 0) Then
          Call EXCLOS(exoUnit,exoErr)
       End If
    End Subroutine MEF90CtxGetDMMeshEXO
@@ -90,9 +89,7 @@ Contains
       Type(tDM), Intent(IN)                           :: Mesh
       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Integer                                         :: exoUnitIN
-      MPI_Comm                                        :: IOComm
-      Integer                                         :: IORank
+      Integer                                         :: exoUnitIN,exoUnit
       Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
       Integer,parameter                               :: num_QA_rec=1
       Character(len=MXSTLN)                           :: QA_rec(4)
@@ -108,46 +105,40 @@ Contains
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
       !!! Get name of output file
-      Select Case (GlobalOptions%FileFormat)
-      Case (MEF90FileFormat_EXOSplit)
-         IOComm = PETSC_COMM_SELF
-         Write(filename,100) trim(MEF90FilePrefix(MEF90Ctx%resultfile)),MEF90Ctx%rank,trim(MEF90FileExtension(MEF90Ctx%resultfile))
-      Case (MEF90FileFormat_EXOSingle)   
-         IOComm = MEF90Ctx%comm
-         filename = MEF90Ctx%resultFile
-      End Select
+      
+      filename = MEF90Ctx%resultFile
    100 Format(A,'-',I4.4,'.',A)
-      Call MPI_Comm_Rank(IOComm,IORank,ierr)
    
       !!! Open output file or create it and format it depending on loading type
-      If (IORank == 0) Then
+      If (MEF90Ctx%rank == 0) Then
          Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
          cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
          Inquire(file=filename,exist=exoExists)
          If (.NOT. exoExists) Then
-            If (GlobalOptions%verbose > 0) Then    
-               Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
-               Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            EndIf
-            io_ws = int(sizeofPetscReal,kind(cpu_ws))
-            MEF90Ctx%fileExoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
-            Select Case (GlobalOptions%FileFormat)
-            Case (MEF90FileFormat_EXOSplit)
-               Call DMmeshViewExodusSplit(mesh,MEF90Ctx%fileExoUnit,ierr)
-            Case (MEF90FileFormat_EXOSingle)
-               exoUnitIN = EXOPEN(MEF90Ctx%geometryfile,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-               Call EXCOPY(exoUnitIN,MEF90Ctx%fileExoUnit,exoErr)
-               Call EXCLOS(exoUnitIN,exoErr)
-            End Select
+            ! If (GlobalOptions%verbose > 0) Then    
+            !    Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
+            !    Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+            ! EndIf
+            ! io_ws = int(sizeofPetscReal,kind(cpu_ws))
+            ! exoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
+            ! Select Case (GlobalOptions%FileFormat)
+            !    Case (MEF90FileFormat_EXOSplit)
+            !       Call DMmeshViewExodusSplit(mesh,exoUnit,ierr)
+            !    Case (MEF90FileFormat_EXOSingle)
+            !       exoUnitIN = EXOPEN(MEF90Ctx%geometryfile,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+            !       Call EXCOPY(exoUnitIN,exoUnit,exoErr)
+            !       Call EXCLOS(exoUnitIN,exoErr)
+            ! End Select
+            Continue
          Else
             io_ws  = 0
-            MEF90Ctx%fileExoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
+            exoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
             QA_rec(1) = "mef90"
             QA_rec(2) = MEF90_GITVER
             Call date_and_time(DATE=date,TIME=time)
             write(QA_rec(3),"(a)") date
             write(QA_rec(4),"(a,':',a,':',a)") time(1:2),time(3:4),time(5:6)
-            call expqa (MEF90Ctx%fileExoUnit , num_QA_rec, QA_rec, ierr)
+            call expqa (exoUnit , num_QA_rec, QA_rec, ierr)
          EndIf
       End If
    End Subroutine MEF90CtxOpenEXO
@@ -216,9 +207,11 @@ Contains
 !!!  MEF90CtxCloseEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   Subroutine MEF90CtxCloseEXO(MEF90Ctx,ierr)
+   Subroutine MEF90CtxCloseEXO(MEF90Ctx,exounit,ierr)
       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+      Integer, intent(IN)                             :: exoUnit
       PetscErrorCode,Intent(OUT)                      :: ierr
    
       Integer                                         :: exoErr
@@ -228,18 +221,8 @@ Contains
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
       Real                                            :: exo_version      
    
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      Select Case (GlobalOptions%FileFormat)
-      Case (MEF90FileFormat_EXOSplit)
-         IOComm = PETSC_COMM_SELF
-      Case (MEF90FileFormat_EXOSingle)   
-         IOComm = PETSC_COMM_WORLD
-      End Select
-      Call MPI_Comm_Rank(IOComm,IORank,ierr)   
-
-      If (IORank == 0) Then
-         Call EXCLOS(MEF90Ctx%fileExoUnit,exoErr)
-         MEF90Ctx%fileExoUnit = 0
+      If (MEF90Ctx%rank == 0) Then
+         Call EXCLOS(exoUnit,exoErr)
       End If
    End Subroutine MEF90CtxCloseEXO
 
@@ -570,29 +553,6 @@ Contains
 !      End If
 !   End Subroutine EXOGetCellSetElementType_Elast
       
-#undef __FUNCT__
-#define __FUNCT__ "EXOWriteCase"
-   Subroutine EXOWriteCase(prefix,formatstring,numprocs)
-      Character(len=*)                               :: prefix,formatstring
-      PetscInt                                       :: numprocs
-      Integer                                        :: F_out = 999
-      
-      Character(len=MEF90_MXSTRLEN)                  :: casefile
-      
-      casefile = Trim(prefix)//'.e2c'
-      If (MEF90_MyRank == 0) Then
-         Open(unit = F_OUT,File = casefile,status = 'Unknown')
-         Rewind(F_OUT)
-         Write(F_OUT,100) '#!EXODUS_CASE 1.0'
-         Write(F_OUT,101) numprocs
-         Write(F_OUT,102) Trim(prefix),Trim(formatstring)
-         Close(F_OUT)
-      End If
-100 Format(A)
-101 Format('FILES_PER_TIMESET',I4)
-102 Format('TIMESET_TEMPLATE "',A,'-',A,'.gen"')
-   End Subroutine EXOWriteCase
-   
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOFormat"
 !!!

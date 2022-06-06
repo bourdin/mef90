@@ -9,12 +9,14 @@ Module m_MEF90_Ctx_Type
    
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
-      MPI_Comm                                        :: IOcomm
-      Integer                                         :: rank
+      !MPI_Comm                                        :: IOcomm
+      Integer                                         :: rank,numProcs
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
-      Integer                                         :: fileExoUnit
+      !Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
-   End Type MEF90Ctx_Type
+   !PetscInt,Public,protected  :: MEF90_MyRank
+   !PetscInt,Public,protected  :: MEF90_NumProcs
+      End Type MEF90Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
       PetscInt                                        :: verbose
@@ -198,65 +200,74 @@ Contains
 !!!
 
    Subroutine MEF90CtxCreate(comm,MEF90Ctx,default,ierr)
-         MPI_Comm,Intent(IN)                          :: comm
-         Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
-         Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
-         PetscInt,Intent(OUT)                         :: ierr
-       
-         Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
-         Character(len=MEF90_MXSTRLEN)                :: IOBuffer,tmpPrefix
-         PetscBool                                    :: hasPrefix,hasGeometry,hasResult
+      MPI_Comm,Intent(IN)                          :: comm
+      Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
+      Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
+      PetscInt,Intent(OUT)                         :: ierr
       
-         MEF90Ctx%comm = comm
-         PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr))
-         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr))
-         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr))
-         PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr))
-         If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
-            PetscCall(PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr))
-            PetscCall(PetscFinalize(ierr))
-            STOP
-         End If
-         If (hasPrefix .AND. hasResult) Then
-            PetscCall(PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr))
-            PetscCall(PetscFinalize(ierr))
-            STOP
-            !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
-         End If
-         If (hasPrefix) Then
-            !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
-            MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
-            MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
-         Else
-            If (.NOT. hasResult) Then
-               MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
-            End If
-         End If
-         PetscCall(PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr))
-         PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr))
+      Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
+      Character(len=MEF90_MXSTRLEN)                :: IOBuffer,tmpPrefix
+      PetscBool                                    :: hasPrefix,hasGeometry,hasResult
+#ifdef PETSC_USE_DEBUG
+      Character(len=MPI_MAX_PROCESSOR_NAME)        :: procName
+      Integer                                      :: procNameLength
+#endif      
+   
+   MEF90Ctx%comm = comm
+   PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm,MEF90Ctx%rank,ierr))
+   PetscCallMPI(MPI_COMM_SIZE(MEF90Ctx%comm,MEF90Ctx%numProcs,ierr))
+   PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-prefix',tmpPrefix,hasPrefix,ierr))
+   PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-geometry',MEF90Ctx%geometryFile,hasGeometry,ierr))
+   PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-result',MEF90Ctx%resultFile,hasResult,ierr))
+   If (.NOT. (hasPrefix .NEQV. hasGeometry)) Then
+      PetscCall(PetscPrintf(comm,"prefix or geometry must be given (-prefix or -geometry) \n",ierr))
+      PetscCall(PetscFinalize(ierr))
+      STOP
+   End If
+   If (hasPrefix .AND. hasResult) Then
+      PetscCall(PetscPrintf(comm,"-prefix and -result options incompatible.\n",ierr))
+      PetscCall(PetscFinalize(ierr))
+      STOP
+      !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
+   End If
+   If (hasPrefix) Then
+      !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
+      MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
+      MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
+   Else
+      If (.NOT. hasResult) Then
+         MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.'//trim(MEF90FileExtension(MEF90Ctx%geometryFile))
+      End If
+   End If
+   PetscCall(PetscBagCreate(comm,sizeofMEF90CtxGlobalOptions,MEF90Ctx%GlobalOptionsBag,ierr))
+   PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,'MEF90Ctx',PETSC_NULL_CHARACTER,default,ierr))
 
-         PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
-         If (GlobalOptions%verbose > 0) Then
-            Write(IOBuffer,*) 'MEF90 Global Context: \n'
-            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-            Write(IOBuffer,100) trim(MEF90Ctx%geometryFile)
-            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-            Write(IOBuffer,101) trim(MEF90Ctx%resultFile)
-            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-            Write(IOBuffer,102) trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
-            PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-            PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr))
-            PetscCall(PetscPrintf(comm,"\n",ierr))
-         End If
-         If (GlobalOptions%fileformat == MEF90FileFormat_EXOSingle) Then
-            MEF90Ctx%IOComm = MEF90Ctx%comm
-         Else
-            MEF90Ctx%IOComm = PETSC_COMM_SELF
-         End If   
-         MEF90Ctx%fileexounit = 0
-      100 Format('  geometry file:       ',(A),'\n')
-      101 Format('  result file:         ',(A),'\n')
-      102 Format('  log file:            ',(A),'\n')
+   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
+
+#ifdef PETSC_USE_DEBUG
+   call MPI_Get_processor_name(procName,procNameLength,ierr)
+   write(*,200) MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
+   ! Write(IOBuffer,200) MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
+   ! Call PetscSynchronizedPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
+   ! Call PetscSynchronizedFlush(MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+#endif
+
+   If (GlobalOptions%verbose > 0) Then
+      Write(IOBuffer,*) 'MEF90 Global Context: \n'
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
+      Write(IOBuffer,100) trim(MEF90Ctx%geometryFile)
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
+      Write(IOBuffer,101) trim(MEF90Ctx%resultFile)
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
+      Write(IOBuffer,102) trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
+      PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr))
+      PetscCall(PetscPrintf(comm,"\n",ierr))
+   End If
+100 Format('  geometry file:       ',(A),'\n')
+101 Format('  result file:         ',(A),'\n')
+102 Format('  log file:            ',(A),'\n')
+200 format(' # Task ',I6,'/',I6,' running on processor ',A,'\n')
    End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__
@@ -340,37 +351,37 @@ Contains
          t = [ ((sqrt(GlobalOptions%timeMin) + Real(i) * dt)**2, i = 0,GlobalOptions%timeNumStep-1) ]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
-      Case (MEF90TimeInterpolation_exo)
-         Select case(GlobalOptions%FileFormat)
-         Case (MEF90FileFormat_EXOSingle)
-            If (MEF90Ctx%rank == 0) Then
-               If (MEF90Ctx%fileExoUnit /= 0) Then
-                  Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
-                  Allocate(t(GlobalOptions%timeNumStep))
-                  Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
-                  PetscCallMPI(MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr))
-                  PetscCallMPI(MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr))
-               Else
-                  Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
-                  SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
-               End If
-            Else
-               PetscCallMPI(MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr))
-               Allocate(t(GlobalOptions%timeNumStep))
-               PetscCallMPI(MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr))
-            End If            
-            GlobalOptions%timeMin = t(1)
-            GlobalOptions%timeMax = t(GlobalOptions%timeNumStep)
-         Case (MEF90FileFormat_EXOSplit)
-            If (MEF90Ctx%fileExoUnit /= 0) Then
-               Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
-               Allocate(t(GlobalOptions%timeNumStep))
-               Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
-            Else
-               Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
-               SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
-            End If
-         End Select
+      ! Case (MEF90TimeInterpolation_exo)
+      !    Select case(GlobalOptions%FileFormat)
+      !    Case (MEF90FileFormat_EXOSingle)
+      !       If (MEF90Ctx%rank == 0) Then
+      !          If (MEF90Ctx%fileExoUnit /= 0) Then
+      !             Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+      !             Allocate(t(GlobalOptions%timeNumStep))
+      !             Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
+      !             PetscCallMPI(MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr))
+      !             PetscCallMPI(MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr))
+      !          Else
+      !             Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+      !             SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
+      !          End If
+      !       Else
+      !          PetscCallMPI(MPI_Bcast(GlobalOptions%timeNumStep,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr))
+      !          Allocate(t(GlobalOptions%timeNumStep))
+      !          PetscCallMPI(MPI_Bcast(t,GlobalOptions%timeNumStep,MPIU_SCALAR,0,MEF90Ctx%comm,ierr))
+      !       End If            
+      !       GlobalOptions%timeMin = t(1)
+      !       GlobalOptions%timeMax = t(GlobalOptions%timeNumStep)
+      !    Case (MEF90FileFormat_EXOSplit)
+      !       If (MEF90Ctx%fileExoUnit /= 0) Then
+      !          Call EXINQ(MEF90Ctx%fileExoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoerr)
+      !          Allocate(t(GlobalOptions%timeNumStep))
+      !          Call EXGATM(MEF90Ctx%fileExoUnit,t,exoerr)
+      !       Else
+      !          Call PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr);
+      !          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
+      !       End If
+      !    End Select
       End Select
       If ((GlobalOptions%verbose > 0) .AND. (MEF90Ctx%rank == 0)) Then
          PetscCall(PetscPrintf(PETSC_COMM_SELF,"Time values array:\n",ierr))

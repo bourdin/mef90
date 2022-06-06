@@ -1,6 +1,5 @@
 Program  TestDMPlexComputeGeometry
 #include <petsc/finclude/petsc.h>
-#include <petsc/finclude/petscdmlabel.h>
    Use m_MEF90
    Use petsc
    Implicit NONE   
@@ -12,7 +11,6 @@ Program  TestDMPlexComputeGeometry
    PetscBool                           :: interpolate = PETSC_TRUE
    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
    PetscInt                            :: set,cell
-   DMLabel                             :: CSLabel,FSLabel
    type(tIS)                           :: CSIS,FSIS,CellIS
    PetscInt,Dimension(:),pointer       :: setID,cellID
    PetscReal,Dimension(:),pointer      :: v0

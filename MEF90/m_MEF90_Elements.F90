@@ -30,11 +30,15 @@ Module m_MEF90_Elements
       PetscInt                                     :: numEdge
       PetscInt                                     :: numFaces
       
-      !!! Number of dof at each vertex edge face cell
-      PetscInt                                     :: numVertexDof
-      PetscInt                                     :: numEdgeDof
-      PetscInt                                     :: numFaceDof
-      PetscInt                                     :: numCellDof
+      !!! Number of dof at each 
+      !!!   vertex edge face cell in 3D,
+      !!!   vertex edge cell in 2D (last value is unused, i.e. always use depth to locate DoF)
+      PetscInt,Dimension(4)                        :: numDofs
+      ! !!!
+      ! PetscInt                                     :: numVertexDof
+      ! PetscInt                                     :: numEdgeDof
+      ! PetscInt                                     :: numFaceDof
+      ! PetscInt                                     :: numCellDof
       PetscInt                                     :: numDoF 
       !!! numDof = numVertexDof * numVertex + numEdgeDof * numEdge 
       !!!          + numFaceDof * numFace + numCellDof
@@ -72,28 +76,28 @@ Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D = MEF90Element_
 "MEF90_P1_Lagrange_2D",                      &  ! name
 MEF90_P1_Lagrange_2D_ShortID,                &  ! shortID
 3,3,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,3,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,0,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D = MEF90Element_Type(   &
 "MEF90_P1_Lagrange_3D",                      &  ! name
 MEF90_P1_Lagrange_3D_ShortID,                &  ! shortID
 4,6,4,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,0,1                                        &  ! dim,codim,order                         
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary = MEF90Element_Type(   &
 "MEF90_P1_Lagrange_2DBoundary",              &  ! name
 MEF90_P1_Lagrange_2DBoundary_ShortID,        &  ! shortID
 2,1,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,2,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],2,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,1,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary = MEF90Element_Type(   &
 "MEF90_P1_Lagrange_3DBoundary",              &  ! name
 MEF90_P1_Lagrange_3DBoundary_ShortID,        &  ! shortID
 3,3,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,3,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,1,1                                        &  ! dim,codim,order                             
 )
 !!!
@@ -103,28 +107,28 @@ Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D = MEF90Element_
 "MEF90_P2_Lagrange_2D",                      &  ! name
 MEF90_P2_Lagrange_2D_ShortID,                &  ! shortID
 3,3,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,0],6,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,0,2                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D = MEF90Element_Type(   &
 "MEF90_P2_Lagrange_3D",                      &  ! name
 MEF90_P2_Lagrange_3D_ShortID,                &  ! shortID
 4,6,4,                                       &  ! numVertex,numEdge,numFace
-1,1,0,0,10,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,0],10,                                &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,0,2                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary = MEF90Element_Type(   &
 "MEF90_P2_Lagrange_2DBoundary",              &  ! name
 MEF90_P2_Lagrange_2DBoundary_ShortID,        &  ! shortID
 2,1,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,0,3,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,1,2                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary = MEF90Element_Type(   &
 "MEF90_P2_Lagrange_3DBoundary",              &  ! name
 MEF90_P2_Lagrange_3DBoundary_ShortID,        &  ! shortID
 3,3,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,0,6,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,0],6,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,1,2                                        &  ! dim,codim,order                             
 )
 !!! 
@@ -134,28 +138,28 @@ Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_2D = MEF90Element_
 "MEF90_Q1_Lagrange_2D",                      &  ! name
 MEF90_Q1_Lagrange_2D_ShortID,                &  ! shortID
 4,4,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,0,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_3D = MEF90Element_Type(   &
 "MEF90_Q1_Lagrange_3D",                      &  ! name
 MEF90_Q1_Lagrange_3D_ShortID,                &  ! shortID
 8,12,6,                                      &  ! numVertex,numEdge,numFace
-1,0,0,0,8,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],8,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,0,1                                        &  ! dim,codim,order                         
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_2DBoundary = MEF90Element_Type(   &
 "MEF90_Q1_Lagrange_2DBoundary",              &  ! name
 MEF90_Q1_Lagrange_2DBoundary_ShortID,        &  ! shortID
 2,1,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,2,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],2,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,1,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_3DBoundary = MEF90Element_Type(   &
 "MEF90_Q1_Lagrange_3DBoundary",              &  ! name
 MEF90_Q1_Lagrange_3DBoundary_ShortID,        &  ! shortID
 4,4,0,                                       &  ! numVertex,numEdge,numFace
-1,0,0,0,4,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,1,1                                        &  ! dim,codim,order                             
 )
 !!! 
@@ -165,28 +169,28 @@ Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_2D = MEF90Element_
 "MEF90_Q2_Lagrange_2D",                      &  ! name
 MEF90_Q2_Lagrange_2D_ShortID,                &  ! shortID
 4,4,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,1,9,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,1],9,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,0,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_3D = MEF90Element_Type(   &
 "MEF90_Q2_Lagrange_3D",                      &  ! name
 MEF90_Q2_Lagrange_3D_ShortID,                &  ! shortID
 8,12,6,                                      &  ! numVertex,numEdge,numFace
-1,1,1,1,27,                                  &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,1,1],27,                                &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,0,1                                        &  ! dim,codim,order                         
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_2DBoundary = MEF90Element_Type(   &
 "MEF90_Q2_Lagrange_2DBoundary",              &  ! name
 MEF90_Q2_Lagrange_2DBoundary_ShortID,        &  ! shortID
 2,1,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,0,3,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,1,1                                        &  ! dim,codim,order                             
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_3DBoundary = MEF90Element_Type(   &
 "MEF90_Q2_Lagrange_3DBoundary",              &  ! name
 MEF90_Q2_Lagrange_3DBoundary_ShortID,        &  ! shortID
 4,4,0,                                       &  ! numVertex,numEdge,numFace
-1,1,0,1,9,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,1,0,1],9,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 3,1,1                                        &  ! dim,codim,order                             
 )
 
