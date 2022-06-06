@@ -5,8 +5,8 @@ MEF90_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_Parameters.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_Materials.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_Elements.o \
-             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_EXO.o \
              ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_Utils.o
+#             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_EXO.o \
 #             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DiffusionImplementation_2D.o \
 #             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DiffusionImplementation_3D.o \
 #             ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DiffusionInterface.o \

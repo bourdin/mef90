@@ -19,6 +19,7 @@ Program  TestDMPlexComputeGeometry
    PetscReal,Dimension(:),pointer      :: B,Binv
    PetscReal                           :: detB
    PetscInt                            :: dim
+   PetscMPIInt                         :: rank,numProc
 
    PetscReal                           :: vol
    PetscReal,Dimension(:),pointer      :: centroid,normal
@@ -29,90 +30,93 @@ Program  TestDMPlexComputeGeometry
    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
    MEF90GlobalOptions_default%timeMin           = 0.0_Kr
    MEF90GlobalOptions_default%timeMax           = 1.0_Kr
-   MEF90GlobalOptions_default%timeFrequency     = 0.0_Kr
    MEF90GlobalOptions_default%timeNumStep       = 11
+   MEF90GlobalOptions_default%timeSkip          = 0
+   MEF90GlobalOptions_default%timeNumCycle      = 1
    MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
 
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+   PetscCall(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
+   PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD,numProc,ierr))
+
    Call MEF90Initialize(ierr)
    Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
 
-   Call DMPlexCreateFromFile(PETSC_COMM_WORLD,MEF90Ctx%inputmesh,interpolate,dm,ierr);CHKERRQ(ierr);
-   Call DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr);CHKERRQ(ierr)
-
-   !!!
-   !!! I am not sure everybody would approve of this...
-   !!!
-   if (dmDist%v /= -1) then
-      call DMDestroy(dm,ierr)
-      dm%v = dmDist%v
+   PetscCall(PetscPrintf(PETSC_COMM_WORLD,MEF90Ctx%geometryfile,ierr))
+   PetscCall(DMPlexCreateFromFile(PETSC_COMM_WORLD,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
+   PetscCall(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCall(DMSetFromOptions(dm,ierr))
+   PetscCall(DMGetDimension(dm,dim,ierr))
+   PetscCall(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+  
+   PetscCall(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+   if (numProc == 1) then
+      dmDist = dm
    end if
-
-   Call DMView(dm,PETSC_VIEWER_STDOUT_WORLD,ierr)
-   call DMGetDimension(dm,dim,ierr)
+   PetscCall(DMViewFromOptions(dmDist,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCall(DMGetDimension(dm,dim,ierr))
 
    allocate(v0(dim))
    allocate(B(dim**2))
    allocate(Binv(dim**2))
-   call DMGetLabel(dm,"Cell Sets",CSLabel,ierr)
-   call DMLabelGetValueIS(CSLabel,CSIS,ierr)
-   call ISGetIndicesF90(CSIS,setID,ierr)
+   PetscCall(DMGetLabelIdIS(dm, "Cell Sets", CSIS, ierr))
+   PetscCall(ISGetIndicesF90(CSIS,setID,ierr))
    do set = 1, size(setID)
       write(IOBuffer,*) 'Cell Set', setID(set),'\n'
-      call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-      call DMLabelGetStratumIS(CSLabel,setID(set),cellIS,ierr)
-      call ISGetIndicesF90(cellIS,cellID,ierr)
+      PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+      PetscCall(DMGetStratumIS(dm, "Cell Sets", setID(set), cellIS, ierr))
+      PetscCall(ISGetIndicesF90(cellIS,cellID,ierr))
       do cell = 1, size(cellID)
-         call DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr)
+         PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr))
          write(*,*) 'cell ',cellID(cell)
          write(*,*) '   v0      ',v0
          write(*,*) '   B       ',B
          write(*,*) '   Binv    ',Binv
          write(*,*) '   detB    ',detB
-         !call DMPlexComputeCellGeometryFVM(dm,cellID(cell),vol,centroid,normal,ierr)
+         !PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(cell),vol,centroid,normal,ierr))
          !write(*,*) '   vol      ', vol
          !write(*,*) '   centroid ', centroid
          !write(*,*) '   normal   ', normal
       end do
-      call PetscPrintf(PETSC_COMM_SELF,"\n",ierr)
-      call ISRestoreIndicesF90(cellIS,cellID,ierr)
-      call ISDestroy(cellIS,ierr)
+      PetscCall(PetscPrintf(PETSC_COMM_SELF,"\n",ierr))
+      PetscCall(ISRestoreIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISDestroy(cellIS,ierr))
    end do
-   call ISRestoreIndicesF90(CSIS,setID,ierr)
-   call ISDestroy(CSIS,ierr)
+   PetscCall(ISRestoreIndicesF90(CSIS,setID,ierr))
+   PetscCall(ISDestroy(CSIS,ierr))
    deAllocate(Binv)
    deAllocate(B)
    DeAllocate(v0)
 
    allocate(centroid(dim))
    allocate(normal(dim))
-   call DMGetLabel(dm,"Face Sets",FSLabel,ierr)
-   call DMLabelGetValueIS(FSLabel,FSIS,ierr)
-   call ISGetIndicesF90(FSIS,setID,ierr)
+   PetscCall(DMGetLabelIdIS(dm, "Face Sets", fsIS, ierr))
+
+   PetscCall(ISGetIndicesF90(FSIS,setID,ierr))
    do set = 1, size(setID)
       write(IOBuffer,*) 'Face Set', setID(set),'\n'
-      call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-      call DMLabelGetStratumIS(FSLabel,setID(set),cellIS,ierr)
-      call ISGetIndicesF90(cellIS,cellID,ierr)
+      PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+      PetscCall(DMGetStratumIS(dm, "Face Sets", setID(set), cellIS, ierr))
+      PetscCall(ISGetIndicesF90(cellIS,cellID,ierr))
       do cell = 1, size(cellID)
-         !call DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr)
+         !PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr))
          !write(*,*) 'cell ',cellID(cell)
          !write(*,*) '   v0   ',v0
          !write(*,*) '   B    ',B
          !write(*,*) '   Binv ',Binv
          !write(*,*) '   detB ',detB
-         call DMPlexComputeCellGeometryFVM(dm,cellID(cell),vol,centroid,normal,ierr)
+         PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(cell),vol,centroid,normal,ierr))
          write(*,*) '   vol         ', vol
          write(*,*) '   centroid    ', centroid
          write(*,*) '   normal      ', normal
       end do
-      call ISRestoreIndicesF90(cellIS,cellID,ierr)
-      call ISDestroy(cellIS,ierr)
+      PetscCall(ISRestoreIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISDestroy(cellIS,ierr))
    end do
-   call ISRestoreIndicesF90(FSIS,setID,ierr)
-   call ISDestroy(FSIS,ierr)
+   PetscCall(ISRestoreIndicesF90(FSIS,setID,ierr))
+   PetscCall(ISDestroy(FSIS,ierr))
 
    Call MEF90CtxDestroy(MEF90Ctx,ierr)   
    Call MEF90Finalize(ierr)
-   Call PetscFinalize()
+   Call PetscFinalize(ierr)
 End Program  TestDMPlexComputeGeometry
