@@ -20,59 +20,59 @@ int dmViewDAG(DM dm,PetscViewer viewer)
   PetscReal      *xyz=NULL;
 
   
-  ierr = PetscViewerASCIIPrintf(viewer,"=== DAG ===\n");CHKERRQ(ierr);
-  ierr = DMPlexGetChart(dm,&pStart,&pEnd);
-  ierr = DMGetDimension(dm,&dim);
-  ierr = PetscViewerASCIIPrintf(viewer,"\nDimension %d:\n",dim);CHKERRQ(ierr);
-  ierr = DMGetCoordinateSection(dm,&coordSection);CHKERRQ(ierr);
-  ierr = DMGetCoordinatesLocal(dm,&coord);CHKERRQ(ierr);
-  ierr = DMPlexGetDepthStratum(dm,0,&vStart,&vEnd);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"\nvertex range in DAG %d-%d:\n",vStart,vEnd);CHKERRQ(ierr);
+  PetscCall(PetscViewerASCIIPrintf(viewer,"=== DAG ===\n"));
+  PetscCall(DMPlexGetChart(dm,&pStart,&pEnd));
+  PetscCall(DMGetDimension(dm,&dim));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"\nDimension %d:\n",dim));
+  PetscCall(DMGetCoordinateSection(dm,&coordSection));
+  PetscCall(DMGetCoordinatesLocal(dm,&coord));
+  PetscCall(DMPlexGetDepthStratum(dm,0,&vStart,&vEnd));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"\nvertex range in DAG %d-%d:\n",vStart,vEnd));
   for (v = vStart; v < vEnd; v++) {
-    ierr = DMPlexVecGetClosure(dm,coordSection,coord,v,&nc,&xyz);CHKERRQ(ierr);
-    ierr = PetscViewerASCIIPrintf(viewer,"   vertex %d:",v);CHKERRQ(ierr);
+    PetscCall(DMPlexVecGetClosure(dm,coordSection,coord,v,&nc,&xyz));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"   vertex %d:",v));
     for (c = 0; c < nc; c++) {
-      ierr = PetscViewerASCIIPrintf(viewer," %g",xyz[c]);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer," %g",xyz[c]));
     }
-    ierr = PetscViewerASCIIPrintf(viewer,"\n");CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
   }
-  ierr = DMPlexVecRestoreClosure(dm,coordSection,coord,v,&nc,&xyz);CHKERRQ(ierr);
+  PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coord,v,&nc,&xyz));
   for (p1 = pStart; p1 < pEnd; p1++) {
-    ierr = PetscViewerASCIIPrintf(viewer,"\npoint %d:\n",p1);CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\npoint %d:\n",p1));
     PetscCall(DMPlexGetPointDepth(dm,p1,&depth));
     PetscCall(DMPlexGetPointHeight(dm,p1,&height));
     PetscCall(PetscViewerASCIIPrintf(viewer,"   Depth: %d Height: %d\n",depth,height));
-    ierr = DMPlexGetConeSize(dm,p1,&numPoints);CHKERRQ(ierr);
-    ierr = DMPlexGetCone(dm,p1,&cone);CHKERRQ(ierr);
-    ierr = PetscViewerASCIIPrintf(viewer,"   Cone: ");CHKERRQ(ierr);
+    PetscCall(DMPlexGetConeSize(dm,p1,&numPoints));
+    PetscCall(DMPlexGetCone(dm,p1,&cone));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"   Cone: "));
     for (p2 = 0; p2 < numPoints; p2++) {
-      ierr = PetscViewerASCIIPrintf(viewer,"%d,",cone[p2]);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"%d,",cone[p2]));
     }
-    ierr = PetscViewerASCIIPrintf(viewer,"\n");CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
     
-    ierr = DMPlexGetSupportSize(dm,p1,&numPoints);CHKERRQ(ierr);
-    ierr = DMPlexGetSupport(dm,p1,&support);CHKERRQ(ierr);
-    ierr = PetscViewerASCIIPrintf(viewer,"   Support: ");CHKERRQ(ierr);
+    PetscCall(DMPlexGetSupportSize(dm,p1,&numPoints));
+    PetscCall(DMPlexGetSupport(dm,p1,&support));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"   Support: "));
     for (p2 = 0; p2 < numPoints; p2++) {
-      ierr = PetscViewerASCIIPrintf(viewer,"%d,",support[p2]);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"%d,",support[p2]));
     }
-    ierr = PetscViewerASCIIPrintf(viewer,"\n");CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
     
-    ierr = DMPlexGetTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure);CHKERRQ(ierr);
-    ierr = PetscViewerASCIIPrintf(viewer,"   TransitiveClosure IN: ");CHKERRQ(ierr);
+    PetscCall(DMPlexGetTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"   TransitiveClosure IN: "));
     for (p2 = 0; p2 < numPoints; p2++) {
-      ierr = PetscViewerASCIIPrintf(viewer,"%d,",transitiveClosure[p2*2]);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"%d,",transitiveClosure[p2*2]));
     }
-    ierr = PetscViewerASCIIPrintf(viewer,"\n");CHKERRQ(ierr);
-    ierr = DMPlexRestoreTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure);CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
+    PetscCall(DMPlexRestoreTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure));
     
-    ierr = DMPlexGetTransitiveClosure(dm,p1,PETSC_FALSE,&numPoints,&transitiveClosure);CHKERRQ(ierr);
-    ierr = PetscViewerASCIIPrintf(viewer,"   TransitiveClosure OUT: ");CHKERRQ(ierr);
+    PetscCall(DMPlexGetTransitiveClosure(dm,p1,PETSC_FALSE,&numPoints,&transitiveClosure));
+    PetscCall(PetscViewerASCIIPrintf(viewer,"   TransitiveClosure OUT: "));
     for (p2 = 0; p2 < numPoints; p2++) {
-      ierr = PetscViewerASCIIPrintf(viewer,"%d,",transitiveClosure[p2*2]);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"%d,",transitiveClosure[p2*2]));
     }
-    ierr = PetscViewerASCIIPrintf(viewer,"\n");CHKERRQ(ierr);
-    ierr = DMPlexRestoreTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure);CHKERRQ(ierr);
+    PetscCall(PetscViewerASCIIPrintf(viewer,"\n"));
+    PetscCall(DMPlexRestoreTransitiveClosure(dm,p1,PETSC_TRUE,&numPoints,&transitiveClosure));
   }
   return 0;
 }
@@ -88,61 +88,61 @@ int dmViewSets(DM dm,PetscViewer viewer)
   PetscInt       set;
   PetscErrorCode ierr;
 
-  ierr = PetscViewerASCIIPrintf(viewer,"=== SETS ===\n");CHKERRQ(ierr);
-  ierr = DMPlexGetChart(dm,&pStart,&pEnd);
-  ierr = DMPlexGetHeightStratum(dm,0,&cStart,&cEnd);CHKERRQ(ierr);
-  ierr = DMPlexGetHeightStratum(dm,1,&eStart,&eEnd);CHKERRQ(ierr);
-  ierr = DMPlexGetDepthStratum(dm,0,&vStart,&vEnd);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"pStart: %d, pEnd: %d\n",pStart,pEnd);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"cStart: %d, cEnd: %d\n",cStart,cEnd);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"vStart: %d, vEnd: %d\n",vStart,vEnd);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"eStart: %d, eEnd: %d\n",eStart,eEnd);CHKERRQ(ierr);
+  PetscCall(PetscViewerASCIIPrintf(viewer,"=== SETS ===\n"));
+  PetscCall(DMPlexGetChart(dm,&pStart,&pEnd));
+  PetscCall(DMPlexGetHeightStratum(dm,0,&cStart,&cEnd));
+  PetscCall(DMPlexGetHeightStratum(dm,1,&eStart,&eEnd));
+  PetscCall(DMPlexGetDepthStratum(dm,0,&vStart,&vEnd));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"pStart: %d, pEnd: %d\n",pStart,pEnd));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"cStart: %d, cEnd: %d\n",cStart,cEnd));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"vStart: %d, vEnd: %d\n",vStart,vEnd));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"eStart: %d, eEnd: %d\n",eStart,eEnd));
 
-  ierr = DMGetLabelSize(dm,"Cell Sets",&numSets);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"\n%d Cell sets: \n",numSets);CHKERRQ(ierr);
+  PetscCall(DMGetLabelSize(dm,"Cell Sets",&numSets));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"\n%d Cell sets: \n",numSets));
   if (numSets > 0) {
-    ierr = DMGetLabelIdIS(dm,"Cell Sets",&setIS);CHKERRQ(ierr);
-    ierr = ISView(setIS,viewer);CHKERRQ(ierr);
-    ierr = ISGetIndices(setIS,&setIDs);CHKERRQ(ierr);
+    PetscCall(DMGetLabelIdIS(dm,"Cell Sets",&setIS));
+    PetscCall(ISView(setIS,viewer));
+    PetscCall(ISGetIndices(setIS,&setIDs));
     for (set = 0; set < numSets; set++){
-      ierr = PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]);CHKERRQ(ierr);
-      ierr = DMGetStratumIS(dm,"Cell Sets",setIDs[set],&pointsIS);CHKERRQ(ierr);
-      ierr = ISView(pointsIS,viewer);CHKERRQ(ierr);
-      ierr = ISDestroy(&pointsIS);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]));
+      PetscCall(DMGetStratumIS(dm,"Cell Sets",setIDs[set],&pointsIS));
+      PetscCall(ISView(pointsIS,viewer));
+      PetscCall(ISDestroy(&pointsIS));
     }
-    ierr = ISRestoreIndices(setIS,&setIDs);CHKERRQ(ierr);
-    ierr = ISDestroy(&setIS);CHKERRQ(ierr);
+    PetscCall(ISRestoreIndices(setIS,&setIDs));
+    PetscCall(ISDestroy(&setIS));
   }
-  ierr = DMGetLabelSize(dm,"Face Sets",&numSets);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"\n%d Face sets: \n",numSets);CHKERRQ(ierr);
+  PetscCall(DMGetLabelSize(dm,"Face Sets",&numSets));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"\n%d Face sets: \n",numSets));
   if (numSets > 0) {
-    ierr = DMGetLabelIdIS(dm,"Face Sets",&setIS);CHKERRQ(ierr);
-    ierr = ISView(setIS,viewer);CHKERRQ(ierr);
-    ierr = ISGetIndices(setIS,&setIDs);CHKERRQ(ierr);
+    PetscCall(DMGetLabelIdIS(dm,"Face Sets",&setIS));
+    PetscCall(ISView(setIS,viewer));
+    PetscCall(ISGetIndices(setIS,&setIDs));
     for (set = 0; set < numSets; set++){
-      ierr = PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]);CHKERRQ(ierr);
-      ierr = DMGetStratumIS(dm,"Face Sets",setIDs[set],&pointsIS);CHKERRQ(ierr);
-      ierr = ISView(pointsIS,viewer);CHKERRQ(ierr);
-      ierr = ISDestroy(&pointsIS);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]));
+      PetscCall(DMGetStratumIS(dm,"Face Sets",setIDs[set],&pointsIS));
+      PetscCall(ISView(pointsIS,viewer));
+      PetscCall(ISDestroy(&pointsIS));
     }
-    ierr = ISRestoreIndices(setIS,&setIDs);CHKERRQ(ierr);
-    ierr = ISDestroy(&setIS);CHKERRQ(ierr);
+    PetscCall(ISRestoreIndices(setIS,&setIDs));
+    PetscCall(ISDestroy(&setIS));
   }
 
-  ierr = DMGetLabelSize(dm,"Vertex Sets",&numSets);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIPrintf(viewer,"\n%d Vertex sets: \n",numSets);CHKERRQ(ierr);
+  PetscCall(DMGetLabelSize(dm,"Vertex Sets",&numSets));
+  PetscCall(PetscViewerASCIIPrintf(viewer,"\n%d Vertex sets: \n",numSets));
   if (numSets > 0) {
-    ierr = DMGetLabelIdIS(dm,"Vertex Sets",&setIS);CHKERRQ(ierr);
-    ierr = ISView(setIS,viewer);CHKERRQ(ierr);
-    ierr = ISGetIndices(setIS,&setIDs);CHKERRQ(ierr);
+    PetscCall(DMGetLabelIdIS(dm,"Vertex Sets",&setIS));
+    PetscCall(ISView(setIS,viewer));
+    PetscCall(ISGetIndices(setIS,&setIDs));
     for (set = 0; set < numSets; set++){
-      ierr = PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]);CHKERRQ(ierr);
-      ierr = DMGetStratumIS(dm,"Vertex Sets",setIDs[set],&pointsIS);CHKERRQ(ierr);
-      ierr = ISView(pointsIS,viewer);CHKERRQ(ierr);
-      ierr = ISDestroy(&pointsIS);CHKERRQ(ierr);
+      PetscCall(PetscViewerASCIIPrintf(viewer,"=== Set %d ===\n",setIDs[set]));
+      PetscCall(DMGetStratumIS(dm,"Vertex Sets",setIDs[set],&pointsIS));
+      PetscCall(ISView(pointsIS,viewer));
+      PetscCall(ISDestroy(&pointsIS));
     }
-    ierr = ISRestoreIndices(setIS,&setIDs);CHKERRQ(ierr);
-    ierr = ISDestroy(&setIS);CHKERRQ(ierr);
+    PetscCall(ISRestoreIndices(setIS,&setIDs));
+    PetscCall(ISDestroy(&setIS));
   }
   return 0;
 }
@@ -161,7 +161,7 @@ int main(int argc,char **argv)
   Vec            coordLoc;
   PetscSF        migrationSF;
 
-  ierr = PetscInitialize(&argc,&argv,NULL,help);CHKERRQ(ierr);
+  PetscCall(PetscInitialize(&argc,&argv,NULL,help));
   MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
   PetscOptionsBegin(PETSC_COMM_WORLD,"","viewDAG options","none");
   PetscCall(PetscOptionsString("-i","filename to read","",filename,filename,sizeof(filename),NULL));
@@ -169,25 +169,25 @@ int main(int argc,char **argv)
   PetscCall(PetscOptionsBool("-interpolate","Generate intermediate mesh elements","",interpolate,&interpolate,NULL));
   PetscOptionsEnd();
 
-  //ierr = DMPlexCreateFromFile(PETSC_COMM_WORLD,filename,interpolate,&dm);CHKERRQ(ierr);
+  PetscCall(PetscPrintf(PETSC_COMM_WORLD," filename %s\n",filename));
   PetscCall(DMPlexCreateFromFile(PETSC_COMM_WORLD, filename, NULL, interpolate, &dm));
-  ierr = DMPlexDistribute(dm,0,&migrationSF,&dmDist);CHKERRQ(ierr);
+  PetscCall(DMPlexDistribute(dm,0,&migrationSF,&dmDist));
   if (dmDist) {
     DMDestroy(&dm);
     dm   = dmDist;
   }
-  ierr = DMSetFromOptions(dm);CHKERRQ(ierr);
-  ierr = PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank);CHKERRQ(ierr);
-  ierr = PetscViewerASCIIOpen(PETSC_COMM_SELF,outfilename,&viewer);CHKERRQ(ierr);
-  ierr = dmViewSets(dm,viewer);CHKERRQ(ierr);
-  ierr = dmViewDAG(dm,viewer);CHKERRQ(ierr);
-  ierr = PetscViewerDestroy(&viewer);CHKERRQ(ierr);
+  PetscCall(DMSetFromOptions(dm));
+  PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
+  PetscCall(PetscViewerASCIIOpen(PETSC_COMM_SELF,outfilename,&viewer));
+  PetscCall(dmViewSets(dm,viewer));
+  PetscCall(dmViewDAG(dm,viewer));
+  PetscCall(PetscViewerDestroy(&viewer));
 
-  ierr = DMGetCoordinateSection(dm,&sectionCoord);CHKERRQ(ierr);
-  ierr = DMGetCoordinatesLocal(dm,&coordLoc);CHKERRQ(ierr);
-  ierr = VecView(coordLoc,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
+  PetscCall(DMGetCoordinateSection(dm,&sectionCoord));
+  PetscCall(DMGetCoordinatesLocal(dm,&coordLoc));
+  PetscCall(VecView(coordLoc,PETSC_VIEWER_STDOUT_WORLD));
 
-  ierr = DMDestroy(&dm);CHKERRQ(ierr);
-  ierr = PetscFinalize();
+  PetscCall(DMDestroy(&dm));
+  PetscCall(PetscFinalize());
   return 0;
 }
