@@ -51,19 +51,13 @@ Subroutine MEF90_SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,s
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
             !!! This can probably be optimize by allocating closure outside of the loop
-            !!! But I can;t figure out how it is done at the moment.
+            !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
             Do point = 1,size(setPointID)
                 PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point), PETSC_TRUE, closure,ierr))
                 Do p = 1,size(closure),2
-                    ! find the depth of p
-                    Do depth = 1,sdim+1
-                        If((closure(p) >= pStartDepth(depth)) .AND. (closure(p) < pEndDepth(depth))) Then
-                            If (elemType%numDofs(depth) > 0) Then
-                                PetscCall(PetscSectionSetDof(section,closure(p),elemType%numDofs(depth)*numComponents,ierr))
-                            End If 
-                        End If! closure(p)
-                    End Do! d
+                    PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
+                    PetscCall(PetscSectionSetDof(section,closure(p),elemType%numDofs(depth)*numComponents,ierr))
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm, setPointID(point), PETSC_TRUE, closure,ierr))
             End Do! cell
@@ -76,7 +70,7 @@ Subroutine MEF90_SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,s
 #define __FUNCT__ "MEF90_SectionAllocateConstraintSet"
 !!!
 !!!  
-!!!  MEF90_SectionAllocateConstraintSet: Associates dof to a section
+!!!  MEF90_SectionAllocateConstraintSet: Allocate space for constraints in a section
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
@@ -108,16 +102,14 @@ Subroutine MEF90_SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,s
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
             !!! This can probably be optimize by allocating closure outside of the loop
-            !!! But I can;t figure out how it is done at the moment.
+            !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
             Do point = 1,size(setPointID)
                 PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point), PETSC_TRUE, closure,ierr))
-Write(*,*) setPointID(point), closure(::2)
                 Do p = 1,size(closure),2
                     PetscCall(PetscSectionGetDoF(section,closure(p),numDof,ierr))
-write(*,*) closure(p), numDof
                     If (numDof > 0) Then
-                        PetscCall(PetscSectionSetDof(section, p,numComponents,ierr))
+                        PetscCall(PetscSectionSetConstraintDof(section,closure(p),numComponents,ierr))
                     End If
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm, setPointID(point), PETSC_TRUE, closure,ierr))
@@ -131,7 +123,7 @@ write(*,*) closure(p), numDof
 #define __FUNCT__ "MEF90_SectionSetConstraintIndicesSet"
 !!!
 !!!  
-!!!  MEF90_SectionSetConstraintIndicesSet: Associates dof to a section
+!!!  MEF90_SectionSetConstraintIndicesSet: Set constrained points in a section
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
@@ -163,14 +155,12 @@ write(*,*) closure(p), numDof
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
             !!! This can probably be optimize by allocating closure outside of the loop
-            !!! But I can;t figure out how it is done at the moment.
+            !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
             Do point = 1,size(setPointID)
                 PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point), PETSC_TRUE, closure,ierr))
-!Write(*,*) setPointID(point), closure(::2)
                 Do p = 1,size(closure),2
                     PetscCall(PetscSectionGetDoF(section,closure(p),numDof,ierr))
-write(*,*) closure(p), numDof, ConstraintIndices
                     If (numDof > 0) Then
                         PetscCall(PetscSectionSetConstraintIndicesF90(section,closure(p),ConstraintIndices,ierr))
                     End If
