@@ -18,5 +18,7 @@ EndFor
 Line Loop(1) = {1:4};
 Plane Surface(1) = {1};
 Physical Surface(1) = {1};
-Physical Line(20)   = {1,3};
-Physical Point(300) = {4};
+Physical Line(20)   = {1};
+Physical Line(21)   = {2};
+Physical Point(300) = {2};
+Physical Point(301) = {4};

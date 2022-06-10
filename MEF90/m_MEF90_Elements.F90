@@ -33,6 +33,7 @@ Module m_MEF90_Elements
       !!! Number of dof at each 
       !!!   vertex edge face cell in 3D,
       !!!   vertex edge cell in 2D (last value is unused, i.e. always use depth to locate DoF)
+      !!! i.e. point depth -1
       PetscInt,Dimension(4)                        :: numDofs
       ! !!!
       ! PetscInt                                     :: numVertexDof
@@ -90,7 +91,7 @@ Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary = MEF90
 "MEF90_P1_Lagrange_2DBoundary",              &  ! name
 MEF90_P1_Lagrange_2DBoundary_ShortID,        &  ! shortID
 2,1,0,                                       &  ! numVertex,numEdge,numFace
-[1,0,0,0],2,                                   &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+[1,0,0,0],2,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
 2,1,1                                        &  ! dim,codim,order
 )
 Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary = MEF90Element_Type(   &

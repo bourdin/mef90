@@ -8,6 +8,10 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 #include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 #include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+viewDAG: viewDAG.o
+	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
+	${RM} -f viewDAG.o
+
 TestLabels.o: ${MEF90_DIR}/Tests/TestLabels.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
