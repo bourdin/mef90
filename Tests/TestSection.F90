@@ -87,7 +87,7 @@ Implicit NONE
     PetscCall(DMGetLabelIdIS(dm,setType,SetIS,ierr))
     PetscCall(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
-        !!! setting the constrained compoents to an arbitrary value
+        !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
@@ -100,7 +100,7 @@ Implicit NONE
     PetscCall(DMGetLabelIdIS(dm,setType,SetIS,ierr))
     PetscCall(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
-        !!! setting the constrained compoents to an arbitrary value
+        !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.

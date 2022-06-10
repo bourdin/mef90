@@ -150,13 +150,12 @@ Subroutine MEF90_SectionAllocateConstraint(dm,table,section,ierr)
     Type(tPetscSection),Intent(INOUT)  :: section
     PetscErrorCode,Intent(INOUT)       :: ierr
 
-    PetscInt                           :: p,c,i,pStart,pEnd,numConstraints,maxConstraints = 0
+    PetscInt                           :: p,c,i,pStart,pEnd,numConstraints,numComponents
     PetscInt,Dimension(:),Pointer      :: constraints
 
     PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
     Do p = 1, pEnd
         numConstraints = count(table(p,:))
-        maxConstraints = max(maxConstraints,numConstraints)
         If (numConstraints > 0) Then
             PetscCall(PetscSectionSetConstraintDof(section,p-1,numConstraints,ierr))
         End If
@@ -164,11 +163,12 @@ Subroutine MEF90_SectionAllocateConstraint(dm,table,section,ierr)
 
     PetscCall(PetscSectionSetup(section,ierr))
 
+    numComponents = size(table,2)
     Do p = 1, pEnd
         numConstraints = count(table(p,:))
         If (numConstraints > 0) Then
             Allocate(constraints(numConstraints))
-            constraints = pack([ (i-1, i = 1,maxConstraints) ],table(p,:))
+            constraints = pack([ (i-1, i = 1,numComponents) ],table(p,:))
             PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
             DeAllocate(constraints)
         End If
