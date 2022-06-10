@@ -26,41 +26,41 @@ Implicit NONE
     MEF90GlobalOptions_default%timeNumCycle      = 1
     MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
 
-    PetscCall(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     
     Call MEF90Initialize(ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     
-    PetscCall(PetscPrintf(MEF90Ctx%Comm,MEF90Ctx%geometryfile//'\n',ierr))
-    PetscCall(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
-    PetscCall(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
-    PetscCall(DMSetFromOptions(dm,ierr))
-    PetscCall(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(PetscPrintf(MEF90Ctx%Comm,MEF90Ctx%geometryfile//'\n',ierr))
+    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
+    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+    PetscCallA(DMSetFromOptions(dm,ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
     
-    PetscCall(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+    PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
     if (MEF90Ctx%NumProcs > 1) then
-        PetscCall(DMDestroy(dm,ierr))
+        PetscCallA(DMDestroy(dm,ierr))
         dm = dmDist
     end if
-    PetscCall(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
     Do i = 1, size(MEF90_DMPlexSetTypes)
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90_DMPlexSetTypes(i))//' ===\n',ierr))
-        PetscCall(DMGetLabelIdIS(dm,MEF90_DMPlexSetTypes(i), SetIS, ierr))
-        PetscCall(ISGetIndicesF90(SetIS,setID,ierr))
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90_DMPlexSetTypes(i))//' ===\n',ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetTypes(i), SetIS, ierr))
+        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
         Write(*,*) trim(MEF90_DMPlexSetTypes(i))//' ID: ', setID
         Do set = 1, size(setID)
-            PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetTypes(i),setID(set),pointIS,ierr))
-            PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetTypes(i),setID(set),pointIS,ierr))
+            PetscCallA(ISGetIndicesF90(pointIS,pointID,ierr))
             Write(*,*) '   points', pointID
-            PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
-            PetscCall(ISDestroy(pointIS,ierr))
+            PetscCallA(ISRestoreIndicesF90(pointIS,pointID,ierr))
+            PetscCallA(ISDestroy(pointIS,ierr))
         End Do
-        PetscCall(ISRestoreIndicesF90(SetIS,setID,ierr))
-        PetscCall(ISDestroy(SetIS,ierr))
+        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+        PetscCallA(ISDestroy(SetIS,ierr))
     End Do
-    PetscCall(DMDestroy(dm,ierr))
-    PetscCall(PetscFinalize(ierr))
+    PetscCallA(DMDestroy(dm,ierr))
+    PetscCallA(PetscFinalize(ierr))
     
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)

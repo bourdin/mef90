@@ -224,6 +224,7 @@ Contains
       If (MEF90Ctx%rank == 0) Then
          Call EXCLOS(exoUnit,exoErr)
       End If
+      ierr = 0
    End Subroutine MEF90CtxCloseEXO
 
 #undef __FUNCT__
