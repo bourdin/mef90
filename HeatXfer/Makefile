@@ -39,10 +39,10 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 BASE_DIR=${MEF90_DIR}/HeatXfer
 
-HeatXfer:${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer
+HeatXfer:${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer
 	-@echo "      $@"
 
-${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer: HeatXfer.o
+${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer: HeatXfer.o
 	-@echo "      $@"
 	-@${FLINKER} -o $@ HeatXfer.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
@@ -53,7 +53,7 @@ HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
 testHeatXfer:
 	@echo ;echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 

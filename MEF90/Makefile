@@ -10,7 +10,7 @@ m_MEF90_Parameters.F90: ${MEF90_DIR}/mef90version.h
 MEF90: m_MEF90.o
 
 m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
-	       m_MEF90_Ctx.o \
+	   m_MEF90_Ctx.o \
            m_MEF90_LinAlg.o \
            m_MEF90_MPI.o \
            m_MEF90_Parameters.o \
