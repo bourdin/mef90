@@ -146,25 +146,29 @@ m_MEF90_LinAlg.o: ${MEF90_DIR}/MEF90/m_MEF90_LinAlg.F90 \
 m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
+        m_MEF90_Utils.o \
+        m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element2D_Scal"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Scal -c -o $@ $<
 m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
+        m_MEF90_Utils.o \
+        m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element2D_Vect"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Vect -c -o $@ $<
 m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
+        m_MEF90_Utils.o \
+        m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element3D_Scal"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Scal -c -o $@ $<
 m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
+        m_MEF90_Utils.o \
+        m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element3D_Vect"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Vect -c -o $@ $<
 

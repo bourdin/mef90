@@ -7,6 +7,7 @@ MEF90_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DMPlex.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Utils.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixInterface.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \

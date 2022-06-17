@@ -13,8 +13,8 @@ Module m_MEF90
    !Use m_MEF90_DiffusionInterface
    !Use m_MEF90_ElasticityInterface
    !Use m_MEF90_GradDamageInterface
-   !Use m_MEF90_Elements 
-   !Use m_MEF90_MassMatrixInterface
+   Use m_MEF90_Elements 
+   Use m_MEF90_MassMatrixInterface
    !Use m_MEF90_Norm
 
    Implicit NONE
