@@ -188,6 +188,7 @@ Implicit NONE
     Character(len=MEF90_MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
+    Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents,numFConstraints = 1,numVConstraints = 3
     PetscInt                            :: set
     type(tIS)                           :: CSIS,FSIS,VSIS,setIS
@@ -246,13 +247,11 @@ Implicit NONE
     If (dim == 2) Then
         Select case(order)
         case(1)
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P1_Lagrange_2D,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_2DBoundary,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_2DBoundary,numComponents,sectionU0,ierr))
+            cellSetElementType = MEF90_P1_Lagrange_2D
+            faceSetElementType = MEF90_P1_Lagrange_2DBoundary
         case(2)
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P2_Lagrange_2D,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_2DBoundary,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_2DBoundary,numComponents,sectionU0,ierr))
+            cellSetElementType = MEF90_P2_Lagrange_2D
+            faceSetElementType = MEF90_P2_Lagrange_2DBoundary
         Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
@@ -260,18 +259,19 @@ Implicit NONE
     Else If (dim == 3) Then
         Select case(order)
             case(1)
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P1_Lagrange_3D,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_3DBoundary,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_3DBoundary,numComponents,sectionU0,ierr))
-        case(2)
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P2_Lagrange_3D,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_3DBoundary,numComponents,sectionU,ierr))
-            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_3DBoundary,numComponents,sectionU0,ierr))
-        Case default
+                cellSetElementType = MEF90_P1_Lagrange_3D
+                faceSetElementType = MEF90_P1_Lagrange_3DBoundary
+            case(2)
+                cellSetElementType = MEF90_P2_Lagrange_3D
+                faceSetElementType = MEF90_P2_Lagrange_3DBoundary
+            Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     End If
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
     !!! Allocate constraints.
