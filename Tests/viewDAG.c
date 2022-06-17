@@ -159,7 +159,6 @@ int main(int argc,char **argv)
   PetscViewer    viewer;
   PetscSection   sectionCoord; 
   Vec            coordLoc;
-  PetscSF        migrationSF;
 
   PetscCall(PetscInitialize(&argc,&argv,NULL,help));
   MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
@@ -171,12 +170,12 @@ int main(int argc,char **argv)
 
   PetscCall(PetscPrintf(PETSC_COMM_WORLD," filename %s\n",filename));
   PetscCall(DMPlexCreateFromFile(PETSC_COMM_WORLD, filename, NULL, interpolate, &dm));
-  PetscCall(DMPlexDistribute(dm,0,&migrationSF,&dmDist));
+  PetscCall(DMPlexDistribute(dm,0,NULL,&dmDist));
   if (dmDist) {
     DMDestroy(&dm);
     dm   = dmDist;
   }
-  PetscCall(DMSetFromOptions(dm));
+  //PetscCall(DMSetFromOptions(dm));
   PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
   PetscCall(PetscViewerASCIIOpen(PETSC_COMM_SELF,outfilename,&viewer));
   PetscCall(dmViewSets(dm,viewer));

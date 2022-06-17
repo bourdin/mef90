@@ -1,6 +1,6 @@
 #include "mef90.inc"
 Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
    Use m_MEF90_Parameters
    Use m_MEF90_Elements
@@ -10,81 +10,57 @@ Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
 
    Private   
    Public :: MEF90_MassMatrixAssembleSet   
-   Public :: MEF90_MassMatrixAssembleLoc   
 
 Contains
+!!!
+!!!  
+!!!  MEF90_MassMatrixAssembleSet: Assemble the contribution of a cell / face / edge set to 
+!!!                               the mass matrix associated with the element type elemType
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MassMatrixAssembleSet"
 
-   Subroutine MEF90_MassMatrixAssembleSet(M,mesh,cellIS,scaling,elem,elemType,ierr)
-      Type(Mat),Intent(IN)                            :: M
-      Type(DM),Intent(IN)                             :: mesh
-      Type(IS),Intent(IN)                             :: cellIS
-      PetscReal,Intent(IN)                            :: scaling
+   Subroutine MEF90_MassMatrixAssembleSet(M,dm,setType,setID,elem,elemType,ierr)
+      Type(tMat),Intent(IN)                           :: M
+      Type(tDM),Intent(IN)                            :: dm
+      Character(len=*),Intent(IN)                     :: setType
+      PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
       Type(MEF90Element_Type),Intent(IN)              :: elemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      Type(SectionReal)                               :: defaultSection
-      PetscInt,Dimension(:),Pointer                   :: cellID
-      PetscInt                                        :: cell
-      PetscReal,Dimension(:,:),Pointer                :: MatElem
+      Type(tIS)                                       :: setPointIS
+      PetscInt,Dimension(:),Pointer                   :: setPointID
+      PetscInt                                        :: point
+      PetscReal,Dimension(:),Pointer                  :: MatElem
       PetscInt                                        :: iDoF1,iDoF2,iGauss
       PetscLogDouble                                  :: flops
      
-      flops = 0
-      Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      If (Size(cellID) > 0) Then
-         Allocate(MatElem(elemType%numDof,elemType%numDof))
-         Do cell = 1,size(cellID)   
+      flops = 0.0_pflop
+      PetscCall(DMGetStratumIS(dm,setType,setID,setPointIS,ierr))
+      PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+      If (size(setPointID) > 0) Then
+         Allocate(MatElem(elemType%numDof**2))
+         Do point = 1,size(setPointID)   
             MatElem = 0.0_Kr
-            Do iGauss = 1,size(elem(cell)%Gauss_C)
+            Do iGauss = 1,size(elem(point)%Gauss_C)
                Do iDoF1 = 1,elemType%numDof
                   Do iDoF2 = 1,elemType%numDof
-                     MatElem(iDoF2,iDoF1) = MatElem(iDoF2,iDoF1) + elem(cell)%Gauss_C(iGauss) * &
-                                           (elem(cell)%BF(iDoF1,iGauss) * elem(cell)%BF(iDoF2,iGauss) )
+                     MatElem((iDoF1-1)*elemType%numDof+iDof2) = MatElem((iDoF1-1)*elemType%numDof+iDof2) &
+                        + elem(point)%Gauss_C(iGauss) * ( elem(point)%BF(iDoF1,iGauss) * elem(point)%BF(iDoF2,iGauss) )
                   End Do ! iDoF2
                End Do ! iDoF1
             End Do ! iGauss
-            MatElem = MatElem * scaling
-            Call DMmeshAssembleMatrix(M,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
-         End Do ! cell
-         flops = 3 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID)
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+            PetscCall(DMPlexMatSetClosure(dm,PETSC_NULL_SECTION,PETSC_NULL_SECTION,M,setPointID(point),MatElem,ADD_VALUES,ierr))
+         End Do ! point
+         flops = 3 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(setPointID)
+         PetscCall(PetscLogFlops(flops,ierr))
          DeAllocate(MatElem,stat=ierr)
       End If 
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
+      PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISDestroy(setPointIS,ierr))
    End Subroutine MEF90_MassMatrixAssembleSet   
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90_MassMatrixAssembleLoc"
-!!!
-!!!  
-!!!  MEF90_MassMatrixAssembleLoc:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90_MassMatrixAssembleLoc(ALoc,scaling,elem)
-      PetscReal,Dimension(:,:),Pointer                   :: Aloc
-      PetscReal,Intent(IN)                               :: scaling
-      Type(MEF90_ELEMENTTYPE),Intent(IN)                 :: elem
-
-      PetscInt                                           :: iDoF1,iDoF2,iGauss,numDof
-      PetscLogDouble                                     :: flops
-      PetscErrorCode                                     :: ierr
-
-      numDof = size(elem%BF,1)
-      Do iGauss = 1,size(elem%Gauss_C)
-         Do iDoF1 = 1,numDof
-            Do iDoF2 = 1,numDof
-               ALoc(iDoF2,iDoF1) = ALoc(iDoF2,iDoF1) + scaling * elem%Gauss_C(iGauss) * (elem%BF(iDoF1,iGauss) * elem%BF(iDoF2,iGauss)) 
-            End Do
-         End Do
-      End Do
-      !!! All flops accounted for for non-scalar element types
-   End Subroutine MEF90_MassMatrixAssembleLoc
-
 End Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)

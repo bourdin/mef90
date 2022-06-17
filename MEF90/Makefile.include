@@ -7,6 +7,10 @@ MEF90_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DMPlex.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Utils.o
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o \
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_EXO.o \
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DiffusionImplementation_2D.o \
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DiffusionImplementation_3D.o \
@@ -17,11 +21,5 @@ MEF90_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90.o \
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageImplementation_2D.o\
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageImplementation_3D.o\
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageInterface.o\
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element2D_Elast.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MassMatrixImplementation_MEF90Element3D_Elast.o \
 #             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Norm.o \
 
