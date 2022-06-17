@@ -7,12 +7,14 @@ Implicit NONE
     PetscErrorCode                      :: ierr
     Type(MEF90Ctx_Type),target          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-    Type(tDM),target                    :: dm,dmDist
+    Type(tDM)                           :: dm,dmDist
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90_MXSTRLEN)       :: IOBuffer,setType
+    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+    PetscEnum                           :: setType
 
     PetscInt                            :: numComponents,numFConstraints = 1,numVConstraints = 3
-    PetscInt                            :: set
+    PetscInt                            :: set,order = 1
+    PetscBool                           :: flg
     type(tIS)                           :: CSIS,FSIS,VSIS,setIS
     PetscInt,Dimension(:),pointer       :: CSID,FSID,VSID,setID
     PetscInt                            :: dim,pStart,pEnd,depth,numdof,i
@@ -42,11 +44,14 @@ Implicit NONE
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
     
-    PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
-    if (MEF90Ctx%NumProcs > 1) then
-        PetscCallA(DMDestroy(dm,ierr))
-        dm = dmDist
-    end if
+    distribute: Block 
+        Type(tDM),target                    :: dmDist
+        If (MEF90Ctx%NumProcs > 1) Then
+            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMDestroy(dm,ierr))
+            dm = dmDist
+        End If
+    End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,section,ierr))
@@ -58,12 +63,31 @@ Implicit NONE
     !!! Allocate DoF at cell and face sets
     !!! Note that if the face sets corresponds to faces in elements in cell set 
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
+    Call PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr);CHKERRQ(ierr);
     If (dim == 2) Then
-        PetscCallA(MEF90_SectionAllocateDof(dm,"Cell Sets",MEF90_P1_Lagrange_2D,numComponents,section,ierr))
-        PetscCallA(MEF90_SectionAllocateDof(dm,"Face Sets",MEF90_P1_Lagrange_2DBoundary,numComponents,section,ierr))
+        Select case(order)
+        case(1)
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P1_Lagrange_2D,numComponents,section,ierr))
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_2DBoundary,numComponents,section,ierr))
+        case(2)
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P2_Lagrange_2D,numComponents,section,ierr))
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_2DBoundary,numComponents,section,ierr))
+        Case default
+            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
+            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
+        End Select
     Else If (dim == 3) Then
-        PetscCallA(MEF90_SectionAllocateDof(dm,"Cell Sets",MEF90_P1_Lagrange_3D,numComponents,section,ierr))
-        PetscCallA(MEF90_SectionAllocateDof(dm,"Face Sets",MEF90_P1_Lagrange_3DBoundary,numComponents,section,ierr))
+        Select case(order)
+            case(1)
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P1_Lagrange_3D,numComponents,section,ierr))
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P1_Lagrange_3DBoundary,numComponents,section,ierr))
+        case(2)
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexCellSetType,MEF90_P2_Lagrange_3D,numComponents,section,ierr))
+            PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexFaceSetType,MEF90_P2_Lagrange_3DBoundary,numComponents,section,ierr))
+        Case default
+            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
+            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
+        End Select
     End If
 
 
@@ -84,7 +108,7 @@ Implicit NONE
     constraints = .FALSE.
 
     setType = MEF90_DMPlexFaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,setType,SetIS,ierr))
+    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
@@ -97,7 +121,7 @@ Implicit NONE
     PetscCallA(ISDestroy(SetIS,ierr))
 
     setType = MEF90_DMPlexVertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,setType,SetIS,ierr))
+    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value

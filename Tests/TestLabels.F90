@@ -7,9 +7,8 @@ Implicit NONE
     PetscErrorCode                      :: ierr
     Type(MEF90Ctx_Type),target          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-    Type(tDM),target                    :: dm,dmDist
+    Type(tDM),target                    :: dm
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90_MXSTRLEN)       :: setType
 
     PetscInt                            :: set
     type(tIS)                           :: setIS,pointIS
@@ -37,20 +36,23 @@ Implicit NONE
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
     
-    PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
-    if (MEF90Ctx%NumProcs > 1) then
-        PetscCallA(DMDestroy(dm,ierr))
-        dm = dmDist
-    end if
+    distribute: Block 
+        Type(tDM),target                    :: dmDist
+        If (MEF90Ctx%NumProcs > 1) Then
+            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMDestroy(dm,ierr))
+            dm = dmDist
+        End If
+    End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
-    Do i = 1, size(MEF90_DMPlexSetTypes)
-        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90_DMPlexSetTypes(i))//' ===\n',ierr))
-        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetTypes(i), SetIS, ierr))
+    Do i = 1, size(MEF90_DMPlexSetLabelName)
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90_DMPlexSetLabelName(i))//' ===\n',ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(i), SetIS, ierr))
         PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-        Write(*,*) trim(MEF90_DMPlexSetTypes(i))//' ID: ', setID
+        Write(*,*) trim(MEF90_DMPlexSetLabelName(i))//' ID: ', setID
         Do set = 1, size(setID)
-            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetTypes(i),setID(set),pointIS,ierr))
+            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(i),setID(set),pointIS,ierr))
             PetscCallA(ISGetIndicesF90(pointIS,pointID,ierr))
             Write(*,*) '   points', pointID
             PetscCallA(ISRestoreIndicesF90(pointIS,pointID,ierr))
