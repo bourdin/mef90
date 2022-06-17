@@ -10,15 +10,20 @@ m_MEF90_Parameters.F90: ${MEF90_DIR}/mef90version.h
 MEF90: m_MEF90.o
 
 m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
-	   m_MEF90_Ctx.o \
-           m_MEF90_LinAlg.o \
-           m_MEF90_MPI.o \
-           m_MEF90_Parameters.o \
-           m_MEF90_Materials.o \
-           m_MEF90_Elements.o \
-           m_MEF90_EXO.o \
-           m_MEF90_DMPlex.o \
-           m_MEF90_Utils.o 
+	m_MEF90_Ctx.o \
+        m_MEF90_LinAlg.o \
+        m_MEF90_MPI.o \
+        m_MEF90_Parameters.o \
+        m_MEF90_Materials.o \
+        m_MEF90_Elements.o \
+        m_MEF90_EXO.o \
+        m_MEF90_DMPlex.o \
+        m_MEF90_Utils.o \
+        m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
+        m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
+        m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \
+        m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o \
+        m_MEF90_MassMatrixInterface.o \
 #           m_MEF90_DiffusionImplementation_2D.o \
 #           m_MEF90_DiffusionImplementation_3D.o \
 #           m_MEF90_DiffusionInterface.o \
@@ -29,13 +34,6 @@ m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
 #           m_MEF90_GradDamageImplementation_3D.o \
 #           m_MEF90_GradDamageInterface.o \
 #           m_MEF90_Elements.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element2D_Elast.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o \
-#           m_MEF90_MassMatrixImplementation_MEF90Element3D_Elast.o \
-#           m_MEF90_MassMatrixInterface.o \
 #           m_MEF90_Norm.o \
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
@@ -157,12 +155,6 @@ m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF
         m_MEF90_Utils.o
 	@echo "      $< MEF90Element2D_Vect"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Vect -c -o $@ $<
-m_MEF90_MassMatrixImplementation_MEF90Element2D_Elast.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
-        m_MEF90_Elements.o \
-        m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
-	@echo "      $< MEF90Element2D_Elast"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Elast -c -o $@ $<
 m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
@@ -175,20 +167,12 @@ m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF
         m_MEF90_Utils.o
 	@echo "      $< MEF90Element3D_Vect"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Vect -c -o $@ $<
-m_MEF90_MassMatrixImplementation_MEF90Element3D_Elast.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixImplementation.F90 \
-        m_MEF90_Elements.o \
-        m_MEF90_Parameters.o \
-        m_MEF90_Utils.o
-	@echo "      $< MEF90Element3D_Elast"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Elast -c -o $@ $<
 
 m_MEF90_MassMatrixInterface.o: ${MEF90_DIR}/MEF90/m_MEF90_MassMatrixInterface.F90 m_MEF90_LinAlg.o \
         m_MEF90_MassMatrixImplementation_MEF90Element2D_Scal.o \
         m_MEF90_MassMatrixImplementation_MEF90Element2D_Vect.o \
-        m_MEF90_MassMatrixImplementation_MEF90Element2D_Elast.o \
         m_MEF90_MassMatrixImplementation_MEF90Element3D_Scal.o \
         m_MEF90_MassMatrixImplementation_MEF90Element3D_Vect.o \
-        m_MEF90_MassMatrixImplementation_MEF90Element3D_Elast.o \
         m_MEF90_Parameters.o m_MEF90_Utils.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
