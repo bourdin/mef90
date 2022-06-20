@@ -56,7 +56,7 @@ Program  TestMassMatrix
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,section,ierr))
-    PetscCall(PetscObjectSetName(section,"Section for U",ierr))
+    PetscCallA(PetscObjectSetName(section,"Section for U",ierr))
     PetscCallA(PetscSectionSetChart(section,pStart,pEnd,ierr))
 
 
@@ -64,7 +64,7 @@ Program  TestMassMatrix
     !!! Allocate DoF at cell and face sets
     !!! Note that if the face sets corresponds to faces in elements in cell set 
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
-    Call PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr);CHKERRQ(ierr);
+    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
     If (dim == 2) Then
         Select case(order)
         case(1)
@@ -94,7 +94,7 @@ Program  TestMassMatrix
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,section,ierr))
 
 
-    Call PetscOptionsGetBool(PETSC_NULL_OPTIONS,'','-constraint',hasConstraints,flg,ierr);CHKERRQ(ierr);
+    PetscCallA(PetscOptionsGetBool(PETSC_NULL_OPTIONS,'','-constraint',hasConstraints,flg,ierr))
     If (hasConstraints) Then
 
         !!! Allocate constraints.
@@ -144,7 +144,7 @@ Program  TestMassMatrix
 
         DeAllocate(ConstraintTruthTableU)
     Else
-        PetscCall(PetscSectionSetup(section,ierr))
+        PetscCallA(PetscSectionSetup(section,ierr))
     End If
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-section_view",ierr))
 
@@ -157,10 +157,10 @@ Program  TestMassMatrix
         PetscInt                         :: point = 0
 
         PetscCallA(DMCreateGlobalVector(dm,v,ierr))
-        PetscCall(DMPlexVecGetClosure(dm,section,v,point,velem,ierr))
+        PetscCallA(DMPlexVecGetClosure(dm,section,v,point,velem,ierr))
         write(*,*)'---', velem
-        PetscCall(DMPlexVecrestoreClosure(dm,section,v,point,velem,ierr))
-        PetscCall(VecDestroy(v,ierr))
+        PetscCallA(DMPlexVecrestoreClosure(dm,section,v,point,velem,ierr))
+        PetscCallA(VecDestroy(v,ierr))
 
     end block testClosure
 
@@ -175,21 +175,21 @@ Program  TestMassMatrix
         PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
         PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
         Do set = 1,size(setID)
-            PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
+            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
             If (dim == 2) Then
-                PetscCall(MEF90Element_Create(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
+                PetscCallA(MEF90Element_Create(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,section,setType,setID(set),elem2D,cellSetElementType,ierr))
             Else
-                PetscCall(MEF90Element_Create(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
+                PetscCallA(MEF90Element_Create(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,section,setType,setID(set),elem3D,cellSetElementType,ierr))
             End If
-            PetscCall(ISDestroy(setPointIS,ierr))
+            PetscCallA(ISDestroy(setPointIS,ierr))
         End Do
         PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
         PetscCallA(ISDestroy(SetIS,ierr))
     End Block elementCreate
-    PetscCall(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
-    PetscCall(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
+    PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
+    PetscCallA(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
 
     PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mat_view",ierr))
 

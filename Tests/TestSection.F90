@@ -64,7 +64,7 @@ Implicit NONE
     !!! Allocate DoF at cell and face sets
     !!! Note that if the face sets corresponds to faces in elements in cell set 
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
-    Call PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr);CHKERRQ(ierr);
+    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
     If (dim == 2) Then
         Select case(order)
         case(1)

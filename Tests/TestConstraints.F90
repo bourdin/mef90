@@ -46,24 +46,24 @@ contains
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim
 
-        PetscCall(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCall(VecGetDM(v,dm,ierr))
-        PetscCall(DMGetLocalVector(dm,vLoc,ierr))
-        PetscCall(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCall(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCall(DMGetDimension(dm,dim,ierr))
+        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+        PetscCallA(VecGetDM(v,dm,ierr))
+        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
+        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+        PetscCallA(DMGetDimension(dm,dim,ierr))
 
         Do p = pStart,pEnd-1
-            PetscCall(PetscSectionGetDof(s,p,numDof,ierr))
+            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
             If (numDof > 0) Then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCall(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
                 Do i = 1,dim
                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
                 End Do
-                PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
 
-                PetscCall(DMPlexVecGetClosure(dm,s,vLoc,p,vArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,s,vLoc,p,vArray,ierr))
                 Do i = 1,numDof
                     vArray(i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
@@ -71,12 +71,12 @@ contains
                 !!! v at other points
                 !!! In the cirrent state of DMPlexVecSetClosure / DMPlexVecRestoreClosure
                 !!! in fortran, it also forces 1 alloc and 1 free 
-                PetscCall(DMPlexVecSetClosure(dm,s,vLoc,p,vArray,INSERT_VALUES,ierr))
-                PetscCall(DMPlexVecRestoreClosure(dm,s,vLoc,p,vArray,ierr))
+                PetscCallA(DMPlexVecSetClosure(dm,s,vLoc,p,vArray,INSERT_VALUES,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dm,s,vLoc,p,vArray,ierr))
             End If
         End Do
-        PetscCall(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCall(DMRestoreLocalVector(dm,vLoc,ierr))
+        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
+        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
     End subroutine project    
 
 #undef __FUNCT__
@@ -95,22 +95,22 @@ contains
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim
 
-        PetscCall(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCall(VecGetDM(v,dm,ierr))
-        PetscCall(DMGetLocalVector(dm,vLoc,ierr))
-        PetscCall(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCall(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCall(DMGetDimension(dm,dim,ierr))
+        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+        PetscCallA(VecGetDM(v,dm,ierr))
+        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
+        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+        PetscCallA(DMGetDimension(dm,dim,ierr))
 
         Do p = pStart,pEnd-1
-            PetscCall(PetscSectionGetDof(s,p,numDof,ierr))
+            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
             If (numDof > 0) Then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCall(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
                 Do i = 1,dim
                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
                 End Do
-                PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
 
                 !!! If numdof is constant (where > 0) I could move the allocate
                 !!! outside of this loop 
@@ -118,12 +118,12 @@ contains
                 Do i = 1,numDof
                     vArray(i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
-                PetscCall(VecSetValuesSectionF90(vLoc,s,p,vArray,INSERT_VALUES,ierr))
+                PetscCallA(VecSetValuesSectionF90(vLoc,s,p,vArray,INSERT_VALUES,ierr))
                 DeAllocate(vArray)
             End If
         End Do
-        PetscCall(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCall(DMRestoreLocalVector(dm,vLoc,ierr))
+        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
+        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
     End subroutine project2    
     
 #undef __FUNCT__
@@ -142,34 +142,34 @@ contains
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim,pOffset
 
-        PetscCall(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCall(VecGetDM(v,dm,ierr))
-        PetscCall(DMGetLocalVector(dm,vLoc,ierr))
-        PetscCall(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCall(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCall(DMGetDimension(dm,dim,ierr))
-        PetscCall(VecGetArrayF90(vLoc,vArray,ierr))
+        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+        PetscCallA(VecGetDM(v,dm,ierr))
+        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
+        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+        PetscCallA(DMGetDimension(dm,dim,ierr))
+        PetscCallA(VecGetArrayF90(vLoc,vArray,ierr))
 
         !nullify(vArray)
         Do p = pStart,pEnd-1
-            PetscCall(PetscSectionGetDof(s,p,numDof,ierr))
+            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
             If (numDof > 0) Then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCall(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
                 Do i = 1,dim
                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
                 End Do
-                PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
 
-                PetscCall(PetscSectionGetOffset(s,p,pOffset,ierr))
+                PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
                 Do i = 1,numDof
                     vArray(pOffset+i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
             End If
         End Do
-        PetscCall(VecRestoreArrayF90(vLoc,vArray,ierr))
-        PetscCall(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCall(DMRestoreLocalVector(dm,vLoc,ierr))
+        PetscCallA(VecRestoreArrayF90(vLoc,vArray,ierr))
+        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
+        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
     End subroutine project3    
 End Module localFunctions
 
@@ -212,7 +212,6 @@ Implicit NONE
 
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     
-    PetscCallA(PetscPrintf(MEF90Ctx%Comm,MEF90Ctx%geometryfile//'\n',ierr))
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
@@ -232,10 +231,10 @@ Implicit NONE
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU,ierr))
-    PetscCall(PetscObjectSetName(SectionU,"Section for U",ierr))
+    PetscCallA(PetscObjectSetName(SectionU,"Section for U",ierr))
     PetscCallA(PetscSectionSetChart(sectionU,pStart,pEnd,ierr))
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU0,ierr))
-    PetscCall(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
+    PetscCallA(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
     PetscCallA(PetscSectionSetChart(sectionU0,pStart,pEnd,ierr))
 
 
@@ -243,7 +242,7 @@ Implicit NONE
     !!! Allocate DoF at cell and face sets
     !!! Note that if the face sets corresponds to faces in elements in cell set 
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
-    Call PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr);CHKERRQ(ierr);
+    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
     If (dim == 2) Then
         Select case(order)
         case(1)
@@ -326,32 +325,32 @@ Implicit NONE
     PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-section_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-section_view",ierr))
 
-    PetscCall(DMClone(dm,dmU,ierr))
+    PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
 
-    PetscCall(DMClone(dm,dmU0,ierr))
+    PetscCallA(DMClone(dm,dmU0,ierr))
     PetscCallA(DMSetLocalSection(dmU0,sectionU0,ierr))
     PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
 
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCall(project(U,sectionU,f1,ierr))
-    PetscCall(project(U0,sectionU0,f1,ierr))
+    PetscCallA(project(U,sectionU,f1,ierr))
+    PetscCallA(project(U0,sectionU0,f1,ierr))
     PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
     PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
 
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCall(project2(U,sectionU,f1,ierr))
-    PetscCall(project2(U0,sectionU0,f1,ierr))
+    PetscCallA(project2(U,sectionU,f1,ierr))
+    PetscCallA(project2(U0,sectionU0,f1,ierr))
     PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
     PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
 
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCall(project3(U,sectionU,f1,ierr))
-    PetscCall(project3(U0,sectionU0,f1,ierr))
+    PetscCallA(project3(U,sectionU,f1,ierr))
+    PetscCallA(project3(U0,sectionU0,f1,ierr))
     PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
     PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
 

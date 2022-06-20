@@ -18,46 +18,50 @@ Program  TestMEF90Ctx
    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
    MEF90GlobalOptions_default%timeMin           = 0.0_Kr
    MEF90GlobalOptions_default%timeMax           = 1.0_Kr
-   MEF90GlobalOptions_default%timeFrequency     = 0.0_Kr
    MEF90GlobalOptions_default%timeNumStep       = 11
+   MEF90GlobalOptions_default%timeSkip          = 0
+   MEF90GlobalOptions_default%timeNumCycle      = 1
    MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
 
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
-   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
 
-   Call DMPlexCreateFromFile(PETSC_COMM_WORLD,MEF90Ctx%inputmesh,interpolate,dm,ierr);CHKERRQ(ierr);
-   Call DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr);CHKERRQ(ierr)
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
+   PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetFromOptions(dm,ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
-   !!!
-   !!! I am not sure everybody would approve of this...
-   !!!
-   if (dmDist%v /= -1) then
-      call DMDestroy(dm,ierr)
-      dm%v = dmDist%v
-   end if
 
-   Call DMView(dm,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
+   distribute: Block 
+      Type(tDM),target                    :: dmDist
+      If (MEF90Ctx%NumProcs > 1) Then
+         PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+         PetscCallA(DMDestroy(dm,ierr))
+         dm = dmDist
+      End If
+   End Block distribute
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
-   Call MEF90CtxOpenEXO(MEF90Ctx,dm,ierr)
-   Call MEF90CtxGetTime(MEF90Ctx,time,ierr)
+   ! PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,dm,ierr))
+   ! PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
-   Call MEF90CtxDestroy(MEF90Ctx,ierr)
+   PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    
-   Call PetscOptionsHasName(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-verbose",flg,ierr)
+   PetscCallA(PetscOptionsHasName(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-verbose",flg,ierr))
    If (flg) Then
       Write(IOBuffer,*) "verbose is set\n"
    Else
       Write(IOBuffer,*) "verbose is NOT set\n"
    End If
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr)
-   Call PetscOptionsHasName(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-time_min",flg,ierr)
+   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+   PetscCallA(PetscOptionsHasName(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-time_min",flg,ierr))
    If (flg) Then
       Write(IOBuffer,*) "time_min is set\n"
    Else
       Write(IOBuffer,*) "time_min is NOT set\n"
    End If
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr)
-   Call MEF90Finalize(ierr)
-   Call PetscFinalize()
+   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+   PetscCallA(MEF90Finalize(ierr))
+   PetscCallA(PetscFinalize(ierr))
 End Program  TestMEF90Ctx
