@@ -75,6 +75,10 @@ Module m_MEF90_Materials_Types
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
+      PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
+      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
+      PetscReal                     :: ViscosityN                                       ! viscosity exponent
+      PetscReal                     :: Viscositydt                                      ! time step size
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -116,6 +120,10 @@ Module m_MEF90_Materials_Types
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
       Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
+      PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
+      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
+      PetscReal                     :: ViscosityN                                       ! viscosity exponent
+      PetscReal                     :: Viscositydt                                      ! time step size
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -184,6 +192,10 @@ Module m_MEF90_Materials_Types
       MEF90RotationMatrix3D(MEF90Mat3DIdentity,0.0_Kr,0.0_Kr,0.0_Kr,                   & ! RotationMatrix, phi1, Phi, phi2,
       Vect3D(1.0_Kr,0.0_Kr,0.0_Kr),Vect3D(0.0_Kr,1.0_Kr,0.0_Kr),                       & ! V1, V2,
       Vect3D(0.0_Kr,0.0_Kr,1.0_Kr),.False.),                                           & ! V3, fromEuler
+      .FALSE.,                                                                         & ! isViscousPlasticity
+      1.0_Kr,                                                                          & ! ViscosityGamma0
+      1.0_Kr,                                                                          & ! ViscosityN
+      1.0_Kr,                                                                          & ! Viscositydt
       "MEF90Mathium2D")
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &
@@ -244,6 +256,10 @@ Module m_MEF90_Materials_Types
       MEF90RotationMatrix3D(MEF90Mat3DIdentity,0.0_Kr,0.0_Kr,0.0_Kr,                   & ! RotationMatrix, phi1, Phi, phi2,
       Vect3D(1.0_Kr,0.0_Kr,0.0_Kr),Vect3D(0.0_Kr,1.0_Kr,0.0_Kr),                       & ! V1, V2,
       Vect3D(0.0_Kr,0.0_Kr,1.0_Kr),.False.),                                           & ! V3, fromEuler
+      .FALSE.,                                                                         & ! isViscousPlasticity
+      1.0_Kr,                                                                          & ! ViscosityGamma0
+      1.0_Kr,                                                                          & ! ViscosityN
+      1.0_Kr,                                                                          & ! Viscositydt
       "MEF90Mathium3D")
 End Module m_MEF90_Materials_Types
 
@@ -547,6 +563,11 @@ Contains
       matprop%RotationMatrix%V3 = default%RotationMatrix%V3
       Call PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr)      
       Call PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -633,6 +654,11 @@ Contains
       matprop%RotationMatrix%V3 = default%RotationMatrix%V3
       Call PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr)      
       Call PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)
+      Call PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
