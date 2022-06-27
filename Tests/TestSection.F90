@@ -7,18 +7,18 @@ Implicit NONE
     PetscErrorCode                      :: ierr
     Type(MEF90Ctx_Type),target          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-    Type(tDM)                           :: dm,dmDist
+    Type(tDM)                           :: dm
     PetscBool                           :: interpolate = PETSC_TRUE
     Character(len=MEF90_MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
     Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
-    PetscInt                            :: numComponents,numFConstraints = 1,numVConstraints = 3
+    PetscInt                            :: numComponents
     PetscInt                            :: set,order = 1
     PetscBool                           :: flg
-    type(tIS)                           :: CSIS,FSIS,VSIS,setIS
-    PetscInt,Dimension(:),pointer       :: CSID,FSID,VSID,setID
-    PetscInt                            :: dim,pStart,pEnd,depth,numdof,i
+    type(tIS)                           :: setIS
+    PetscInt,Dimension(:),pointer       :: setID
+    PetscInt                            :: dim,pStart,pEnd
     Type(tPetscSection)                 :: section
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTable
     Logical,Dimension(:),Pointer        :: constraints

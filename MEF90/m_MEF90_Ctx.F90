@@ -309,9 +309,9 @@ Contains
       
       PetscReal                                       :: dt
       Integer                                         :: i
-      Real                                            :: dummyR
-      Character(len=1)                                :: dummyS
-      Integer                                         :: exoerr
+      !Real                                            :: dummyR
+      !Character(len=1)                                :: dummyS
+      !Integer                                         :: exoerr
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
       Integer                                         :: j,CycleLength 
 

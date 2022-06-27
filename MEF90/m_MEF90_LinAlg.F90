@@ -956,8 +956,6 @@ Contains
       Type(Tens4OS2D),Intent(IN)                  :: T1
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D)                                :: Tens4OS2DXMat2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Tens4OS2DXMat2D = T1 * symmetrize(M1)
    End Function Tens4OS2DXMat2D
@@ -974,7 +972,6 @@ Contains
       Type(Tens4OS3D),Intent(IN)                  :: T1
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D)                                :: Tens4OS3DXMat3D
-      PetscInt                                    :: ierr
       
       Tens4OS3DXMat3D =  T1 * symmetrize(M1)
    End Function Tens4OS3DXMat3D
@@ -1289,8 +1286,6 @@ Contains
       Type(Mat2D),Intent(IN)                      :: M1
       Type(MatS2D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat2DDotMatS2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Mat2DDotMatS2D = symmetrize(M1) .DotP. M2
    End Function Mat2DDotMatS2D
@@ -1307,8 +1302,6 @@ Contains
       Type(MatS2D),Intent(IN)                     :: M1
       Type(Mat2D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS2DDotMat2D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       MatS2DDotMat2D = M1 .DotP. symmetrize(M2)
    End Function MatS2DDotMat2D
@@ -1325,8 +1318,6 @@ Contains
       Type(Mat3D),Intent(IN)                      :: M1
       Type(MatS3D),Intent(IN)                     :: M2
       PetscReal                                   :: Mat3DDotMatS3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       Mat3DDotMatS3D = symmetrize(M1) .DotP. M2
    End Function Mat3DDotMatS3D
@@ -1343,8 +1334,6 @@ Contains
       Type(MatS3D),Intent(IN)                     :: M1
       Type(Mat3D),Intent(IN)                      :: M2
       PetscReal                                   :: MatS3DDotMat3D
-      PetscLogDouble                              :: flops
-      PetscInt                                    :: ierr
       
       MatS3DDotMat3D = M1 .DotP. symmetrize(M2)
    End Function MatS3DDotMat3D
@@ -2912,9 +2901,8 @@ Contains
       Type(MatS2D),Dimension(2),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A,Pt
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A
+      PetscInt                                    :: i
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2936,9 +2924,8 @@ Contains
       Type(MatS3D),Dimension(3),Intent(OUT)       :: ppleDirections
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A,Pt      
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A
+      PetscInt                                    :: i
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -2966,9 +2953,7 @@ Contains
       Type(MatS3D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 3
-      PetscReal,Dimension(n,n)                    :: A,Pt      
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
@@ -3002,15 +2987,12 @@ Contains
       Type(MatS2D),Intent(OUT)                    :: MatDiag
       
       Integer,Parameter                           :: n = 2
-      PetscReal,Dimension(n,n)                    :: A,Pt      
-      Integer                                     :: i
-      PetscReal                                   :: d
+      PetscReal,Dimension(n,n)                    :: A
       PetscInt                                    :: lwork = 2*n**2+6*n+1
       PetscReal,Dimension(2*n**2+6*n+1)           :: work
       PetscInt                                    :: liwork = 5*n+3
       PetscInt,Dimension(5*n+3)                   :: iwork
       PetscInt                                    :: info
-      PetscErrorCode                              :: ierr
 
       A = M
       Call DSYEVD('V','L',n,A,n,ppleValues,work,lwork,iwork,liwork,info)
