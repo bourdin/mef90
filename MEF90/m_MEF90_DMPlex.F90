@@ -40,7 +40,6 @@ Subroutine MEF90_SectionAllocateDof(dm,setType,elemType,numComponents,section,ie
 
     Type(tIS)                          :: setIS
     PetscInt,dimension(:),Pointer      :: setID
-    Type(MEF90Element_Type)            :: CSelemType
     PetscInt                           :: set
 
     PetscCall(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),setIS,ierr))
@@ -74,7 +73,7 @@ Subroutine MEF90_SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,s
     PetscInt,dimension(:),Pointer      :: setPointID
     PetscInt                           :: point
     PetscInt,dimension(:),pointer      :: closure
-    PetscInt                           :: p,depth,closureSize
+    PetscInt                           :: p,depth
 
     PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
     PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -119,7 +118,7 @@ End Subroutine MEF90_SectionAllocateDofSet
         PetscInt,dimension(:),Pointer      :: setPointID
         PetscInt                           :: point,numDof
         PetscInt,dimension(:),pointer      :: closure
-        PetscInt                           :: p,c
+        PetscInt                           :: p
 
         PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -157,7 +156,7 @@ Subroutine MEF90_SectionAllocateConstraint(dm,table,section,ierr)
     Type(tPetscSection),Intent(INOUT)  :: section
     PetscErrorCode,Intent(INOUT)       :: ierr
 
-    PetscInt                           :: p,c,i,pStart,pEnd,numConstraints,numComponents
+    PetscInt                           :: p,i,pStart,pEnd,numConstraints,numComponents
     PetscInt,Dimension(:),Pointer      :: constraints
 
     PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))

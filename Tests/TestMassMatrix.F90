@@ -12,12 +12,12 @@ Program  TestMassMatrix
     Character(len=MEF90_MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
-    PetscInt                            :: numComponents,numFConstraints = 1,numVConstraints = 3
+    PetscInt                            :: numComponents
     PetscInt                            :: set
     Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
-    type(tIS)                           :: CSIS,FSIS,VSIS,setIS
-    PetscInt,Dimension(:),pointer       :: CSID,FSID,VSID,setID
-    PetscInt                            :: dim,pStart,pEnd,depth,numdof,i,p,order = 1
+    type(tIS)                           :: setIS
+    PetscInt,Dimension(:),pointer       :: setID
+    PetscInt                            :: dim,pStart,pEnd,order = 1
     PetscBool                           :: flg
     Type(tPetscSection)                 :: section
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTableU
