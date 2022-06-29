@@ -8,6 +8,14 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 #include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 #include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+TestConstraintIO.o: ${MEF90_DIR}/Tests/TestConstraintIO.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestConstraintIO: TestConstraintIO.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+	
 viewDAG: viewDAG.o
 	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
 	${RM} -f viewDAG.o

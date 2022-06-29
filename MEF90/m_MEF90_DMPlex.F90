@@ -1,6 +1,7 @@
 Module m_MEF90_DMPlex
 #include "petsc/finclude/petsc.h"
     Use m_MEF90_Elements
+    Use m_MEF90_Ctx
     Use petsc
     Use,intrinsic :: iso_c_binding
     IMPLICIT NONE
@@ -180,4 +181,67 @@ Subroutine MEF90_SectionAllocateConstraint(dm,table,section,ierr)
         End If
     End Do
 End Subroutine MEF90_SectionAllocateConstraint
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90_CreateLocalToConstraintSF"
+!!!
+!!!  
+!!!  MEF90_CreateLocalToConstraintSF: sf mapping between local and constraint Vec odering and distribution
+!!!  
+!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+subroutine MEF90_CreateLocalToConstraintSF(MEF90Ctx,dm,dmB,sf,invSF,ierr)
+    Type(tDM),intent(IN)                    :: dm, dmB
+    Type(tPetscSF),intent(OUT)              :: sf, invSF
+    Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
+    PetscErrorCode,intent(INOUT)            :: ierr
+
+    Type(tPetscSection)                     :: locSection, locBSection, gBSection
+    Type(PetscSFNode),dimension(:),Pointer  :: remote
+    Type(PetscInt),dimension(:),Pointer     :: local, cindices
+    PetscInt                                :: pStart, pEnd, p, d, nleaves = 0, ldof, loff, cdof, coff, nsize = 0, nroots
+    PetscMPIInt                             :: rank
+
+    PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
+    PetscCallA(DMGetLocalSection(dm,locSection,ierr))
+    PetscCallA(PetscSectionGetStorageSize(locSection,nroots,ierr))
+    PetscCallA(DMGetLocalSection(dmB,locBSection,ierr))
+    PetscCallA(PetscSectionGetChart(locBSection, pStart, pEnd, ierr))
+    Do p = pStart,pEnd-1
+        PetscCallA(PetscSectionGetConstraintDof(locBSection,p,cdof,ierr))
+        nleaves = nleaves + cdof
+    End Do
+    Allocate(remote(nleaves))
+    Allocate(local(nleaves))
+    Do p = pStart,pEnd-1
+        PetscCallA(PetscSectionGetDoF(locSection,p,ldof,ierr))
+        PetscCallA(PetscSectionGetOffset(locSection,p,loff,ierr))
+        PetscCallA(PetscSectionGetConstraintDof(locBSection,p,cdof,ierr))
+        PetscCallA(PetscSectionGetConstraintIndicesF90(locBSection,p,cindices,ierr))
+        PetscCallA(PetscSectionGetOffset(locBSection,p,coff,ierr))
+        If (coff >= 0) Then
+            Do d=1,cdof
+                local(nsize+1) = coff+cindices(d)
+                remote(nsize+1)%rank = rank
+                remote(nsize+1)%index = loff+cindices(d)
+                nsize = nsize + 1
+            End Do
+        End If
+        PetscCallA(PetscSectionRestoreConstraintIndicesF90(locBSection,p,cindices,ierr))
+    End Do
+    PetscCallA(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
+    PetscCallA(PetscSFSetFromOptions(sf, ierr))
+    PetscCallA(PetscSFSetGraph(sf, nroots, nleaves, local, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
+    DeAllocate(remote)
+    DeAllocate(local)
+    PetscCallA(PetscSFSetUp(sf, ierr))
+    PetscCallA(PetscObjectSetName(sf, "Local-To-Constraint SF", ierr))
+    PetscCallA(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-localtoconstraint_sf_view",ierr))
+    PetscCallA(PetscSFCreateInverseSF(sf,invSF,ierr))
+    PetscCallA(PetscSFSetUp(invSF, ierr))
+    PetscCallA(PetscObjectSetName(invSF, "Constraint-To-Local SF", ierr))
+    PetscCallA(PetscSFViewFromOptions(invSF,PETSC_NULL_OPTIONS,"-constrainttolocal_sf_view",ierr))
+    
+End subroutine MEF90_CreateLocalToConstraintSF
 End Module m_MEF90_DMPlex
