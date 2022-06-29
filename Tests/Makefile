@@ -20,6 +20,14 @@ viewDAG: viewDAG.o
 	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
 	${RM} -f viewDAG.o
 
+TestEXOReadPart.o: ${MEF90_DIR}/Tests/TestEXOReadPart.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestEXOReadPart: TestEXOReadPart.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 TestMassMatrix.o: ${MEF90_DIR}/Tests/TestMassMatrix.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
