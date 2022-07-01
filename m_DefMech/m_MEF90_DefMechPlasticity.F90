@@ -984,8 +984,6 @@ contains
             TotalPlasticIncrementCrystal = TotalPlasticIncrementCrystal + (PlasticSlipIncrement(s) * MatrixMu(s))
             !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)
             myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
-            print *,'CRSS = ',CRSS,'   ', 'taus = ',ResolvedShearStress(s)
-            print *,'gammas = ',PlasticSlipIncrement(s)
          else
             print *, "Rate-independent crystal plasticity is not implemented."
             !PlasticSlipIncrement(s) = dt * myctx_ptr%eta * SIGN(1.0_Kr, ResolvedShearStress(s)) *&
