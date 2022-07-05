@@ -79,6 +79,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
       PetscReal                     :: ViscosityN                                       ! viscosity exponent
       PetscReal                     :: Viscositydt                                      ! time step size
+      PetscReal                     :: m                                                ! equivalent stress exponent for rate-independent crystal plasticity
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
@@ -124,6 +125,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
       PetscReal                     :: ViscosityN                                       ! viscosity exponent
       PetscReal                     :: Viscositydt                                      ! time step size
+      PetscReal                     :: m                                                ! equivalent stress exponent for rate-independent crystal plasticity
       Character(len=MEF90_MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
@@ -196,6 +198,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! ViscosityGamma0
       1.0_Kr,                                                                          & ! ViscosityN
       1.0_Kr,                                                                          & ! Viscositydt
+      1.0_Kr,                                                                          & ! m
       "MEF90Mathium2D")
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &
@@ -260,6 +263,7 @@ Module m_MEF90_Materials_Types
       1.0_Kr,                                                                          & ! ViscosityGamma0
       1.0_Kr,                                                                          & ! ViscosityN
       1.0_Kr,                                                                          & ! Viscositydt
+      1.0_Kr,                                                                          & ! m
       "MEF90Mathium3D")
 End Module m_MEF90_Materials_Types
 
@@ -568,6 +572,8 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterReal(bag,matprop%m,default%m,'m','[unit-less] Equivalent stress exponent for rate-independent crystal plasticity',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -659,6 +665,8 @@ Contains
       Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr);CHKERRQ(ierr)
+
+      Call PetscBagRegisterReal(bag,matprop%m,default%m,'m','[unit-less] Equivalent stress exponent for rate-independent crystal plasticity',ierr);CHKERRQ(ierr)
       !Call PetscBagSetFromOptions(bag,ierr)
    End Subroutine PetscBagRegisterMEF90MatProp3D
 

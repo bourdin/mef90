@@ -48,6 +48,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
       real(Kind = Kr)             :: ViscosityN
       real(Kind = Kr)             :: Viscositydt
       real(Kind = Kr)             :: viscouscumulatedDissipatedPlasticEnergyVariation
+      real(Kind = Kr)             :: m
    end type MEF90DefMechPlasticityCtx
 
 contains
@@ -870,8 +871,8 @@ contains
       type(MEF90DefMechPlasticityCtx),pointer   :: myctx_ptr
       type(MEF90_MATS)                          :: xMatS
       type(MEF90_MATS)                          :: InelasticStrain,PlasticStrainFlow,Stress
-      type(MatS3D)                              :: Strain3D,PlasticStrainFlow3D,Stress3D,Stress3DCrystal,TotalPlasticIncrement,TotalPlasticIncrementCrystal !, MatrixMu
-      type(MatS3D)                              :: PlasticStrain3D,PlasticStrain3DCrystal
+      type(MatS3D)                              :: Strain3D,PlasticStrainFlow3D,Stress3D,Stress3DCrystal,TotalPlasticIncrement,TotalPlasticIncrementCrystal
+      type(MatS3D)                              :: PlasticStrain3D,PlasticStrain3DCrystal,PlasticStrainFlow3DCrystal
       type(MatS3D),dimension(12)                :: MatrixMu
       type(MAT3D)                               :: MatrixR
       real(Kind = Kr),dimension(12)             :: ResolvedShearStress,PlasticSlipIncrement
@@ -887,7 +888,7 @@ contains
                                                                   & 0.,-1., 1.,   1., 1., 0.,   1., 0., 1.,  -1., 1., 0.,   1., 0., 1.,   0., 1., 1.  /), (/3,12/)) !!! slip planes normals
       real(Kind = Kr),dimension(3,12)           :: m_s = reshape((/ 1., 1., 1.,   1., 1., 1.,   1., 1., 1.,   1.,-1., 1.,   1.,-1., 1.,   1.,-1., 1., &
                                                                   &-1., 1., 1.,  -1., 1., 1.,  -1., 1., 1.,  -1.,-1., 1.,  -1.,-1., 1.,  -1.,-1., 1.  /), (/3,12/)) !!! slip directions
-      real(Kind = Kr)                           :: lambda,mu,E,nu
+      real(Kind = Kr)                           :: lambda,mu,E,nu,taueq
       
       !!! Casting x into a MEF90_MATS
       xMatS = x(1:SIZEOFMEF90_MATS)
@@ -949,6 +950,7 @@ contains
 #endif
       
       Stress3DCrystal = MatRaRt(Stress3D,myctx_ptr%RotationMatrix3D%fullTensor)
+      PlasticStrainFlow3DCrystal = MatRaRt(PlasticStrainFlow3D,myctx_ptr%RotationMatrix3D%fullTensor)
 
       normS = (2.0_Kr*SQRT(6.0_Kr))  
       Do s=1,12
@@ -968,8 +970,7 @@ contains
 
       dt = myctx_ptr%Viscositydt
       active = 0
-
-      f(1) = 0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%InelasticStrain-xMatS)
+      taueq = 0.0_Kr
       Do s = 1,12
          ResolvedShearStress(s) =  Stress3DCrystal .DotP. MatrixMu(s)
          CRSS = myctx_ptr%YieldTau0
@@ -985,26 +986,28 @@ contains
             !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)
             myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
          else
-            print *, "Rate-independent crystal plasticity is not implemented."
-            !PlasticSlipIncrement(s) = dt * myctx_ptr%eta * SIGN(1.0_Kr, ResolvedShearStress(s)) *&
-            !                        & MAX( (ABS(StiffnessA*ResolvedShearStress(s)) - StiffnessB*CRSS) / myctx_ptr%YieldTau0 , 0. )**myctx_ptr%ViscosityN                      
-            !TotalPlasticIncrementCrystal = TotalPlasticIncrementCrystal + (PlasticSlipIncrement(s) * MatrixMu(s))
-            !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)
-            !myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
+            taueq = taueq + ABS( (StiffnessA * ResolvedShearStress(s)) /  CRSS ) ** myctx_ptr%m
+            !myctx_ptr%PlasticSlipsVariation(s) = SIGN(1.0_KR, ResolvedShearStress(s)) * (Stress3DCrystal .DotP. PlasticStrainFlow3DCrystal) * (ABS( (StiffnessA * ResolvedShearStress(s)) / CRSS ) ** (myctx_ptr%m - 1.0_Kr)) / CRSS
          endif
          if ((ABS(StiffnessA*ResolvedShearStress(s)) - StiffnessB*CRSS)>0) then
             active = active + 1
          end if
       End Do
-      f(1) = f(1) + StiffnessB * myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation
-      TotalPlasticIncrement = MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
+      if (myctx_ptr%isViscousPlasticity) then
+         f(1) = (0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%InelasticStrain-xMatS)) + (StiffnessB * myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation)
+         TotalPlasticIncrement = MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
 #if MEF90_DIM==2
-      h(1) = PlasticStrainFlow3D%XX - TotalPlasticIncrement%XX
-      h(2) = PlasticStrainFlow3D%XY - TotalPlasticIncrement%XY
-      h(3) = PlasticStrainFlow3D%YY - TotalPlasticIncrement%YY
+         h(1) = PlasticStrainFlow3D%XX - TotalPlasticIncrement%XX
+         h(2) = PlasticStrainFlow3D%XY - TotalPlasticIncrement%XY
+         h(3) = PlasticStrainFlow3D%YY - TotalPlasticIncrement%YY
 #elif MEF90_DIM==3
-      h(1) = NORM(PlasticStrainFlow3D - TotalPlasticIncrement)
+         h(1) = NORM(PlasticStrainFlow3D - TotalPlasticIncrement)
 #endif
+      else
+         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )
+         g(1) = ((taueq) ** (1.0_Kr/myctx_ptr%m)) - StiffnessB
+         h(1) = Trace(xMatS)
+      end if
    end subroutine FHG_CRYSTALBCC
 
 
@@ -1220,14 +1223,18 @@ contains
                      if (matPropSet%HookesLaw%isPlaneStress) then
                         write(*,*) "Plane stress CrystalBCC is not implemented"
                      end if
-                     snlp_m    = 3
+                     if (matpropSet%isViscousPlasticity) then
+                        snlp_m    = 3
+                     else
+                        snlp_m    = 1
+                     end if
 #elif MEF90_DIM==3
                      snlp_m    = 1
 #endif
                      if (matpropSet%isViscousPlasticity) then
                         snlp_p = 0
                      else   
-                        snlp_p = 0
+                        snlp_p = 1
                      end if
                      snlp_ctx  = c_loc(PlasticityCtx)
                   case default
@@ -1268,6 +1275,7 @@ contains
                PlasticityCtx%ViscosityGamma0 = matpropSet%ViscosityGamma0
                PlasticityCtx%ViscosityN = matpropSet%ViscosityN
                PlasticityCtx%Viscositydt = matpropSet%Viscositydt
+               PlasticityCtx%m = matpropSet%m
 
 
 #if MEF90_DIM == 2
