@@ -1244,6 +1244,7 @@ contains
                PlasticityCtx%residualStiffness = matpropSet%residualStiffness
                PlasticityCtx%YieldStress = matpropSet%YieldStress
                PlasticityCtx%DuctileCouplingPower = matpropSet%DuctileCouplingPower
+               PlasticityCtx%isNoPlCoupling = matpropSet%isNoPlCoupling
                PlasticityCtx%CoefficientDruckerPrager = matpropSet%CoefficientDruckerPrager
                PlasticityCtx%CoefficientCapModel0 = matpropSet%CoefficientCapModel0
                PlasticityCtx%CoefficientCapModel1 = matpropSet%CoefficientCapModel1
