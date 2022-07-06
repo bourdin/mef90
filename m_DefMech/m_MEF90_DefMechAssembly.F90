@@ -1807,6 +1807,11 @@ Contains
                If (Associated(MEF90DefMechCtx%CrackPressure)) Then
                   Call SectionRealRestore(CrackPressureSec,cellID(cell),CrackPressureLoc,ierr);CHKERRQ(ierr)
                EndIf
+
+               If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
+                  Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
+               EndIf
+
             End Do ! cell
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
@@ -1897,6 +1902,10 @@ Contains
       
       If (Associated(MEF90DefMechCtx%temperature)) Then
          Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
+         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
       End If
 
       Call SectionRealDestroy(damageSec,ierr);CHKERRQ(ierr)
@@ -2149,6 +2158,10 @@ Contains
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                End If
+
+               If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
+                  Call SectionRealRestore(cumulatedDissipatedPlasticEnergySec,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
+               End If
             End Do ! cell
             DeAllocate(displacementDof)
             DeAllocate(damageDof)
@@ -2215,6 +2228,10 @@ Contains
       
       If (Associated(MEF90DefMechCtx%plasticStrain)) Then
          Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
+      End If
+
+      If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
+         Call SectionRealDestroy(cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
       End If
       flg = SAME_NONZERO_PATTERN
    End Subroutine MEF90DefMechBilinearFormDamage
