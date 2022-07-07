@@ -987,15 +987,18 @@ contains
             myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
          else
             taueq = taueq + ABS( (StiffnessA * ResolvedShearStress(s)) /  CRSS ) ** myctx_ptr%m
+            PlasticSlipIncrement(s) = SIGN(1.0_KR, ResolvedShearStress(s)) * (Stress3DCrystal .DotP. PlasticStrainFlow3DCrystal) * (ABS( (StiffnessA * ResolvedShearStress(s)) / CRSS ) ** (myctx_ptr%m - 1.0_Kr)) / CRSS
+            TotalPlasticIncrementCrystal = TotalPlasticIncrementCrystal + (PlasticSlipIncrement(s) * MatrixMu(s))
+            !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)
             !myctx_ptr%PlasticSlipsVariation(s) = SIGN(1.0_KR, ResolvedShearStress(s)) * (Stress3DCrystal .DotP. PlasticStrainFlow3DCrystal) * (ABS( (StiffnessA * ResolvedShearStress(s)) / CRSS ) ** (myctx_ptr%m - 1.0_Kr)) / CRSS
          endif
          if ((ABS(StiffnessA*ResolvedShearStress(s)) - StiffnessB*CRSS)>0) then
             active = active + 1
          end if
       End Do
+      TotalPlasticIncrement = MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
       if (myctx_ptr%isViscousPlasticity) then
          f(1) = (0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%InelasticStrain-xMatS)) + (StiffnessB * myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation)
-         TotalPlasticIncrement = MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
 #if MEF90_DIM==2
          h(1) = PlasticStrainFlow3D%XX - TotalPlasticIncrement%XX
          h(2) = PlasticStrainFlow3D%XY - TotalPlasticIncrement%XY
@@ -1006,7 +1009,7 @@ contains
       else
          f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )
          g(1) = ((taueq) ** (1.0_Kr/myctx_ptr%m)) - StiffnessB
-         h(1) = Trace(xMatS)
+         h(1) = Trace(TotalPlasticIncrementCrystal)
       end if
    end subroutine FHG_CRYSTALBCC
 
