@@ -1,19 +1,21 @@
 reset
 journal off
-create brick x 1
+
+create surface rectangle width 1 
 surface 1 size .5 scheme tridelaunay
 #Tridelaunay point placement gq
 mesh surface 1
-smooth surface 1
-smooth surface 1
 
-block 1 surface 1
+#block 1 surface 1
 
-sideset 20 curve 4
-sideset 21 curve 2
-sideset 22 curve 1 3
-nodeset 10 node in curve 2
-nodeset 20 node in curve 4
+#sideset 20 curve 4
+#sideset 21 curve 2
+#sideset 22 curve 1 3
+#nodeset 10 node in curve 2
+#nodeset 20 node in curve 4
 
-export mesh "SquareFaceSet.gen" dimension 2 block all overwrite
-exit
+set exodus netcdf4 off
+set large exodus file on
+export mesh "SquareFaceSet.gen" dimension 2 overwrite
+#exit
+

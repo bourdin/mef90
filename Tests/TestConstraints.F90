@@ -33,10 +33,10 @@ contains
     end function f2
 
 #undef __FUNCT__
-#define __FUNCT__ "project"
+#define __FUNCT__ "project1"
 !!! Projects a function over a Lagrange finite element space using DMPlexVecSetClosure
 !!! U must be  LOCAL vector
-    subroutine project(v,s,f,ierr)
+    subroutine project1(v,s,f,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSection),intent(IN)     :: s
         procedure(f_interface)             :: f
@@ -80,7 +80,7 @@ contains
                 PetscCallA(DMPlexVecRestoreClosure(dm,s,v,p,vArray,ierr))
             End If
         End Do
-    End subroutine project    
+    End subroutine project1
 
 #undef __FUNCT__
 #define __FUNCT__ "project2"
@@ -229,7 +229,8 @@ Implicit NONE
     Type(tPetscSection)                 :: sectionU,sectionU0
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTableU,ConstraintTruthTableU0
     Logical,Dimension(:),Pointer        :: Constraints
-    Type(tVec)                          :: U,U0,Uloc
+    Type(tVec)                          :: U,U0,Uloc,Uloc2
+    PetscInt                            :: projectType
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
@@ -268,18 +269,17 @@ Implicit NONE
     PetscCallA(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
     PetscCallA(PetscSectionSetChart(sectionU0,pStart,pEnd,ierr))
 
-
     numComponents = dim
     !!! Allocate DoF at cell and face sets
     !!! Note that if the face sets corresponds to faces in elements in cell set 
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
     PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
     If (dim == 2) Then
-        Select case(order)
-        case(1)
+        Select Case(order)
+        Case(1)
             cellSetElementType = MEF90_P1_Lagrange_2D
             faceSetElementType = MEF90_P1_Lagrange_2DBoundary
-        case(2)
+        Case(2)
             cellSetElementType = MEF90_P2_Lagrange_2D
             faceSetElementType = MEF90_P2_Lagrange_2DBoundary
         Case default
@@ -287,11 +287,11 @@ Implicit NONE
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     Else If (dim == 3) Then
-        Select case(order)
-            case(1)
+        Select Case(order)
+            Case(1)
                 cellSetElementType = MEF90_P1_Lagrange_3D
                 faceSetElementType = MEF90_P1_Lagrange_3DBoundary
-            case(2)
+            Case(2)
                 cellSetElementType = MEF90_P2_Lagrange_3D
                 faceSetElementType = MEF90_P2_Lagrange_3DBoundary
             Case default
@@ -301,6 +301,7 @@ Implicit NONE
     End If
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU0,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
@@ -359,38 +360,55 @@ Implicit NONE
     PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
+    PetscCallA(PetscObjectSetName(U,"U: global vector",ierr))
     PetscCallA(DMCreateLocalVector(dmU,uLoc,ierr))
-
+    PetscCallA(PetscObjectSetName(Uloc,"Uloc: local vector",ierr))
+    PetscCallA(DMCreateLocalVector(dmU,uLoc2,ierr))
+    PetscCallA(PetscObjectSetName(Uloc2,"Uloc2: local vector",ierr))
+    
     PetscCallA(DMClone(dm,dmU0,ierr))
     PetscCallA(DMSetLocalSection(dmU0,sectionU0,ierr))
-    PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
+    PetscCallA(DMCreateLocalVector(dmU0,U0,ierr))
+    PetscCallA(PetscObjectSetName(U0,"U0: boundary vector",ierr))
+
+    projectType = 1
+    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-projectType',projectType,flg,ierr))
+    If ((projectType < 0) .OR. (projectType > 3)) Then
+        Write(IOBuffer,*) 'ERROR: unimplemented projection type ', projectType, '\n'
+        SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
+    End If
     
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(U0,-1.0_Kr,ierr))
     PetscCallA(VecSet(Uloc,-3.0_Kr,ierr))
+    PetscCallA(VecSet(Uloc2,-3.0_Kr,ierr))
 
-    PetscCallA(project(Uloc,sectionU,f1,ierr))
-    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OPTIONS,"-vecloc_view",ierr))
-    PetscCallA(MyVecView(uLoc,ierr))
+    Select Case(ProjectType)
+    Case(1)
+        PetscCallA(project1(Uloc,sectionU,f1,ierr))
+        PetscCallA(project1(U0,sectionU0,f1,ierr))
+    Case(2)
+        PetscCallA(project2(Uloc,sectionU,f1,ierr))
+        PetscCallA(project2(U0,sectionU0,f1,ierr))
+    Case(3)
+        PetscCallA(project3(Uloc,sectionU,f1,ierr))
+        PetscCallA(project3(U0,sectionU0,f1,ierr))
+    End Select
 
-    ! PetscCallA(project(U,sectionU,f1,ierr))
-    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    ! PetscCallA(project(U0,sectionU0,f1,ierr))
-    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OPTIONS,"-uloc_view",ierr))
 
-    ! PetscCallA(VecSet(U,-1.0_Kr,ierr))
-    ! PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    ! PetscCallA(project2(U,sectionU,f1,ierr))
-    ! PetscCallA(project2(U0,sectionU0,f1,ierr))
-    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-u0_view",ierr))
 
-    ! PetscCallA(VecSet(U,-1.0_Kr,ierr))
-    ! PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    ! PetscCallA(project3(U,sectionU,f1,ierr))
-    ! PetscCallA(project3(U0,sectionU0,f1,ierr))
-    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(DMLocalToGlobal(dmU,Uloc,INSERT_ALL_VALUES,U,ierr))
+
+    PetscCallA(DMGlobalToLocal(dmU,U,INSERT_ALL_VALUES,Uloc2,ierr))
+    !!! In this process, we should have lost the constrained values
+    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
+
+    PetscCall(VecSet(Uloc2,-33.33_Kr,ierr))
+    PetscCall(MEF90_VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
+    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
+
 
     PetscCallA(VecDestroy(Uloc,ierr))
     PetscCallA(VecDestroy(Uloc2,ierr))
