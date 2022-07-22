@@ -14,6 +14,7 @@ implicit none
 contains
 #undef __FUNCT__
 #define __FUNCT__ "f1"
+
     pure function f1(x,y)
         PetscReal,intent(in)   :: x,y
         PetscReal              :: f1
@@ -23,6 +24,7 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "f2"
+
     pure function f2(x,y)
         PetscReal,intent(in)   :: x,y
         PetscReal              :: f2
@@ -32,6 +34,8 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "project"
+!!! Projects a function over a Lagrange finite element space using DMPlexVecSetClosure
+!!! U must be  LOCAL vector
     subroutine project(v,s,f,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSection),intent(IN)     :: s
@@ -41,14 +45,13 @@ contains
         PetscInt                           :: pStart,pEnd,p,numDof,i
         Type(tDM)                          :: dm
         Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec,vLoc
+        Type(tVec)                         :: coordVec
         PetscScalar,dimension(:),Pointer   :: coordArray,vArray
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim
 
         PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
         PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
@@ -63,24 +66,25 @@ contains
                 End Do
                 PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
 
-                PetscCallA(DMPlexVecGetClosure(dm,s,vLoc,p,vArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,s,v,p,vArray,ierr))
                 Do i = 1,numDof
                     vArray(i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
                 !!! This is dangerous as I could potentially overwrite the value of 
                 !!! v at other points
-                !!! In the cirrent state of DMPlexVecSetClosure / DMPlexVecRestoreClosure
+                !!! In the current state of DMPlexVecSetClosure / DMPlexVecRestoreClosure
                 !!! in fortran, it also forces 1 alloc and 1 free 
-                PetscCallA(DMPlexVecSetClosure(dm,s,vLoc,p,vArray,INSERT_VALUES,ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dm,s,vLoc,p,vArray,ierr))
+                PetscCallA(DMPlexVecSetClosure(dm,s,v,p,vArray,INSERT_ALL_VALUES,ierr))
+                !!! VecSetCLosure will silently drop constrained DOF, so the write does not
+                !!! set the value at any constrained DOF
+                PetscCallA(DMPlexVecRestoreClosure(dm,s,v,p,vArray,ierr))
             End If
         End Do
-        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
     End subroutine project    
 
 #undef __FUNCT__
 #define __FUNCT__ "project2"
+
     subroutine project2(v,s,f,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSection),intent(IN)     :: s
@@ -90,14 +94,13 @@ contains
         PetscInt                           :: pStart,pEnd,p,numDof,i
         Type(tDM)                          :: dm
         Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec,vLoc
+        Type(tVec)                         :: coordVec
         PetscScalar,dimension(:),Pointer   :: coordArray,vArray
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim
 
         PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
         PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
@@ -118,16 +121,16 @@ contains
                 Do i = 1,numDof
                     vArray(i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
-                PetscCallA(VecSetValuesSectionF90(vLoc,s,p,vArray,INSERT_VALUES,ierr))
+                PetscCallA(VecSetValuesSectionF90(v,s,p,vArray,INSERT_ALL_VALUES,ierr))
+                !!! As before, this call silently drops the constrained values
                 DeAllocate(vArray)
             End If
         End Do
-        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
     End subroutine project2    
     
 #undef __FUNCT__
 #define __FUNCT__ "project3"
+
     subroutine project3(v,s,f,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSection),intent(IN)     :: s
@@ -137,20 +140,18 @@ contains
         PetscInt                           :: pStart,pEnd,p,numDof,i
         Type(tDM)                          :: dm
         Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec,vLoc
+        Type(tVec)                         :: coordVec
         PetscScalar,dimension(:),Pointer   :: coordArray,vArray
         PetscScalar,dimension(3)           :: xyz
         PetscInt                           :: dim,pOffset
 
         PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
         PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetLocalVector(dm,vLoc,ierr))
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArrayF90(vLoc,vArray,ierr))
+        PetscCallA(VecGetArrayF90(v,vArray,ierr))
 
-        !nullify(vArray)
         Do p = pStart,pEnd-1
             PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
             If (numDof > 0) Then
@@ -167,10 +168,40 @@ contains
                 End Do
             End If
         End Do
-        PetscCallA(VecRestoreArrayF90(vLoc,vArray,ierr))
-        PetscCallA(DMLocalToGlobal(dm,vLoc,INSERT_VALUES,v,ierr))
-        PetscCallA(DMRestoreLocalVector(dm,vLoc,ierr))
+        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+        !!! Of course, this does not use informations from the section, so it does over-write constrained values
     End subroutine project3    
+
+    Subroutine MyVecView(v,ierr)
+        Type(tVec),Intent(IN)               :: v
+        PetscErrorCode,Intent(OUT)          :: ierr
+
+        Type(tDM)                           :: dm
+        PetscInt                            :: p,pStart,pEnd
+        Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+        PetscScalar,Dimension(:),Pointer    :: vArray
+
+
+        PetscCall(VecGetDM(v,dm,ierr))
+
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Cell closure\n",ierr))
+        PetscCall(DMPlexGetHeightStratum(dm,0,pStart,pEnd,ierr))
+        Do p = pStart,pEnd-1
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
+            Write(IOBuffer,*) p, vArray,"\n"
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
+        End Do
+    
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Point Values\n",ierr))
+        PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
+        Do p = pStart,pEnd-1
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
+            Write(IOBuffer,*) p, vArray,"\n"
+            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
+        End Do
+    End Subroutine MyVecView
 End Module localFunctions
 
 Program  TestConstraints
@@ -198,7 +229,7 @@ Implicit NONE
     Type(tPetscSection)                 :: sectionU,sectionU0
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTableU,ConstraintTruthTableU0
     Logical,Dimension(:),Pointer        :: Constraints
-    Type(tVec)                          :: U,U0
+    Type(tVec)                          :: U,U0,Uloc
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
@@ -328,32 +359,41 @@ Implicit NONE
     PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
+    PetscCallA(DMCreateLocalVector(dmU,uLoc,ierr))
 
     PetscCallA(DMClone(dm,dmU0,ierr))
     PetscCallA(DMSetLocalSection(dmU0,sectionU0,ierr))
     PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
-
+    
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCallA(project(U,sectionU,f1,ierr))
-    PetscCallA(project(U0,sectionU0,f1,ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecSet(Uloc,-3.0_Kr,ierr))
 
-    PetscCallA(VecSet(U,-1.0_Kr,ierr))
-    PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCallA(project2(U,sectionU,f1,ierr))
-    PetscCallA(project2(U0,sectionU0,f1,ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(project(Uloc,sectionU,f1,ierr))
+    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OPTIONS,"-vecloc_view",ierr))
+    PetscCallA(MyVecView(uLoc,ierr))
 
-    PetscCallA(VecSet(U,-1.0_Kr,ierr))
-    PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCallA(project3(U,sectionU,f1,ierr))
-    PetscCallA(project3(U0,sectionU0,f1,ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    ! PetscCallA(project(U,sectionU,f1,ierr))
+    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    ! PetscCallA(project(U0,sectionU0,f1,ierr))
+    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
 
+    ! PetscCallA(VecSet(U,-1.0_Kr,ierr))
+    ! PetscCallA(VecSet(U0,-1.0_Kr,ierr))
+    ! PetscCallA(project2(U,sectionU,f1,ierr))
+    ! PetscCallA(project2(U0,sectionU0,f1,ierr))
+    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+
+    ! PetscCallA(VecSet(U,-1.0_Kr,ierr))
+    ! PetscCallA(VecSet(U0,-1.0_Kr,ierr))
+    ! PetscCallA(project3(U,sectionU,f1,ierr))
+    ! PetscCallA(project3(U0,sectionU0,f1,ierr))
+    ! PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    ! PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+
+    PetscCallA(VecDestroy(Uloc,ierr))
+    PetscCallA(VecDestroy(Uloc2,ierr))
     PetscCallA(VecDestroy(U,ierr))
     PetscCallA(VecDestroy(U0,ierr))
     PetscCallA(PetscSectionDestroy(sectionU,ierr))

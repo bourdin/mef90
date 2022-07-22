@@ -189,7 +189,8 @@ Implicit NONE
 
     PetscCallA(PetscSFCreateRemoteOffsetsF90(idSF,sectionU,sectionU0,remoteOffsets,ierr))
     PetscCallA(PetscSFCreateSectionSFF90(idSF,sectionU,remoteOffsets,SectionU0,testSF,ierr))
-    PetscCallA(PetscSFDestroyRemoteOffsetsF90(remoteOffsets,ierr))
+!    PetscCallA(PetscSFDestroyRemoteOffsetsF90(remoteOffsets,ierr))
+PetscCallA(PetscIntArray1dDestroyF90(remoteOffsets,ierr))
     PetscCallA(PetscSFView(testSF,PETSC_NULL_VIEWER,ierr))
     PetscCallA(PetscSFDestroy(testSF,ierr))
     PetscCallA(PetscSFDestroy(idSF,ierr))
