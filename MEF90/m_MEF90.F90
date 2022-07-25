@@ -7,7 +7,7 @@ Module m_MEF90
    Use m_MEF90_Parameters
    Use m_MEF90_Materials
    Use m_MEF90_MPI
-   !Use m_MEF90_EXO  
+   Use m_MEF90_EXO  
    Use m_MEF90_Utils
    Use m_MEF90_DMPlex
    !Use m_MEF90_DiffusionInterface
