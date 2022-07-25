@@ -202,21 +202,21 @@ m_MEF90_NormsImplementation_MEF90Element2D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF90_No
         m_MEF90_Utils.o \
         m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element2D_Vect"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Vect -DMEF90_DIM=2 -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element2D_Vect -DMEF90_ELEMENTTYPE_VECT  -DMEF90_DIM=2 -c -o $@ $<
 m_MEF90_NormsImplementation_MEF90Element3D_Scal.o: ${MEF90_DIR}/MEF90/m_MEF90_NormsImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o \
         m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element3D_Scal"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Scal -DMEF90_DIM=3 -DMEF90_ELEMENTTYPE_SCALAR -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Scal -DMEF90_ELEMENTTYPE_SCALAR -DMEF90_DIM=3 -c -o $@ $<
 m_MEF90_NormsImplementation_MEF90Element3D_Vect.o: ${MEF90_DIR}/MEF90/m_MEF90_NormsImplementation.F90 \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o \
         m_MEF90_DMPlex.o
 	@echo "      $< MEF90Element3D_Vect"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Vect -DMEF90_DIM=3 -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_ELEMENTTYPE=MEF90Element3D_Vect -DMEF90_ELEMENTTYPE_VECT  -DMEF90_DIM=3 -c -o $@ $<
 
 m_MEF90_NormsInterface.o: ${MEF90_DIR}/MEF90/m_MEF90_NormsInterface.F90 m_MEF90_LinAlg.o \
         m_MEF90_NormsImplementation_MEF90Element2D_Scal.o \
