@@ -95,117 +95,26 @@ Contains
 !!!  MEF90ISAllGatherMerge: Merge all values of an IS, deleting duplicates
 !!!  
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90ISAllGatherMerge(Comm,labels,ierr)
+   Subroutine MEF90ISAllGatherMerge(Comm,is,ierr)
       MPI_Comm,intent(IN)              :: Comm
-      Type(tIS),intent(INOUT)          :: labels
-      PetscErrorCode,intent(OUT)       :: ierr
-      Type(tIS)                        :: tmplabels
+      Type(tIS),intent(INOUT)          :: is
+      PetscErrorCode,intent(INOUT)     :: ierr
+
+      Type(tIS)                        :: tmpIS
+      PetscInt,Dimension(:),pointer    :: indices
       
-      PetscCall(ISAllGather(labels,tmplabels,ierr))
-      PetscCall(ISSortRemoveDups(tmplabels,ierr))
-      PetscCall(ISDestroy(labels,ierr))
-      labels%v = tmplabels%v
-      
+      PetscCall(ISGetIndicesF90(is,indices,ierr))
+      PetscCall(ISCreateGeneral(Comm,size(indices),indices,PETSC_COPY_VALUES,tmpIS,ierr))
+      PetscCall(ISRestoreIndicesF90(is,indices,ierr))
+      PetscCall(ISDestroy(is,ierr))
+      PetscCall(ISAllGather(tmpIS,is,ierr))
+      PetscCall(ISSortRemoveDups(is,ierr))
       ierr = 0
    End Subroutine MEF90ISAllGatherMerge
    
-!#undef __FUNCT__
-!#define __FUNCT__ "MEF90ISCreateCelltoVertex"
-!!!!
-!!!!  
-!!!!  MEF90ISCreateCelltoVertex: Create an IS indexing all vertices associated with a cell set
-!!!!                              Assume that the cone of an elements is made only of vertices
-!!!!                              i.e. non  interpolated mesh
-!!!!  
-!!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!!
-!
-!   Subroutine MEF90ISCreateCelltoVertex(mesh,comm,cellSetIS,vertexSetIS,ierr)
-!      Type(tDM),Intent(IN)                             :: mesh
-!      MPI_Comm,Intent(IN)                             :: Comm
-!      Type(tIS),Intent(INOUT)                          :: cellSetIS,vertexSetIS
-!      PetscErrorCode,Intent(OUT)                      :: ierr
-!      
-!      PetscInt,Dimension(:),Pointer                   :: cellSetIdx,vertexSetIdx,cone
-!      PetscInt                                        :: numVertices,cell,v,coneSize
-!      
-!      PetscCall(ISGetIndicesF90(cellSetIS,cellSetIdx,ierr))
-!      numVertices = 0
-!      Do cell = 1,size(cellSetIdx)
-!         PetscCall(DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr))
-!         numVertices = numVertices + coneSize
-!      End Do ! cell
-!      Allocate(vertexSetIdx(numVertices))
-!      Do cell = 1,size(cellSetIdx)
-!         PetscCall(DMMeshGetConeSize(mesh,cellSetIdx(cell),coneSize,ierr))
-!         PetscCall(DMMeshGetConeF90(mesh,cellSetIdx(cell),Cone,ierr))
-!         Do v = 1,coneSize
-!            vertexSetIdx((cell-1)*coneSize+v) = Cone(v)
-!         End Do ! v
-!         PetscCall(DMMeshRestoreConeF90(mesh,cellSetIdx(cell),Cone,ierr))
-!      End Do ! cell
-!      PetscCall(PetscSortRemoveDupsInt(numVertices,vertexSetIdx,ierr))
-!      PetscCall(ISCreateGeneral(Comm,numVertices,vertexSetIdx,PETSC_COPY_VALUES,vertexSetIS,ierr))
-!      DeAllocate(vertexSetIdx)
-!      PetscCall(ISRestoreIndicesF90(cellSetIS,cellSetIdx,ierr))
-!   End Subroutine MEF90ISCreateCelltoVertex
-   
-! #undef __FUNCT__
-! #define __FUNCT__ "MEF90AskInt"
-!
-!    Subroutine MEF90AskInt(val,msg,ArgUnit,IsBatch)
-!       PetscInt                                  :: Val
-!       Character(len=*)                          :: msg 
-!       PetscInt                                  :: argunit
-!       PetscBool                                 :: IsBatch
-
-!       Character(len=MEF90_MXSTRLEN)             :: IOBuffer   
-!       PetscInt                                  :: ierr   
-      
-!       If (IsBatch) Then
-!          If (MEF90_MyRank == 0) Then
-!             Read(ArgUnit,*) Val
-!          End If
-!          PetscCallMPI(MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr))
-!       Else
-!          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-!          PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-!          If (MEF90_MyRank == 0) Then
-!             Read(*,*) Val
-!             Write(ArgUnit,"(I4,t60,A)") val,Trim(msg)
-!          End If
-!          PetscCallMPI(MPI_BCast(Val,1,MPIU_INTEGER,0,PETSC_COMM_WORLD,ierr))
-!       End If
-!    End Subroutine MEF90AskInt   
-   
-! #undef __FUNCT__
-! #define __FUNCT__ "MEF90AskReal"
-
-!    Subroutine MEF90AskReal(val,msg,ArgUnit,IsBatch)
-!       PetscReal                                 :: Val
-!       Character(len=*)                          :: msg 
-!       PetscInt                                  :: argunit
-!       PetscBool                                 :: IsBatch
-
-!       Character(len=MEF90_MXSTRLEN)             :: IOBuffer      
-!       PetscInt                                  :: ierr
-!       If (IsBatch) Then
-!          If (MEF90_MyRank == 0) Then
-!             Read(ArgUnit,*) Val
-!          End If
-!          PetscCallMPI(MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr))
-!       Else
-!          Write(IOBuffer,"(A,t60,':  ')") Trim(msg)
-!          PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-!          If (MEF90_MyRank == 0) Then
-!             Read(*,*) Val
-!             Write(ArgUnit,"(ES12.5,t60,A)") val,Trim(msg)
-!          End If
-!          PetscCallMPI(MPI_BCast(Val,1,MPIU_SCALAR,0,PETSC_COMM_WORLD,ierr))
-!       End If
-!    End Subroutine MEF90AskReal
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90FilePrefix"
