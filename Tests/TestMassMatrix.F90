@@ -178,10 +178,10 @@ Program  TestMassMatrix
             PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
             If (dim == 2) Then
                 PetscCallA(MEF90Element_Create(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
-                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,section,setType,setID(set),elem2D,cellSetElementType,ierr))
+                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem2D,cellSetElementType,ierr))
             Else
                 PetscCallA(MEF90Element_Create(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
-                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,section,setType,setID(set),elem3D,cellSetElementType,ierr))
+                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem3D,cellSetElementType,ierr))
             End If
             PetscCallA(ISDestroy(setPointIS,ierr))
         End Do

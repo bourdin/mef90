@@ -24,10 +24,9 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MassMatrixAssembleSet"
 
-   Subroutine MEF90_MassMatrixAssembleSet(M,dm,section,setType,setID,elem,elemType,ierr)
+   Subroutine MEF90_MassMatrixAssembleSet(M,dm,setType,setID,elem,elemType,ierr)
       Type(tMat),Intent(IN)                           :: M
       Type(tDM),Intent(IN)                            :: dm
-      Type(tPetscSection),intent(IN)                  :: section
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
