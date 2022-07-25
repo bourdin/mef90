@@ -115,6 +115,7 @@ Implicit NONE
     End If
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU0,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
@@ -181,17 +182,17 @@ Implicit NONE
     PetscCallA(DMSetUseNatural(dmU0,PETSC_TRUE,ierr))
 
     ! Creating the GlobalToNatural SF
-    if (MEF90Ctx%NumProcs > 1) then
-        PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
-        PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
-        PetscCallA(PetscObjectDereference(natSFU, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
-        PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
-        PetscCallA(PetscObjectDereference(natSFU0, ierr))
-    end if
+    ! if (MEF90Ctx%NumProcs > 1) then
+    !     PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
+    !     PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
+    !     PetscCallA(PetscObjectDereference(natSFU, ierr))
+    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
+    !     PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
+    !     PetscCallA(PetscObjectDereference(natSFU0, ierr))
+    ! end if
 
     PetscCallA(MEF90_CreateLocalToConstraintSF(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
     ! PetscCallA(MEF90_CreateLocalToIOSF(MEF90Ctx,dmU,lioSF,ierr))
