@@ -1,6 +1,6 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_HeatXferCtx_Type
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use,Intrinsic :: iso_c_binding
    Implicit none
@@ -22,15 +22,6 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(DM),pointer                 :: DM
-
-      Type(DM)                         :: DMScal
-      Type(DM)                         :: cellDMScal
-
-      Type(VecScatter)                 :: DMScalScatter
-      Type(VecScatter)                 :: cellDMScalScatter
-      
-      Type(SectionReal)                :: DMScalSec
-      Type(SectionReal)                :: cellDMScalSec
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
@@ -38,13 +29,9 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBool                        :: addNullSpace
       PetscInt                         :: tempOffset
       PetscReal                        :: initialTemperature
-      PetscInt                         :: boundaryTempScaling
-      PetscInt                         :: boundaryTempOffset
-      PetscInt                         :: externalTempScaling
-      PetscInt                         :: externalTempOffset
-      PetscInt                         :: fluxScaling
-      PetscInt                         :: fluxOffset
-      !!! offset  = position in data file (required for exodus)
+      PetscEnum                        :: boundaryTempScaling
+      PetscEnum                        :: externalTempScaling
+      PetscEnum                        :: fluxScaling
       !!! scaling = time (step) scaling law currently CST, Linear, Null (not present) File
    End Type MEF90HeatXferGlobalOptions_Type
 
@@ -100,8 +87,7 @@ Contains
 End Module m_MEF90HeatXferGlobalOptions_Private
 
 Module m_MEF90HeatXferCellSetOptions_Private
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
@@ -135,8 +121,7 @@ Contains
 End Module m_MEF90HeatXferCellSetOptions_Private
 
 Module m_MEF90HeatXferVertexSetOptions_Private
-#include "finclude/petscdef.h"
-#include "finclude/petscbagdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
@@ -170,7 +155,7 @@ Contains
 End Module m_MEF90HeatXferVertexSetOptions_Private
 
 Module m_MEF90_HeatXferCtx
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXferCtx_Type
    Use m_MEF90HeatXferGlobalOptions_Private
@@ -230,11 +215,11 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90HeatXferCtxCreate(HeatXferCtx,Mesh,MEF90Ctx,ierr)
+   Subroutine MEF90HeatXferCtxCreate(HeatXferCtx,dm,MEF90Ctx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(OUT)            :: HeatXferCtx
-      Type(DM),target,Intent(IN)                         :: Mesh
+      Type(tDM),target,Intent(IN)                        :: dm
       Type(MEF90Ctx_Type),target,Intent(IN)              :: MEF90Ctx
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
@@ -244,13 +229,8 @@ Contains
       PetscInt                                           :: set,numSet
 
       Call MEF90HeatXferCtxInitialize_Private(ierr)
-      HeatXferCtx%DM => Mesh
+      HeatXferCtx%DM => dm
       HeatXferCtx%MEF90Ctx => MEF90Ctx
-      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%DMScal,ierr);CHKERRQ(ierr)
-      Call DMMeshClone(HeatXferCtx%DM,HeatXferCtx%cellDMScal,ierr);CHKERRQ(ierr)
-      Call DMMeshSetMaxDof(HeatXferCtx%DMScal,1,ierr);CHKERRQ(ierr) 
-      Call DMMeshSetMaxDof(HeatXferCtx%cellDMScal,1,ierr);CHKERRQ(ierr) 
-
       Call PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr);CHKERRQ(ierr)
       
       !!! Call DMmeshGetLabelSize(Mesh,'Cell Sets',numSet,ierr);CHKERRQ(ierr)

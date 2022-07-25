@@ -63,13 +63,7 @@ Module m_MEF90_Ctx
                      MEF90Scaling_Null
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90ScalingList
-   
-   Enum,bind(c)
-      Enumerator  :: MEF90FileFormat_EXOSingle = 0,    &
-                     MEF90FileFormat_EXOSplit 
-   End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(5),protected  :: MEF90FileFormatList
-   
+      
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
                      MEF90TimeInterpolation_Vcycle,     &
@@ -77,9 +71,6 @@ Module m_MEF90_Ctx
                      MEF90TimeInterpolation_exo
    End Enum
    Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
-   
-   
-
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
@@ -118,17 +109,6 @@ Contains
       MEF90ScalingList(5) = 'MEF90scaling'
       MEF90ScalingList(6) = '_MEF90Scaling'
       MEF90ScalingList(7) = ''
-      
-      MEF90FileFormatList(1) = 'Replace'
-      MEF90FileFormatList(2) = 'MEF90FileFormat'
-      MEF90FileFormatList(3) = '_MEF90FileFormat'
-      MEF90FileFormatList(4) = ''
-
-      MEF90FileFormatList(1) = 'EXOSingle'
-      MEF90FileFormatList(2) = 'EXOSplit'
-      MEF90FileFormatList(3) = 'MEF90FileFormat'
-      MEF90FileFormatList(4) = '_MEF90FileFormatList'
-      MEF90FileFormatList(5) = '' 
       
       MEF90TimeInterpolationList(1) = 'linear'
       MEF90TimeInterpolationList(2) = 'Vcycle'
@@ -186,7 +166,6 @@ Contains
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr))
-      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%fileFormat,MEF90FileFormatList,default%fileFormat,'file_format','I/O: file format.',ierr))
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__
