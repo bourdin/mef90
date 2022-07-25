@@ -13,16 +13,19 @@ Implicit NONE
     PetscEnum                               :: setType
 
     Type(MEF90Element_Type)                 :: cellSetElementType,faceSetElementType
-    PetscInt                                :: numComponents
-    PetscInt                                :: set, order = 1
+    PetscInt                                :: numComponents, numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
+    Character(len=MEF90_MXSTRLEN),allocatable       :: nodalVarName(:), cellVarName(:), gVarName(:)
+    PetscInt                                :: set, order = 1, nroots, nleaves
     PetscBool                               :: flg
     PetscMPIInt                             :: rank = 0
     type(tIS)                               :: setIS
-    PetscInt,Dimension(:),pointer           :: setID,remoteOffsets
+    PetscInt,Dimension(:),pointer           :: setID,remoteOffsets,ilocal
     PetscInt                                :: dim,pStart,pEnd,size,n,p
     Type(tPetscSection)                     :: sectionU, sectionU0
-    Type(tPetscSF)                          :: naturalPointSF, natSFU, natSFU0, lcSF, clSF, idSF, testSF
-    Type(PetscSFNode),dimension(:),Pointer  :: remote
+    Type(tPetscSF)                          :: naturalPointSF, natSFU, natSFU0, lcSF, clSF, idSF, testSF, lioSF, iolSF, lioBSF, iolBSF
+    Type(tVec)                              :: locCoord, locVec, gVec, locVecB, ioVec
+    Type(PetscSFNode),dimension(:),Pointer  :: iremote
+    Type(tPetscViewer)                      :: viewer
     Logical,Dimension(:,:),Pointer          :: ConstraintTruthTableU, ConstraintTruthTableU0
     Logical,Dimension(:),Pointer            :: constraints
 
@@ -35,18 +38,34 @@ Implicit NONE
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
 
-
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+
+    MEF90Ctx%resultFile = "results/TestConstraintIO_out.exo"
+    Allocate(nodalVarName(numNodalVar))
+    Allocate(cellVarName(numCellVar))
+    Allocate(gVarName(numGVar))
+    nodalVarName(1:2) = ["U_x ","U_y "]
+    cellVarName(1:3) = ["Sigma_11","Sigma_22","Sigma_12"]
     
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
-    
+
+    call MEF90CtxOpenEXO(MEF90Ctx,viewer,ierr)
+    call MEF90EXODMView(dm,viewer,ierr)
+    call MEF90EXOFormat(viewer,gVarName,cellVarName,nodalVarName,numStep,ierr)
+
+    DeAllocate(nodalVarName)
+    DeAllocate(cellVarName)
+    DeAllocate(gVarName)
+
     distribute: Block 
         Type(tDM),target                    :: dmDist
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,0,naturalPointSF,dmDist,ierr))
+            PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
+            PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
         End If
@@ -96,6 +115,7 @@ Implicit NONE
     End If
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU0,ierr))
     PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
@@ -151,6 +171,8 @@ Implicit NONE
     PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-section_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-section_view",ierr))
 
+    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
+
     PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMSetUseNatural(dmU,PETSC_TRUE,ierr))
@@ -160,43 +182,66 @@ Implicit NONE
     PetscCallA(DMSetUseNatural(dmU0,PETSC_TRUE,ierr))
 
     ! Creating the GlobalToNatural SF
-    if (MEF90Ctx%NumProcs > 1) then
-        PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
-        PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
-        PetscCallA(PetscObjectDereference(natSFU, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
-        PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
-        PetscCallA(PetscObjectDereference(natSFU0, ierr))
-    end if
+    ! if (MEF90Ctx%NumProcs > 1) then
+    !     PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
+    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
+    !     PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
+    !     PetscCallA(PetscObjectDereference(natSFU, ierr))
+    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
+    !     PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
+    !     PetscCallA(PetscObjectDereference(natSFU0, ierr))
+    ! end if
 
     PetscCallA(MEF90_CreateLocalToConstraintSF(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
+    ! PetscCallA(MEF90_CreateLocalToIOSF(MEF90Ctx,dmU,lioSF,ierr))
+    ! PetscCallA(MEF90_CreateIOToLocalSF(MEF90Ctx,dmU,iolSF,ierr))
+    ! PetscCallA(MEF90_CreateLocalToIOSF(MEF90Ctx,dmU0,lioBSF,ierr))
+    ! PetscCallA(MEF90_CreateIOToLocalSF(MEF90Ctx,dmU0,iolBSF,ierr))
 
-    PetscCallA(PetscSectionGetChart(sectionU, pStart, pEnd, ierr))
-    n = pEnd-pStart
-    Allocate(remote(n))
-    Do p = 1,n
-        remote(p)%rank = rank
-        remote(p)%index = p-1
-    End Do
-    PetscCallA(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
-    PetscCallA(PetscSFSetFromOptions(idSF, ierr))
-    PetscCallA(PetscSFSetGraph(idSF, n, n, PETSC_NULL_INTEGER, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
-    PetscCallA(PetscSFSetUp(idSF, ierr))
-    DeAllocate(remote)
+    ! PetscCallA(DMGetCoordinatesLocal(dmU,locCoord,ierr))
+    ! PetscCallA(DMGetLocalVector(dmU,locVec,ierr))
+    ! PetscCallA(DMGetLocalVector(dmU0,locVecB,ierr))
+    PetscCallA(DMGetGlobalVector(dmU,gVec,ierr))
+    PetscCallA(VecSet(gVec,-111.0_kr,ierr))
+    ! PetscCallA(VecSet(locVecB,999.0_kr,ierr))
+    ! PetscCallA(VecCopy(locCoord,locVec,ierr))
 
-    PetscCallA(PetscSFCreateRemoteOffsetsF90(idSF,sectionU,sectionU0,remoteOffsets,ierr))
-    PetscCallA(PetscSFCreateSectionSFF90(idSF,sectionU,remoteOffsets,SectionU0,testSF,ierr))
-!    PetscCallA(PetscSFDestroyRemoteOffsetsF90(remoteOffsets,ierr))
-PetscCallA(PetscIntArray1dDestroyF90(remoteOffsets,ierr))
-    PetscCallA(PetscSFView(testSF,PETSC_NULL_VIEWER,ierr))
-    PetscCallA(PetscSFDestroy(testSF,ierr))
-    PetscCallA(PetscSFDestroy(idSF,ierr))
+    ! PetscCallA(DMGlobalToLocalBegin(dmU,gVec,INSERT_VALUES,locVec,ierr))
+    ! PetscCallA(DMGlobalToLocalEnd(dmU,gVec,INSERT_VALUES,locVec,ierr))
+
+    ! PetscCallA(VecView(locVec,PETSC_VIEWER_STDOUT_SELF,ierr))
+
+    ! PetscCallA(MEF90_VecReorderingSF(locVecB,locVec,clSF,ierr))
+
+    ! PetscCallMPIA(MPI_Barrier(PETSC_COMM_WORLD,ierr))
+
+    ! PetscCallA(VecView(locVec,PETSC_VIEWER_STDOUT_SELF,ierr))
+
+    ! PetscCallA(PetscSFGetGraph(lioSF,nroots,nleaves,ilocal,iremote,ierr))
+    ! PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,iovec,ierr))
+    ! PetscCallA(PetscObjectSetName(iovec,"U",ierr))
+
+    ! PetscCallA(MEF90_VecReorderingSF(locVec,ioVec,lioSF,ierr))
+
+    ! PetscCallA(VecView(ioVec,PETSC_VIEWER_STDOUT_WORLD,ierr))
+
+    ! PetscCallMPIA(MPI_Barrier(PETSC_COMM_WORLD,ierr))
+
+    PetscCallA(MEF90EXOVecView(gVec,viewer,ierr))
+
+    ! PetscCallA(DMRestoreLocalVector(dmU,locVec,ierr))
+    ! PetscCallA(DMRestoreLocalVector(dmU0,locVecB,ierr))
+    PetscCallA(DMRestoreGlobalVector(dmU,gVec,ierr))
+    ! PetscCallA(VecDestroy(ioVec,ierr))
 
     PetscCallA(PetscSFDestroy(lcSF,ierr))
     PetscCallA(PetscSFDestroy(clSF,ierr))
+    ! PetscCallA(PetscSFDestroy(lioSF,ierr))
+    ! PetscCallA(PetscSFDestroy(iolSF,ierr))
+    ! PetscCallA(PetscSFDestroy(lioBSF,ierr))
+    ! PetscCallA(PetscSFDestroy(iolBSF,ierr))
 
     PetscCallA(PetscSectionDestroy(sectionU,ierr))
     PetscCallA(PetscSectionDestroy(sectionU0,ierr))
@@ -204,6 +249,7 @@ PetscCallA(PetscIntArray1dDestroyF90(remoteOffsets,ierr))
     PetscCallA(DMDestroy(dmU,ierr))
     PetscCallA(DMDestroy(dmU0,ierr))
     PetscCallA(DMDestroy(dm,ierr))
+    call MEF90CtxCloseEXO(viewer,ierr)
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)

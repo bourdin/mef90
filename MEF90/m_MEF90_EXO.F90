@@ -1,3 +1,31 @@
+Module localFunctions
+#include <petsc/finclude/petsc.h>
+   use petsc
+   Use m_MEF90_Parameters
+   Use m_MEF90_Ctx
+   implicit none
+#include "../mef90version.h"
+       
+contains    
+#undef __FUNCT__
+#define __FUNCT__ "MEF90EXOGetVarIndex"
+Subroutine MEF90EXOGetVarIndex(exoid,obj_type,name,varIndex,ierr)
+   Integer,Intent(IN)               :: exoid
+   Character(len=MXSTLN),Intent(IN) :: name
+   Integer,Intent(IN)               :: obj_type
+   Integer,Intent(OUT)              :: varIndex
+   PetscErrorCode,Intent(OUT)       :: ierr
+
+   Integer                          :: i, j, num_suffix = 5, num_vars
+   Character(len=MXSTLN)            :: ext_name, var_name, suffix(5)
+
+   suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
+   
+   varIndex = -1
+   PetscCallA(exgvp(exoid,EX_NODAL,num_vars,ierr))
+End Subroutine MEF90EXOGetVarIndex
+End Module localFunctions
+
 Module m_MEF90_EXO
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
@@ -5,6 +33,7 @@ Module m_MEF90_EXO
    Use m_MEF90_Utils
    Use m_MEF90_Elements
    Use petsc
+   Use localFunctions
    IMPLICIT NONE
 #include "../mef90version.h"
 
@@ -12,69 +41,86 @@ Module m_MEF90_EXO
    PetscInt,Public                                 :: exo_ver
 
    
-!   Public :: MEF90CtxOpenEXO
+   Public :: MEF90CtxOpenEXO
    Public :: MEF90CtxCloseEXO
    Public :: MEF90EXOFormat
-   Public :: EXOGetCellSetElementType_Scal      
-   Public :: EXOGetCellSetElementType_Vect      
+   Public :: MEF90EXODMView
+   Public :: MEF90EXOVecView
+!  Public :: EXOGetCellSetElementType_Scal      
+!  Public :: EXOGetCellSetElementType_Vect      
 
 Contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90CtxGetDMMeshEXO"
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90CtxGetDMMeshEXO"
 !!!
 !!!  
 !!!  MEF90CtxGetDMMeshEXO:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr)
-      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      Type(tDM),Intent(OUT)                            :: Mesh
-      PetscErrorCode,Intent(OUT)                      :: ierr
+   ! Subroutine MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr)
+   !    Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+   !    Type(tDM),Intent(OUT)                            :: Mesh
+   !    PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
-      Character(len=MEF90_MXSTRLEN)                   :: filename
-      Integer                                         :: cpu_ws,io_ws
-      Real                                            :: exoVersion
-      Integer                                         :: exoErr,exoUnit
-      Type(tDM)                                       :: tmpMesh
+   !    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
+   !    Character(len=MEF90_MXSTRLEN)                   :: filename
+   !    Integer                                         :: cpu_ws,io_ws
+   !    Real                                            :: exoVersion
+   !    Integer                                         :: exoErr,exoUnit
+   !    Type(tDM)                                       :: tmpMesh
       
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-      PetscSizeT                                      :: sizeofPetscReal
+   !    Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+   !    PetscSizeT                                      :: sizeofPetscReal
    
 
    
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      !!! Open input file
-      If (MEF90Ctx%rank == 0) Then
-         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
-         cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
-         io_ws = 0
-         filename = Trim(MEF90Ctx%geometryFile)
-         exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+   !    Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+   !    !!! Open input file
+   !    If (MEF90Ctx%rank == 0) Then
+   !       Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+   !       cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
+   !       io_ws = 0
+   !       filename = Trim(MEF90Ctx%geometryFile)
+   !       exoUnit = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+   !       Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
 
-         If (exoerr < 0) Then
-            Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
-         EndIf
-      End If
-      If (MEF90Ctx%numProcs == 1) Then
-         Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
-      Else
-         Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
-         Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
-         Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
-      End If
-      If (MEF90Ctx%rank == 0) Then
-         Call EXCLOS(exoUnit,exoErr)
-      End If
-   End Subroutine MEF90CtxGetDMMeshEXO
+   !       If (exoerr < 0) Then
+   !          Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+   !          Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+   !          SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,IOBuffer);
+   !       EndIf
+   !    End If
+   !    If (MEF90Ctx%numProcs == 1) Then
+   !       Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,Mesh,ierr);CHKERRQ(ierr)
+   !    Else
+   !       Call DMMeshCreateExodus(PETSC_COMM_WORLD,exoUnit,tmpMesh,ierr);CHKERRQ(ierr)   
+   !       Call DMMeshDistribute(tmpMesh,PETSC_NULL_CHARACTER,mesh,ierr);CHKERRQ(ierr)
+   !       Call DMDestroy(tmpMesh,ierr);CHKERRQ(ierr)
+   !    End If
+   !    If (MEF90Ctx%rank == 0) Then
+   !       Call EXCLOS(exoUnit,exoErr)
+   !    End If
+   ! End Subroutine MEF90CtxGetDMMeshEXO
 
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxOpenEXO"
+!!!
+!!!  
+!!!  MEF90CtxOpenEXO:
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Viewer,ierr)
+      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+      Type(tPetscViewer), Intent(INOUT)               :: Viewer
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscCallA(exopts(EXVRBS+EXDEBG,ierr))
+      PetscCallA(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,FILE_MODE_WRITE,Viewer,ierr))
+
+   End Subroutine MEF90CtxOpenEXO
 !#undef __FUNCT__
 !!!
 !!!  
@@ -82,64 +128,64 @@ Contains
 !!!  
 !!!  (c) 2012-2017 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
-      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
-      Type(tDM), Intent(IN)                           :: Mesh
-      PetscErrorCode,Intent(OUT)                      :: ierr
+!    Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
+!       Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+!       Type(tDM), Intent(IN)                           :: Mesh
+!       PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Integer                                         :: exoUnit
-      Character(len=MEF90_MXSTRLEN)                   :: filename
-      Integer,parameter                               :: num_QA_rec=1
-      Character(len=MXSTLN)                           :: QA_rec(4)
-      Character(len=MXSTLN)                           :: date
-      Character(len=MXSTLN)                           :: time
+!       Integer                                         :: exoUnit
+!       Character(len=MEF90_MXSTRLEN)                   :: filename
+!       Integer,parameter                               :: num_QA_rec=1
+!       Character(len=MXSTLN)                           :: QA_rec(4)
+!       Character(len=MXSTLN)                           :: date
+!       Character(len=MXSTLN)                           :: time
 
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-      Integer                                         :: cpu_ws,io_ws
-      Real                                            :: exo_version
-      Integer                                         :: exoerr
-      Logical                                         :: exoExists
-      PetscSizeT                                      :: sizeofPetscReal
+!       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+!       Integer                                         :: cpu_ws,io_ws
+!       Real                                            :: exo_version
+!       Integer                                         :: exoerr
+!       Logical                                         :: exoExists
+!       PetscSizeT                                      :: sizeofPetscReal
    
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      !!! Get name of output file
+!       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+!       !!! Get name of output file
       
-      filename = MEF90Ctx%resultFile
-!   100 Format(A,'-',I4.4,'.',A)
+!       filename = MEF90Ctx%resultFile
+! !   100 Format(A,'-',I4.4,'.',A)
    
-      !!! Open output file or create it and format it depending on loading type
-      If (MEF90Ctx%rank == 0) Then
-         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
-         cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
-         Inquire(file=filename,exist=exoExists)
-         If (.NOT. exoExists) Then
-            ! If (GlobalOptions%verbose > 0) Then    
-            !    Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
-            !    Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            ! EndIf
-            ! io_ws = int(sizeofPetscReal,kind(cpu_ws))
-            ! exoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
-            ! Select Case (GlobalOptions%FileFormat)
-            !    Case (MEF90FileFormat_EXOSplit)
-            !       Call DMmeshViewExodusSplit(mesh,exoUnit,ierr)
-            !    Case (MEF90FileFormat_EXOSingle)
-            !       exoUnitIN = EXOPEN(MEF90Ctx%geometryfile,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
-            !       Call EXCOPY(exoUnitIN,exoUnit,exoErr)
-            !       Call EXCLOS(exoUnitIN,exoErr)
-            ! End Select
-            Continue
-         Else
-            io_ws  = 0
-            exoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
-            QA_rec(1) = "mef90"
-            QA_rec(2) = MEF90_GITVER
-            Call date_and_time(DATE=date,TIME=time)
-            write(QA_rec(3),"(a)") date
-            write(QA_rec(4),"(a,':',a,':',a)") time(1:2),time(3:4),time(5:6)
-            call expqa (exoUnit , num_QA_rec, QA_rec, ierr)
-         EndIf
-      End If
-   End Subroutine MEF90CtxOpenEXO
+!       !!! Open output file or create it and format it depending on loading type
+!       If (MEF90Ctx%rank == 0) Then
+!          Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+!          cpu_ws = int(sizeofPetscReal,kind(cpu_ws))
+!          Inquire(file=filename,exist=exoExists)
+!          If (.NOT. exoExists) Then
+!             ! If (GlobalOptions%verbose > 0) Then    
+!             !    Write(IOBuffer,*) 'EXO file ',trim(filename),' does not seem to exist. Creating it.\n'
+!             !    Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+!             ! EndIf
+!             ! io_ws = int(sizeofPetscReal,kind(cpu_ws))
+!             ! exoUnit = EXCRE(trim(filename),EXCLOB,cpu_ws,io_ws,ierr)
+!             ! Select Case (GlobalOptions%FileFormat)
+!             !    Case (MEF90FileFormat_EXOSplit)
+!             !       Call DMmeshViewExodusSplit(mesh,exoUnit,ierr)
+!             !    Case (MEF90FileFormat_EXOSingle)
+!             !       exoUnitIN = EXOPEN(MEF90Ctx%geometryfile,EXREAD,cpu_ws,io_ws,exo_version,exoerr)
+!             !       Call EXCOPY(exoUnitIN,exoUnit,exoErr)
+!             !       Call EXCLOS(exoUnitIN,exoErr)
+!             ! End Select
+!             Continue
+!          Else
+!             io_ws  = 0
+!             exoUnit = EXOPEN(filename,EXWRIT,cpu_ws,io_ws,exo_version,exoerr)
+!             QA_rec(1) = "mef90"
+!             QA_rec(2) = MEF90_GITVER
+!             Call date_and_time(DATE=date,TIME=time)
+!             write(QA_rec(3),"(a)") date
+!             write(QA_rec(4),"(a,':',a,':',a)") time(1:2),time(3:4),time(5:6)
+!             call expqa (exoUnit , num_QA_rec, QA_rec, ierr)
+!          EndIf
+!       End If
+!    End Subroutine MEF90CtxOpenEXO
 !   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Mesh,ierr)
 !      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
 !      Type(tDM), Intent(IN)                           :: Mesh
@@ -204,130 +250,144 @@ Contains
 !!!  
 !!!  MEF90CtxCloseEXO:
 !!!  
+!!! 
+!!!      2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+   Subroutine MEF90CtxCloseEXO(Viewer,ierr)
+      Type(tPetscViewer),Intent(INOUT)                :: Viewer
+      PetscErrorCode,Intent(OUT)                      :: ierr
+
+      PetscCallA(PetscViewerDestroy(Viewer,ierr))
+
+   End Subroutine MEF90CtxCloseEXO
+!!!
+!!!  
+!!!  MEF90CtxCloseEXO:
+!!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   Subroutine MEF90CtxCloseEXO(MEF90Ctx,exounit,ierr)
-      Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
-      Integer, intent(IN)                             :: exoUnit
-      PetscErrorCode,Intent(OUT)                      :: ierr
+   ! Subroutine MEF90CtxCloseEXO(MEF90Ctx,exounit,ierr)
+   !    Type(MEF90Ctx_Type),Intent(INOUT)               :: MEF90Ctx
+   !    Integer, intent(IN)                             :: exoUnit
+   !    PetscErrorCode,Intent(OUT)                      :: ierr
    
-      Integer                                         :: exoErr
+   !    Integer                                         :: exoErr
 
-      If (MEF90Ctx%rank == 0) Then
-         Call EXCLOS(exoUnit,exoErr)
-      End If
-      ierr = 0
-   End Subroutine MEF90CtxCloseEXO
+   !    If (MEF90Ctx%rank == 0) Then
+   !       Call EXCLOS(exoUnit,exoErr)
+   !    End If
+   !    ierr = 0
+   ! End Subroutine MEF90CtxCloseEXO
 
-#undef __FUNCT__
-#define __FUNCT__ "EXOGetCellSetElementType_Scal"
-   Subroutine EXOGetCellSetElementType_Scal(MEF90Ctx,elemType,ierr)
-      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
-      PetscErrorCode,Intent(OUT)                      :: ierr
+! #undef __FUNCT__
+! #define __FUNCT__ "EXOGetCellSetElementType_Scal"
+!    Subroutine EXOGetCellSetElementType_Scal(MEF90Ctx,elemType,ierr)
+!       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+!       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
+!       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
-      Character(len=MXSTLN)                           :: EXOelemType
-      Integer                                         :: cpu_ws,io_ws,exoID
-      Real                                            :: exoVersion
-      Integer                                         :: junk1,junk2,junk3,junk4,exoerr
-      Character(len=MXLNLN)                           :: dummyS
-      Integer                                         :: numSet,set,numDim
-      PetscInt,Dimension(:),Pointer                   :: setID
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
-      PetscSizeT                                      :: sizeofPetscReal
+!       Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
+!       Character(len=MXSTLN)                           :: EXOelemType
+!       Integer                                         :: cpu_ws,io_ws,exoID
+!       Real                                            :: exoVersion
+!       Integer                                         :: junk1,junk2,junk3,junk4,exoerr
+!       Character(len=MXLNLN)                           :: dummyS
+!       Integer                                         :: numSet,set,numDim
+!       PetscInt,Dimension(:),Pointer                   :: setID
+!       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
+!       PetscSizeT                                      :: sizeofPetscReal
 
    
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      If (MEF90Ctx%rank == 0) Then
-         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
-         cpu_ws = int(sizeofPetscReal,kind(cpu_ws))      
-         io_ws = 0
-         filename = MEF90Ctx%geometryFile
-         exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
-         If (exoerr < 0) Then
-            Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            STOP
-         EndIf
-         Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk4,exoerr)
-      End If
-      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
-      Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+!       If (MEF90Ctx%rank == 0) Then
+!          Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+!          cpu_ws = int(sizeofPetscReal,kind(cpu_ws))      
+!          io_ws = 0
+!          filename = MEF90Ctx%geometryFile
+!          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+!          If (exoerr < 0) Then
+!             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+!             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+!             STOP
+!          EndIf
+!          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk4,exoerr)
+!       End If
+!       Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
 
-      Allocate(elemType(numSet))
-      Allocate(setID(numSet))
-      If (MEF90Ctx%rank == 0) Then       
-         Call EXGEBI(exoID,setID,exoerr)
-      End If
-      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
-      Do set = 1, numSet
-         If (MEF90Ctx%rank == 0) Then
-            Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
-         EndIf
-         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
-         Call EXO2MEF90ElementType_Scal(EXOelemType,numDim,elemType(set),ierr)
-      End Do
-      DeAllocate(setID)
-      If (MEF90Ctx%rank == 0) Then
-         Call EXCLOS(exoid,exoErr)
-      End If
-   End Subroutine EXOGetCellSetElementType_Scal
+!       Allocate(elemType(numSet))
+!       Allocate(setID(numSet))
+!       If (MEF90Ctx%rank == 0) Then       
+!          Call EXGEBI(exoID,setID,exoerr)
+!       End If
+!       Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Do set = 1, numSet
+!          If (MEF90Ctx%rank == 0) Then
+!             Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
+!          EndIf
+!          Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
+!          Call EXO2MEF90ElementType_Scal(EXOelemType,numDim,elemType(set),ierr)
+!       End Do
+!       DeAllocate(setID)
+!       If (MEF90Ctx%rank == 0) Then
+!          Call EXCLOS(exoid,exoErr)
+!       End If
+!    End Subroutine EXOGetCellSetElementType_Scal
       
-#undef __FUNCT__
-#define __FUNCT__ "EXOGetCellSetElementType_Vect"
-   Subroutine EXOGetCellSetElementType_Vect(MEF90Ctx,elemType,ierr)
-      Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
-      PetscErrorCode,Intent(OUT)                      :: ierr
+! #undef __FUNCT__
+! #define __FUNCT__ "EXOGetCellSetElementType_Vect"
+!    Subroutine EXOGetCellSetElementType_Vect(MEF90Ctx,elemType,ierr)
+!       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+!       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
+!       PetscErrorCode,Intent(OUT)                      :: ierr
       
-      Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
-      Character(len=MXSTLN)                           :: EXOelemType
-      Integer                                         :: cpu_ws,io_ws,exoID
-      Real                                            :: exoVersion
-      Integer                                         :: junk1,junk2,junk3,junk4,exoerr
-      Character(len=MXLNLN)                           :: dummyS
-      Integer                                         :: numSet,set,numDim
-      PetscInt,Dimension(:),Pointer                   :: setID
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
-      PetscSizeT                                      :: sizeofPetscReal      
+!       Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
+!       Character(len=MXSTLN)                           :: EXOelemType
+!       Integer                                         :: cpu_ws,io_ws,exoID
+!       Real                                            :: exoVersion
+!       Integer                                         :: junk1,junk2,junk3,junk4,exoerr
+!       Character(len=MXLNLN)                           :: dummyS
+!       Integer                                         :: numSet,set,numDim
+!       PetscInt,Dimension(:),Pointer                   :: setID
+!       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
+!       PetscSizeT                                      :: sizeofPetscReal      
    
-      Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
-      If (MEF90Ctx%rank == 0) Then
-         Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
-         cpu_ws = int(sizeofPetscReal,kind(cpu_ws))      
-         io_ws = 0
-         filename = MEF90Ctx%geometryFile
-         exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
-         If (exoerr < 0) Then
-            Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
-            Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
-            STOP
-         EndIf
-         Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk4,exoerr)
-      End If
-      Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
-      Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr);CHKERRQ(ierr)
+!       If (MEF90Ctx%rank == 0) Then
+!          Call PetscDataTypeGetSize(PETSC_REAL,sizeofPetscReal,ierr)
+!          cpu_ws = int(sizeofPetscReal,kind(cpu_ws))      
+!          io_ws = 0
+!          filename = MEF90Ctx%geometryFile
+!          exoID = EXOPEN(filename,EXREAD,cpu_ws,io_ws,exoVersion,exoErr)
+!          If (exoerr < 0) Then
+!             Write(IOBuffer,*) '\n\nError opening EXO file ',trim(filename),'\n\n'
+!             Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr);CHKERRQ(ierr);
+!             STOP
+!          EndIf
+!          Call EXGINI(exoid,dummyS,numDim,junk1,junk2,numSet,junk3,junk4,exoerr)
+!       End If
+!       Call MPI_Bcast(numSet,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Call MPI_Bcast(numDim,1,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
 
-      Allocate(elemType(numSet))
-      Allocate(setID(numSet))
-      If (MEF90Ctx%rank == 0) Then       
-         Call EXGEBI(exoID,setID,exoerr)
-      End If
-      Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
-      Do set = 1, numSet
-         If (MEF90Ctx%rank == 0) Then
-            Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
-         EndIf
-         Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
-         Call EXO2MEF90ElementType_Vect(EXOelemType,numDim,elemType(set),ierr)
-      End Do
-      DeAllocate(setID)
-      If (MEF90Ctx%rank == 0) Then
-         Call EXCLOS(exoid,exoErr)
-      End If
-   End Subroutine EXOGetCellSetElementType_Vect
+!       Allocate(elemType(numSet))
+!       Allocate(setID(numSet))
+!       If (MEF90Ctx%rank == 0) Then       
+!          Call EXGEBI(exoID,setID,exoerr)
+!       End If
+!       Call MPI_Bcast(setID,numSet,MPIU_INTEGER,0,MEF90Ctx%comm,ierr)
+!       Do set = 1, numSet
+!          If (MEF90Ctx%rank == 0) Then
+!             Call EXGELB(exoID,setID(set),EXOelemType,junk1,junk2,junk3,exoerr)
+!          EndIf
+!          Call MPI_Bcast(EXOelemType,MXSTLN,MPI_CHAR,0,MEF90Ctx%comm,ierr)
+!          Call EXO2MEF90ElementType_Vect(EXOelemType,numDim,elemType(set),ierr)
+!       End Do
+!       DeAllocate(setID)
+!       If (MEF90Ctx%rank == 0) Then
+!          Call EXCLOS(exoid,exoErr)
+!       End If
+!    End Subroutine EXOGetCellSetElementType_Vect
       
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOFormat"
@@ -336,39 +396,108 @@ Contains
 !!!  MEF90EXOFormat:
 !!!  
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!           2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-Subroutine MEF90EXOFormat(exoid,NameG,NameC,NameV,ierr)
-   Integer,Intent(INOUT)                              :: exoid
-   Character(len=*),Dimension(:),Pointer,Intent(IN)   :: nameG,nameC,nameV
-   PetscErrorCode,Intent(OUT)                         :: ierr
-   
-   Integer                                            :: numCS
-   Real                                               :: rJunk
-   Character(len=MXSTLN)                              :: sJunk
-   Integer,Dimension(:,:),Pointer                     :: varTruthTable
-   
-   If (exoID > 0) Then
-      !!! Write variable names
-      If (size(nameG) > 0) Then
-         Call EXPVP (exoid,'g',size(nameG),ierr)
-         Call EXPVAN(exoid,'g',size(nameG),NameG,ierr)
-      End If
-      If (size(nameC) > 0) Then
-         Call EXPVP (exoid,'e',size(nameC),ierr)
-         Call EXPVAN(exoid,'e',size(nameC),NameC,ierr)
-      End If
-      If (size(nameV) > 0) Then
-         Call EXPVP (exoid,'n',size(nameV),ierr)
-         Call EXPVAN(exoid,'n',size(nameV),nameV,ierr)
-      End If
+   Subroutine MEF90EXOFormat(Viewer,NameG,NameC,NameV,numstep,ierr)
+      Type(tPetscViewer),Intent(IN)                      :: Viewer
+      Character(len=MXSTLN),Intent(IN)                   :: nameG(:),nameC(:),nameV(:)
+      Integer,Intent(IN)                                 :: numstep
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      Integer                                            :: numCS, exoid
+      PetscInt                                           :: step
+      Character(len=MXSTLN)                              :: sJunk
+      Logical,Dimension(:,:),Pointer                     :: truthtable
 
-      !!! Write truth tables
-      Call EXINQ(exoid,EXELBL,numCS,rjunk,sjunk,ierr)
-      Allocate(varTruthTable(size(nameC),numCS))
-      varTruthTable = 1
-      Call EXPVTT(exoid,numCS,size(nameC),varTruthTable,ierr)
-      DeAllocate(varTruthTable)
-   End If
-End Subroutine MEF90EXOFormat
+      PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      If (exoid > 0) Then
+         !!! Write variable names
+         If (size(nameG) > 0) Then
+            PetscCallA(expvp(exoid,'G',size(nameG),ierr))
+            PetscCallA(expvan(exoid,'G',size(nameG),NameG,ierr))
+         End If
+         If (size(nameC) > 0) Then
+            PetscCallA(expvp(exoid,'E',size(nameC),ierr))
+            PetscCallA(expvan(exoid,'E',size(nameC),NameC,ierr))
+         End If
+         If (size(nameV) > 0) Then
+            PetscCallA(expvp(exoid,'N',size(nameV),ierr))
+            PetscCallA(expvan(exoid,'N',size(nameV),nameV,ierr))
+         End If
+
+         !!! Write truth tables
+         PetscCallA(exinq(exoid, EX_INQ_ELEM_BLK,numCS,PETSC_NULL_REAL,sjunk,ierr))
+         Allocate(truthtable(numCS,size(nameC)))
+         truthtable = .true.
+         PetscCallA(expvtt(exoid, numCS, size(nameC), truthtable, ierr))
+         DeAllocate(truthtable)
+
+         Do step = 1,numstep
+            PetscCallA(exptim(exoid,step,Real(step,kind=Kr),ierr))
+         End Do
+
+      End If
+   End Subroutine MEF90EXOFormat
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90EXODMView"
+!!!
+!!!  
+!!!  MEF90EXODMView:
+!!!
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
+!!!
+   Subroutine MEF90EXODMView(Mesh,Viewer,ierr)
+      Type(tPetscViewer),Intent(IN)                      :: Viewer
+      Type(tDM),Intent(IN)                               :: Mesh
+      PetscErrorCode,Intent(OUT)                         :: ierr
+      
+      PetscInt                                           :: order = 1
+      PetscBool                                          :: flg
+      Character(len=PETSC_MAX_PATH_LEN)                  :: IOBuffer
+
+      PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-order",order,flg,ierr))
+      if ((order > 2) .or. (order < 1)) then
+          write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') order
+          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
+      end if
+      PetscCallA(PetscViewerExodusIISetOrder(Viewer,order,ierr))
+      PetscCallA(DMView(Mesh,Viewer,ierr))
+
+   End Subroutine MEF90EXODMView
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90EXOVecView"
+!!!
+!!!  
+!!!  MEF90EXOVecView:
+!!!
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
+!!!
+   Subroutine MEF90EXOVecView(v,Viewer,ierr)
+      Type(tVec),Intent(IN)                              :: v
+      Type(tPetscViewer),Intent(IN)                      :: Viewer
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      PetscInt                                           :: exoid, offsetN, offsetZ
+      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
+
+      PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      PetscCallA(PetscObjectGetName(v, vecname,ierr))
+
+      PetscCallA(MEF90EXOGetVarIndex(exoid,EX_NODAL,vecname,offsetN,ierr))
+      !PetscCallA(MEF90EXOGetVarIndex_Internal(exoid,EX_ELEM_BLOCK,vecname,offsetZ,ierr))
+      !write(*,*) "OffsetN = ",OffsetN," OffsetZ = ",OffsetZ
+      !PetscCheck(offsetN > 0 || offsetZ > 0,comm, PETSC_ERR_FILE_UNEXPECTED, "Found both nodal and zonal variable %s in exodus file. ", vecname)
+      !If (offsetN > 0) Then
+         !PetscCallA(VecViewPlex_ExodusII_Nodal_Internal(v,exoid,step+1,offsetN))
+      !Else If (offsetZ > 0) Then
+         !PetscCall(VecViewPlex_ExodusII_Zonal_Internal(v,exoid,(int) step+1,offsetZ));
+      !Else
+         !write(IOBuffer,'("Could not find nodal or zonal variable ", I2, " in exodus file. ")') vecname
+         !SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
+      !End If
+   End Subroutine MEF90EXOVecView
 End Module m_MEF90_EXO
-
