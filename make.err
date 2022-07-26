@@ -1,0 +1,2 @@
+Building MEF90 with PETSC_ARCH=monterey-gcc11.2-arm64-basic-g
+make: *** No rule to make target `2'.  Stop.

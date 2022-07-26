@@ -1,5 +1,0 @@
-{
-  "fortran.fortls.path": "/opt/homebrew/bin/fortls"
-  "fortran.linter.includePaths": ["/opt/HPC/petsc-main/include/petsc/finclude/**", "/opt/HPC/petsc-main/monterey-gcc11.3-arm64-basic-g/include/**", "${workspaceFolder}/**"]
-  "fortran.preferredCase": "lowercase"
-}
