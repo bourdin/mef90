@@ -328,7 +328,7 @@ Module m_MEF90_Materials
    PetscSizeT,protected   :: sizeofMEF90HookesLaw2D
    PetscSizeT,protected   :: sizeofMEF90HookesLaw3D
 
-   Character(len =  MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90HookesLawTypeList
+   Character(len = MEF90_MXSTRLEN),Dimension(5),protected :: MEF90HookesLawTypeList
 
 Contains
 #undef __FUNCT__
