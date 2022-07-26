@@ -197,9 +197,6 @@ Module m_MEF90_DMPlex
     Use,intrinsic :: iso_c_binding
     IMPLICIT NONE
     
-
-    Character(len=MEF90_MXSTRLEN),dimension(4),Parameter  :: MEF90_DMPlexSetLabelName = &
-              ['Cell Sets  ','Face Sets  ','Edge Sets  ','Vertex Sets']
     Enum,bind(c)
         enumerator  :: MEF90_DMPlexCellSetType = 1, &
                        MEF90_DMPlexFaceSetType,     &
@@ -210,6 +207,9 @@ Module m_MEF90_DMPlex
     Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexFaceSetLabelName   = 'Face Sets  '
     Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexEdgeSetLabelName   = 'Edge Sets  '
     Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexVertexSetLabelName = 'Vertex Sets'
+
+    Character(len=MEF90_MXSTRLEN),dimension(4),Parameter  :: MEF90_DMPlexSetLabelName = &
+              [MEF90_DMPlexCellSetLabelName,MEF90_DMPlexFaceSetLabelName,MEF90_DMPlexEdgeSetLabelName,MEF90_DMPlexVertexSetLabelName]
 
 Contains
 

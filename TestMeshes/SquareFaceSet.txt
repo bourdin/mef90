@@ -1,0 +1,484 @@
+=== SETS ===
+pStart: 0, pEnd: 57
+cStart: 0, cEnd: 16
+vStart: 16, vEnd: 29
+eStart: 29, eEnd: 57
+
+1 Cell sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 1
+0 1
+=== Set 1 ===
+IS Object: indices 1 MPI process
+  type: stride
+Number of indices in (stride) set 16
+0 0
+1 1
+2 2
+3 3
+4 4
+5 5
+6 6
+7 7
+8 8
+9 9
+10 10
+11 11
+12 12
+13 13
+14 14
+15 15
+
+2 Face sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 2
+0 20
+1 21
+=== Set 20 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 2
+0 31
+1 36
+=== Set 21 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 2
+0 38
+1 41
+
+2 Vertex sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 2
+0 300
+1 301
+=== Set 300 ===
+IS Object: indices 1 MPI process
+  type: stride
+Number of indices in (stride) set 1
+0 17
+=== Set 301 ===
+IS Object: indices 1 MPI process
+  type: stride
+Number of indices in (stride) set 1
+0 19
+=== DAG ===
+
+Dimension 2:
+
+vertex range in DAG 16-29:
+   vertex 16: 0. 0.
+   vertex 17: 1. 0.
+   vertex 18: 1. 1.
+   vertex 19: 0. 1.
+   vertex 20: 0.5 0.
+   vertex 21: 1. 0.5
+   vertex 22: 0.5 1.
+   vertex 23: 0. 0.5
+   vertex 24: 0.5 0.5
+   vertex 25: 0.25 0.25
+   vertex 26: 0.75 0.75
+   vertex 27: 0.25 0.75
+   vertex 28: 0.75 0.25
+
+point 0:
+   Depth: 2 Height: 0
+   Cone: 29,30,31,
+   Support: 
+   TransitiveClosure IN: 0,29,30,31,20,25,16,
+   TransitiveClosure OUT: 0,
+
+point 1:
+   Depth: 2 Height: 0
+   Cone: 30,32,33,
+   Support: 
+   TransitiveClosure IN: 1,30,32,33,16,25,23,
+   TransitiveClosure OUT: 1,
+
+point 2:
+   Depth: 2 Height: 0
+   Cone: 34,35,36,
+   Support: 
+   TransitiveClosure IN: 2,34,35,36,17,28,20,
+   TransitiveClosure OUT: 2,
+
+point 3:
+   Depth: 2 Height: 0
+   Cone: 37,34,38,
+   Support: 
+   TransitiveClosure IN: 3,37,34,38,21,28,17,
+   TransitiveClosure OUT: 3,
+
+point 4:
+   Depth: 2 Height: 0
+   Cone: 39,40,41,
+   Support: 
+   TransitiveClosure IN: 4,39,40,41,18,26,21,
+   TransitiveClosure OUT: 4,
+
+point 5:
+   Depth: 2 Height: 0
+   Cone: 42,39,43,
+   Support: 
+   TransitiveClosure IN: 5,42,39,43,22,26,18,
+   TransitiveClosure OUT: 5,
+
+point 6:
+   Depth: 2 Height: 0
+   Cone: 44,45,46,
+   Support: 
+   TransitiveClosure IN: 6,44,45,46,19,27,22,
+   TransitiveClosure OUT: 6,
+
+point 7:
+   Depth: 2 Height: 0
+   Cone: 47,44,48,
+   Support: 
+   TransitiveClosure IN: 7,47,44,48,23,27,19,
+   TransitiveClosure OUT: 7,
+
+point 8:
+   Depth: 2 Height: 0
+   Cone: 49,29,50,
+   Support: 
+   TransitiveClosure IN: 8,49,29,50,24,25,20,
+   TransitiveClosure OUT: 8,
+
+point 9:
+   Depth: 2 Height: 0
+   Cone: 35,51,50,
+   Support: 
+   TransitiveClosure IN: 9,35,51,50,20,28,24,
+   TransitiveClosure OUT: 9,
+
+point 10:
+   Depth: 2 Height: 0
+   Cone: 40,52,53,
+   Support: 
+   TransitiveClosure IN: 10,40,52,53,21,26,24,
+   TransitiveClosure OUT: 10,
+
+point 11:
+   Depth: 2 Height: 0
+   Cone: 51,37,53,
+   Support: 
+   TransitiveClosure IN: 11,51,37,53,24,28,21,
+   TransitiveClosure OUT: 11,
+
+point 12:
+   Depth: 2 Height: 0
+   Cone: 52,42,54,
+   Support: 
+   TransitiveClosure IN: 12,52,42,54,24,26,22,
+   TransitiveClosure OUT: 12,
+
+point 13:
+   Depth: 2 Height: 0
+   Cone: 45,55,54,
+   Support: 
+   TransitiveClosure IN: 13,45,55,54,22,27,24,
+   TransitiveClosure OUT: 13,
+
+point 14:
+   Depth: 2 Height: 0
+   Cone: 32,49,56,
+   Support: 
+   TransitiveClosure IN: 14,32,49,56,23,25,24,
+   TransitiveClosure OUT: 14,
+
+point 15:
+   Depth: 2 Height: 0
+   Cone: 55,47,56,
+   Support: 
+   TransitiveClosure IN: 15,55,47,56,24,27,23,
+   TransitiveClosure OUT: 15,
+
+point 16:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 30,31,33,
+   TransitiveClosure IN: 16,
+   TransitiveClosure OUT: 16,30,31,33,0,1,
+
+point 17:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 34,36,38,
+   TransitiveClosure IN: 17,
+   TransitiveClosure OUT: 17,34,36,38,2,3,
+
+point 18:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 39,41,43,
+   TransitiveClosure IN: 18,
+   TransitiveClosure OUT: 18,39,41,43,4,5,
+
+point 19:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 44,46,48,
+   TransitiveClosure IN: 19,
+   TransitiveClosure OUT: 19,44,46,48,6,7,
+
+point 20:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 29,31,35,36,50,
+   TransitiveClosure IN: 20,
+   TransitiveClosure OUT: 20,29,31,35,36,50,0,8,2,9,
+
+point 21:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 37,38,40,41,53,
+   TransitiveClosure IN: 21,
+   TransitiveClosure OUT: 21,37,38,40,41,53,3,11,4,10,
+
+point 22:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 42,43,45,46,54,
+   TransitiveClosure IN: 22,
+   TransitiveClosure OUT: 22,42,43,45,46,54,5,12,6,13,
+
+point 23:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 32,33,47,48,56,
+   TransitiveClosure IN: 23,
+   TransitiveClosure OUT: 23,32,33,47,48,56,1,14,7,15,
+
+point 24:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 49,50,51,52,53,54,55,56,
+   TransitiveClosure IN: 24,
+   TransitiveClosure OUT: 24,49,50,51,52,53,54,55,56,8,14,9,11,10,12,13,15,
+
+point 25:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 29,30,32,49,
+   TransitiveClosure IN: 25,
+   TransitiveClosure OUT: 25,29,30,32,49,0,8,1,14,
+
+point 26:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 39,40,42,52,
+   TransitiveClosure IN: 26,
+   TransitiveClosure OUT: 26,39,40,42,52,4,5,10,12,
+
+point 27:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 44,45,47,55,
+   TransitiveClosure IN: 27,
+   TransitiveClosure OUT: 27,44,45,47,55,6,7,13,15,
+
+point 28:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 34,35,37,51,
+   TransitiveClosure IN: 28,
+   TransitiveClosure OUT: 28,34,35,37,51,2,3,9,11,
+
+point 29:
+   Depth: 1 Height: 1
+   Cone: 20,25,
+   Support: 0,8,
+   TransitiveClosure IN: 29,20,25,
+   TransitiveClosure OUT: 29,0,8,
+
+point 30:
+   Depth: 1 Height: 1
+   Cone: 25,16,
+   Support: 0,1,
+   TransitiveClosure IN: 30,25,16,
+   TransitiveClosure OUT: 30,0,1,
+
+point 31:
+   Depth: 1 Height: 1
+   Cone: 16,20,
+   Support: 0,
+   TransitiveClosure IN: 31,16,20,
+   TransitiveClosure OUT: 31,0,
+
+point 32:
+   Depth: 1 Height: 1
+   Cone: 25,23,
+   Support: 1,14,
+   TransitiveClosure IN: 32,25,23,
+   TransitiveClosure OUT: 32,1,14,
+
+point 33:
+   Depth: 1 Height: 1
+   Cone: 23,16,
+   Support: 1,
+   TransitiveClosure IN: 33,23,16,
+   TransitiveClosure OUT: 33,1,
+
+point 34:
+   Depth: 1 Height: 1
+   Cone: 17,28,
+   Support: 2,3,
+   TransitiveClosure IN: 34,17,28,
+   TransitiveClosure OUT: 34,2,3,
+
+point 35:
+   Depth: 1 Height: 1
+   Cone: 28,20,
+   Support: 2,9,
+   TransitiveClosure IN: 35,28,20,
+   TransitiveClosure OUT: 35,2,9,
+
+point 36:
+   Depth: 1 Height: 1
+   Cone: 20,17,
+   Support: 2,
+   TransitiveClosure IN: 36,20,17,
+   TransitiveClosure OUT: 36,2,
+
+point 37:
+   Depth: 1 Height: 1
+   Cone: 21,28,
+   Support: 3,11,
+   TransitiveClosure IN: 37,21,28,
+   TransitiveClosure OUT: 37,3,11,
+
+point 38:
+   Depth: 1 Height: 1
+   Cone: 17,21,
+   Support: 3,
+   TransitiveClosure IN: 38,17,21,
+   TransitiveClosure OUT: 38,3,
+
+point 39:
+   Depth: 1 Height: 1
+   Cone: 18,26,
+   Support: 4,5,
+   TransitiveClosure IN: 39,18,26,
+   TransitiveClosure OUT: 39,4,5,
+
+point 40:
+   Depth: 1 Height: 1
+   Cone: 26,21,
+   Support: 4,10,
+   TransitiveClosure IN: 40,26,21,
+   TransitiveClosure OUT: 40,4,10,
+
+point 41:
+   Depth: 1 Height: 1
+   Cone: 21,18,
+   Support: 4,
+   TransitiveClosure IN: 41,21,18,
+   TransitiveClosure OUT: 41,4,
+
+point 42:
+   Depth: 1 Height: 1
+   Cone: 22,26,
+   Support: 5,12,
+   TransitiveClosure IN: 42,22,26,
+   TransitiveClosure OUT: 42,5,12,
+
+point 43:
+   Depth: 1 Height: 1
+   Cone: 18,22,
+   Support: 5,
+   TransitiveClosure IN: 43,18,22,
+   TransitiveClosure OUT: 43,5,
+
+point 44:
+   Depth: 1 Height: 1
+   Cone: 19,27,
+   Support: 6,7,
+   TransitiveClosure IN: 44,19,27,
+   TransitiveClosure OUT: 44,6,7,
+
+point 45:
+   Depth: 1 Height: 1
+   Cone: 27,22,
+   Support: 6,13,
+   TransitiveClosure IN: 45,27,22,
+   TransitiveClosure OUT: 45,6,13,
+
+point 46:
+   Depth: 1 Height: 1
+   Cone: 22,19,
+   Support: 6,
+   TransitiveClosure IN: 46,22,19,
+   TransitiveClosure OUT: 46,6,
+
+point 47:
+   Depth: 1 Height: 1
+   Cone: 23,27,
+   Support: 7,15,
+   TransitiveClosure IN: 47,23,27,
+   TransitiveClosure OUT: 47,7,15,
+
+point 48:
+   Depth: 1 Height: 1
+   Cone: 19,23,
+   Support: 7,
+   TransitiveClosure IN: 48,19,23,
+   TransitiveClosure OUT: 48,7,
+
+point 49:
+   Depth: 1 Height: 1
+   Cone: 24,25,
+   Support: 8,14,
+   TransitiveClosure IN: 49,24,25,
+   TransitiveClosure OUT: 49,8,14,
+
+point 50:
+   Depth: 1 Height: 1
+   Cone: 20,24,
+   Support: 8,9,
+   TransitiveClosure IN: 50,20,24,
+   TransitiveClosure OUT: 50,8,9,
+
+point 51:
+   Depth: 1 Height: 1
+   Cone: 28,24,
+   Support: 9,11,
+   TransitiveClosure IN: 51,28,24,
+   TransitiveClosure OUT: 51,9,11,
+
+point 52:
+   Depth: 1 Height: 1
+   Cone: 26,24,
+   Support: 10,12,
+   TransitiveClosure IN: 52,26,24,
+   TransitiveClosure OUT: 52,10,12,
+
+point 53:
+   Depth: 1 Height: 1
+   Cone: 24,21,
+   Support: 10,11,
+   TransitiveClosure IN: 53,24,21,
+   TransitiveClosure OUT: 53,10,11,
+
+point 54:
+   Depth: 1 Height: 1
+   Cone: 22,24,
+   Support: 12,13,
+   TransitiveClosure IN: 54,22,24,
+   TransitiveClosure OUT: 54,12,13,
+
+point 55:
+   Depth: 1 Height: 1
+   Cone: 27,24,
+   Support: 13,15,
+   TransitiveClosure IN: 55,27,24,
+   TransitiveClosure OUT: 55,13,15,
+
+point 56:
+   Depth: 1 Height: 1
+   Cone: 24,23,
+   Support: 14,15,
+   TransitiveClosure IN: 56,24,23,
+   TransitiveClosure OUT: 56,14,15,

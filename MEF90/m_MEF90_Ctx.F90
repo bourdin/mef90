@@ -9,13 +9,9 @@ Module m_MEF90_Ctx_Type
    
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
-      !MPI_Comm                                        :: IOcomm
       Integer                                         :: rank,numProcs
       Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
-      !Integer                                         :: fileExoUnit
       PetscBag                                        :: GlobalOptionsBag      
-   !PetscInt,Public,protected  :: MEF90_MyRank
-   !PetscInt,Public,protected  :: MEF90_NumProcs
       End Type MEF90Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
@@ -42,7 +38,6 @@ Module m_MEF90_Ctx
    Use m_MEF90_Utils
    Implicit none
 
-   !Private  
    Public :: MEF90Ctx_Type
    Public :: MEF90CtxGlobalOptions_Type
    Public :: MEF90CtxInitialize_Private

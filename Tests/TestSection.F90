@@ -32,7 +32,6 @@ Implicit NONE
     MEF90GlobalOptions_default%timeNumStep       = 11
     MEF90GlobalOptions_default%timeSkip          = 0
     MEF90GlobalOptions_default%timeNumCycle      = 1
-    MEF90GlobalOptions_default%fileFormat        = MEF90FileFormat_EXOSingle
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     
