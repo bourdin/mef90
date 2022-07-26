@@ -16,8 +16,8 @@ Subroutine MEF90EXOGetVarIndex(exoid,obj_type,name,varIndex,ierr)
    Integer,Intent(OUT)              :: varIndex
    PetscErrorCode,Intent(OUT)       :: ierr
 
-   Integer                          :: i, j, num_suffix = 5, num_vars
-   Character(len=MXSTLN)            :: ext_name, var_name, suffix(5)
+   Integer                          :: num_vars
+   Character(len=MXSTLN)            :: suffix(5)
 
    suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
    
@@ -481,23 +481,12 @@ Contains
       Type(tPetscViewer),Intent(IN)                      :: Viewer
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscInt                                           :: exoid, offsetN, offsetZ
-      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
+      PetscInt                                           :: exoid, offsetN
+      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname
 
       PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCallA(PetscObjectGetName(v, vecname,ierr))
 
       PetscCallA(MEF90EXOGetVarIndex(exoid,EX_NODAL,vecname,offsetN,ierr))
-      !PetscCallA(MEF90EXOGetVarIndex_Internal(exoid,EX_ELEM_BLOCK,vecname,offsetZ,ierr))
-      !write(*,*) "OffsetN = ",OffsetN," OffsetZ = ",OffsetZ
-      !PetscCheck(offsetN > 0 || offsetZ > 0,comm, PETSC_ERR_FILE_UNEXPECTED, "Found both nodal and zonal variable %s in exodus file. ", vecname)
-      !If (offsetN > 0) Then
-         !PetscCallA(VecViewPlex_ExodusII_Nodal_Internal(v,exoid,step+1,offsetN))
-      !Else If (offsetZ > 0) Then
-         !PetscCall(VecViewPlex_ExodusII_Zonal_Internal(v,exoid,(int) step+1,offsetZ));
-      !Else
-         !write(IOBuffer,'("Could not find nodal or zonal variable ", I2, " in exodus file. ")') vecname
-         !SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
-      !End If
    End Subroutine MEF90EXOVecView
 End Module m_MEF90_EXO
