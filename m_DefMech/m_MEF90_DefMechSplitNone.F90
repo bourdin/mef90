@@ -96,7 +96,7 @@ Contains
 
       D2EEDPlus = HookesLaw
 
-      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+      D2EEDMinus%type = HookesLaw%type
 #if MEF90_DIM==2
       D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
 #endif
@@ -104,6 +104,18 @@ Contains
       D2EEDMinus%PoissonRatio  = 0.0_Kr
       D2EEDMinus%lambda        = 0.0_Kr 
       D2EEDMinus%mu            = 0.0_Kr
+#if MEF90_DIM==2
+      D2EEDMinus%fullTensor    = 0.0_Kr * HookesLaw%fullTensor !Tens4OS2D(0.00000_Kr,0.00000_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
+                                 !                     0.00000_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
+                                 !                                0.00000_Kr)                                   & !                     XYXY
+#elif MEF90_DIM==3
+      D2EEDMinus%fullTensor    = 0.0_Kr * HookesLaw%fullTensor !Tens4OS3D(0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                                                      !0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                                      !           0.00000_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                      !                      0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY
+                                                      !                                 0.00000_Kr,0.00000_Kr,  & !                     XZXZ,XZXY
+                                                      !                                            0.00000_Kr)  &!                          XYXY
+#endif
    End Subroutine D2EEDNone
 
 End Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
