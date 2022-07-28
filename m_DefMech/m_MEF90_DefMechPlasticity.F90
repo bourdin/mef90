@@ -1007,10 +1007,13 @@ contains
          h(1) = NORM(PlasticStrainFlow3D - TotalPlasticIncrement)
 #endif
       else
-         f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )
+         f(1) = PlasticStrainFlow .DotP. PlasticStrainFlow !( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) )
          g(1) = ((taueq) ** (1.0_Kr/myctx_ptr%m)) - StiffnessB
          h(1) = Trace(TotalPlasticIncrementCrystal)
       end if
+      !print *,"f(1) = ", f(1)
+      !print *,"h(1) = ", h(1)
+      !print *,"g(1) = ", g(1)
    end subroutine FHG_CRYSTALBCC
 
 
@@ -1296,6 +1299,7 @@ contains
                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Allocate(damageloc(elemScalType%numDof))
                Do cell = 1,size(cellID)
+                  !print *,"cell = ", cell
                   !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
