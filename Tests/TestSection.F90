@@ -18,11 +18,13 @@ Implicit NONE
     PetscBool                           :: flg
     type(tIS)                           :: setIS
     PetscInt,Dimension(:),pointer       :: setID
-    PetscInt                            :: dim,pStart,pEnd
+    PetscInt                            :: dim,pStart,pEnd,sz
     Type(tPetscSection)                 :: section
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTable
     Logical,Dimension(:),Pointer        :: constraints
     Type(tVec)                          :: v
+    PetscInt,dimension(1)              :: fieldU = [0]
+
 
     MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
@@ -55,9 +57,12 @@ Implicit NONE
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,section,ierr))
+    PetscCallA(PetscSectionSetNumFields(section, 1,ierr))
+    PetscCallA(PetscSectionSetFieldName(section,[0],"U",ierr))
+    PetscCallA(DMGetDimension(dm,dim,ierr))
+    PetscCallA(PetscSectionSetFieldComponents(section,[0],dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
     PetscCallA(PetscSectionSetChart(section,pStart,pEnd,ierr))
-    PetscCallA(DMGetDimension(dm,dim,ierr))
 
     numComponents = dim
     !!! Allocate DoF at cell and face sets
@@ -144,8 +149,17 @@ Implicit NONE
     PetscCallA(DMCreateGlobalVector(dm,v,ierr))
     PetscCallA(VecSet(v,0.0_Kr,ierr))
     PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
-
+    PetscCallA(VecGetBlockSize(v,sz,ierr))
+    Write(*,*) 'Global block size: ', sz
     PetscCallA(VecDestroy(v,ierr))
+
+    PetscCallA(DMCreateLocalVector(dm,v,ierr))
+    PetscCallA(VecSet(v,0.0_Kr,ierr))
+    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecGetBlockSize(v,sz,ierr))
+    Write(*,*) 'Local block size: ', sz
+    PetscCallA(VecDestroy(v,ierr))
+
     PetscCallA(PetscSectionDestroy(section,ierr))
     PetscCallA(DMDestroy(dm,ierr))
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   

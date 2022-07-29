@@ -86,6 +86,7 @@ Contains
         PetscInt,dimension(:),pointer      :: closure
         PetscInt                           :: p,depth
 
+
         PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
@@ -98,6 +99,7 @@ Contains
                     PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
                     If (elemType%numDofs(depth+1) > 0) Then
                         PetscCall(PetscSectionSetDof(section,closure(p),elemType%numDofs(depth+1)*numComponents,ierr))
+                        PetscCall(PetscSectionSetFieldDof(section,closure(p),[0],elemType%numDofs(depth+1)*numComponents,ierr))
                     End If
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
@@ -169,12 +171,14 @@ Contains
 
         PetscInt                           :: p,i,pStart,pEnd,numConstraints,numComponents
         PetscInt,Dimension(:),Pointer      :: constraints
+        PetscInt                           :: field = 0
 
         PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
         Do p = 1, pEnd
             numConstraints = count(table(p,:))
             If (numConstraints > 0) Then
                 PetscCall(PetscSectionSetConstraintDof(section,p-1,numConstraints,ierr))
+                PetscCall(PetscSectionSetFieldConstraintDof(section,p-1,[0],numConstraints,ierr))
             End If
         End Do
 
@@ -187,6 +191,7 @@ Contains
                 Allocate(constraints(numConstraints))
                 constraints = pack([ (i-1, i = 1,numComponents) ],table(p,:))
                 PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
+                PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
                 DeAllocate(constraints)
             End If
         End Do
