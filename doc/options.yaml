@@ -94,7 +94,7 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   damage:
     type: <AT1> #Type of damage law (choose one of)  AT1 AT2 LinSoft KKL AT1Elastic AT2Elastic LinSoftElastic KKLElastic
   plasticity:
-    type: <None> #Type of plasticity law (choose one of)  None Tresca VonMises VonMisesPlaneTheory CapModel DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson
+    type: <None> #Type of plasticity law (choose one of)  None Tresca VonMises VonMisesPlaneTheory CapModel DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson CrystalSingleSlip CrystalBCC
   unilateralContact:
     type: <None> #Type of handling of unilateral contact (choose one of)  None HydrostaticDeviatoric BrittleDuctile PositiveHydrostatic HybridHydrostaticDeviatoric Deviatoric PrincipalStrains Masonry
   DisplacementBC: <0 1 2 > #Displacement has Dirichlet boundary Condition (Y/N, yes/no, true/false, 0,1) 
@@ -152,3 +152,7 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   residualStiffness: <1e-09> #[unit-less] (eta) residual stiffness 
   isLinearIsotropicHardening: <FALSE> #[bool] Plasticity with Linear Isotropic Hardening 
   isNoPlCoupling: <FALSE> #[bool] Coupling between damage and plastic dissipation 
+  isViscousPlasticity: <FALSE> #[bool] Visco-plastic power law behaviour (crystal plasticity)
+  ViscosityGamma0: <1> #[s^-1] Reference plastic slip rate
+  ViscosityN: <1> #[unit-less] Visco-plastic power law exponent
+  Viscositydt: <1> #[s] Time step size
