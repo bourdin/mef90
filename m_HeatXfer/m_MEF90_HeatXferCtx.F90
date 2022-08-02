@@ -10,10 +10,9 @@ Module m_MEF90_HeatXferCtx_Type
    Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
-      Type(tVec),pointer               :: temperature
-      Type(tVec),pointer               :: flux
-      Type(tVec),pointer               :: boundaryTemperature
-      Type(tVec),pointer               :: externalTemperature
+      Type(tVec),pointer               :: temperatureLocal
+      Type(tVec),pointer               :: fluxLocal
+      Type(tVec),pointer               :: externalTemperatureLocal
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
@@ -27,7 +26,6 @@ Module m_MEF90_HeatXferCtx_Type
    Type MEF90HeatXferGlobalOptions_Type
       PetscEnum                        :: timeSteppingType
       PetscBool                        :: addNullSpace
-      PetscInt                         :: tempOffset
       PetscReal                        :: initialTemperature
       PetscEnum                        :: boundaryTempScaling
       PetscEnum                        :: externalTempScaling
