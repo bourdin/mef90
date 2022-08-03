@@ -26,7 +26,9 @@ Module m_MEF90_Ctx_Type
       PetscInt                                        :: timeNumStep
       PetscInt                                        :: timeSkip
       PetscInt                                        :: timeNumCycle
-      PetscEnum                                       :: fileFormat
+      !PetscEnum                                       :: fileFormat
+      PetscEnum                                       :: defaultElementFamily
+      PetscInt                                        :: defaultElementOrder
    End Type MEF90CtxGlobalOptions_Type
 End Module m_MEF90_Ctx_Type
 
@@ -36,6 +38,7 @@ Module m_MEF90_Ctx
    Use m_MEF90_Parameters
    Use m_MEF90_Ctx_Type
    Use m_MEF90_Utils
+   Use m_MEF90_Elements
    Implicit none
 
    Public :: MEF90Ctx_Type
@@ -161,6 +164,8 @@ Contains
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%defaultElementFamily,MEF90ElementFamily,default%defaultElementFamily,'element_family','Element family (possibly overridden in application contexts)',ierr))
+      PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%defaultElementOrder,default%defaultElementOrder,'element_order','Element order (possibly overridden in application contexts)',ierr))
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__

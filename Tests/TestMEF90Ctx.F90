@@ -5,10 +5,10 @@ Program  TestMEF90Ctx
    Implicit NONE   
 
    PetscErrorCode                      :: ierr
-   PetscReal,Dimension(:),Pointer      :: time
+   !PetscReal,Dimension(:),Pointer      :: time
    Type(MEF90Ctx_Type),target          :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-   Type(tDM),target                    :: dm,dmDist
+   Type(tDM),target                    :: dm
    PetscBool                           :: flg
    PetscBool                           :: interpolate = PETSC_FALSE
    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
