@@ -21,6 +21,8 @@ Program  TestMEF90Ctx
    MEF90GlobalOptions_default%timeNumStep       = 11
    MEF90GlobalOptions_default%timeSkip          = 0
    MEF90GlobalOptions_default%timeNumCycle      = 1
+   MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamily_Lagrange
+   MEF90GlobalOptions_default%elementOrder      = 1
 
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
    PetscCallA(MEF90Initialize(ierr))
@@ -30,7 +32,6 @@ Program  TestMEF90Ctx
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
-
 
    distribute: Block 
       Type(tDM),target                    :: dmDist
@@ -61,6 +62,7 @@ Program  TestMEF90Ctx
       Write(IOBuffer,*) "time_min is NOT set\n"
    End If
    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))
 End Program  TestMEF90Ctx

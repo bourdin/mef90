@@ -240,7 +240,9 @@ Implicit NONE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
-
+    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamily_Lagrange
+    MEF90GlobalOptions_default%elementOrder      = 1
+ 
 
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     

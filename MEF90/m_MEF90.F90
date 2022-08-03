@@ -78,6 +78,7 @@ Contains
       !!! Individual modules runtime initialization should be called here
       PetscCall(MEF90MPIInitialize_Private(ierr))
       PetscCall(MEF90MaterialsInitialize_Private(ierr))
+      PetscCall(MEF90ElementsInitialize_Private(ierr))
       PetscCall(MEF90CtxInitialize_Private(ierr))
    End Subroutine MEF90Initialize
    

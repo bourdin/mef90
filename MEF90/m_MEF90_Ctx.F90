@@ -17,18 +17,14 @@ Module m_MEF90_Ctx_Type
    Type MEF90CtxGlobalOptions_Type
       PetscInt                                        :: verbose
       PetscBool                                       :: dryrun
-      !Character(len=MEF90_MXSTRLEN,kind=C_char)       :: prefix
-      !!! There seems to be an incompatibility between PetscBagRegisterString and intel fortran 13.0
-      !!! Moving prefix to the context itself instead of the bag
       PetscEnum                                       :: timeInterpolation
       PetscReal                                       :: timeMin
       PetscReal                                       :: timeMax
       PetscInt                                        :: timeNumStep
       PetscInt                                        :: timeSkip
       PetscInt                                        :: timeNumCycle
-      !PetscEnum                                       :: fileFormat
-      PetscEnum                                       :: defaultElementFamily
-      PetscInt                                        :: defaultElementOrder
+      PetscEnum                                       :: elementFamily
+      PetscInt                                        :: elementOrder
    End Type MEF90CtxGlobalOptions_Type
 End Module m_MEF90_Ctx_Type
 
@@ -164,8 +160,8 @@ Contains
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeNumStep,default%timeNumStep,'time_numstep','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt (bag,MEF90CtxGlobalOptions%timeSkip,   default%timeSkip,'time_skip','Time: number of time steps',ierr))
       PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%timenumCycle,default%timenumCycle,'time_numCycle','Time: number of cycles',ierr))
-      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%defaultElementFamily,MEF90ElementFamily,default%defaultElementFamily,'element_family','Element family (possibly overridden in application contexts)',ierr))
-      PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%defaultElementOrder,default%defaultElementOrder,'element_order','Element order (possibly overridden in application contexts)',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,MEF90CtxGlobalOptions%ElementFamily,MEF90ElementFamilyList,default%ElementFamily,'element_family','Element family (possibly overridden in application contexts)',ierr))
+      PetscCall(PetscBagRegisterInt(bag,MEF90CtxGlobalOptions%ElementOrder,default%ElementOrder,'element_order','Element order (possibly overridden in application contexts)',ierr))
    End Subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__

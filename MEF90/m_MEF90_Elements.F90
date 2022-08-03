@@ -73,7 +73,7 @@ Module m_MEF90_Elements
 
    Enum,bind(c)
       enumerator :: &
-      MEF90_Lagrange = 1
+      MEF90ElementFamily_Lagrange = 0
    End Enum
 
    Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(4),Parameter,Public   :: MEF90ElementFamily = [ &
@@ -81,6 +81,7 @@ Module m_MEF90_Elements
       "MEF90ElementFamily ",     &
       "prefix_            ",     &
       C_NULL_CHAR//"                  "]
+      Character(len=MEF90_MXSTRLEN),dimension(4),protected  :: MEF90ElementFamilyList
 
 
    !!! 
@@ -301,6 +302,26 @@ Module m_MEF90_Elements
    End Interface MEF90Element_Destroy
       
 Contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90Elements_InitializePrivate"
+!!!
+!!!  
+!!!  MEF90Ctx_ElementsPrivate:
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   Subroutine MEF90ElementsInitialize_Private(ierr)
+      PetscErrorCode,Intent(OUT)                   :: ierr
+   
+      MEF90ElementFamilyList(1) = 'Lagrange'
+      MEF90ElementFamilyList(2) = 'MEF90ElementFamily'
+      MEF90ElementFamilyList(3) = '_MEF90ElementFamily'
+      MEF90ElementFamilyList(4) = ''
+   End Subroutine MEF90ElementsInitialize_Private
+
+
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Element_TypeFindByID"
    Subroutine MEF90Element_TypeFindByID(elemID,elemType,ierr)
