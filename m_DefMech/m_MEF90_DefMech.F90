@@ -354,7 +354,7 @@ Contains
       PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: val
       PetscInt,Dimension(:),Pointer                      :: cone
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       PetscInt                                           :: cell,dof,c,dim
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
@@ -435,7 +435,7 @@ Contains
       PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: val
       PetscInt,Dimension(:),Pointer                      :: cone
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       PetscInt                                           :: cell,dof,c,dim
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
@@ -512,7 +512,7 @@ Contains
       PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: val
       PetscInt,Dimension(:),Pointer                      :: cone
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       PetscInt                                           :: cell,dof,c,dim
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
@@ -589,7 +589,7 @@ Contains
       PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: val
       PetscInt,Dimension(:),Pointer                      :: cone
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       PetscInt                                           :: cell
       
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
@@ -665,7 +665,7 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt                                           :: set,c,dim,nval
       PetscReal,Dimension(:),Pointer                     :: boundaryDisplacementPtr
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
@@ -747,7 +747,7 @@ End Subroutine MEF90DefMechUpdateboundaryDisplacement
       PetscInt,Dimension(:),Pointer                      :: setID
       PetscInt                                           :: set,nval
       PetscReal,Dimension(:),Pointer                     :: boundaryDamagePtr
-      Type(MEF90Element_Type)                            :: elemType
+      Type(MEF90ElementType)                            :: elemType
       
    
       Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)

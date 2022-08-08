@@ -11,17 +11,17 @@ Module m_MEF90_Elements
 
    !Private   
    ! not sure how to make the enumerator public short of listing them one after each other.
-   Public :: MEF90Element_Create
-   Public :: MEF90Element_Destroy
+   Public :: MEF90ElementCreate
+   Public :: MEF90ElementDestroy
 
-   Public :: MEF90Element_Type
-   Public :: MEF90Element2D_Vect,MEF90Element2D_Scal
-   Public :: MEF90Element3D_Vect,MEF90Element3D_Scal
-   Public :: MEF90Element_TypeFindByID,MEF90Element_TypeFindByName
+   Public :: MEF90ElementType
+   Public :: MEF90Element2DVect,MEF90Element2DScal
+   Public :: MEF90Element3DVect,MEF90Element3DScal
+   Public :: MEF90ElementTypeFindByID,MEF90ElementTypeFindByName
    
-   Type MEF90Element_Type
+   Type MEF90ElementType
       ! name is the element name in english language
-      Character(len=MEF90MXSTRLEN)                :: Name
+      Character(len=MEF90MXSTRLEN)                 :: Name
       ! shortID is a numerical shortcut used in the prep, for instance
       PetscInt                                     :: ShortID
       
@@ -35,11 +35,6 @@ Module m_MEF90_Elements
       !!!   vertex edge cell in 2D (last value is unused, i.e. always use depth to locate DoF)
       !!! i.e. point depth -1
       PetscInt,Dimension(4)                        :: numDofs
-      ! !!!
-      ! PetscInt                                     :: numVertexDof
-      ! PetscInt                                     :: numEdgeDof
-      ! PetscInt                                     :: numFaceDof
-      ! PetscInt                                     :: numCellDof
       PetscInt                                     :: numDoF 
       !!! numDof = numVertexDof * numVertex + numEdgeDof * numEdge 
       !!!          + numFaceDof * numFace + numCellDof
@@ -49,31 +44,31 @@ Module m_MEF90_Elements
       !!! The co-dimension of the cell associated with the element
       PetscInt                                     :: order
       !!! The polynomial order
-   End Type MEF90Element_Type
+   End Type MEF90ElementType
  
    Enum,bind(c)
       enumerator  :: &
-      MEF90_P1_Lagrange_2D_ShortID = 1,       &  ! 1
-      MEF90_P1_Lagrange_3D_ShortID,           &  ! 2
-      MEF90_P1_Lagrange_2DBoundary_ShortID,   &  ! 3
-      MEF90_P1_Lagrange_3DBoundary_ShortID,   &  ! 4
-      MEF90_P2_Lagrange_2D_ShortID,           &  ! 5
-      MEF90_P2_Lagrange_3D_ShortID,           &  ! 6
-      MEF90_P2_Lagrange_2DBoundary_ShortID,   &  ! 7
-      MEF90_P2_Lagrange_3DBoundary_ShortID,   &  ! 8
-      MEF90_Q1_Lagrange_2D_ShortID,           &  ! 9
-      MEF90_Q1_Lagrange_3D_ShortID,           &  ! 10
-      MEF90_Q1_Lagrange_2DBoundary_ShortID,   &  ! 11
-      MEF90_Q1_Lagrange_3DBoundary_ShortID,   &  ! 12
-      MEF90_Q2_Lagrange_2D_ShortID,           &  ! 13
-      MEF90_Q2_Lagrange_3D_ShortID,           &  ! 14
-      MEF90_Q2_Lagrange_2DBoundary_ShortID,   &  ! 15
-      MEF90_Q2_Lagrange_3DBoundary_ShortID       ! 16
+      MEF90P1Lagrange2DShortID = 1,       &  ! 1
+      MEF90P1Lagrange3DShortID,           &  ! 2
+      MEF90P1Lagrange2DBoundaryShortID,   &  ! 3
+      MEF90P1Lagrange3DBoundaryShortID,   &  ! 4
+      MEF90P2Lagrange2DShortID,           &  ! 5
+      MEF90P2Lagrange3DShortID,           &  ! 6
+      MEF90P2Lagrange2DBoundaryShortID,   &  ! 7
+      MEF90P2Lagrange3DBoundaryShortID,   &  ! 8
+      MEF90Q1Lagrange2DShortID,           &  ! 9
+      MEF90Q1Lagrange3DShortID,           &  ! 10
+      MEF90Q1Lagrange2DBoundaryShortID,   &  ! 11
+      MEF90Q1Lagrange3DBoundaryShortID,   &  ! 12
+      MEF90Q2Lagrange2DShortID,           &  ! 13
+      MEF90Q2Lagrange3DShortID,           &  ! 14
+      MEF90Q2Lagrange2DBoundaryShortID,   &  ! 15
+      MEF90Q2Lagrange3DBoundaryShortID       ! 16
    End Enum      
 
    Enum,bind(c)
       enumerator :: &
-      MEF90ElementFamily_Lagrange = 0
+      MEF90ElementFamilyLagrange = 0
    End Enum
 
    Character(kind=c_char,len=MEF90MXSTRLEN),dimension(4),Parameter,Public   :: MEF90ElementFamily = [ &
@@ -87,30 +82,30 @@ Module m_MEF90_Elements
    !!! 
    !!! P1 Simplicial Lagrange elements
    !!!
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2D = MEF90Element_Type(   &
-   "MEF90_P1_Lagrange_2D",                      &  ! name
-   MEF90_P1_Lagrange_2D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P1Lagrange2D = MEF90ElementType(   &
+   "MEF90P1Lagrange2D",                         &  ! name
+   MEF90P1Lagrange2DShortID,                    &  ! shortID
    3,3,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3D = MEF90Element_Type(   &
-   "MEF90_P1_Lagrange_3D",                      &  ! name
-   MEF90_P1_Lagrange_3D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P1Lagrange3D = MEF90ElementType(   &
+   "MEF90P1Lagrange3D",                         &  ! name
+   MEF90P1Lagrange3DShortID,                    &  ! shortID
    4,6,4,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_2DBoundary = MEF90Element_Type(   &
-   "MEF90_P1_Lagrange_2DBoundary",              &  ! name
-   MEF90_P1_Lagrange_2DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P1Lagrange2DBoundary = MEF90ElementType(   &
+   "MEF90P1Lagrange2DBoundary",                 &  ! name
+   MEF90P1Lagrange2DBoundaryShortID,            &  ! shortID
    2,1,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],2,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,1,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P1_Lagrange_3DBoundary = MEF90Element_Type(   &
-   "MEF90_P1_Lagrange_3DBoundary",              &  ! name
-   MEF90_P1_Lagrange_3DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P1Lagrange3DBoundary = MEF90ElementType(   &
+   "MEF90P1Lagrange3DBoundary",                 &  ! name
+   MEF90P1Lagrange3DBoundaryShortID,            &  ! shortID
    3,3,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,1,1                                        &  ! dim,codim,order
@@ -118,30 +113,30 @@ Module m_MEF90_Elements
    !!!
    !!! P2 Simplicial Lagrange elements
    !!!
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2D = MEF90Element_Type(   &
-   "MEF90_P2_Lagrange_2D",                      &  ! name
-   MEF90_P2_Lagrange_2D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P2Lagrange2D = MEF90ElementType(   &
+   "MEF90P2Lagrange2D",                         &  ! name
+   MEF90P2Lagrange2DShortID,                    &  ! shortID
    3,3,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,0],6,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,0,2                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3D = MEF90Element_Type(   &
-   "MEF90_P2_Lagrange_3D",                      &  ! name
-   MEF90_P2_Lagrange_3D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P2Lagrange3D = MEF90ElementType(   &
+   "MEF90P2Lagrange3D",                         &  ! name
+   MEF90P2Lagrange3DShortID,                    &  ! shortID
    4,6,4,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,0],10,                                &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,0,2                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_2DBoundary = MEF90Element_Type(   &
-   "MEF90_P2_Lagrange_2DBoundary",              &  ! name
-   MEF90_P2_Lagrange_2DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P2Lagrange2DBoundary = MEF90ElementType(   &
+   "MEF90P2Lagrange2DBoundary",                 &  ! name
+   MEF90P2Lagrange2DBoundaryShortID,            &  ! shortID
    2,1,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,1,2                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_P2_Lagrange_3DBoundary = MEF90Element_Type(   &
-   "MEF90_P2_Lagrange_3DBoundary",              &  ! name
-   MEF90_P2_Lagrange_3DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90P2Lagrange3DBoundary = MEF90ElementType(   &
+   "MEF90P2Lagrange3DBoundary",                 &  ! name
+   MEF90P2Lagrange3DBoundaryShortID,            &  ! shortID
    3,3,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,0],6,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,1,2                                        &  ! dim,codim,order
@@ -149,30 +144,30 @@ Module m_MEF90_Elements
    !!! 
    !!! Q1 tensor product Lagrange elements
    !!!
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_2D = MEF90Element_Type(   &
-   "MEF90_Q1_Lagrange_2D",                      &  ! name
-   MEF90_Q1_Lagrange_2D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q1Lagrange2D = MEF90ElementType(   &
+   "MEF90Q1Lagrange2D",                         &  ! name
+   MEF90Q1Lagrange2DShortID,                    &  ! shortID
    4,4,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_3D = MEF90Element_Type(   &
-   "MEF90_Q1_Lagrange_3D",                      &  ! name
-   MEF90_Q1_Lagrange_3D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q1Lagrange3D = MEF90ElementType(   &
+   "MEF90Q1Lagrange3D",                         &  ! name
+   MEF90Q1Lagrange3DShortID,                    &  ! shortID
    8,12,6,                                      &  ! numVertex,numEdge,numFace
    [1,0,0,0],8,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_2DBoundary = MEF90Element_Type(   &
-   "MEF90_Q1_Lagrange_2DBoundary",              &  ! name
-   MEF90_Q1_Lagrange_2DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q1Lagrange2DBoundary = MEF90ElementType(   &
+   "MEF90Q1Lagrange2DBoundary",                 &  ! name
+   MEF90Q1Lagrange2DBoundaryShortID,            &  ! shortID
    2,1,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],2,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,1,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q1_Lagrange_3DBoundary = MEF90Element_Type(   &
-   "MEF90_Q1_Lagrange_3DBoundary",              &  ! name
-   MEF90_Q1_Lagrange_3DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q1Lagrange3DBoundary = MEF90ElementType(   &
+   "MEF90Q1Lagrange3DBoundary",                 &  ! name
+   MEF90Q1Lagrange3DBoundaryShortID,            &  ! shortID
    4,4,0,                                       &  ! numVertex,numEdge,numFace
    [1,0,0,0],4,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,1,1                                        &  ! dim,codim,order
@@ -180,60 +175,60 @@ Module m_MEF90_Elements
    !!! 
    !!! Q2 tensor product Lagrange elements
    !!!
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_2D = MEF90Element_Type(   &
-   "MEF90_Q2_Lagrange_2D",                      &  ! name
-   MEF90_Q2_Lagrange_2D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q2Lagrange2D = MEF90ElementType(   &
+   "MEF90Q2Lagrange2D",                         &  ! name
+   MEF90Q2Lagrange2DShortID,                    &  ! shortID
    4,4,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,1],9,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_3D = MEF90Element_Type(   &
-   "MEF90_Q2_Lagrange_3D",                      &  ! name
-   MEF90_Q2_Lagrange_3D_ShortID,                &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q2Lagrange3D = MEF90ElementType(   &
+   "MEF90Q2Lagrange3D",                         &  ! name
+   MEF90Q2Lagrange3DShortID,                    &  ! shortID
    8,12,6,                                      &  ! numVertex,numEdge,numFace
    [1,1,1,1],27,                                &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,0,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_2DBoundary = MEF90Element_Type(   &
-   "MEF90_Q2_Lagrange_2DBoundary",              &  ! name
-   MEF90_Q2_Lagrange_2DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q2Lagrange2DBoundary = MEF90ElementType(   &
+   "MEF90Q2Lagrange2DBoundary",                 &  ! name
+   MEF90Q2Lagrange2DBoundaryShortID,            &  ! shortID
    2,1,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,0],3,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    2,1,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_Q2_Lagrange_3DBoundary = MEF90Element_Type(   &
-   "MEF90_Q2_Lagrange_3DBoundary",              &  ! name
-   MEF90_Q2_Lagrange_3DBoundary_ShortID,        &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90Q2Lagrange3DBoundary = MEF90ElementType(   &
+   "MEF90Q2Lagrange3DBoundary",                 &  ! name
+   MEF90Q2Lagrange3DBoundaryShortID,            &  ! shortID
    4,4,0,                                       &  ! numVertex,numEdge,numFace
    [1,1,0,1],9,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,1,1                                        &  ! dim,codim,order
    )
-   Type(MEF90Element_Type),Parameter,Public :: MEF90_NULL_ELEMENT = MEF90Element_Type(   &
-   "NULL",                                      &  ! name
-   0,                                           &  ! shortID
+   Type(MEF90ElementType),Parameter,Public :: MEF90_NULL_ELEMENT = MEF90ElementType(   &
+   "NULL",                                         &  ! name
+   0,                                               &  ! shortID
    0,0,0,                                       &  ! numVertex,numEdge,numFace
    [0,0,0,0],0,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    0,0,0                                        &  ! dim,codim,order
    )
 
    Integer,Parameter,Public :: MEF90_numKnownElements = 16       
-   Type(MEF90Element_Type),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90knownElements = [ &
-      MEF90_P1_Lagrange_2D,          &  ! 1
-      MEF90_P1_Lagrange_3D,          &  ! 2
-      MEF90_P1_Lagrange_2DBoundary,  &  ! 3
-      MEF90_P1_Lagrange_3DBoundary,  &  ! 4
-      MEF90_P2_Lagrange_2D,          &  ! 5
-      MEF90_P2_Lagrange_3D,          &  ! 6
-      MEF90_P2_Lagrange_2DBoundary,  &  ! 7
-      MEF90_P2_Lagrange_3DBoundary,  &  ! 8
-      MEF90_Q1_Lagrange_2D,          &  ! 9
-      MEF90_Q1_Lagrange_3D,          &  ! 10
-      MEF90_Q1_Lagrange_2DBoundary,  &  ! 11
-      MEF90_Q1_Lagrange_3DBoundary,  &  ! 12
-      MEF90_Q2_Lagrange_2D,          &  ! 13
-      MEF90_Q2_Lagrange_3D,          &  ! 14
-      MEF90_Q2_Lagrange_2DBoundary,  &  ! 15
-      MEF90_Q2_Lagrange_3DBoundary   &  ! 16
+   Type(MEF90ElementType),dimension(MEF90_numKnownElements),Parameter,Public   :: MEF90knownElements = [ &
+      MEF90P1Lagrange2D,          &  ! 1
+      MEF90P1Lagrange3D,          &  ! 2
+      MEF90P1Lagrange2DBoundary,  &  ! 3
+      MEF90P1Lagrange3DBoundary,  &  ! 4
+      MEF90P2Lagrange2D,          &  ! 5
+      MEF90P2Lagrange3D,          &  ! 6
+      MEF90P2Lagrange2DBoundary,  &  ! 7
+      MEF90P2Lagrange3DBoundary,  &  ! 8
+      MEF90Q1Lagrange2D,          &  ! 9
+      MEF90Q1Lagrange3D,          &  ! 10
+      MEF90Q1Lagrange2DBoundary,  &  ! 11
+      MEF90Q1Lagrange3DBoundary,  &  ! 12
+      MEF90Q2Lagrange2D,          &  ! 13
+      MEF90Q2Lagrange3D,          &  ! 14
+      MEF90Q2Lagrange2DBoundary,  &  ! 15
+      MEF90Q2Lagrange3DBoundary   &  ! 16
    ]
 
    Character(kind=c_char,len=MEF90MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = [ &
@@ -257,56 +252,56 @@ Module m_MEF90_Elements
       "prefix_                ",     &
       C_NULL_CHAR//"                      "]
       
-   Type MEF90Element2D_Scal
+   Type MEF90Element2DScal
       PetscReal,Dimension(:,:),Pointer             :: BF
       Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element2D_Scal
+   End Type MEF90Element2DScal
  
-   Type MEF90Element2D_Vect
+   Type MEF90Element2DVect
       Type (Vect2D),Dimension(:,:),Pointer         :: BF
       Type (Mat2D),Dimension(:,:),Pointer          :: Grad_BF
       Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element2D_Vect
+   End Type MEF90Element2DVect
  
-   Type MEF90Element3D_Scal
+   Type MEF90Element3DScal
       PetscReal,Dimension(:,:),Pointer             :: BF
       Type (Vect3D),Dimension(:,:),Pointer         :: Grad_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element3D_Scal
+   End Type MEF90Element3DScal
  
-   Type MEF90Element3D_Vect
+   Type MEF90Element3DVect
       Type (Vect3D),Dimension(:,:),Pointer         :: BF
       Type (Mat3D),Dimension(:,:),Pointer          :: Grad_BF
       Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF
       PetscReal,Dimension(:),Pointer               :: Gauss_C
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
-   End Type MEF90Element3D_Vect
+   End Type MEF90Element3DVect
  
-   Interface MEF90Element_Create
-      Module Procedure Element2D_Scal_InitSet,Element2D_Vect_InitSet, &
-                       Element3D_Scal_InitSet,Element3D_Vect_InitSet, &
-                       Element2D_Scal_InitSet_ByShortID,Element2D_Vect_InitSet_ByShortID,&
-                       Element3D_Scal_InitSet_ByShortID,Element3D_Vect_InitSet_ByShortID
-   End Interface MEF90Element_Create
+   Interface MEF90ElementCreate
+      Module Procedure Element2DScalInitSet,Element2DVectInitSet, &
+                       Element3DScalInitSet,Element3DVectInitSet, &
+                       Element2DScalInitSetByShortID,Element2DVectInitSetByShortID,&
+                       Element3D_Scal_InitSet_ByShortID,Element3DVectInitSetByShortID
+   End Interface MEF90ElementCreate
    
-   Interface MEF90Element_Destroy
-      Module Procedure Element2D_Scal_Destroy,Element2D_Vect_Destroy,&
-                       Element3D_Scal_Destroy,Element3D_Vect_Destroy,&
-                       Element2D_Scal_DestroySet,Element2D_Vect_DestroySet,& 
-                       Element3D_Scal_DestroySet,Element3D_Vect_DestroySet
-   End Interface MEF90Element_Destroy
+   Interface MEF90ElementDestroy
+      Module Procedure Element2DScalDestroy,Element2DVectDestroy,&
+                       Element3DScalDestroy,Element3DVectDestroy,&
+                       Element2DScalDestroySet,Element2DVectDestroySet,& 
+                       Element3DScalDestroySet,Element3DVectDestroySet
+   End Interface MEF90ElementDestroy
       
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Elements_InitializePrivate"
+#define __FUNCT__ "MEF90ElementsInitialize_Private"
 !!!
 !!!  
-!!!  MEF90Ctx_ElementsPrivate:
+!!!  MEF90ElementsInitialize_Private:
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
@@ -323,10 +318,10 @@ Contains
 
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Element_TypeFindByID"
-   Subroutine MEF90Element_TypeFindByID(elemID,elemType,ierr)
+#define __FUNCT__ "MEF90ElementTypeFindByID"
+   Subroutine MEF90ElementTypeFindByID(elemID,elemType,ierr)
       PetscInt, Intent(IN)                        :: elemID
-      Type(MEF90Element_Type),Intent(OUT)         :: elemType
+      Type(MEF90ElementType),Intent(OUT)          :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
       
       Integer                                     :: i
@@ -342,13 +337,13 @@ Contains
          Write(*,*) "[ERROR]: Unknown element ID", elemID
          ierr = PETSC_ERR_ARG_WRONG
       End If
-   End Subroutine MEF90Element_TypeFindByID
+   End Subroutine MEF90ElementTypeFindByID
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90Element_TypeFindByname"
-   Subroutine MEF90Element_TypeFindByname(elemName,elemType,ierr)
+#define __FUNCT__ "MEF90ElementTypeFindByname"
+   Subroutine MEF90ElementTypeFindByName(elemName,elemType,ierr)
       Character(len=*), Intent(IN)                :: elemName
-      Type(MEF90Element_Type),Intent(OUT)         :: elemType
+      Type(MEF90ElementType),Intent(OUT)          :: elemType
       PetscErrorCode,Intent(OUT)                  :: ierr
 
       Integer                                     :: i
@@ -364,128 +359,128 @@ Contains
          Write(*,*) "[ERROR]: Unknown element ", trim(elemName)
          ierr = PETSC_ERR_ARG_WRONG
       End If
-   End Subroutine MEF90Element_TypeFindByname
+   End Subroutine MEF90ElementTypeFindByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_InitSet_ByName"
-   Subroutine Element2D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
+#define __FUNCT__ "Element2DScalInitSetByName"
+   Subroutine Element2DScalInitSetByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Type(MEF90Element_Type)                          :: elemType
+      Type(MEF90ElementType)                           :: elemType
 
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element2D_Scal_InitSet_ByName
+      Call MEF90ElementTypeFindByName(elemName,elemType,ierr)
+      Call Element2DScalInitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+   End Subroutine Element2DScalInitSetByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_InitSet_ByName"
-   Subroutine Element2D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
+#define __FUNCT__ "Element2DVectInitSetByName"
+   Subroutine Element2DVectInitSetByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Type(MEF90Element_Type)                          :: elemType
+      Type(MEF90ElementType)                           :: elemType
 
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element2D_Vect_InitSet_ByName
+      Call MEF90ElementTypeFindByName(elemName,elemType,ierr)
+      Call Element2DVectInitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+   End Subroutine Element2DVectInitSetByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_InitSet_ByName"
-   Subroutine Element3D_Scal_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
+#define __FUNCT__ "Element3DScalInitSetByName"
+   Subroutine Element3DScalInitSetByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Type(MEF90Element_Type)                          :: elemType
+      Type(MEF90ElementType)                          :: elemType
 
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element3D_Scal_InitSet_ByName
+      Call MEF90ElementTypeFindByName(elemName,elemType,ierr)
+      Call Element3DScalInitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+   End Subroutine Element3DScalInitSetByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Vect_InitSet_ByName"
-   Subroutine Element3D_Vect_InitSet_ByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
+#define __FUNCT__ "Element3DVectInitSetByName"
+   Subroutine Element3DVectInitSetByName(mesh,cellIS,dElem,dQuadratureOrder,elemName,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
       Character(len=*), Intent(IN)                     :: elemName
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Type(MEF90Element_Type)                          :: elemType
+      Type(MEF90ElementType)                           :: elemType
 
-      Call MEF90Element_TypeFindByName(elemName,elemType,ierr)
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
-   End Subroutine Element3D_Vect_InitSet_ByName
+      Call MEF90ElementTypeFindByName(elemName,elemType,ierr)
+      Call Element3DVectInitSet(mesh,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+   End Subroutine Element3DVectInitSetByName
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_InitSet_ByShortID"
-   Subroutine Element2D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
+#define __FUNCT__ "Element2DScalInitSetByShortID"
+   Subroutine Element2DScalInitSetByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element2D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
-   End Subroutine Element2D_Scal_InitSet_ByShortID
+      Call Element2DScalInitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
+   End Subroutine Element2DScalInitSetByShortID
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_InitSet_ByShortID"
-   Subroutine Element2D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
+#define __FUNCT__ "Element2DVectInitSetByShortID"
+   Subroutine Element2DVectInitSetByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element2D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
-   End Subroutine Element2D_Vect_InitSet_ByShortID
+      Call Element2DVectInitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
+   End Subroutine Element2DVectInitSetByShortID
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_InitSet_ByShortID"
+#define __FUNCT__ "Element3DScalInitSetByShortID"
    Subroutine Element3D_Scal_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element3D_Scal_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
+      Call Element3DScalInitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
    End Subroutine Element3D_Scal_InitSet_ByShortID
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Vect_InitSet_ByShortID"
-   Subroutine Element3D_Vect_InitSet_ByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
+#define __FUNCT__ "Element3DVectInitSetByShortID"
+   Subroutine Element3DVectInitSetByShortID(mesh,cellIS,dElem,dQuadratureOrder,shortID,ierr)
       Type(tDM),intent(IN)                             :: mesh
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder,shortID
       PetscErrorCode,Intent(OUT)                       :: ierr
       
-      Call Element3D_Vect_InitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
-   End Subroutine Element3D_Vect_InitSet_ByShortID
+      Call Element3DVectInitSet(mesh,cellIS,dElem,dQuadratureOrder,MEF90knownElements(ShortID),ierr)
+   End Subroutine Element3DVectInitSetByShortID
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_InitSet"
-   Subroutine Element2D_Scal_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+#define __FUNCT__ "Element2DScalInitSet"
+   Subroutine Element2DScalInitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(tDM),intent(IN)                             :: dm
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
+      Type(MEF90ElementType),intent(IN)                :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
       PetscInt                                         :: iELoc
@@ -498,7 +493,7 @@ Contains
       Type(Vect2D)                                     :: outerNormal
 
       Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_2D%shortID,MEF90_P2_Lagrange_2D%shortID)
+         Case (MEF90P1Lagrange2D%shortID,MEF90P2Lagrange2D%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -512,14 +507,14 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(4)*0.5_Kr
                   detBBinv = 4.0_Kr * detBBinv
-                  Call Element_P_Lagrange_2D_Scal_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange2DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(BBinv)
                DeAllocate(BB)
                DeAllocate(v0)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         Case (MEF90_P1_Lagrange_2DBoundary%shortID,MEF90_P2_Lagrange_2DBoundary%shortID)
+         Case (MEF90P1Lagrange2DBoundary%shortID,MEF90P2Lagrange2DBoundary%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -528,29 +523,29 @@ Contains
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
-                  Call Element_P_Lagrange_2DBoundary_Scal_Init(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange2DBoundaryScalInit(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         !Case (MEF90_Q1_Lagrange_2D%shortID,MEF90_Q2_Lagrange_2D%shortID,MEF90_Q1_Lagrange_2DBoundary%shortID,MEF90_Q2_Lagrange_2DBoundary%shortID)
+         !Case (MEF90Q1Lagrange2D%shortID,MEF90Q2Lagrange2D%shortID,MEF90Q1Lagrange2DBoundary%shortID,MEF90Q2Lagrange2DBoundary%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
          Case Default
             Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
-   End Subroutine Element2D_Scal_InitSet
+   End Subroutine Element2DScalInitSet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_InitSet"
-   Subroutine Element2D_Vect_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+#define __FUNCT__ "Element2DVectInitSet"
+   Subroutine Element2DVectInitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(tDM),intent(IN)                             :: dm
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element2D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element2DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
+      Type(MEF90ElementType),intent(IN)                :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
       PetscInt                                         :: iELoc
@@ -563,7 +558,7 @@ Contains
       Type(Vect2D)                                     :: outerNormal
 
       Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_2D%shortID,MEF90_P2_Lagrange_2D%shortID)
+         Case (MEF90P1Lagrange2D%shortID,MEF90P2Lagrange2D%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -577,14 +572,14 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(4)*0.5_Kr
                   detBBinv = 4.0_Kr * detBBinv
-                  Call Element_P_Lagrange_2D_Vect_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange2DVectInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
                DeAllocate(BB)
                DeAllocate(v0)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         Case (MEF90_P1_Lagrange_2DBoundary%shortID,MEF90_P2_Lagrange_2DBoundary%shortID)
+         Case (MEF90P1Lagrange2DBoundary%shortID,MEF90P2Lagrange2DBoundary%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -593,29 +588,29 @@ Contains
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),length,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
-                  Call Element_P_Lagrange_2DBoundary_Vect_Init(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange2DBoundaryVectInit(dElem(iELoc),length,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         !Case (MEF90_Q1_Lagrange_2D%shortID,MEF90_Q2_Lagrange_2D%shortID,MEF90_Q1_Lagrange_2DBoundary%shortID,MEF90_Q2_Lagrange_2DBoundary%shortID)
+         !Case (MEF90Q1Lagrange2D%shortID,MEF90Q2Lagrange2D%shortID,MEF90Q1Lagrange2DBoundary%shortID,MEF90Q2Lagrange2DBoundary%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
          Case Default
             Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
-   End Subroutine Element2D_Vect_InitSet
+   End Subroutine Element2DVectInitSet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_InitSet"
-   Subroutine Element3D_Scal_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+#define __FUNCT__ "Element3DScalInitSet"
+   Subroutine Element3DScalInitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(tDM),intent(IN)                             :: dm
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Scal),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DScal),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
+      Type(MEF90ElementType),intent(IN)                :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
       PetscInt                                         :: iELoc
@@ -628,7 +623,7 @@ Contains
       Type(Vect3D)                                     :: outerNormal
 
       Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_3D%shortID,MEF90_P2_Lagrange_3D%shortID)
+         Case (MEF90P1Lagrange3D%shortID,MEF90P2Lagrange3D%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -643,14 +638,14 @@ Contains
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
                   detBBinv = 8.0_Kr * detBBinv
-                  Call Element_P_Lagrange_3D_Scal_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange3DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
                DeAllocate(BB)
                DeAllocate(v0)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         Case (MEF90_P1_Lagrange_3DBoundary%shortID,MEF90_P2_Lagrange_3DBoundary%shortID)
+         Case (MEF90P1Lagrange3DBoundary%shortID,MEF90P2Lagrange3DBoundary%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -659,29 +654,29 @@ Contains
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
-                  Call Element_P_Lagrange_3DBoundary_Scal_Init(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange3DBoundaryScalInit(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         !Case (MEF90_Q1_Lagrange_3D%shortID,MEF90_Q2_Lagrange_3D%shortID,MEF90_Q1_Lagrange_3DBoundary%shortID,MEF90_Q2_Lagrange_3DBoundary%shortID)
+         !Case (MEF90Q1Lagrange3D%shortID,MEF90Q2Lagrange3D%shortID,MEF90Q1Lagrange3DBoundary%shortID,MEF90Q2Lagrange3DBoundary%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
          Case Default
             Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
-   End Subroutine Element3D_Scal_InitSet
+   End Subroutine Element3DScalInitSet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Vect_InitSet"
-   Subroutine Element3D_Vect_InitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
+#define __FUNCT__ "Element3DVectInitSet"
+   Subroutine Element3DVectInitSet(dm,cellIS,dElem,dQuadratureOrder,elemType,ierr)
       Type(tDM),intent(IN)                             :: dm
       Type(tIS),intent(IN)                             :: cellIS
-      Type(MEF90Element3D_Vect),Dimension(:),Pointer   :: dElem
+      Type(MEF90Element3DVect),Dimension(:),Pointer    :: dElem
       PetscInt,Intent(IN)                              :: dQuadratureOrder
-      Type(MEF90Element_Type),intent(IN)               :: elemType
+      Type(MEF90ElementType),intent(IN)                :: elemType
       PetscErrorCode,Intent(OUT)                       :: ierr
       
       PetscInt                                         :: iELoc
@@ -694,7 +689,7 @@ Contains
       Type(Vect3D)                                     :: outerNormal
 
       Select Case (elemType%shortID)
-         Case (MEF90_P1_Lagrange_3D%shortID,MEF90_P2_Lagrange_3D%shortID)
+         Case (MEF90P1Lagrange3D%shortID,MEF90P2Lagrange3D%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -709,14 +704,14 @@ Contains
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
                   detBBinv = 8.0_Kr * detBBinv
-                  Call Element_P_Lagrange_3D_Vect_Init(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange3DVectInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
                DeAllocate(BB)
                DeAllocate(v0)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         Case (MEF90_P1_Lagrange_3DBoundary%shortID,MEF90_P2_Lagrange_3DBoundary%shortID)
+         Case (MEF90P1Lagrange3DBoundary%shortID,MEF90P2Lagrange3DBoundary%shortID)
             PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
@@ -725,28 +720,28 @@ Contains
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryFVM(dm,cellID(iEloc),area,centroid,innerNormal,ierr))
                   outerNormal = -innerNormal
-                  Call Element_P_Lagrange_3DBoundary_Vect_Init(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
+                  Call ElementPLagrange3DBoundaryVectInit(dElem(iELoc),area,outerNormal,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
             PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
-         !Case (MEF90_Q1_Lagrange_3D%shortID,MEF90_Q2_Lagrange_3D%shortID,MEF90_Q1_Lagrange_3DBoundary%shortID,MEF90_Q2_Lagrange_3DBoundary%shortID)
+         !Case (MEF90Q1Lagrange3D%shortID,MEF90Q2Lagrange3D%shortID,MEF90Q1Lagrange3DBoundary%shortID,MEF90Q2Lagrange3DBoundary%shortID)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
          Case Default
             Write(*,*) __FUNCT__,': Element type not implemented yet',elemType%name,elemType%shortID
             ierr = PETSC_ERR_SUP
       End Select
-   End Subroutine Element3D_Vect_InitSet
+   End Subroutine Element3DVectInitSet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2D_Scal_Init"
-   Subroutine Element_P_Lagrange_2D_Scal_Init(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+#define __FUNCT__ "ElementPLagrange2DScalInit"
+   Subroutine ElementPLagrange2DScalInit(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
       ! Quadrature rules courtesy of Shawn Walker walker@math.lsu.edu
-      Type(MEF90Element2D_Scal)              :: dElem
+      Type(MEF90Element2DScal),Intent(INOUT) :: dElem
       Type(Mat2D),Intent(IN)                 :: Bt          ! The transposed of transformation matrix
       PetscReal,Intent(IN)                   :: DetBinv     ! The determinant of B^{-1}
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
@@ -954,12 +949,12 @@ Contains
       DeAllocate(Xi,stat=ierr)
       DeAllocate(PhiHat,stat=ierr)
       DeAllocate(GradPhiHat,stat=ierr)
-   End Subroutine Element_P_Lagrange_2D_Scal_Init
+   End Subroutine ElementPLagrange2DScalInit
    
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Scal_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Scal_Init(dElem,l,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Scal),intent(INOUT):: dElem
+#define __FUNCT__ "ElementPLagrange2DBoundaryScalInit"
+   Subroutine ElementPLagrange2DBoundaryScalInit(dElem,l,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+      Type(MEF90Element2DScal),intent(INOUT) :: dElem
       PetscReal,Intent(IN)                   :: l
       Type(Vect2D),Intent(IN)                :: outerNormal
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
@@ -1047,23 +1042,23 @@ Contains
          End Do
       End Do
       DeAllocate(Xi,stat=ierr)
-   End Subroutine Element_P_Lagrange_2DBoundary_Scal_Init                          
+   End Subroutine ElementPLagrange2DBoundaryScalInit                          
       
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2D_Vect_Init"
-   Subroutine Element_P_Lagrange_2D_Vect_Init(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Vect)              :: dElem
+#define __FUNCT__ "ElementPLagrange2DVectInit"
+   Subroutine ElementPLagrange2DVectInit(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+      Type(MEF90Element2DVect),Intent(INOUT) :: dElem
       Type(Mat2D),Intent(IN)                 :: Bt          ! The transposed of transformation matrix
       PetscReal,Intent(IN)                   :: DetBinv     ! The determinant of B^{-1}
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
    
-      Type(MEF90Element2D_Scal)              :: Elem_Scal
+      Type(MEF90Element2DScal)              :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,i,iDof,iG
       
       
-      Call Element_P_Lagrange_2D_Scal_Init(Elem_Scal,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+      Call ElementPLagrange2DScalInit(Elem_Scal,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
 
@@ -1096,24 +1091,24 @@ Contains
          dElem%GradS_BF(i*dim+2,:)%YY = Elem_Scal%Grad_BF(i+1,:)%Y
       End Do
       
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_2D_Vect_Init
+      Call MEF90ElementDestroy(Elem_Scal,ierr)
+   End Subroutine ElementPLagrange2DVectInit
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_2DBoundary_Vect_Init"
-   Subroutine Element_P_Lagrange_2DBoundary_Vect_Init(dElem,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element2D_Vect)              :: dElem
+#define __FUNCT__ "ElementPLagrange2DBoundaryVectInit"
+   Subroutine ElementPLagrange2DBoundaryVectInit(dElem,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+      Type(MEF90Element2DVect),Intent(INOUT) :: dElem
       PetscReal,Intent(IN)                   :: length
       Type(Vect2D),Intent(IN)                :: outerNormal 
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
    
-      Type(MEF90Element2D_Scal)              :: Elem_Scal
+      Type(MEF90Element2DScal)              :: Elem_Scal
       PetscInt                               :: dim = 2 
       PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
-      Call Element_P_Lagrange_2DBoundary_Scal_Init(Elem_Scal,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+      Call ElementPLagrange2DBoundaryScalInit(Elem_Scal,length,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF  = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1136,16 +1131,16 @@ Contains
       End Do
 
       dElem%outerNormal = Elem_Scal%outerNormal
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_2DBoundary_Vect_Init
+      Call MEF90ElementDestroy(Elem_Scal,ierr)
+   End Subroutine ElementPLagrange2DBoundaryVectInit
 
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3D_Scal_Init"
-   Subroutine Element_P_Lagrange_3D_Scal_Init(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+#define __FUNCT__ "ElementPLagrange3DScalInit"
+   Subroutine ElementPLagrange3DScalInit(dElem,Bt,DetBinv,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
-      Type(MEF90Element3D_Scal)              :: dElem
+      Type(MEF90Element3DScal),Intent(INOUT) :: dElem
       Type(Mat3D),Intent(IN)                 :: Bt          ! The transposed of transformation matrix
       PetscReal,Intent(IN)                   :: DetBinv     ! The determinant of B^{-1}
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
@@ -1452,14 +1447,14 @@ Contains
       DeAllocate(Xi,stat=ierr)
       DeAllocate(PhiHat,stat=ierr)
       DeAllocate(GradPhiHat,stat=ierr)
-   End Subroutine Element_P_Lagrange_3D_Scal_Init
+   End Subroutine ElementPLagrange3DScalInit
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Scal_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Scal_Init(dElem,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+#define __FUNCT__ "ElementPLagrange3DBoundaryScalInit"
+   Subroutine ElementPLagrange3DBoundaryScalInit(dElem,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
       ! Compute the quadrature weights and the value of the basis functions and their gradient 
       ! at the quadrature points.
-      Type(MEF90Element3D_Scal)              :: dElem
+      Type(MEF90Element3DScal),Intent(INOUT) :: dElem
       PetscReal,Intent(IN)                   :: area
       Type(Vect3D),Intent(IN)                :: outerNormal
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
@@ -1622,23 +1617,23 @@ Contains
       End Do
      
       DeAllocate(Xi,stat=ierr)
-   End Subroutine Element_P_Lagrange_3DBoundary_Scal_Init
+   End Subroutine ElementPLagrange3DBoundaryScalInit
    
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3D_Vect_Init"
-   Subroutine Element_P_Lagrange_3D_Vect_Init(dElem,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element3D_Vect)              :: dElem
+#define __FUNCT__ "ElementPLagrange3DVectInit"
+   Subroutine ElementPLagrange3DVectInit(dElem,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+      Type(MEF90Element3DVect),Intent(INOUT) :: dElem
       Type(Mat3D),Intent(IN)                 :: Bt
       PetscReal,Intent(IN)                   :: detBinv
       PetscInt,Intent(IN)                    :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
    
-      Type(MEF90Element3D_Scal)              :: Elem_Scal
+      Type(MEF90Element3DScal)              :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,i,iDof,iG
       
       
-      Call Element_P_Lagrange_3D_Scal_Init(Elem_Scal,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
+      Call ElementPLagrange3DScalInit(Elem_Scal,Bt,detBinv,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1681,24 +1676,24 @@ Contains
          dElem%GradS_BF(i*dim+3,:)%YZ = Elem_Scal%Grad_BF(i+1,:)%Y * 0.5_Kr
          dElem%GradS_BF(i*dim+3,:)%ZZ = Elem_Scal%Grad_BF(i+1,:)%Z
       End Do
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_3D_Vect_Init
+      Call MEF90ElementDestroy(Elem_Scal,ierr)
+   End Subroutine ElementPLagrange3DVectInit
 
 #undef __FUNCT__
-#define __FUNCT__ "Element_P_Lagrange_3DBoundary_Vect_Init"
-   Subroutine Element_P_Lagrange_3DBoundary_Vect_Init(dElem,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
-      Type(MEF90Element3D_Vect)              :: dElem
+#define __FUNCT__ "ElementPLagrange3DBoundaryVectInit"
+   Subroutine ElementPLagrange3DBoundaryVectInit(dElem,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+      Type(MEF90Element3DVect),Intent(INOUT) :: dElem
       PetscReal,Intent(IN)                   :: area
       Type(Vect3D),Intent(IN)                :: outerNormal
       PetscInt                               :: dPolynomialOrder,dQuadratureOrder
       PetscErrorCode,Intent(OUT)             :: ierr
    
-      Type(MEF90Element3D_Scal)              :: Elem_Scal
+      Type(MEF90Element3DScal)              :: Elem_Scal
       PetscInt                               :: dim = 3 
       PetscInt                               :: Num_DoF,Nb_Gauss,iDof,iG
       
       
-      Call Element_P_Lagrange_3DBoundary_Scal_Init(Elem_Scal,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
+      Call ElementPLagrange3DBoundaryScalInit(Elem_Scal,area,outerNormal,dPolynomialOrder,dQuadratureOrder,ierr)
       Num_DoF   = Size(Elem_Scal%BF,1) 
       Nb_Gauss = Size(Elem_Scal%BF,2)
       Allocate(dElem%Gauss_C(Nb_Gauss),stat=ierr)
@@ -1721,13 +1716,13 @@ Contains
       End Do
 
       dElem%outerNormal = Elem_Scal%outerNormal
-      Call MEF90Element_Destroy(Elem_Scal,ierr)
-   End Subroutine Element_P_Lagrange_3DBoundary_Vect_Init
+      Call MEF90ElementDestroy(Elem_Scal,ierr)
+   End Subroutine ElementPLagrange3DBoundaryVectInit
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_Destroy"
-   Subroutine Element2D_Scal_Destroy(dElem,ierr)
-      Type(MEF90Element2D_Scal)              :: dElem
+#define __FUNCT__ "Element2DScalDestroy"
+   Subroutine Element2DScalDestroy(dElem,ierr)
+      Type(MEF90Element2DScal),Intent(INOUT) :: dElem
       PetscErrorCode,Intent(OUT)             :: ierr
       
       If (Associated(dElem%BF)) Then
@@ -1739,12 +1734,12 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element2D_Scal_Destroy
+   End Subroutine Element2DScalDestroy
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_Destroy"
-   Subroutine Element2D_Vect_Destroy(dElem,ierr)
-      Type(MEF90Element2D_Vect)              :: dElem
+#define __FUNCT__ "Element2DVectDestroy"
+   Subroutine Element2DVectDestroy(dElem,ierr)
+      Type(MEF90Element2DVect),Intent(INOUT) :: dElem
       PetscErrorCode,Intent(OUT)             :: ierr
       
       If (Associated(dElem%BF)) Then
@@ -1759,12 +1754,12 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element2D_Vect_Destroy
+   End Subroutine Element2DVectDestroy
       
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_Destroy"
-   Subroutine Element3D_Scal_Destroy(dElem,ierr)
-      Type(MEF90Element3D_Scal)              :: dElem
+#define __FUNCT__ "Element3DScalDestroy"
+   Subroutine Element3DScalDestroy(dElem,ierr)
+      Type(MEF90Element3DScal),Intent(INOUT) :: dElem
       PetscErrorCode,Intent(OUT)             :: ierr
       
       If (Associated(dElem%BF)) Then
@@ -1776,12 +1771,12 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element3D_Scal_Destroy
+   End Subroutine Element3DScalDestroy
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Vect_Destroy"
-   Subroutine Element3D_Vect_Destroy(dElem,ierr)
-      Type(MEF90Element3D_Vect)              :: dElem
+#define __FUNCT__ "Element3DVectDestroy"
+   Subroutine Element3DVectDestroy(dElem,ierr)
+      Type(MEF90Element3DVect),Intent(INOUT) :: dElem
       PetscErrorCode,Intent(OUT)             :: ierr
       If (Associated(dElem%BF)) Then
          DeAllocate(dElem%BF,stat=ierr)
@@ -1795,62 +1790,62 @@ Contains
       If (Associated(dElem%Gauss_C)) Then
          DeAllocate(dElem%Gauss_C,stat=ierr)
       End If
-   End Subroutine Element3D_Vect_Destroy
+   End Subroutine Element3DVectDestroy
    
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Scal_DestroySet"
-   Subroutine Element2D_Scal_DestroySet(dElem,ierr)
-      Type(MEF90Element2D_Scal),dimension(:),Pointer    :: dElem
+#define __FUNCT__ "Element2DScalDestroySet"
+   Subroutine Element2DScalDestroySet(dElem,ierr)
+      Type(MEF90Element2DScal),dimension(:),Pointer    :: dElem
       PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
+         Call MEF90ElementDestroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
-   End Subroutine Element2D_Scal_DestroySet
+   End Subroutine Element2DScalDestroySet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element2D_Vect_DestroySet"
-   Subroutine Element2D_Vect_DestroySet(dElem,ierr)
-      Type(MEF90Element2D_Vect),dimension(:),Pointer    :: dElem
+#define __FUNCT__ "Element2DVectDestroySet"
+   Subroutine Element2DVectDestroySet(dElem,ierr)
+      Type(MEF90Element2DVect),dimension(:),Pointer    :: dElem
       PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
+         Call MEF90ElementDestroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
-   End Subroutine Element2D_Vect_DestroySet
+   End Subroutine Element2DVectDestroySet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Scal_DestroySet"
-   Subroutine Element3D_Scal_DestroySet(dElem,ierr)
-      Type(MEF90Element3D_Scal),dimension(:),Pointer    :: dElem
+#define __FUNCT__ "Element3DScalDestroySet"
+   Subroutine Element3DScalDestroySet(dElem,ierr)
+      Type(MEF90Element3DScal),dimension(:),Pointer    :: dElem
       PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt                                          :: cell
       
       Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
+         Call MEF90ElementDestroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
-   End Subroutine Element3D_Scal_DestroySet
+   End Subroutine Element3DScalDestroySet
 
 #undef __FUNCT__
-#define __FUNCT__ "Element3D_Vect_DestroySet"
-   Subroutine Element3D_Vect_DestroySet(dElem,ierr)
-      Type(MEF90Element3D_Vect),dimension(:),Pointer    :: dElem
+#define __FUNCT__ "Element3DVectDestroySet"
+   Subroutine Element3DVectDestroySet(dElem,ierr)
+      Type(MEF90Element3DVect),dimension(:),Pointer    :: dElem
       PetscErrorCode,Intent(OUT)                        :: ierr
       
       PetscInt                                          :: cell
         
       Do cell = 1, size(dElem)
-         Call MEF90Element_Destroy(dElem(cell),ierr)
+         Call MEF90ElementDestroy(dElem(cell),ierr)
       End Do
       DeAllocate(dElem,stat=ierr)
-   End Subroutine Element3D_Vect_DestroySet
+   End Subroutine Element3DVectDestroySet
    
 End Module m_MEF90_Elements

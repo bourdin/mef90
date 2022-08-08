@@ -66,7 +66,7 @@ Contains
       Type(MEF90DefMechVertexSetOptions_Type),Pointer    :: vertexSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemDamageType
       PetscInt                                           :: p,dof,c,dim,numDof
       PetscInt                                           :: nVal
       PetscReal,Dimension(:),Pointer                     :: nullPtr
@@ -183,8 +183,8 @@ Contains
             End If
             !!! Allocate elements 
             QuadratureOrder = max(2*elemDisplacementType%order,split%damageOrder + split%strainOrder)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(residualLoc(ElemDisplacementType%numDof))
@@ -372,8 +372,8 @@ Contains
             End If
             DeAllocate(residualLoc)
 
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemDamage,ierr)
+            Call MEF90ElementDestroy(elemDisplacement,ierr)
+            Call MEF90ElementDestroy(elemDamage,ierr)
          End If 
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -502,7 +502,7 @@ Contains
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90DefMechVertexSetOptions_Type),Pointer    :: vertexSetOptions
-      Type(MEF90Element_Type)                            :: ElemDisplacementType,ElemDamageType
+      Type(MEF90ElementType)                            :: ElemDisplacementType,ElemDamageType
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
       PetscInt                                           :: cell,v,numBC,numDoF,numCell,c,dim
@@ -586,8 +586,8 @@ Contains
             QuadratureOrder = split%damageOrder + split%strainOrder
 
             !!! Allocate elements 
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(Aloc(ElemDisplacementType%numDof,ElemDisplacementType%numDof))
@@ -678,8 +678,8 @@ Contains
             If (Associated(MEF90DefMechCtx%temperature)) Then
                DeAllocate(temperatureDof)
             End If
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemDamage,ierr)
+            Call MEF90ElementDestroy(elemDisplacement,ierr)
+            Call MEF90ElementDestroy(elemDamage,ierr)
             DeAllocate(Aloc)    
          End If ! coDim
 
@@ -769,7 +769,7 @@ Contains
       PetscInt                                           :: set,QuadratureOrder,numCell
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
-      Type(MEF90Element_Type)                            :: elemDisplacementType
+      Type(MEF90ElementType)                            :: elemDisplacementType
       Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       PetscReal                                          :: myWork,myWorkSet
@@ -798,7 +798,7 @@ Contains
 
          !!! Call proper local assembly depending on the type of damage law
          QuadratureOrder = elemDisplacementType%order
-         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
 
          !!! Force work
          If (globalOptions%forceScaling /= MEF90Scaling_Null) Then
@@ -810,7 +810,7 @@ Contains
             Call MEF90ElasticityPressureWorkSetCell(mywork,xSec,MEF90DefMechCtx%CellDMVect,pressureForceSec,setIS,elemDisplacement,elemDisplacementType,ierr)
          End If
          
-         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call MEF90ElementDestroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
          Call MPI_AllReduce(myWork,myWorkSet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
@@ -846,7 +846,7 @@ Contains
       PetscInt                                           :: set,QuadratureOrder,numCell
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
-      Type(MEF90Element_Type)                            :: elemDisplacementType
+      Type(MEF90ElementType)                            :: elemDisplacementType
       Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       PetscReal                                          :: mycohesiveEnergy,mycohesiveEnergySet
@@ -873,11 +873,11 @@ Contains
 
          !!! Call proper local assembly depending on the type of damage law
          QuadratureOrder = elemDisplacementType%order
-         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
 
          Call MEF90ElasticityCohesiveEnergySet(mycohesiveEnergy,xSec,MEF90DefMechCtx%CellDMVect,boundaryDisplacementSec,setIS,elemDisplacement,elemDisplacementType,ierr)
 
-         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call MEF90ElementDestroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 
          Call MPI_AllReduce(mycohesiveEnergy,mycohesiveEnergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
@@ -917,7 +917,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemScalType
       PetscReal                                          :: myenergy,myenergySet
 
       !!! Get Section and scatter associated with each field
@@ -966,12 +966,12 @@ Contains
                Else
                   QuadratureOrder = 2 * (elemDisplacementType%order - 1)
                End If
-               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90PlasticityEnergySet(myenergy,xSec,damageSec,cumulatedDissipatedPlasticEnergySec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS, &
                                              elemDisplacement,elemDisplacementType,elemScal,elemScalType,matpropSet,ierr)
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemScal,ierr)
+               Call MEF90ElementDestroy(elemDisplacement,ierr)
+               Call MEF90ElementDestroy(elemScal,ierr)
             End If
          Case default
             Print*,__FUNCT__,': Unimplemented damage Type, only AT1Elastic and AT2Elastic implement',cellSetOptions%damageType
@@ -1026,7 +1026,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemScalType
       PetscScalar                                        :: myenergy,myenergySet
       PetscReal,Dimension(:),Pointer                     :: xloc,damageLoc,temperatureLoc,plasticStrainLoc
       PetscReal                                          :: EEDPlus,EEDMinus
@@ -1081,8 +1081,8 @@ Contains
                Call MEF90DefMechGetATModel(cellSetOptions,ATModel,isElastic)
                Call MEF90DefMechGetSplit(cellSetOptions,Split)
                quadratureOrder = max(2 * elemScalType%order,ATModel%aOrder + Split%strainOrder + Split%damageOrder)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,cellIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,cellIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,cellIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,cellIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
                !!! Allocate storage for fields at dof and Gauss points
                Allocate(xloc(elemDisplacementType%numDof))
@@ -1151,8 +1151,8 @@ Contains
                DeAllocate(xloc)
                DeAllocate(temperatureloc)
                DeAllocate(damageloc)
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemScal,ierr)
+               Call MEF90ElementDestroy(elemDisplacement,ierr)
+               Call MEF90ElementDestroy(elemScal,ierr)
             End If   
             Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
             Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
@@ -1200,7 +1200,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemDamageType
       PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
@@ -1261,8 +1261,8 @@ Contains
 
             !!! Allocate elements 
             QuadratureOrder = max(2*elemDisplacementType%order,split%damageOrder + split%strainOrder)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
             !!! Allocate storage for fields at dof and Gauss points
             Allocate(displacementDof(ElemDisplacementType%numDof))
@@ -1319,8 +1319,8 @@ Contains
                stressCellPtr = stressCell
                Call SectionRealUpdate(stressSec,cellID(cell),stressCellPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
             End Do ! cell
-            Call MEF90Element_Destroy(elemDamage,ierr)
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
+            Call MEF90ElementDestroy(elemDamage,ierr)
+            Call MEF90ElementDestroy(elemDisplacement,ierr)
          End If ! cell coDim
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -1536,7 +1536,7 @@ Contains
       PetscReal                                          :: CrackPressureCell
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemDamageType
       PetscInt                                           :: p,dof,c,dim,numDof
       PetscInt                                           :: nVal
       PetscReal,Dimension(:),Pointer                     :: nullPtr
@@ -1640,8 +1640,8 @@ Contains
 
             !!! Allocate elements 
             quadratureOrder = max(2 * elemDamageType%order,ATModel%aOrder + Split%strainOrder + Split%damageOrder)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Do cell = 1,size(cellID)
                !!! Get value of each field at each Dof of the local element
                Call SectionRealRestrictClosure(displacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementDof,ierr);CHKERRQ(ierr)
@@ -1780,8 +1780,8 @@ Contains
             End If
             DeAllocate(residualLoc)
 
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemDamage,ierr)
+            Call MEF90ElementDestroy(elemDisplacement,ierr)
+            Call MEF90ElementDestroy(elemDamage,ierr)
          End If ! size(cellID) >0
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
@@ -1897,7 +1897,7 @@ Contains
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90DefMechVertexSetOptions_Type),Pointer    :: vertexSetOptions
-      Type(MEF90Element_Type)                            :: ElemDisplacementType,ElemDamageType
+      Type(MEF90ElementType)                            :: ElemDisplacementType,ElemDamageType
       PetscInt,Dimension(:),Pointer                      :: setIdx,bcIdx,Cone
       Type(IS)                                           :: bcIS
       PetscInt                                           :: cell,v,numBC,numDoF,numCell,c,dim
@@ -1974,8 +1974,8 @@ Contains
             
             !!! Allocate elements 
             quadratureOrder = max(2 * elemDamageType%order,ATModel%aOrder + Split%strainOrder + Split%damageOrder)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemDamage,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             Do cell = 1,size(cellID)
                !!! Get value of each field at each Dof of the local element
                Call SectionRealRestrictClosure(displacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementDof,ierr);CHKERRQ(ierr)
@@ -2094,8 +2094,8 @@ Contains
             If (Associated(MEF90DefMechCtx%temperature)) Then
                DeAllocate(temperatureDof)
             End If
-            Call MEF90Element_Destroy(elemDisplacement,ierr)
-            Call MEF90Element_Destroy(elemDamage,ierr)
+            Call MEF90ElementDestroy(elemDisplacement,ierr)
+            Call MEF90ElementDestroy(elemDamage,ierr)
             DeAllocate(Aloc)    
          End If 
          Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
@@ -2184,7 +2184,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(SectionReal)                                  :: DamageSec
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      Type(MEF90Element_Type)                            :: elemScalType
+      Type(MEF90ElementType)                            :: elemScalType
       PetscReal                                          :: myenergy,myenergySet
       PetscReal,Dimension(:),Pointer                     :: DamageLoc
       PetscReal                                          :: DamageGauss
@@ -2214,7 +2214,7 @@ Contains
             Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),cellIS,ierr);CHKERRQ(iErr)
             Call MEF90DefMechGetATModel(cellSetOptions,ATModel,isElastic)
             QuadratureOrder = max(ATmodel%wOrder,2*(elemScalType%order-1))
-            Call MEF90Element_Create(MEF90DefMechCtx%DMScal,cellIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+            Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,cellIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
             !!! Do the cell based computations
             C1 =  matpropSet%fractureToughness / matpropSet%internalLength * 0.25_Kr / ATModel%cw
             C2 = (matpropSet%fractureToughness * matpropSet%internalLength * 0.25_Kr / ATModel%cw) * matPropSet%toughnessAnisotropyMatrix
@@ -2238,7 +2238,7 @@ Contains
             End If   
 
             Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
-            Call MEF90Element_Destroy(elemScal,ierr)
+            Call MEF90ElementDestroy(elemScal,ierr)
             Call ISDestroy(cellIS,ierr);CHKERRQ(ierr)
             Call MPI_AllReduce(myenergy,myenergySet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
             energy(set) = myenergySet
@@ -2273,7 +2273,7 @@ Contains
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
-      Type(MEF90Element_Type)                            :: elemDisplacementType,elemScalType
+      Type(MEF90ElementType)                            :: elemDisplacementType,elemScalType
       Type(MEF90DefMechGlobalOptions_Type),Pointer       :: globalOptions
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       PetscReal                                          :: myCrackVolume,myCrackVolumeSet
@@ -2309,8 +2309,8 @@ Contains
          elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
          QuadratureOrder = 2 * (elemScalType%order - 1)
-         Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-         Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
 
          If (elemScalType%coDim == 0) Then
             Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
@@ -2340,8 +2340,8 @@ Contains
             Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
          End If
 
-         Call MEF90Element_Destroy(elemScal,ierr)
-         Call MEF90Element_Destroy(elemDisplacement,ierr)
+         Call MEF90ElementDestroy(elemScal,ierr)
+         Call MEF90ElementDestroy(elemDisplacement,ierr)
          Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
          Call MPI_AllReduce(myCrackVolume,myCrackVolumeSet,1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
          CrackVolume(set) = CrackVolume(set) + myCrackVolumeSet

@@ -214,8 +214,8 @@ Contains
       Type(IS)                                           :: CellSetGlobalIS,setIS
       PetscInt,Dimension(:),Pointer                      :: setID,cellID
       PetscInt                                           :: set,cell
-      Type(MEF90Element_Type)                            :: ElemType
-      Type(MEF90Element3D_Scal),Dimension(:),Pointer     :: Elem
+      Type(MEF90ElementType)                            :: ElemType
+      Type(MEF90Element3DScal),Dimension(:),Pointer     :: Elem
 
       i1 = 0.0_Kr
       i2 = 0.0_Kr
@@ -231,7 +231,7 @@ Contains
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
 
          ElemType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-         Call MEF90Element_Create(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
          !!! Integrate
          numDof   = ElemType%numDof
          numGauss = size(Elem(1)%BF,2)
@@ -251,7 +251,7 @@ Contains
                i1 = i1 + Elem(cell)%Gauss_C(iGauss) * X**i * Y**j * Z**k
             End Do
          End Do
-         Call MEF90Element_Destroy(elem,ierr)
+         Call MEF90ElementDestroy(elem,ierr)
          DeAllocate(coordDof)
          Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       End Do
@@ -279,8 +279,8 @@ Contains
       Type(IS)                                           :: CellSetGlobalIS,setIS
       PetscInt,Dimension(:),Pointer                      :: setID,cellID
       PetscInt                                           :: set,cell
-      Type(MEF90Element_Type)                            :: ElemType
-      Type(MEF90Element2D_Scal),Dimension(:),Pointer     :: Elem
+      Type(MEF90ElementType)                            :: ElemType
+      Type(MEF90Element2DScal),Dimension(:),Pointer     :: Elem
 
       i1 = 0.0_Kr
       i2 = 0.0_Kr
@@ -296,7 +296,7 @@ Contains
          Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
 
          ElemType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-         Call MEF90Element_Create(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+         Call MEF90ElementCreate(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
          !!! Integrate
          numDof   = ElemType%numDof
          numGauss = size(Elem(1)%BF,2)
@@ -314,7 +314,7 @@ Contains
                i1 = i1 + Elem(cell)%Gauss_C(iGauss) * X**i * Y**j
             End Do
          End Do
-         Call MEF90Element_Destroy(elem,ierr)
+         Call MEF90ElementDestroy(elem,ierr)
          DeAllocate(coordDof)
          Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
       End Do

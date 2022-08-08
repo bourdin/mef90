@@ -745,12 +745,12 @@ contains
       Type(IS)                                           :: cellSetGlobalIS,setIS
       PetscInt,dimension(:),Pointer                      :: setID,cellID
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
-      Type(MEF90Element_Type)                            :: elemDisplacementType
+      Type(MEF90ElementType)                            :: elemDisplacementType
       Type(MEF90_MATPROP),pointer                        :: matPropSet
       Type(SectionReal)                                  :: xSec,temperatureSec
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      Type(MEF90Element_Type)                            :: elemScalType
+      Type(MEF90ElementType)                            :: elemScalType
 
       Type(SectionReal)                                  :: damageSec
       PetscReal                                          :: damageCellAvg,Stiffness
@@ -937,8 +937,8 @@ contains
 
                Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
                QuadratureOrder = 2 * (elemDisplacementType%order - 1)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
-               Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
+               Call MEF90ElementCreate(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
                Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Allocate(damageloc(elemScalType%numDof))
@@ -1016,8 +1016,8 @@ contains
                   Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
                End Do !cell
-               Call MEF90Element_Destroy(elemDisplacement,ierr)
-               Call MEF90Element_Destroy(elemScal,ierr)
+               Call MEF90ElementDestroy(elemDisplacement,ierr)
+               Call MEF90ElementDestroy(elemScal,ierr)
                Call SNLPDelete(s)
                DeAllocate(damageLoc)
             End If ! set

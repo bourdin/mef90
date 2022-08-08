@@ -2,9 +2,9 @@
 #define MEF90_APPEND(a,b)       PASS(a)b
 
 #if MEF90_DIM == 3
-#define MEF90_ELEMENT_SCAL  MEF90Element3D_Scal
-#define MEF90_ELEMENT_VECT  MEF90Element3D_Vect
-#define MEF90_ELEMENT_ELAST MEF90Element3D_Vect
+#define MEF90_ELEMENT_SCAL  MEF90Element3DScal
+#define MEF90_ELEMENT_VECT  MEF90Element3DVect
+#define MEF90_ELEMENT_ELAST MEF90Element3DVect
 #define MEF90_VECT          Vect3D
 #define MEF90_MAT           Mat3D
 #define MEF90_MATS          MatS3D
@@ -19,9 +19,9 @@
 #define MEF90_MAT_IDENTITY  MEF90Mat3DIdentity
 #define MEF90_MATS_IDENTITY MEF90MatS3DIdentity
 #else
-#define MEF90_ELEMENT_SCAL  MEF90Element2D_Scal
-#define MEF90_ELEMENT_VECT  MEF90Element2D_Vect
-#define MEF90_ELEMENT_ELAST MEF90Element2D_Vect
+#define MEF90_ELEMENT_SCAL  MEF90Element2DScal
+#define MEF90_ELEMENT_VECT  MEF90Element2DVect
+#define MEF90_ELEMENT_ELAST MEF90Element2DVect
 #define MEF90_VECT          Vect2D
 #define MEF90_MAT           Mat2D
 #define MEF90_MATS          MatS2D

@@ -1004,7 +1004,7 @@ Contains
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
       Type(MEF90DefMechCellSetOptions_Type)                 :: myDefaultCellSetOptions
-      Type(MEF90Element_Type),Dimension(:),Pointer          :: ElemTypeScal,ElemTypeElast
+      Type(MEF90ElementType),Dimension(:),Pointer          :: ElemTypeScal,ElemTypeElast
       Type(IS)                                              :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set

@@ -44,7 +44,7 @@ Contains
     Subroutine MEF90SectionAllocateDof(dm,setType,elemType,numComponents,section,ierr)
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
-        Type(MEF90Element_Type),Intent(IN) :: elemType
+        Type(MEF90ElementType),Intent(IN) :: elemType
         PetscInt,Intent(IN)                :: numComponents
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscErrorCode,Intent(INOUT)       :: ierr
@@ -75,7 +75,7 @@ Contains
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
         PetscInt,Intent(IN)                :: setID
-        Type(MEF90Element_Type),Intent(IN) :: elemType
+        Type(MEF90ElementType),Intent(IN) :: elemType
         PetscInt,Intent(IN)                :: numComponents
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscErrorCode,Intent(INOUT)       :: ierr
@@ -99,7 +99,7 @@ Contains
                     PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
                     If (elemType%numDofs(depth+1) > 0) Then
                         PetscCall(PetscSectionSetDof(section,closure(p),elemType%numDofs(depth+1)*numComponents,ierr))
-                        PetscCall(PetscSectionSetFieldDof(section,closure(p),[0],elemType%numDofs(depth+1)*numComponents,ierr))
+                        !PetscCall(PetscSectionSetFieldDof(section,closure(p),[0],elemType%numDofs(depth+1)*numComponents,ierr))
                     End If
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
@@ -178,7 +178,7 @@ Contains
             numConstraints = count(table(p,:))
             If (numConstraints > 0) Then
                 PetscCall(PetscSectionSetConstraintDof(section,p-1,numConstraints,ierr))
-                PetscCall(PetscSectionSetFieldConstraintDof(section,p-1,[0],numConstraints,ierr))
+                !PetscCall(PetscSectionSetFieldConstraintDof(section,p-1,[0],numConstraints,ierr))
             End If
         End Do
 

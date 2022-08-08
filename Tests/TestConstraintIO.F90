@@ -9,12 +9,12 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)        :: MEF90GlobalOptions_default
     Type(tDM),target                        :: dm,dmU,dmU0
     PetscBool                               :: interpolate = PETSC_TRUE
-    Character(len=MEF90MXSTRLEN)           :: IOBuffer
+    Character(len=MEF90MXSTRLEN)            :: IOBuffer
     PetscEnum                               :: setType
 
-    Type(MEF90Element_Type)                 :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)                  :: cellSetElementType,faceSetElementType
     PetscInt                                :: numComponents, numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
-    Character(len=MEF90MXSTRLEN),allocatable       :: nodalVarName(:), cellVarName(:), gVarName(:)
+    Character(len=MEF90MXSTRLEN),allocatable:: nodalVarName(:), cellVarName(:), gVarName(:)
     PetscInt                                :: set, order = 1, nroots, nleaves
     PetscBool                               :: flg
     PetscMPIInt                             :: rank = 0
@@ -37,7 +37,7 @@ Implicit NONE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
-    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamily_Lagrange
+    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
@@ -93,11 +93,11 @@ Implicit NONE
     If (dim == 2) Then
         Select case(order)
         case(1)
-            cellSetElementType = MEF90_P1_Lagrange_2D
-            faceSetElementType = MEF90_P1_Lagrange_2DBoundary
+            cellSetElementType = MEF90P1Lagrange2D
+            faceSetElementType = MEF90P1Lagrange2DBoundary
         case(2)
-            cellSetElementType = MEF90_P2_Lagrange_2D
-            faceSetElementType = MEF90_P2_Lagrange_2DBoundary
+            cellSetElementType = MEF90P2Lagrange2D
+            faceSetElementType = MEF90P2Lagrange2DBoundary
         Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
@@ -105,20 +105,20 @@ Implicit NONE
     Else If (dim == 3) Then
         Select case(order)
             case(1)
-                cellSetElementType = MEF90_P1_Lagrange_3D
-                faceSetElementType = MEF90_P1_Lagrange_3DBoundary
+                cellSetElementType = MEF90P1Lagrange3D
+                faceSetElementType = MEF90P1Lagrange3DBoundary
             case(2)
-                cellSetElementType = MEF90_P2_Lagrange_3D
-                faceSetElementType = MEF90_P2_Lagrange_3DBoundary
+                cellSetElementType = MEF90P2Lagrange3D
+                faceSetElementType = MEF90P2Lagrange3DBoundary
             Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     End If
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU0,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
     !!! Allocate constraints.
@@ -127,46 +127,46 @@ Implicit NONE
     !!! We can address this later if needed
     !!! The whole constraint setup takes 2 passes: 
     !!!   1. Fill the constraint truth table (typically from data in CS/FS/ES/VS bag)
-    !!!      This is done in MEF90_SetupConstraintTableSet
+    !!!      This is done in MEF90SetupConstraintTableSet
     !!!   2. Allocate space in the section, call PetscSectionSetup, and set the constraint indices
-    !!!      for each constrained dof. This is done in MEF90_SectionAllocateConstraint
+    !!!      for each constrained dof. This is done in MEF90SectionAllocateConstraint
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
     Allocate(ConstraintTruthTableU(pEnd,numComponents),source=.FALSE.)
     Allocate(ConstraintTruthTableU0(pEnd,numComponents),source=.FALSE.)
 
     Allocate(constraints(numComponents))
 
-    setType = MEF90_DMPlexFaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90FaceSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
 
-    setType = MEF90_DMPlexVertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90VertexSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
     DeAllocate(constraints)
 
-    PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
 
     DeAllocate(ConstraintTruthTableU)
     DeAllocate(ConstraintTruthTableU0)
@@ -196,11 +196,11 @@ Implicit NONE
     !     PetscCallA(PetscObjectDereference(natSFU0, ierr))
     ! end if
 
-    PetscCallA(MEF90_CreateLocalToConstraintSF(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
-    ! PetscCallA(MEF90_CreateLocalToIOSF(MEF90Ctx,dmU,lioSF,ierr))
-    ! PetscCallA(MEF90_CreateIOToLocalSF(MEF90Ctx,dmU,iolSF,ierr))
-    ! PetscCallA(MEF90_CreateLocalToIOSF(MEF90Ctx,dmU0,lioBSF,ierr))
-    ! PetscCallA(MEF90_CreateIOToLocalSF(MEF90Ctx,dmU0,iolBSF,ierr))
+    PetscCallA(MEF90CreateLocalToConstraintSF(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
+    ! PetscCallA(MEF90CreateLocalToIOSF(MEF90Ctx,dmU,lioSF,ierr))
+    ! PetscCallA(MEF90CreateIOToLocalSF(MEF90Ctx,dmU,iolSF,ierr))
+    ! PetscCallA(MEF90CreateLocalToIOSF(MEF90Ctx,dmU0,lioBSF,ierr))
+    ! PetscCallA(MEF90CreateIOToLocalSF(MEF90Ctx,dmU0,iolBSF,ierr))
 
     ! PetscCallA(DMGetCoordinatesLocal(dmU,locCoord,ierr))
     ! PetscCallA(DMGetLocalVector(dmU,locVec,ierr))
@@ -215,7 +215,7 @@ Implicit NONE
 
     ! PetscCallA(VecView(locVec,PETSC_VIEWER_STDOUT_SELF,ierr))
 
-    ! PetscCallA(MEF90_VecReorderingSF(locVecB,locVec,clSF,ierr))
+    ! PetscCallA(MEF90VecReorderingSF(locVecB,locVec,clSF,ierr))
 
     ! PetscCallMPIA(MPI_Barrier(PETSC_COMM_WORLD,ierr))
 
@@ -225,7 +225,7 @@ Implicit NONE
     ! PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,iovec,ierr))
     ! PetscCallA(PetscObjectSetName(iovec,"U",ierr))
 
-    ! PetscCallA(MEF90_VecReorderingSF(locVec,ioVec,lioSF,ierr))
+    ! PetscCallA(MEF90VecReorderingSF(locVec,ioVec,lioSF,ierr))
 
     ! PetscCallA(VecView(ioVec,PETSC_VIEWER_STDOUT_WORLD,ierr))
 

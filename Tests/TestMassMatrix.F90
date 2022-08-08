@@ -14,7 +14,7 @@ Program  TestMassMatrix
 
     PetscInt                            :: numComponents
     PetscInt                            :: set
-    Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)             :: cellSetElementType,faceSetElementType
     type(tIS)                           :: setIS
     PetscInt,Dimension(:),pointer       :: setID
     PetscInt                            :: dim,pStart,pEnd,order = 1
@@ -68,7 +68,7 @@ Program  TestMassMatrix
     If (dim == 2) Then
         Select case(order)
         case(1)
-            cellSetElementType = MEF90_P1_Lagrange_2D
+            cellSetElementType = MEF90P1Lagrange2D
             faceSetElementType = MEF90_P1_Lagrange_2DBoundary
         case(2)
             cellSetElementType = MEF90_P2_Lagrange_2D
@@ -166,8 +166,8 @@ Program  TestMassMatrix
 
 
     elementCreate: Block
-        Type(MEF90Element2D_Vect),dimension(:),Pointer  :: elem2D
-        Type(MEF90Element3D_Vect),dimension(:),Pointer  :: elem3D
+        Type(MEF90Element2DVect),dimension(:),Pointer  :: elem2D
+        Type(MEF90Element3DVect),dimension(:),Pointer  :: elem3D
         PetscInt                                        :: quadratureOrder = 2
         Type(tIS)                                       :: setPointIS
 
@@ -177,10 +177,10 @@ Program  TestMassMatrix
         Do set = 1,size(setID)
             PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
             If (dim == 2) Then
-                PetscCallA(MEF90Element_Create(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
+                PetscCallA(MEF90ElementCreate(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem2D,cellSetElementType,ierr))
             Else
-                PetscCallA(MEF90Element_Create(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
+                PetscCallA(MEF90ElementCreate(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem3D,cellSetElementType,ierr))
             End If
             PetscCallA(ISDestroy(setPointIS,ierr))

@@ -30,7 +30,7 @@ Contains
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-      Type(MEF90Element_Type),Intent(IN)              :: elemType
+      Type(MEF90ElementType),Intent(IN)              :: elemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       Type(tIS)                                       :: setPointIS

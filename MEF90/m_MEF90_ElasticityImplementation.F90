@@ -94,7 +94,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -143,7 +143,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: A
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -196,7 +196,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       PetscReal,Intent(IN)                               :: alpha
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -250,7 +250,7 @@ Contains
       Type(MEF90_MATS),Intent(IN)                        :: e0
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -298,7 +298,7 @@ Contains
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       Type(MEF90_MATS)                                   :: e0_elem
@@ -349,7 +349,7 @@ Contains
       Type(MEF90_MATS),Intent(IN)                        :: K0 ! The inelastic strain is e0.K0
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -400,7 +400,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType,elemScalType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType,elemScalType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -452,7 +452,7 @@ Contains
       Type(MEF90_VECT),Intent(IN)                        :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -498,7 +498,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -546,7 +546,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -598,7 +598,7 @@ Contains
       PetscReal,Intent(IN)                               :: pressure
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -643,7 +643,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: pressureSec
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -688,9 +688,9 @@ Contains
       Type(SectionReal),Intent(IN)                       :: pressureSec
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType
+      Type(MEF90ElementType),Intent(IN)                 :: elemDisplacementType
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemPressure
-      Type(MEF90Element_Type),Intent(IN)                 :: elemPressureType
+      Type(MEF90ElementType),Intent(IN)                 :: elemPressureType
       PetscErrorCode,Intent(OUT)                         :: ierr
       
       PetscInt,Dimension(:),Pointer                      :: cellID
@@ -745,7 +745,7 @@ Contains
       Type(MEF90_VECT),Intent(IN)                        :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer     :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc
@@ -794,7 +794,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,floc
@@ -845,7 +845,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: F
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,floc
@@ -897,7 +897,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: x0
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,x0loc
@@ -947,7 +947,7 @@ Contains
       Type(SectionReal),Intent(IN)                       :: P
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elem
-      Type(MEF90Element_Type),Intent(IN)                 :: elemType
+      Type(MEF90ElementType),Intent(IN)                 :: elemType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,ploc
@@ -1000,7 +1000,7 @@ Contains
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      Type(MEF90ElementType),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,plasticStrainLoc
@@ -1083,7 +1083,7 @@ Contains
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemScal
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemScalType
+      Type(MEF90ElementType),Intent(IN)                 :: elemDisplacementType,elemScalType
       PetscReal,Intent(IN)                               :: CoefficientLinSoft
       PetscErrorCode,Intent(OUT)                         :: ierr
 
@@ -1201,7 +1201,7 @@ Contains
       Type(MEF90_MATS),Intent(IN)                        :: ThermalExpansion
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      Type(MEF90ElementType),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
       PetscErrorCode,Intent(OUT)                         :: ierr
 
       PetscReal,Dimension(:),Pointer                     :: xloc,temperatureLoc,InelasticStrainPtr
@@ -1289,7 +1289,7 @@ Contains
       Type(IS),Intent(IN)                                :: cellIS
       Type(MEF90_ELEMENT_ELAST), Dimension(:), Pointer   :: elemDisplacement
       Type(MEF90_ELEMENT_SCAL), Dimension(:), Pointer    :: elemTemperature
-      Type(MEF90Element_Type),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
+      Type(MEF90ElementType),Intent(IN)                 :: elemDisplacementType,elemTemperatureType
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       PetscErrorCode,Intent(OUT)                         :: ierr
 

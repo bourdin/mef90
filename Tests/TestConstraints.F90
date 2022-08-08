@@ -219,7 +219,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
-    Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)             :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents
     PetscInt                            :: set
     type(tIS)                           :: setIS
@@ -240,7 +240,7 @@ Implicit NONE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
-    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamily_Lagrange
+    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
 
@@ -277,34 +277,34 @@ Implicit NONE
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
     PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
     If (dim == 2) Then
-        Select Case(order)
-        Case(1)
-            cellSetElementType = MEF90_P1_Lagrange_2D
-            faceSetElementType = MEF90_P1_Lagrange_2DBoundary
-        Case(2)
-            cellSetElementType = MEF90_P2_Lagrange_2D
-            faceSetElementType = MEF90_P2_Lagrange_2DBoundary
+        Select case(order)
+        case(1)
+            cellSetElementType = MEF90P1Lagrange2D
+            faceSetElementType = MEF90P1Lagrange2DBoundary
+        case(2)
+            cellSetElementType = MEF90P2Lagrange2D
+            faceSetElementType = MEF90P2Lagrange2DBoundary
         Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     Else If (dim == 3) Then
-        Select Case(order)
-            Case(1)
-                cellSetElementType = MEF90_P1_Lagrange_3D
-                faceSetElementType = MEF90_P1_Lagrange_3DBoundary
-            Case(2)
-                cellSetElementType = MEF90_P2_Lagrange_3D
-                faceSetElementType = MEF90_P2_Lagrange_3DBoundary
+        Select case(order)
+            case(1)
+                cellSetElementType = MEF90P1Lagrange3D
+                faceSetElementType = MEF90P1Lagrange3DBoundary
+            case(2)
+                cellSetElementType = MEF90P2Lagrange3D
+                faceSetElementType = MEF90P2Lagrange3DBoundary
             Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     End If
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,sectionU0,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
 
 
     !!! Allocate constraints.
@@ -313,46 +313,46 @@ Implicit NONE
     !!! We can address this later if needed
     !!! The whole constraint setup takes 2 passes: 
     !!!   1. Fill the constraint truth table (typically from data in CS/FS/ES/VS bag)
-    !!!      This is done in MEF90_SetupConstraintTableSet
+    !!!      This is done in MEF90SetupConstraintTableSet
     !!!   2. Allocate space in the section, call PetscSectionSetup, and set the constraint indices
-    !!!      for each constrained dof. This is done in MEF90_SectionAllocateConstraint
+    !!!      for each constrained dof. This is done in MEF90SectionAllocateConstraint
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
     Allocate(ConstraintTruthTableU(pEnd,numComponents),source=.FALSE.)
     Allocate(ConstraintTruthTableU0(pEnd,numComponents),source=.FALSE.)
 
     Allocate(constraints(numComponents))
 
-    setType = MEF90_DMPlexFaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90FaceSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
 
-    setType = MEF90_DMPlexVertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90VertexSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
     DeAllocate(constraints)
 
-    PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
-    PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
+    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
+    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
 
     DeAllocate(ConstraintTruthTableU)
     DeAllocate(ConstraintTruthTableU0)
@@ -408,7 +408,7 @@ Implicit NONE
     PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
 
     PetscCall(VecSet(Uloc2,-33.33_Kr,ierr))
-    PetscCall(MEF90_VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
+    PetscCall(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
     PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
 
 

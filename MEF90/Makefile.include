@@ -18,14 +18,3 @@ MEF90_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_NormsImplementation_MEF90Element3D_Scal.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_NormsImplementation_MEF90Element3D_Vect.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_EXO.o
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DiffusionImplementation_2D.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DiffusionImplementation_3D.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DiffusionInterface.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_ElasticityImplementation_2D.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_ElasticityImplementation_3D.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_ElasticityInterface.o \
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageImplementation_2D.o\
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageImplementation_3D.o\
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_GradDamageInterface.o\
-#             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Norm.o \
-

@@ -86,7 +86,7 @@ contains
    PetscInt,dimension(:),Pointer                      :: setID,cellID
    Type(MEF90DefMechCellSetOptions_Type),pointer      :: cellSetOptions
    Type(MEF90_MATPROP),Pointer                        :: matpropSet
-   Type(MEF90Element_Type)                            :: elemDisplacementType
+   Type(MEF90ElementType)                            :: elemDisplacementType
    Type(MEF90MatProp2D_Type),pointer                  :: matProp2D
    !Adding type needs for inelastic strain
    PetscReal,Dimension(:),Pointer                     :: InelasticStrainLoc
@@ -94,7 +94,7 @@ contains
    Type(SectionReal)                                  :: xSec,temperatureSec
    Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
    Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-   Type(MEF90Element_Type)                            :: elemScalType
+   Type(MEF90ElementType)                            :: elemScalType
 
    Call DMMeshGetSectionReal(MEF90DefMechCtx%CellDMMatS,'default',plasticStrainSec,ierr);CHKERRQ(ierr)
    Call SectionRealDuplicate(plasticStrainSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)

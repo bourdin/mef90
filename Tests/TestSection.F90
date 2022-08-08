@@ -12,7 +12,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
-    Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)             :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents
     PetscInt                            :: set,order = 1
     PetscBool                           :: flg
@@ -34,7 +34,7 @@ Implicit NONE
     MEF90GlobalOptions_default%timeNumStep       = 11
     MEF90GlobalOptions_default%timeSkip          = 0
     MEF90GlobalOptions_default%timeNumCycle      = 1
-    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamily_Lagrange
+    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
@@ -74,11 +74,11 @@ Implicit NONE
     If (dim == 2) Then
         Select case(order)
         case(1)
-            cellSetElementType = MEF90_P1_Lagrange_2D
-            faceSetElementType = MEF90_P1_Lagrange_2DBoundary
+            cellSetElementType = MEF90P1Lagrange2D
+            faceSetElementType = MEF90P1Lagrange2DBoundary
         case(2)
-            cellSetElementType = MEF90_P2_Lagrange_2D
-            faceSetElementType = MEF90_P2_Lagrange_2DBoundary
+            cellSetElementType = MEF90P2Lagrange2D
+            faceSetElementType = MEF90P2Lagrange2DBoundary
         Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
@@ -86,11 +86,11 @@ Implicit NONE
     Else If (dim == 3) Then
         Select case(order)
             case(1)
-                cellSetElementType = MEF90_P1_Lagrange_3D
-                faceSetElementType = MEF90_P1_Lagrange_3DBoundary
+                cellSetElementType = MEF90P1Lagrange3D
+                faceSetElementType = MEF90P1Lagrange3DBoundary
             case(2)
-                cellSetElementType = MEF90_P2_Lagrange_3D
-                faceSetElementType = MEF90_P2_Lagrange_3DBoundary
+                cellSetElementType = MEF90P2Lagrange3D
+                faceSetElementType = MEF90P2Lagrange3DBoundary
             Case default
             Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)

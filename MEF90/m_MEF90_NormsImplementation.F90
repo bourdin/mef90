@@ -12,29 +12,29 @@ Module MEF90_APPEND(m_MEF90_NormsImplementation_,MEF90_ELEMENTTYPE)
 
    Private   
 #if MEF90_ELEMENTTYPE_SCALAR
-   Public :: MEF90_L2DotProductSet,MEF90_H1DotProductSet,MEF90_L2NormSet
+   Public :: MEF90L2DotProductSet,MEF90H1DotProductSet,MEF90L2NormSet
 #else
-   Public :: MEF90_L2DotProductSet,MEF90_H1DotProductSet,MEF90_H1symDotProductSet,MEF90_L2NormSet
+   Public :: MEF90L2DotProductSet,MEF90H1DotProductSet,MEF90H1symDotProductSet,MEF90L2NormSet
 #endif
 
 Contains
 !!!
 !!!  
-!!!  MEF90_L2DotProductSet: Assemble and add the contribution one processor to the L2 dot products of Vec U and V 
+!!!  MEF90L2DotProductSet: Assemble and add the contribution one processor to the L2 dot products of Vec U and V 
 !!!                   on a cell / face / edge set, interpolated with element type elemType
 !!!  
 !!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_L2DotProductSet"
+#define __FUNCT__ "MEF90L2DotProductSet"
 
-   Subroutine MEF90_L2DotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
+   Subroutine MEF90L2DotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
       PetscReal,Intent(OUT)                           :: myDotProductSet
       Type(tVec),Intent(IN)                           :: U,V
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-      Type(MEF90Element_Type),Intent(IN)              :: elemType
+      Type(MEF90ElementType),Intent(IN)               :: elemType
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscReal,Dimension(:),Pointer                  :: Uloc,Vloc
@@ -84,25 +84,25 @@ Contains
       End If 
       PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
-   End Subroutine MEF90_L2DotProductSet   
+   End Subroutine MEF90L2DotProductSet   
 
 !!!
 !!!  
-!!!  MEF90_H1DotProductSet: Assemble and add the contribution one processor to the H1 dot products of Vec U and V 
+!!!  MEF90H1DotProductSet: Assemble and add the contribution one processor to the H1 dot products of Vec U and V 
 !!!                   on a cell / face / edge set, interpolated with element type elemType
 !!!  
 !!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_H1DotProductSet"
+#define __FUNCT__ "MEF90H1DotProductSet"
    
-   Subroutine MEF90_H1DotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
+   Subroutine MEF90H1DotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
       PetscReal,Intent(OUT)                           :: myDotProductSet
       Type(tVec),Intent(IN)                           :: U,V
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-      Type(MEF90Element_Type),Intent(IN)              :: elemType
+      Type(MEF90ElementType),Intent(IN)               :: elemType
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscReal,Dimension(:),Pointer                  :: Uloc,Vloc
@@ -152,26 +152,26 @@ Contains
       End If 
       PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
-   End Subroutine MEF90_H1DotProductSet   
+   End Subroutine MEF90H1DotProductSet   
    
 !!!
 !!!  
-!!!  MEF90_H1SymDotProductSet: Assemble and add the contribution one processor to the H1-sym dot products of Vec U and V 
+!!!  MEF90H1SymDotProductSet: Assemble and add the contribution one processor to the H1-sym dot products of Vec U and V 
 !!!                   on a cell / face / edge set, interpolated with element type elemType
 !!!  
 !!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_H1SymDotProductSet"
+#define __FUNCT__ "MEF90H1SymDotProductSet"
 #if MEF90_ELEMENTTYPE_VECT
    
-   Subroutine MEF90_H1SymDotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
+   Subroutine MEF90H1SymDotProductSet(myDotProductSet,U,V,setType,setID,elem,elemType,ierr)
       PetscReal,Intent(OUT)                           :: myDotProductSet
       Type(tVec),Intent(IN)                           :: U,V
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-      Type(MEF90Element_Type),Intent(IN)              :: elemType
+      Type(MEF90ElementType),Intent(IN)               :: elemType
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscReal,Dimension(:),Pointer                  :: Uloc,Vloc
@@ -217,25 +217,25 @@ Contains
       End If 
       PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
-   End Subroutine MEF90_H1SymDotProductSet   
+   End Subroutine MEF90H1SymDotProductSet   
 #endif
 !!!
 !!!  
-!!!  MEF90_L2NormSet: Assemble and add the contribution one processor to the L2 norm of a Vect U 
+!!!  MEF90L2NormSet: Assemble and add the contribution one processor to the L2 norm of a Vect U 
 !!!                   on a cell / face / edge set, interpolated with element type elemType
 !!!  
 !!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_L2NormSet"
+#define __FUNCT__ "MEF90L2NormSet"
    
-      Subroutine MEF90_L2NormSet(myNormSet,U,setType,setID,elem,elemType,ierr)
+      Subroutine MEF90L2NormSet(myNormSet,U,setType,setID,elem,elemType,ierr)
          PetscReal,Intent(OUT)                           :: myNormSet
          Type(tVec),Intent(IN)                           :: U
          PetscEnum,Intent(IN)                            :: setType
          PetscInt                                        :: setID
          Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-         Type(MEF90Element_Type),Intent(IN)              :: elemType
+         Type(MEF90ElementType),Intent(IN)               :: elemType
          PetscErrorCode,Intent(INOUT)                    :: ierr
    
          PetscReal,Dimension(:),Pointer                  :: Uloc
@@ -281,5 +281,5 @@ Contains
          End If 
          PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
          PetscCall(ISDestroy(setPointIS,ierr))
-      End Subroutine MEF90_L2NormSet   
+      End Subroutine MEF90L2NormSet   
 End Module MEF90_APPEND(m_MEF90_NormsImplementation_,MEF90_ELEMENTTYPE)
