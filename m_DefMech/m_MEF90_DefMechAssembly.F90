@@ -74,7 +74,7 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic,cellHasForce
@@ -515,7 +515,7 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange,cohesiveStiffness
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic
@@ -1203,7 +1203,7 @@ Contains
       Type(MEF90Element_Type)                            :: elemDisplacementType,elemDamageType
       PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic,cellHasForce

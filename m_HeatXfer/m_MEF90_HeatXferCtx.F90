@@ -168,7 +168,7 @@ Module m_MEF90_HeatXferCtx
                      MEF90HeatXFer_timeSteppingTypeSteadyState, &
                      MEF90HeatXFer_timeSteppingTypeTransient
    End Enum
-   Character(len = MEF90_MXSTRLEN),dimension(6),protected   :: MEF90HeatXFer_timeSteppingTypeList
+   Character(len = MEF90MXSTRLEN),dimension(6),protected   :: MEF90HeatXFer_timeSteppingTypeList
    
 Contains
 #undef __FUNCT__
@@ -402,7 +402,7 @@ Contains
       Type(tIS)                                             :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
-      Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
+      Character(len=MEF90MXSTRLEN)                         :: IOBuffer,setName,setprefix
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(heatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
       !!!

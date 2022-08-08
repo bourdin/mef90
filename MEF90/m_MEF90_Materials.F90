@@ -62,7 +62,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
-      Character(len=MEF90_MXSTRLEN) :: Name
+      Character(len=MEF90MXSTRLEN) :: Name
    End Type MEF90MatProp2D_Type
 
    Type MEF90MatProp3D_Type
@@ -102,7 +102,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
-      Character(len=MEF90_MXSTRLEN) :: Name
+      Character(len=MEF90MXSTRLEN) :: Name
    End Type MEF90MatProp3D_Type
 
    Enum,bind(c)
@@ -328,7 +328,7 @@ Module m_MEF90_Materials
    PetscSizeT,protected   :: sizeofMEF90HookesLaw2D
    PetscSizeT,protected   :: sizeofMEF90HookesLaw3D
 
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected :: MEF90HookesLawTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(5),protected :: MEF90HookesLawTypeList
 
 Contains
 #undef __FUNCT__
@@ -543,7 +543,7 @@ Contains
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
-      Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Character(len=MEF90MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
@@ -593,7 +593,7 @@ Contains
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
-      Character(len=MEF90_MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Character(len=MEF90MXSTRLEN)                   :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
@@ -738,7 +738,7 @@ Contains
       Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DSum
 
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -787,7 +787,7 @@ Contains
       Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DSum
 
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -822,7 +822,7 @@ Contains
       Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DDiff
 
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -871,7 +871,7 @@ Contains
       Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DDiff
 
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then

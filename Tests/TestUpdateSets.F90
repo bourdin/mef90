@@ -7,7 +7,7 @@ Program TestUpdateSets
 
    PetscErrorCode                      :: ierr
    Type(DM),target                     :: Mesh
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
    PetscInt                            :: dim
    Type(Vec)                           :: VecIn,VecOut
    Type(SectionReal)                   :: Sec

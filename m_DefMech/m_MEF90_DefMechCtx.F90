@@ -249,20 +249,20 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_SolverTypeQuasiNewton1, &
                      MEF90DefMech_SolverTypeQuasiNewton2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_SolverTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_SolverTypeList
 
    Enum,bind(c)
       enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0,     &
                      MEF90DefMech_TimeSteppingTypeQuasiStatic
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_TimeSteppingTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_TimeSteppingTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
                      MEF90DefMech_BTTypeBackward,    &
                      MEF90DefMech_BTTypeForward
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_BTTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_BTTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_damageTypeAT1 = 0,        &
@@ -277,7 +277,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_damageTypeKKLElastic
 
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_damageTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_damageTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_plasticityTypeNone = 0,               &
@@ -291,7 +291,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_PlasticityTypeGreen,                  &
                      MEF90DefMech_PlasticityTypeGurson
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_plasticityTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(13),protected   :: MEF90DefMech_plasticityTypeList
    
    Enum,bind(c)
       enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0,                     &
@@ -301,14 +301,14 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_unilateralContactTypePrincipalStrains,             &
                      MEF90DefMech_unilateralContactTypeMasonry
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_unilateralContactTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(9),protected   :: MEF90DefMech_unilateralContactTypeList
 
    Enum,bind(c)
       enumerator  :: MEF90DefMech_drivingForceTypeNone = 0,       &
                      MEF90_DefMechDrivingForceTypeDruckerPrager,  &
                      MEF90DefMech_drivingForceTypeDruckerPrager2
    End Enum
-   Character(len = MEF90_MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_drivingForceTypeList
+   Character(len = MEF90MXSTRLEN),Dimension(6),protected   :: MEF90DefMech_drivingForceTypeList
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -422,7 +422,7 @@ Contains
       Type(IS)                                                 :: setIS
       PetscInt                                                 :: set,numSet
       PetscInt                                                 :: dim
-      Character(len=MEF90_MXSTRLEN)                            :: filename,IOBuffer
+      Character(len=MEF90MXSTRLEN)                            :: filename,IOBuffer
 
       Call MEF90DefMechCtxInitialize_Private(ierr)
       Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
@@ -1008,7 +1008,7 @@ Contains
       Type(IS)                                              :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
-      Character(len=MEF90_MXSTRLEN)                         :: IOBuffer,setName,setprefix
+      Character(len=MEF90MXSTRLEN)                         :: IOBuffer,setName,setprefix
       Type(MEF90DefMechCellSetOptions_Type),pointer         :: cellSetOptions    
       Type(IS)                                              :: cellSetGlobalIS  
 

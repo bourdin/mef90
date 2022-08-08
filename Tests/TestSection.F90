@@ -9,7 +9,7 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
     Type(tDM)                           :: dm
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+    Character(len=MEF90MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
     Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType
@@ -23,7 +23,7 @@ Implicit NONE
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTable
     Logical,Dimension(:),Pointer        :: constraints
     Type(tVec)                          :: v
-    PetscInt,dimension(1)              :: fieldU = [0]
+    PetscInt,dimension(1)               :: fieldU = [0]
 
 
     MEF90GlobalOptions_default%verbose           = 1
@@ -96,8 +96,8 @@ Implicit NONE
             SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
         End Select
     End If
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexcellSetType,cellSetElementType,numComponents,section,ierr))
-    PetscCallA(MEF90_SectionAllocateDof(dm,MEF90_DMPlexfaceSetType,faceSetElementType,numComponents,section,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90cellSetType,cellSetElementType,numComponents,section,ierr))
+    PetscCallA(MEF90SectionAllocateDof(dm,MEF90faceSetType,faceSetElementType,numComponents,section,ierr))
 
     !!! Allocate constraints.
     !!! This is definitely not optimized. We could create a table of dimension
@@ -115,34 +115,34 @@ Implicit NONE
     Allocate(constraints(numComponents))
     constraints = .FALSE.
 
-    setType = MEF90_DMPlexFaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90FaceSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
 
-    setType = MEF90_DMPlexVertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
+    setType = MEF90VertexSetType
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
     Do set = 1,size(setID)
         !!! setting the constrained components to an arbitrary value
         !!! In real life, we would get constraint from the CS/FS/ES/VS bag
         constraints = .FALSE.
         constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90_SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
     End Do
     PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
     PetscCallA(ISDestroy(SetIS,ierr))
     DeAllocate(constraints)
 
-    PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTable,section,ierr))
+    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTable,section,ierr))
 
     DeAllocate(ConstraintTruthTable)
     PetscCallA(PetscSectionViewFromOptions(Section,PETSC_NULL_OPTIONS,"-section_view",ierr))

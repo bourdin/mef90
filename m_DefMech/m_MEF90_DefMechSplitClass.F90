@@ -18,7 +18,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 !!!
 
    Type, abstract :: MEF90_DEFMECHSPLIT
-      Character(len=MEF90_MXSTRLEN)                     :: type
+      Character(len=MEF90MXSTRLEN)                     :: type
       Integer                                           :: damageOrder
       Integer                                           :: strainOrder
    Contains

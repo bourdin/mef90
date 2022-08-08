@@ -13,7 +13,7 @@ Module m_MEF90_DefMechDrivingForce_class
 !!!
 
    Type, abstract :: MEF90_DefMechDrivingForce_Type
-      Character(len=MEF90_MXSTRLEN)                          :: type
+      Character(len=MEF90MXSTRLEN)                          :: type
    Contains
       Procedure(DrivingForceInterface), pass(self), deferred :: df
       Procedure(DrivingForceInterface), pass(self), deferred :: Ddf

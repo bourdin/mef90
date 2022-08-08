@@ -9,7 +9,7 @@ Program  TestMassMatrix
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
     Type(tDM)                           :: dm
     PetscBool                           :: interpolate = PETSC_TRUE, hasConstraints = PETSC_FALSE
-    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+    Character(len=MEF90MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
     PetscInt                            :: numComponents

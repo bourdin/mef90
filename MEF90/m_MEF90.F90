@@ -35,7 +35,7 @@ Contains
    Subroutine MEF90Initialize(ierr)
       PetscInt,Intent(OUT)                               :: ierr
 
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
        
       !Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: git changeset ",MEF90_GITVER,"\n"

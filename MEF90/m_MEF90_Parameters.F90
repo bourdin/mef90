@@ -18,8 +18,8 @@ Module m_MEF90_Parameters
    PetscLogDouble,Parameter            :: flop = 1.0
    Integer,Parameter,Public            :: PFlop = Selected_Real_Kind(Precision(flop))
                                          
-   PetscInt,Parameter,Public           :: MEF90_MXSTRLEN = 256
+   PetscInt,Parameter,Public           :: MEF90MXSTRLEN = 256
 
-   PetscReal,Parameter,Public          :: MEF90_INFINITY  = huge(1.0_Kr)
-   PetscReal,Parameter,Public          :: MEF90_NINFINITY = -huge(1.0_Kr)
+   PetscReal,Parameter,Public          :: MEF90INFINITY  = huge(1.0_Kr)
+   PetscReal,Parameter,Public          :: MEF90NINFINITY = -huge(1.0_Kr)
 End Module m_MEF90_Parameters

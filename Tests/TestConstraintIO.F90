@@ -9,12 +9,12 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)        :: MEF90GlobalOptions_default
     Type(tDM),target                        :: dm,dmU,dmU0
     PetscBool                               :: interpolate = PETSC_TRUE
-    Character(len=MEF90_MXSTRLEN)           :: IOBuffer
+    Character(len=MEF90MXSTRLEN)           :: IOBuffer
     PetscEnum                               :: setType
 
     Type(MEF90Element_Type)                 :: cellSetElementType,faceSetElementType
     PetscInt                                :: numComponents, numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
-    Character(len=MEF90_MXSTRLEN),allocatable       :: nodalVarName(:), cellVarName(:), gVarName(:)
+    Character(len=MEF90MXSTRLEN),allocatable       :: nodalVarName(:), cellVarName(:), gVarName(:)
     PetscInt                                :: set, order = 1, nroots, nleaves
     PetscBool                               :: flg
     PetscMPIInt                             :: rank = 0

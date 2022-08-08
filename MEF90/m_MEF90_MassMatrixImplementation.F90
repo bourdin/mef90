@@ -42,7 +42,7 @@ Contains
       PetscLogDouble                                  :: flops
      
       flops = 0.0_pflop
-      PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
+      PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
          !!! This is really misleading: elemType doesn't know the number of component since we now use the 

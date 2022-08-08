@@ -8,7 +8,7 @@ Program TestQuadrature
 
    PetscErrorCode                      :: ierr
    Type(DM),target                     :: Mesh
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
    PetscInt                            :: dim
    Type(Vec)                           :: xVec
    PetscReal,Dimension(:,:),Pointer    :: coordPtr

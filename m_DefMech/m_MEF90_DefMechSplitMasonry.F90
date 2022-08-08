@@ -54,7 +54,7 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: nu,alpha
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
@@ -113,7 +113,7 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: alpha,E,nu
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
@@ -199,7 +199,7 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: E, nu,alpha
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"

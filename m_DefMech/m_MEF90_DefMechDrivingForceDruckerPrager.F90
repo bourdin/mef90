@@ -59,7 +59,7 @@ Contains
       PetscReal                                          :: E,Gc,delta,gamma,ell,sigma_cs,sigma_ts
       PetscReal                                          :: damageGauss,stiffnessMultGauss,DalphaStiffnessMultGauss
       PetscLogDouble                                     :: flops
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
       If (matprop%HookesLaw%Type /= MEF90HookesLawTypeIsotropic) Then
@@ -169,7 +169,7 @@ Contains
       PetscReal                                          :: Dbeta1,Dbeta2,D
       PetscReal                                          :: damageGauss,stiffnessMultGauss,DalphaStiffnessMultGauss
       PetscLogDouble                                     :: flops
-      Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
       If (matprop%HookesLaw%Type /= MEF90HookesLawTypeIsotropic) Then

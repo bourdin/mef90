@@ -120,15 +120,15 @@ Contains
 #define __FUNCT__ "MEF90FilePrefix"
    function MEF90FilePrefix(s)
       character(len=*),intent(IN)   :: s
-      character(len=MEF90_MXSTRLEN) :: MEF90FilePrefix
+      character(len=MEF90MXSTRLEN) :: MEF90FilePrefix
 
-      character(len=MEF90_MXSTRLEN) :: sChop
+      character(len=MEF90MXSTRLEN) :: sChop
       integer                       :: i,l
 
       l = len(s)
-      if (l > MEF90_MXSTRLEN) then
+      if (l > MEF90MXSTRLEN) then
          !write(*,*) 'Warning, choping input string'
-         sChop = s(1:MEF90_MXSTRLEN)
+         sChop = s(1:MEF90MXSTRLEN)
       else 
          sChop = s
       end if
@@ -145,15 +145,15 @@ Contains
 #define __FUNCT__ "MEF90FileExtension"
    function MEF90FileExtension(s)
       character(len=*),intent(IN)   :: s
-      character(len=MEF90_MXSTRLEN) :: MEF90FileExtension
+      character(len=MEF90MXSTRLEN) :: MEF90FileExtension
 
-      character(len=MEF90_MXSTRLEN) :: sChop
+      character(len=MEF90MXSTRLEN) :: sChop
       integer                       :: i,l
 
       l = len(s)
-      if (l > MEF90_MXSTRLEN) then
+      if (l > MEF90MXSTRLEN) then
          !write(*,*) 'Warning, choping input string'
-         sChop = s(1:MEF90_MXSTRLEN)
+         sChop = s(1:MEF90MXSTRLEN)
       else 
          sChop = s
       end if

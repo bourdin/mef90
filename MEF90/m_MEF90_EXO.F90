@@ -63,8 +63,8 @@ Contains
    !    Type(tDM),Intent(OUT)                            :: Mesh
    !    PetscErrorCode,Intent(OUT)                      :: ierr
    
-   !    Character(len=MEF90_MXSTRLEN)                   :: IOBuffer
-   !    Character(len=MEF90_MXSTRLEN)                   :: filename
+   !    Character(len=MEF90MXSTRLEN)                   :: IOBuffer
+   !    Character(len=MEF90MXSTRLEN)                   :: filename
    !    Integer                                         :: cpu_ws,io_ws
    !    Real                                            :: exoVersion
    !    Integer                                         :: exoErr,exoUnit
@@ -134,7 +134,7 @@ Contains
 !       PetscErrorCode,Intent(OUT)                      :: ierr
    
 !       Integer                                         :: exoUnit
-!       Character(len=MEF90_MXSTRLEN)                   :: filename
+!       Character(len=MEF90MXSTRLEN)                   :: filename
 !       Integer,parameter                               :: num_QA_rec=1
 !       Character(len=MXSTLN)                           :: QA_rec(4)
 !       Character(len=MXSTLN)                           :: date
@@ -194,7 +194,7 @@ Contains
 !      Integer                                         :: exoUnitIN
 !      MPI_Comm                                        :: IOComm
 !      Integer                                         :: IORank
-!      Character(len=MEF90_MXSTRLEN)                   :: IOBuffer,filename
+!      Character(len=MEF90MXSTRLEN)                   :: IOBuffer,filename
 !      Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions      
 !      Integer                                         :: cpu_ws,io_ws
 !      Real                                            :: exo_version
@@ -287,7 +287,7 @@ Contains
 !       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
 !       PetscErrorCode,Intent(OUT)                      :: ierr
       
-!       Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
+!       Character(len=MEF90MXSTRLEN)                   :: filename,IOBuffer
 !       Character(len=MXSTLN)                           :: EXOelemType
 !       Integer                                         :: cpu_ws,io_ws,exoID
 !       Real                                            :: exoVersion
@@ -342,7 +342,7 @@ Contains
 !       Type(MEF90Element_Type),Dimension(:),Pointer    :: elemType
 !       PetscErrorCode,Intent(OUT)                      :: ierr
       
-!       Character(len=MEF90_MXSTRLEN)                   :: filename,IOBuffer
+!       Character(len=MEF90MXSTRLEN)                   :: filename,IOBuffer
 !       Character(len=MXSTLN)                           :: EXOelemType
 !       Integer                                         :: cpu_ws,io_ws,exoID
 !       Real                                            :: exoVersion

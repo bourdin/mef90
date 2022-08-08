@@ -10,7 +10,7 @@ Module m_MEF90_Ctx_Type
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
       Integer                                         :: rank,numProcs
-      Character(len=MEF90_MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
+      Character(len=MEF90MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
       PetscBag                                        :: GlobalOptionsBag      
       End Type MEF90Ctx_Type
    
@@ -56,7 +56,7 @@ Module m_MEF90_Ctx
                      MEF90Scaling_File,         &  
                      MEF90Scaling_Null
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90ScalingList
+   Character(len=MEF90MXSTRLEN),dimension(7),protected  :: MEF90ScalingList
       
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
@@ -64,7 +64,7 @@ Module m_MEF90_Ctx
                      MEF90TimeInterpolation_quadratic,   &
                      MEF90TimeInterpolation_exo
    End Enum
-   Character(len=MEF90_MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
+   Character(len=MEF90MXSTRLEN),dimension(7),protected  :: MEF90TimeInterpolationList
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
@@ -181,7 +181,7 @@ Contains
       PetscInt,Intent(OUT)                         :: ierr
       
       Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
-      Character(len=MEF90_MXSTRLEN)                :: IOBuffer,tmpPrefix
+      Character(len=MEF90MXSTRLEN)                :: IOBuffer,tmpPrefix
       PetscBool                                    :: hasPrefix,hasGeometry,hasResult
 #ifdef PETSC_USE_DEBUG
       Character(len=MPI_MAX_PROCESSOR_NAME)        :: procName

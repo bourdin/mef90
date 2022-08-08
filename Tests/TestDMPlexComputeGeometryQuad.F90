@@ -10,7 +10,7 @@ Program  TestDMPlexComputeGeometry
    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
    Type(tDM),target                    :: dm,dmDist
    PetscBool                           :: interpolate = PETSC_TRUE
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
    PetscInt                            :: set,cell
    DMLabel                             :: CSLabel,FSLabel
    type(tIS)                           :: CSIS,FSIS,CellIS

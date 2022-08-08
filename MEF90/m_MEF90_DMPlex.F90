@@ -7,41 +7,41 @@ Module m_MEF90_DMPlex
     IMPLICIT NONE
     
     Enum,bind(c)
-        enumerator  :: MEF90_DMPlexCellSetType = 1, &
-                       MEF90_DMPlexFaceSetType,     &
-                       MEF90_DMPlexEdgeSetType,     &
-                       MEF90_DMPlexVertexSetType
+        enumerator  :: MEF90CellSetType = 1, &
+                       MEF90FaceSetType,     &
+                       MEF90EdgeSetType,     &
+                       MEF90VertexSetType
     End Enum
-    Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexCellSetLabelName   = 'Cell Sets  '
-    Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexFaceSetLabelName   = 'Face Sets  '
-    Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexEdgeSetLabelName   = 'Edge Sets  '
-    Character(len=MEF90_MXSTRLEN),Parameter :: MEF90_DMPlexVertexSetLabelName = 'Vertex Sets'
+    Character(len=MEF90MXSTRLEN),Parameter :: MEF90CellSetLabelName   = 'Cell Sets  '
+    Character(len=MEF90MXSTRLEN),Parameter :: MEF90FaceSetLabelName   = 'Face Sets  '
+    Character(len=MEF90MXSTRLEN),Parameter :: MEF90EdgeSetLabelName   = 'Edge Sets  '
+    Character(len=MEF90MXSTRLEN),Parameter :: MEF90VertexSetLabelName = 'Vertex Sets'
 
-    Character(len=MEF90_MXSTRLEN),dimension(4),Parameter  :: MEF90_DMPlexSetLabelName = &
-              [MEF90_DMPlexCellSetLabelName,MEF90_DMPlexFaceSetLabelName,MEF90_DMPlexEdgeSetLabelName,MEF90_DMPlexVertexSetLabelName]
+    Character(len=MEF90MXSTRLEN),dimension(4),Parameter  :: MEF90SetLabelName = &
+              [MEF90CellSetLabelName,MEF90FaceSetLabelName,MEF90EdgeSetLabelName,MEF90VertexSetLabelName]
 
     private
-    public :: MEF90_DMPlexCellSetLabelName,MEF90_DMPlexFaceSetLabelName,             &
-              MEF90_DMPlexEdgeSetLabelName,MEF90_DMPlexVertexSetLabelName,           &
-              MEF90_DMPlexSetLabelName,                                              &
-              MEF90_DMPlexCellSetType,MEF90_DMPlexFaceSetType,                       &
-              MEF90_DMPlexEdgeSetType,MEF90_DMPlexVertexSetType,                     &
-              MEF90_SectionAllocateDof,MEF90_SectionAllocateDofSet,                  &
-              MEF90_SetupConstraintTableSet,MEF90_SectionAllocateConstraint,         &
-              MEF90_VecReorderingSF,MEF90_CreateLocalToIOSF,MEF90_CreateIOToLocalSF, &
-              MEF90_CreateLocalToConstraintSF,MEF90_VecGlobalToLocalConstraint
+    public :: MEF90CellSetLabelName,MEF90FaceSetLabelName,                           &
+              MEF90EdgeSetLabelName,MEF90VertexSetLabelName,                         &
+              MEF90SetLabelName,                                                     &
+              MEF90CellSetType,MEF90FaceSetType,                                     &
+              MEF90EdgeSetType,MEF90VertexSetType,                                   &
+              MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                  &
+              MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,         &
+              MEF90VecReorderingSF,MEF90CreateLocalToIOSF,MEF90CreateIOToLocalSF, &
+              MEF90CreateLocalToConstraintSF,MEF90VecGlobalToLocalConstraint
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_SectionAllocateDof"
+#define __FUNCT__ "MEF90SectionAllocateDof"
 !!!
 !!!  
-!!!  MEF90_SectionAllocateDof: Associates dof to a section
+!!!  MEF90SectionAllocateDof: Associates dof to a section
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90_SectionAllocateDof(dm,setType,elemType,numComponents,section,ierr)
+    Subroutine MEF90SectionAllocateDof(dm,setType,elemType,numComponents,section,ierr)
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
         Type(MEF90Element_Type),Intent(IN) :: elemType
@@ -53,25 +53,25 @@ Contains
         PetscInt,dimension(:),Pointer      :: setID
         PetscInt                           :: set
 
-        PetscCall(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),setIS,ierr))
+        PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
         Do set = 1,size(setID)
-            PetscCall(MEF90_SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
+            PetscCall(MEF90SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
         End Do
         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
         PetscCall(ISDestroy(setIS,ierr))
-    End Subroutine MEF90_SectionAllocateDof
+    End Subroutine MEF90SectionAllocateDof
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_SectionAllocateDofSet"
+#define __FUNCT__ "MEF90SectionAllocateDofSet"
 !!!
 !!!  
-!!!  MEF90_SectionAllocateDofSet: Associates dof to a section in a set
+!!!  MEF90SectionAllocateDofSet: Associates dof to a section in a set
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90_SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,section,ierr)
+    Subroutine MEF90SectionAllocateDofSet(dm,setType,setID,elemType,numComponents,section,ierr)
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
         PetscInt,Intent(IN)                :: setID
@@ -87,7 +87,7 @@ Contains
         PetscInt                           :: p,depth
 
 
-        PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
+        PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
             !!! This can probably be optimized by allocating closure outside of the loop
@@ -107,18 +107,18 @@ Contains
         End If
         PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
         PetscCall(ISDestroy(setPointIS,ierr))
-    End Subroutine MEF90_SectionAllocateDofSet
+    End Subroutine MEF90SectionAllocateDofSet
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_SetupConstraintTableSet"
+#define __FUNCT__ "MEF90SetupConstraintTableSet"
 !!!
 !!!  
-!!!  MEF90_SetupConstraintTableSet: Build the contribution of a set to the constraint table
+!!!  MEF90SetupConstraintTableSet: Build the contribution of a set to the constraint table
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
     
-    Subroutine MEF90_SetupConstraintTableSet(dm,section,setType,setID,constraints,table,ierr)
+    Subroutine MEF90SetupConstraintTableSet(dm,section,setType,setID,constraints,table,ierr)
         Type(tDM),Intent(IN)               :: dm
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscEnum,intent(IN)               :: setType
@@ -133,7 +133,7 @@ Contains
         PetscInt,dimension(:),pointer      :: closure
         PetscInt                           :: p
 
-        PetscCall(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID,setPointIS,ierr))
+        PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
         If (size(setPointID) > 0) Then
             !!! This can probably be optimized by allocating closure outside of the loop
@@ -152,18 +152,18 @@ Contains
         End If
         PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
         PetscCall(ISDestroy(setPointIS,ierr))
-    End Subroutine MEF90_SetupConstraintTableSet
+    End Subroutine MEF90SetupConstraintTableSet
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_SectionAllocateConstraint"
+#define __FUNCT__ "MEF90SectionAllocateConstraint"
 !!!
 !!!  
-!!!  MEF90_SectionAllocateConstraint: Associates dof to a section
+!!!  MEF90SectionAllocateConstraint: Associates dof to a section
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90_SectionAllocateConstraint(dm,table,section,ierr)
+    Subroutine MEF90SectionAllocateConstraint(dm,table,section,ierr)
         Type(tDM),Intent(IN)               :: dm
         Logical,Dimension(:,:),Pointer     :: table
         Type(tPetscSection),Intent(INOUT)  :: section
@@ -171,7 +171,7 @@ Contains
 
         PetscInt                           :: p,i,pStart,pEnd,numConstraints,numComponents
         PetscInt,Dimension(:),Pointer      :: constraints
-        PetscInt                           :: field = 0
+        !PetscInt                           :: field = 0
 
         PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
         Do p = 1, pEnd
@@ -191,22 +191,22 @@ Contains
                 Allocate(constraints(numConstraints))
                 constraints = pack([ (i-1, i = 1,numComponents) ],table(p,:))
                 PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
-                PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
+                !PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
                 DeAllocate(constraints)
             End If
         End Do
-    End Subroutine MEF90_SectionAllocateConstraint
+    End Subroutine MEF90SectionAllocateConstraint
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_VecReorderingSF"
+#define __FUNCT__ "MEF90VecReorderingSF"
 !!!
 !!!  
-!!!  MEF90_VecReorderingSF: rearrange a Vec according to the given SF
+!!!  MEF90VecReorderingSF: rearrange a Vec according to the given SF
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90_VecReorderingSF(vin,vout,sf,ierr)
+    Subroutine MEF90VecReorderingSF(vin,vout,sf,ierr)
         Type(tVec),intent(IN)              :: vin
         Type(tVec),intent(INOUT)           :: vout
         Type(tPetscSF),intent(IN)          :: sf
@@ -220,18 +220,18 @@ Contains
         PetscCallA(PetscSFBcastEnd(sf, MPIU_SCALAR, arrayin, arrayout, MPI_REPLACE, ierr))
         PetscCallA(VecRestoreArrayReadF90(vin, arrayin, ierr))
         PetscCallA(VecRestoreArrayF90(vout, arrayout, ierr))
-    End subroutine MEF90_VecReorderingSF
+    End subroutine MEF90VecReorderingSF
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_CreateLocalToIOSF"
+#define __FUNCT__ "MEF90CreateLocalToIOSF"
 !!!
 !!!  
-!!!  MEF90_CreateLocalToIOSF: sf mapping between local to IO ordering and distribution
+!!!  MEF90CreateLocalToIOSF: sf mapping between local to IO ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90_CreateLocalToIOSF(MEF90Ctx,dm,sf,ierr)
+    Subroutine MEF90CreateLocalToIOSF(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)               :: dm
         Type(tPetscSF),intent(OUT)         :: sf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -252,18 +252,18 @@ Contains
         Else
             sf = lcgSF
         End If
-    End subroutine MEF90_CreateLocalToIOSF
+    End subroutine MEF90CreateLocalToIOSF
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_CreateIOToLocalSF"
+#define __FUNCT__ "MEF90CreateIOToLocalSF"
 !!!
 !!!  
-!!!  MEF90_CreateIOToLocalSF: sf mapping between IO to local ordering and distribution
+!!!  MEF90CreateIOToLocalSF: sf mapping between IO to local ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90_CreateIOToLocalSF(MEF90Ctx,dm,sf,ierr)
+    Subroutine MEF90CreateIOToLocalSF(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)               :: dm
         Type(tPetscSF),intent(OUT)         :: sf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -286,19 +286,19 @@ Contains
         Else
             sf = cglSF
         End If
-    End subroutine MEF90_CreateIOToLocalSF
+    End subroutine MEF90CreateIOToLocalSF
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_CreateLocalToConstraintSF"
+#define __FUNCT__ "MEF90CreateLocalToConstraintSF"
 !!!
 !!!  
-!!!  MEF90_CreateLocalToConstraintSF: sf mapping between local and constraint Vec ordering and distribution
+!!!  MEF90CreateLocalToConstraintSF: sf mapping between local and constraint Vec ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!                Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90_CreateLocalToConstraintSF(MEF90Ctx,dm,dmB,sf,invSF,ierr)
+    Subroutine MEF90CreateLocalToConstraintSF(MEF90Ctx,dm,dmB,sf,invSF,ierr)
         Type(tDM),intent(IN)                    :: dm, dmB
         Type(tPetscSF),intent(OUT)              :: sf, invSF
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
@@ -349,18 +349,18 @@ Contains
         PetscCall(PetscSFSetUp(sf, ierr))
         PetscCall(PetscSFCreateInverseSF(sf,invSF,ierr))
         PetscCall(PetscSFSetUp(invSF, ierr))
-    End Subroutine MEF90_CreateLocalToConstraintSF
+    End Subroutine MEF90CreateLocalToConstraintSF
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_VecGlobalToLocalConstraint"
+#define __FUNCT__ "MEF90VecGlobalToLocalConstraint"
 !!!
 !!!  
-!!!  MEF90_VecGlobalToLocalConstraint: do a VecGlobaltoLocal then copy constrained values
+!!!  MEF90VecGlobalToLocalConstraint: do a VecGlobaltoLocal then copy constrained values
 !!!  
 !!!  (c) 2022      Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90_VecGlobalToLocalConstraint(g,c,l,ierr)
+    Subroutine MEF90VecGlobalToLocalConstraint(g,c,l,ierr)
         Type(tVec),Intent(IN)                   :: g,c
         Type(tVec),Intent(INOUT)                :: l
         PetscErrorCode,Intent(INOUT)            :: ierr
@@ -385,7 +385,7 @@ Contains
                 End If ! numConstraint
             End Do ! p
         End If
-    End Subroutine MEF90_VecGlobalToLocalConstraint
+    End Subroutine MEF90VecGlobalToLocalConstraint
 
 #undef __FUNCT__
 #define __FUNCT__ "CreateNaturalToIOSF_internal"

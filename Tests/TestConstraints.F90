@@ -178,7 +178,7 @@ contains
 
         Type(tDM)                           :: dm
         PetscInt                            :: p,pStart,pEnd
-        Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+        Character(len=MEF90MXSTRLEN)       :: IOBuffer
         PetscScalar,Dimension(:),Pointer    :: vArray
 
 
@@ -216,7 +216,7 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
     Type(tDM)                           :: dm,dmU,dmU0
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+    Character(len=MEF90MXSTRLEN)       :: IOBuffer
     PetscEnum                           :: setType
 
     Type(MEF90Element_Type)             :: cellSetElementType,faceSetElementType

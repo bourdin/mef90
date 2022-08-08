@@ -55,7 +55,7 @@ Program HeatXfer
 
           
    PetscBool                                          :: flg
-   Character(len=MEF90_MXSTRLEN)                      :: IOBuffer
+   Character(len=MEF90MXSTRLEN)                      :: IOBuffer
    Type(PetscViewer)                                  :: logViewer
    Integer                                            :: numfield
    

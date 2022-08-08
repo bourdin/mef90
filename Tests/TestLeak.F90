@@ -6,7 +6,7 @@ Program TestNSP
 
    PetscErrorCode                      :: ierr
    Type(DM),target                     :: Mesh,MeshClone
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
    Type(SectionReal)                   :: defaultSection1,defaultSection2,copySection
    PetscBool                           :: flg
    PetscInt                            :: i,dim

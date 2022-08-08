@@ -6,7 +6,7 @@ Program TestNSP
 
    PetscErrorCode                      :: ierr
    Type(DM),target                     :: Mesh,MeshClone
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
    PetscInt                            :: dim,bs
    Type(Mat)                           :: matDisp
    Type(MatNullSpace)                  :: nspDisp

@@ -11,7 +11,7 @@ Program  TestMEF90Ctx
    Type(tDM),target                    :: dm
    PetscBool                           :: flg
    PetscBool                           :: interpolate = PETSC_FALSE
-   Character(len=MEF90_MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)       :: IOBuffer
 
    MEF90GlobalOptions_default%verbose           = 1
    MEF90GlobalOptions_default%dryrun            = PETSC_FALSE

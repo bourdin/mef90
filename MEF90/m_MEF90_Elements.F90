@@ -21,7 +21,7 @@ Module m_MEF90_Elements
    
    Type MEF90Element_Type
       ! name is the element name in english language
-      Character(len=MEF90_MXSTRLEN)                :: Name
+      Character(len=MEF90MXSTRLEN)                :: Name
       ! shortID is a numerical shortcut used in the prep, for instance
       PetscInt                                     :: ShortID
       
@@ -76,12 +76,12 @@ Module m_MEF90_Elements
       MEF90ElementFamily_Lagrange = 0
    End Enum
 
-   Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(4),Parameter,Public   :: MEF90ElementFamily = [ &
+   Character(kind=c_char,len=MEF90MXSTRLEN),dimension(4),Parameter,Public   :: MEF90ElementFamily = [ &
       "Lagrange           ",     &  ! 1
       "MEF90ElementFamily ",     &
       "prefix_            ",     &
       C_NULL_CHAR//"                  "]
-      Character(len=MEF90_MXSTRLEN),dimension(4),protected  :: MEF90ElementFamilyList
+      Character(len=MEF90MXSTRLEN),dimension(4),protected  :: MEF90ElementFamilyList
 
 
    !!! 
@@ -236,7 +236,7 @@ Module m_MEF90_Elements
       MEF90_Q2_Lagrange_3DBoundary   &  ! 16
    ]
 
-   Character(kind=c_char,len=MEF90_MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = [ &
+   Character(kind=c_char,len=MEF90MXSTRLEN),dimension(MEF90_numKnownElements+3),Parameter,Public   :: MEF90_knownElementNames = [ &
       "P1_Lagrange_2D         ",     &  ! 1
       "P1_Lagrange_3D         ",     &  ! 2
       "P1_Lagrange_2DBoundary ",     &  ! 3

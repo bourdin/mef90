@@ -54,7 +54,7 @@ Contains
       PetscReal, Intent(OUT)                           :: EEDPlus,EEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90_MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
@@ -83,7 +83,7 @@ Contains
       Type(MEF90_MATS),Intent(OUT)                     :: DEEDPlus,DEEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90_MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
@@ -112,7 +112,7 @@ Contains
       Type(MEF90_HOOKESLAW),Intent(OUT)                :: D2EEDPlus,D2EEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90_MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
