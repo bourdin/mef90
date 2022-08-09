@@ -23,7 +23,6 @@ Implicit NONE
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTable
     Logical,Dimension(:),Pointer        :: constraints
     Type(tVec)                          :: v
-    PetscInt,dimension(1)               :: fieldU = [0]
 
 
     MEF90GlobalOptions_default%verbose           = 1

@@ -28,7 +28,7 @@ Module m_MEF90_DMPlex
               MEF90EdgeSetType,MEF90VertexSetType,                                   &
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                  &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,         &
-              MEF90VecReorderingSF,MEF90CreateLocalToIOSF,MEF90CreateIOToLocalSF, &
+              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90CreateIOToLocalSF, &
               MEF90CreateLocalToConstraintSF,MEF90VecGlobalToLocalConstraint
 Contains
 
@@ -44,7 +44,7 @@ Contains
     Subroutine MEF90SectionAllocateDof(dm,setType,elemType,numComponents,section,ierr)
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
-        Type(MEF90ElementType),Intent(IN) :: elemType
+        Type(MEF90ElementType),Intent(IN)  :: elemType
         PetscInt,Intent(IN)                :: numComponents
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscErrorCode,Intent(INOUT)       :: ierr
@@ -75,7 +75,7 @@ Contains
         Type(tDM),Intent(IN)               :: dm
         PetscEnum,intent(IN)               :: setType
         PetscInt,Intent(IN)                :: setID
-        Type(MEF90ElementType),Intent(IN) :: elemType
+        Type(MEF90ElementType),Intent(IN)  :: elemType
         PetscInt,Intent(IN)                :: numComponents
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscErrorCode,Intent(INOUT)       :: ierr
@@ -85,6 +85,7 @@ Contains
         PetscInt                           :: point
         PetscInt,dimension(:),pointer      :: closure
         PetscInt                           :: p,depth
+        PetscInt                           :: field = 0
 
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
@@ -99,7 +100,7 @@ Contains
                     PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
                     If (elemType%numDofs(depth+1) > 0) Then
                         PetscCall(PetscSectionSetDof(section,closure(p),elemType%numDofs(depth+1)*numComponents,ierr))
-                        !PetscCall(PetscSectionSetFieldDof(section,closure(p),[0],elemType%numDofs(depth+1)*numComponents,ierr))
+                        PetscCall(PetscSectionSetFieldDof(section,closure(p),field,elemType%numDofs(depth+1)*numComponents,ierr))
                     End If
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
@@ -171,14 +172,14 @@ Contains
 
         PetscInt                           :: p,i,pStart,pEnd,numConstraints,numComponents
         PetscInt,Dimension(:),Pointer      :: constraints
-        !PetscInt                           :: field = 0
+        PetscInt                           :: field = 0
 
         PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
         Do p = 1, pEnd
             numConstraints = count(table(p,:))
             If (numConstraints > 0) Then
                 PetscCall(PetscSectionSetConstraintDof(section,p-1,numConstraints,ierr))
-                !PetscCall(PetscSectionSetFieldConstraintDof(section,p-1,[0],numConstraints,ierr))
+                PetscCall(PetscSectionSetFieldConstraintDof(section,p-1,field,numConstraints,ierr))
             End If
         End Do
 
@@ -191,22 +192,22 @@ Contains
                 Allocate(constraints(numConstraints))
                 constraints = pack([ (i-1, i = 1,numComponents) ],table(p,:))
                 PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
-                !PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
+                PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
                 DeAllocate(constraints)
             End If
         End Do
     End Subroutine MEF90SectionAllocateConstraint
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90VecReorderingSF"
+#define __FUNCT__ "MEF90VecReorder"
 !!!
 !!!  
-!!!  MEF90VecReorderingSF: rearrange a Vec according to the given SF
+!!!  MEF90VecReorder: rearrange a Vec according to the given SF
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90VecReorderingSF(vin,vout,sf,ierr)
+    Subroutine MEF90VecReorder(vin,vout,sf,ierr)
         Type(tVec),intent(IN)              :: vin
         Type(tVec),intent(INOUT)           :: vout
         Type(tPetscSF),intent(IN)          :: sf
@@ -220,18 +221,18 @@ Contains
         PetscCallA(PetscSFBcastEnd(sf, MPIU_SCALAR, arrayin, arrayout, MPI_REPLACE, ierr))
         PetscCallA(VecRestoreArrayReadF90(vin, arrayin, ierr))
         PetscCallA(VecRestoreArrayF90(vout, arrayout, ierr))
-    End subroutine MEF90VecReorderingSF
+    End subroutine MEF90VecReorder
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90CreateLocalToIOSF"
+#define __FUNCT__ "MEF90LocalToIOSFCreate"
 !!!
 !!!  
-!!!  MEF90CreateLocalToIOSF: sf mapping between local to IO ordering and distribution
+!!!  MEF90LocalToIOSFCreate: sf mapping between local to IO ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90CreateLocalToIOSF(MEF90Ctx,dm,sf,ierr)
+    Subroutine MEF90LocalToIOSFCreate(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)               :: dm
         Type(tPetscSF),intent(OUT)         :: sf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -239,9 +240,9 @@ Contains
 
         Type(tPetscSF)                     :: naturalSF, ioSF, lcgSF, tempSF
 
-        PetscCallA(CreateLocalToCGlobalSF_internal(MEF90Ctx,dm,lcgSF,ierr))
+        PetscCallA(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(CreateNaturalToIOSF_internal(MEF90Ctx,dm,ioSF,ierr))
+            PetscCallA(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
             PetscCallA(DMGetNaturalSF(dm,naturalSF,ierr))
             PetscCallA(PetscSFCompose(lcgSF,naturalSF,tempSF,ierr))
             PetscCallA(PetscSFCompose(tempSF,ioSF,sf,ierr))
@@ -252,7 +253,7 @@ Contains
         Else
             sf = lcgSF
         End If
-    End subroutine MEF90CreateLocalToIOSF
+    End subroutine MEF90LocalToIOSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateIOToLocalSF"
@@ -271,9 +272,9 @@ Contains
 
         Type(tPetscSF)                     :: naturalSF, ioSF, cglSF, tempSF, invTempSF
 
-        PetscCallA(CreateCGlobalToLocalSF_internal(MEF90Ctx,dm,cglSF,ierr))
+        PetscCallA(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(CreateNaturalToIOSF_internal(MEF90Ctx,dm,ioSF,ierr))
+            PetscCallA(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
             PetscCallA(DMGetNaturalSF(dm,naturalSF,ierr))
             PetscCallA(PetscSFCompose(naturalSF,ioSF,tempSF,ierr))
             PetscCallA(PetscSFCreateInverseSF(tempSF,invTempSF,ierr))
@@ -379,24 +380,24 @@ Contains
             Do p = pStart,pEnd-1
                 PetscCall(PetscSectionGetConstraintDof(s,p,numConstraint,ierr))
                 If (numConstraint > 0) Then
-                    !PetscCallA(VecGetValuesSectionF90(c,s,p,vArray,ierr))
+                    PetscCallA(VecGetValuesSectionF90(c,s,p,vArray,ierr))
                     PetscCallA(VecSetValuesSectionF90(l,s,p,vArray,INSERT_ALL_VALUES,ierr))
-                    !PetscCallA(VecRestoreValuesSectionF90(c,s,p,vArray,ierr))
+                    PetscCallA(VecRestoreValuesSectionF90(c,s,p,vArray,ierr))
                 End If ! numConstraint
             End Do ! p
         End If
     End Subroutine MEF90VecGlobalToLocalConstraint
 
 #undef __FUNCT__
-#define __FUNCT__ "CreateNaturalToIOSF_internal"
+#define __FUNCT__ "CreateNaturalToIOSF_Private"
 !!!
 !!!  
-!!!  CreateNaturalToIOSF_internal: 
+!!!  CreateNaturalToIOSF_Private: 
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
     
-    subroutine CreateNaturalToIOSF_internal(MEF90Ctx,dm,sf,ierr)
+    subroutine CreateNaturalToIOSF_Private(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)                    :: dm
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         Type(tPetscSF),intent(OUT)              :: sf
@@ -410,8 +411,7 @@ Contains
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize
     
         if (MEF90Ctx%NumProcs > 1) then
-!            PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
-            Continue
+            PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
         else
             PetscCallA(DMCreateGlobalVector(dm,vnat,ierr))
         end if
@@ -440,18 +440,18 @@ Contains
         PetscCallA(VecDestroy(vio,ierr))
         PetscCallA(VecDestroy(vnat,ierr))
         DeAllocate(remote)
-    End subroutine CreateNaturalToIOSF_internal
+    End subroutine CreateNaturalToIOSF_Private
     
 #undef __FUNCT__
-#define __FUNCT__ "CreateLocalToCGlobalSF_internal"
+#define __FUNCT__ "CreateLocalToCGlobalSF_Private"
 !!!
 !!!  
-!!!  CreateLocalToCGlobalSF_internal: 
+!!!  CreateLocalToCGlobalSF_Private: 
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
     
-    subroutine CreateLocalToCGlobalSF_internal(MEF90Ctx,dm,sf,ierr)
+    subroutine CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)                    :: dm
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         Type(tPetscSF),intent(OUT)              :: sf
@@ -490,18 +490,18 @@ Contains
         PetscCallA(PetscSFDestroy(idSF,ierr))
         DeAllocate(remote)
     
-    End subroutine CreateLocalToCGlobalSF_internal
+    End subroutine CreateLocalToCGlobalSF_Private
     
 #undef __FUNCT__
-#define __FUNCT__ "CreateCGlobalToLocalSF_internal"
+#define __FUNCT__ "CreateCGlobalToLocalSF_Private"
 !!!
 !!!  
-!!!  CreateCGlobalToLocalSF_internal: 
+!!!  CreateCGlobalToLocalSF_Private: 
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
     
-    subroutine CreateCGlobalToLocalSF_internal(MEF90Ctx,dm,sf,ierr)
+    subroutine CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)                    :: dm
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         Type(tPetscSF),intent(OUT)              :: sf
@@ -586,5 +586,5 @@ Contains
         PetscCallA(PetscObjectSetName(sf, "CGlobal-To-Local SF", ierr))
         PetscCallA(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
-    End subroutine CreateCGlobalToLocalSF_internal                    
+    End subroutine CreateCGlobalToLocalSF_Private                    
 End Module m_MEF90_DMPlex
