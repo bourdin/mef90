@@ -8,3 +8,9 @@
 _minted*
 mef90version.h
 .vscode
+
+Tests/TestConstraints
+
+Tests/TestSection
+
+Tests/TestVec

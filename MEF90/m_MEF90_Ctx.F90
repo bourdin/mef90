@@ -10,7 +10,7 @@ Module m_MEF90_Ctx_Type
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
       Integer                                         :: rank,numProcs
-      Character(len=MEF90MXSTRLEN,kind=C_char)       :: geometryfile,resultfile
+      Character(len=MEF90MXSTRLEN,kind=C_char)        :: geometryfile,resultfile
       PetscBag                                        :: GlobalOptionsBag      
       End Type MEF90Ctx_Type
    

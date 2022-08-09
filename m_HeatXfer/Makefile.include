@@ -1,4 +1,4 @@
 MEF90_HEATXFER_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXfer.o              \
-                      ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXferAssembly2D.o    \
-                      ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXferAssembly3D.o    \
                       ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXferCtx.o
+                      #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXferAssembly2D.o    \
+                      #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_HeatXferAssembly3D.o    \

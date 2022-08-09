@@ -9,10 +9,10 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
     Type(tDM)                           :: dm
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90MXSTRLEN)       :: IOBuffer
+    Character(len=MEF90MXSTRLEN)        :: IOBuffer
     PetscEnum                           :: setType
 
-    Type(MEF90ElementType)             :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)              :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents
     PetscInt                            :: set,order = 1
     PetscBool                           :: flg
@@ -20,9 +20,10 @@ Implicit NONE
     PetscInt,Dimension(:),pointer       :: setID
     PetscInt                            :: dim,pStart,pEnd,sz
     Type(tPetscSection)                 :: section
-    Logical,Dimension(:,:),Pointer      :: ConstraintTruthTable
-    Logical,Dimension(:),Pointer        :: constraints
+    PetscBool,Dimension(:,:),Pointer    :: ConstraintTruthTable
+    PetscBool,Dimension(:),Pointer      :: constraints
     Type(tVec)                          :: v
+    PetscInt,Dimension(1)               :: field = [0]
 
 
     MEF90GlobalOptions_default%verbose           = 1
@@ -59,9 +60,9 @@ Implicit NONE
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,section,ierr))
     PetscCallA(PetscSectionSetNumFields(section, 1,ierr))
-    PetscCallA(PetscSectionSetFieldName(section,[0],"U",ierr))
+    PetscCallA(PetscSectionSetFieldName(section,field,"U",ierr))
     PetscCallA(DMGetDimension(dm,dim,ierr))
-    PetscCallA(PetscSectionSetFieldComponents(section,[0],dim,ierr))
+    PetscCallA(PetscSectionSetFieldComponents(section,field,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
     PetscCallA(PetscSectionSetChart(section,pStart,pEnd,ierr))
 
@@ -151,14 +152,16 @@ Implicit NONE
     PetscCallA(VecSet(v,0.0_Kr,ierr))
     PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
     PetscCallA(VecGetBlockSize(v,sz,ierr))
-    Write(*,*) 'Global block size: ', sz
+    Write(IOBuffer,*) 'Global block size: ', sz,'\n'
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     PetscCallA(VecDestroy(v,ierr))
 
     PetscCallA(DMCreateLocalVector(dm,v,ierr))
     PetscCallA(VecSet(v,0.0_Kr,ierr))
     PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
     PetscCallA(VecGetBlockSize(v,sz,ierr))
-    Write(*,*) 'Local block size: ', sz
+    Write(IOBuffer,*) 'Local block size: ', sz,'\n'
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     PetscCallA(VecDestroy(v,ierr))
 
     PetscCallA(PetscSectionDestroy(section,ierr))

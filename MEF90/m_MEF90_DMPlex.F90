@@ -9,28 +9,157 @@ Module m_MEF90_DMPlex
     Enum,bind(c)
         enumerator  :: MEF90CellSetType = 1, &
                        MEF90FaceSetType,     &
-                       MEF90EdgeSetType,     &
+                       !MEF90EdgeSetType,     &
                        MEF90VertexSetType
     End Enum
+    PetscEnum,Dimension(3),Parameter :: MEF90SetType = [ &
+        MEF90CellSetType,                                &
+        MEF90FaceSetType,                                &
+        !MEF90EdgeSetType,                                &
+        MEF90VertexSetType ]
+
     Character(len=MEF90MXSTRLEN),Parameter :: MEF90CellSetLabelName   = 'Cell Sets  '
     Character(len=MEF90MXSTRLEN),Parameter :: MEF90FaceSetLabelName   = 'Face Sets  '
-    Character(len=MEF90MXSTRLEN),Parameter :: MEF90EdgeSetLabelName   = 'Edge Sets  '
+    !Character(len=MEF90MXSTRLEN),Parameter :: MEF90EdgeSetLabelName   = 'Edge Sets  '
     Character(len=MEF90MXSTRLEN),Parameter :: MEF90VertexSetLabelName = 'Vertex Sets'
 
-    Character(len=MEF90MXSTRLEN),dimension(4),Parameter  :: MEF90SetLabelName = &
-              [MEF90CellSetLabelName,MEF90FaceSetLabelName,MEF90EdgeSetLabelName,MEF90VertexSetLabelName]
+    Character(len=MEF90MXSTRLEN),dimension(3),Parameter  :: MEF90SetLabelName = &
+              [MEF90CellSetLabelName, &
+               MEF90FaceSetLabelName, &
+               !MEF90EdgeSetLabelName, &
+               MEF90VertexSetLabelName]
 
     private
-    public :: MEF90CellSetLabelName,MEF90FaceSetLabelName,                           &
-              MEF90EdgeSetLabelName,MEF90VertexSetLabelName,                         &
+    public :: MEF90CellSetLabelName,                                                 &
+              MEF90FaceSetLabelName,                                                 &
+              !MEF90EdgeSetLabelName,                                                 &
+              MEF90VertexSetLabelName,                                               &
               MEF90SetLabelName,                                                     &
-              MEF90CellSetType,MEF90FaceSetType,                                     &
-              MEF90EdgeSetType,MEF90VertexSetType,                                   &
-              MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                  &
-              MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,         &
-              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90CreateIOToLocalSF, &
-              MEF90CreateLocalToConstraintSF,MEF90VecGlobalToLocalConstraint
+              MEF90CellSetType,                                                      &
+              MEF90FaceSetType,                                                      &
+              !MEF90EdgeSetType,                                                      &
+              MEF90VertexSetType,                                                    &
+              MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
+              MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
+              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90CreateIOToLocalSF,         &
+              MEF90CreateLocalToConstraintSF,MEF90VecGlobalToLocalConstraint,        &
+              MEF90VecCreate
 Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90VecCreate"
+!!!
+!!!  
+!!!  MEF90VecCreate: create a Vec associated with a FE space and constraints
+!!!                  cellSetBC etc refer to GLOBAL cell sets for now
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+    Subroutine MEF90VecCreate(dm,elemFamily,elemOrder,sDim,cellSetBC,faceSetBC,vertexSetBC,name,V,ierr)
+        Type(tDM),Intent(IN)                    :: dm
+        PetscEnum,Intent(IN)                    :: elemFamily
+        PetscInt,Intent(IN)                     :: elemOrder,sDim
+        PetscBool,Dimension(:,:),Pointer        :: cellSetBC,faceSetBC,vertexSetBC
+        Character(len=MEF90MXSTRLEN),Intent(IN) :: name
+        Type(tVec),Intent(OUT)                  :: V
+        PetscErrorCode,Intent(INOUT)            :: ierr
+    
+        Type(tPetscSection)                     :: sectionV
+        Type(tDM)                               :: dmV
+        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: pStart,pEnd
+        MPI_Comm                                :: comm
+        PetscInt                                :: set
+        PetscEnum                               :: setType
+        PetscInt,Dimension(:),pointer           :: setID,pointID
+        Type(tIS)                               :: setIS,pointIS
+        Type(MEF90ElementType)                  :: elemType
+        DMPolytopeType                          :: cellType
+        PetscBool,Dimension(:,:),Pointer        :: constraintTruthTable
+        PetscBool,Dimension(:),Pointer          :: constraints
+    
+        PetscCall(DMClone(dm,dmV,ierr))
+        PetscCall(PetscObjectGetComm(dmV,comm,ierr))
+
+        PetscCall(PetscSectionCreate(comm,sectionV,ierr))
+        PetscCall(PetscSectionSetNumFields(sectionV,sDim,ierr))
+        PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
+        PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
+        PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
+        PetscCall(PetscSectionSetChart(sectionV,pStart,pEnd,ierr))
+
+    
+        Do setType = 1, size(MEF90SetType)
+            PetscCall(DMGetLabelIdIS(dmV,MEF90SetLabelName(setType),setIS,ierr))
+            !!! Get a GLOBAL cell set IS
+            PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                !!! Get cell type in order to pick the proper element type.
+                !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+                PetscCall(DMGetStratumIS(dmV,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
+                PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                If (size(pointID) > 0) Then
+                    PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
+                    PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
+                    PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90SetType(setType),setID(set),elemType,sdim,sectionV,ierr))
+                End If ! size(pointID)
+                PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                PetscCall(ISDestroy(pointIS,ierr))
+            End Do ! set
+            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISDestroy(setIS,ierr))
+        End Do ! setType
+
+        Allocate(ConstraintTruthTable(pEnd,sDim))
+        ConstraintTruthTable = .FALSE.
+        Allocate(Constraints(sDim))
+        Constraints = .FALSE.
+
+        setType = MEF90CellSetType
+        PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+        PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            constraints = cellSetBC(set,:)
+            PetscCallA(MEF90SetupConstraintTableSet(dmV,sectionV,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISDestroy(setIS,ierr))
+
+        setType = MEF90FaceSetType
+        PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+        PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            constraints = faceSetBC(set,:)
+            PetscCallA(MEF90SetupConstraintTableSet(dmV,sectionV,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISDestroy(setIS,ierr))
+        
+        setType = MEF90VertexSetType
+        PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+        PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            constraints = vertexSetBC(set,:)
+            PetscCallA(MEF90SetupConstraintTableSet(dmV,sectionV,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISDestroy(setIS,ierr))
+
+        PetscCallA(MEF90SectionAllocateConstraint(dmV,ConstraintTruthTable,sectionV,ierr))
+        DeAllocate(ConstraintTruthTable)
+        DeAllocate(Constraints)
+    
+        PetscCallA(DMSetLocalSection(dmV,sectionV,ierr))
+        PetscCallA(DMCreateLocalVector(dmV,V,ierr))
+PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-section_view",ierr))
+
+    End Subroutine MEF90VecCreate   
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SectionAllocateDof"
@@ -124,8 +253,8 @@ Contains
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscEnum,intent(IN)               :: setType
         PetscInt,Intent(IN)                :: setID
-        Logical,Dimension(:),Pointer       :: constraints
-        Logical,Dimension(:,:),Pointer     :: table
+        PetscBool,Dimension(:),Pointer     :: constraints
+        PetscBool,Dimension(:,:),Pointer   :: table
         PetscErrorCode,Intent(INOUT)       :: ierr
 
         Type(tIS)                          :: setPointIS

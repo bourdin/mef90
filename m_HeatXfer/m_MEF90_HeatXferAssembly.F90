@@ -44,7 +44,7 @@ Contains
       Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
-      Type(MEF90ElementType)                            :: elemType
+      Type(MEF90ElementType)                             :: elemType
       PetscInt                                           :: cell,dof,nVal
       Type(MEF90_VECT)                                   :: advectionVector
 

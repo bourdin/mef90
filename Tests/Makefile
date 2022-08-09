@@ -5,8 +5,17 @@ include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
-#include ${MEF90_DIR}/m_HeatXfer/Makefile.include
+include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 #include ${MEF90_DIR}/m_DefMech/Makefile.include
+
+TestVec.o: ${MEF90_DIR}/Tests/TestVec.F90 ${MEF90_HEATXFER_OBJS}
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestVec: TestVec.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
 
 TestConstraintIO.o: ${MEF90_DIR}/Tests/TestConstraintIO.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
@@ -276,12 +285,14 @@ allclean:
 	make -C ${MEF90_DIR} clean
 
 debug::
-	@echo FFLAGS     ${FFLAGS} 
-	@echo FC_FLAGS   ${FC_FLAGS}
-	@echo FCFLAGS    ${FCFLAGS}
-	@echo FCPPFLAGS  ${FCPPFLAGS}
-	@echo FCPP_FLAGS ${FCPP_FLAGS}
-	@echo LDFLAGS    ${LDFLAGS}
-	@echo CLINKER    ${CLINKER}
-	@echo FLINKER    ${FLINKER}
-	@echo PETSC_LIB  ${PETSC_LIB}
+	@echo FFLAGS              ${FFLAGS} 
+	@echo FC_FLAGS            ${FC_FLAGS}
+	@echo FCFLAGS             ${FCFLAGS}
+	@echo FCPPFLAGS           ${FCPPFLAGS}
+	@echo FCPP_FLAGS          ${FCPP_FLAGS}
+	@echo LDFLAGS             ${LDFLAGS}
+	@echo CLINKER             ${CLINKER}
+	@echo FLINKER             ${FLINKER}
+	@echo PETSC_LIB           ${PETSC_LIB}
+	@echo MEF90_HEATXFER_OBJS ${MEF90_HEATXFER_OBJS}
+	@echo MEF90_INCLUDE       ${MEF90_INCLUDE}

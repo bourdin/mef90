@@ -18,7 +18,7 @@ Module m_MEF90_HeatXfer
 
    Implicit none
 
-   Private
+   !Private
    ! Public MEF90HeatXferOperator
    ! Public MEF90HeatXferBilinearForm
    ! Public MEF90HeatXferEnergy
