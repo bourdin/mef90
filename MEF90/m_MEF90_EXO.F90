@@ -31,7 +31,7 @@ Contains
    Subroutine MEF90CtxOpenEXO(MEF90Ctx,Viewer,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(tPetscViewer), Intent(INOUT)               :: Viewer
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscCallA(exopts(EXVRBS+EXDEBG,ierr))
       PetscCallA(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,FILE_MODE_WRITE,Viewer,ierr))
@@ -49,7 +49,7 @@ Contains
 !!!
    Subroutine MEF90CtxCloseEXO(Viewer,ierr)
       Type(tPetscViewer),Intent(INOUT)                :: Viewer
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscCallA(PetscViewerDestroy(Viewer,ierr))
 
@@ -68,7 +68,7 @@ Contains
       Type(tPetscViewer),Intent(IN)                         :: Viewer
       Character(len=MXSTLN),Dimension(:),Pointer,Intent(IN) :: nameG,nameC,nameV
       Integer,Intent(IN)                                    :: numstep
-      PetscErrorCode,Intent(OUT)                            :: ierr
+      PetscErrorCode,Intent(INOUT)                          :: ierr
       
       Integer                                               :: numCS, exoid
       PetscInt                                              :: step
@@ -119,10 +119,10 @@ Contains
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXODMView(Mesh,Viewer,ierr)
+   Subroutine MEF90EXODMView(dm,Viewer,ierr)
       Type(tPetscViewer),Intent(IN)                      :: Viewer
-      Type(tDM),Intent(IN)                               :: Mesh
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      Type(tDM),Intent(IN)                               :: dm
+      PetscErrorCode,Intent(INOUT)                       :: ierr
       
       PetscInt                                           :: order = 1
       PetscBool                                          :: flg
@@ -134,7 +134,7 @@ Contains
           SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
       end if
       PetscCallA(PetscViewerExodusIISetOrder(Viewer,order,ierr))
-      PetscCallA(DMView(Mesh,Viewer,ierr))
+      PetscCallA(DMView(dm,Viewer,ierr))
 
    End Subroutine MEF90EXODMView
 
@@ -150,7 +150,7 @@ Contains
    Subroutine MEF90EXOVecView(v,Viewer,ierr)
       Type(tVec),Intent(IN)                              :: v
       Type(tPetscViewer),Intent(IN)                      :: Viewer
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(tDM)                                          :: dm
       PetscInt                                           :: exoid, offsetN = -1, offsetZ = -1, step
@@ -186,7 +186,7 @@ Contains
    Subroutine MEF90EXOVecLoad(v,Viewer,ierr)
       Type(tVec),Intent(IN)                              :: v
       Type(tPetscViewer),Intent(IN)                      :: Viewer
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(tDM)                                          :: dm
       PetscInt                                           :: exoid, offsetN = -1, offsetZ = -1, step
@@ -217,7 +217,7 @@ Contains
       Character(len=MXSTLN),Intent(IN) :: name
       Character(len=1),Intent(IN)      :: obj_type
       Integer,Intent(OUT)              :: varIndex
-      PetscErrorCode,Intent(OUT)       :: ierr
+      PetscErrorCode,Intent(INOUT)     :: ierr
    
       Integer                          :: i, j, num_suffix = 5, num_vars
       Character(len=MXSTLN)            :: var_name,ext_name, suffix(5)
@@ -243,7 +243,7 @@ Contains
    Subroutine MEF90EXOVecViewNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid, step, offset
       Type(tVec),Intent(IN)            :: v
-      PetscErrorCode,Intent(OUT)       :: ierr
+      PetscErrorCode,Intent(INOUT)     :: ierr
    
       Integer                          :: xs,xe,bs,c
       PetscScalar,Dimension(:),Pointer :: varray
@@ -275,7 +275,7 @@ Contains
    Subroutine MEF90EXOVecLoadNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid, step, offset
       Type(tVec),Intent(IN)            :: v
-      PetscErrorCode,Intent(OUT)       :: ierr
+      PetscErrorCode,Intent(INOUT)     :: ierr
    
       Integer                          :: xs,xe,bs,c
       PetscScalar,Dimension(:),Pointer :: varray
@@ -308,7 +308,7 @@ Contains
    Subroutine MEF90EXOVecViewZonal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid, step, offset
       Type(tVec),Intent(IN)            :: v
-      PetscErrorCode,Intent(OUT)       :: ierr
+      PetscErrorCode,Intent(INOUT)     :: ierr
    
       Integer                          :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
       PetscScalar,Dimension(:),Pointer :: varray
@@ -364,7 +364,7 @@ Contains
    Subroutine MEF90EXOVecLoadZonal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid, step, offset
       Type(tVec),Intent(IN)            :: v
-      PetscErrorCode,Intent(OUT)       :: ierr
+      PetscErrorCode,Intent(INOUT)     :: ierr
    
       Integer                          :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
       PetscScalar,Dimension(:),Pointer :: varray

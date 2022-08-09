@@ -4,30 +4,27 @@ Use m_MEF90
 Use petsc
 Implicit NONE   
     
-    PetscErrorCode                          :: ierr
-    Type(MEF90Ctx_Type),target              :: MEF90Ctx
-    Type(MEF90CtxGlobalOptions_Type)        :: MEF90GlobalOptions_default
-    Type(tDM),target                        :: dm,dmU,dmU0
-    PetscBool                               :: interpolate = PETSC_TRUE
-    Character(len=MEF90MXSTRLEN)            :: IOBuffer
-    PetscEnum                               :: setType
+    PetscErrorCode                                      :: ierr
+    Type(MEF90Ctx_Type),target                          :: MEF90Ctx
+    Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions_default
+    Type(MEF90CtxGlobalOptions_Type),Pointer            :: MEF90GlobalOptions
+    Type(tDM),target                                    :: dm,dmU,dmU0,dmS
+    PetscBool                                           :: interpolate = PETSC_TRUE
 
-    Type(MEF90ElementType)                  :: cellSetElementType,faceSetElementType
-    PetscInt                                :: numComponents, numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
-    Character(len=MEF90MXSTRLEN),allocatable:: nodalVarName(:), cellVarName(:), gVarName(:)
-    PetscInt                                :: set, order = 1, nroots, nleaves
-    PetscBool                               :: flg
-    PetscMPIInt                             :: rank = 0
-    type(tIS)                               :: setIS
-    PetscInt,Dimension(:),pointer           :: setID,remoteOffsets,ilocal
-    PetscInt                                :: dim,pStart,pEnd,size,n,p
-    Type(tPetscSection)                     :: sectionU, sectionU0
-    Type(tPetscSF)                          :: naturalPointSF, natSFU, natSFU0, lcSF, clSF, idSF, testSF, lioSF, iolSF, lioBSF, iolBSF
-    Type(tVec)                              :: locCoord, locVec, gVec, locVecB, ioVec
-    Type(PetscSFNode),dimension(:),Pointer  :: iremote
-    Type(tPetscViewer)                      :: viewer
-    Logical,Dimension(:,:),Pointer          :: ConstraintTruthTableU, ConstraintTruthTableU0
-    Logical,Dimension(:),Pointer            :: constraints
+    PetscInt                                            :: numCellComponents, numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
+    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
+    Character(len=MEF90MXSTRLEN)                        :: name
+    PetscInt                                            :: nroots, nleaves
+    type(tIS)                                           :: cellIS,csIS
+    PetscInt,Dimension(:),pointer                       :: ilocal,cellID,csID
+    PetscInt                                            :: dim,pStart,pEnd,size,bs,cell,c,set,numCells,numCS
+    Type(tPetscSection)                                 :: sectionU, sectionU0, sectionS, coordSection
+    Type(tPetscSF)                                      :: naturalPointSF, natSFU, natSFU0, natSFS, lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
+    Type(tVec)                                          :: locCoord, locVec, locVecB, ioVec, S, locS, ioS, ioVecRead, ioSRead
+    Type(PetscSFNode),dimension(:),Pointer              :: iremote
+    Type(tPetscViewer)                                  :: viewer
+    PetscReal                                           :: time = 1.234_Kr,norm
+    PetscScalar,dimension(:),pointer                    :: cval,xyz
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
@@ -41,19 +38,21 @@ Implicit NONE
     MEF90GlobalOptions_default%elementOrder      = 1
  
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
-    MEF90Ctx%resultFile = "results/TestConstraintIO_out.exo"
     Allocate(nodalVarName(numNodalVar))
     Allocate(cellVarName(numCellVar))
     Allocate(gVarName(numGVar))
-    nodalVarName(1:2) = ["U_x ","U_y "]
-    cellVarName(1:3) = ["Sigma_11","Sigma_22","Sigma_12"]
+    nodalVarName(1:2) = ["U_X","U_Y"]
+    cellVarName(1:3) = ["Sigma_11","Sigma_22","Sigma_33"]
     
+    ! Create DM from file
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
+    ! Open exodus file + write geometry + format the file
     call MEF90CtxOpenEXO(MEF90Ctx,viewer,ierr)
     call MEF90EXODMView(dm,viewer,ierr)
     call MEF90EXOFormat(viewer,gVarName,cellVarName,nodalVarName,numStep,ierr)
@@ -62,6 +61,7 @@ Implicit NONE
     DeAllocate(cellVarName)
     DeAllocate(gVarName)
 
+    ! Distribute DM
     distribute: Block 
         Type(tDM),target                    :: dmDist
         If (MEF90Ctx%NumProcs > 1) Then
@@ -77,180 +77,181 @@ Implicit NONE
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
 
-    PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU,ierr))
-    PetscCallA(PetscObjectSetName(SectionU,"Section for U",ierr))
-    PetscCallA(PetscSectionSetChart(sectionU,pStart,pEnd,ierr))
-    PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU0,ierr))
-    PetscCallA(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
-    PetscCallA(PetscSectionSetChart(sectionU0,pStart,pEnd,ierr))
-
-
-    numComponents = dim
-    !!! Allocate DoF at cell and face sets
-    !!! Note that if the face sets corresponds to faces in elements in cell set 
-    !!! (which will always be the case in an exodusII mesh), the second call does nothing
-    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
-    If (dim == 2) Then
-        Select case(order)
-        case(1)
-            cellSetElementType = MEF90P1Lagrange2D
-            faceSetElementType = MEF90P1Lagrange2DBoundary
-        case(2)
-            cellSetElementType = MEF90P2Lagrange2D
-            faceSetElementType = MEF90P2Lagrange2DBoundary
-        Case default
-            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
-            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
-        End Select
-    Else If (dim == 3) Then
-        Select case(order)
-            case(1)
-                cellSetElementType = MEF90P1Lagrange3D
-                faceSetElementType = MEF90P1Lagrange3DBoundary
-            case(2)
-                cellSetElementType = MEF90P2Lagrange3D
-                faceSetElementType = MEF90P2Lagrange3DBoundary
-            Case default
-            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
-            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
-        End Select
-    End If
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU0,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
-
-
-    !!! Allocate constraints.
-    !!! This is definitely not optimized. We could create a table of dimension
-    !!! # points with dof x # components instead of #points x # components
-    !!! We can address this later if needed
-    !!! The whole constraint setup takes 2 passes: 
-    !!!   1. Fill the constraint truth table (typically from data in CS/FS/ES/VS bag)
-    !!!      This is done in MEF90SetupConstraintTableSet
-    !!!   2. Allocate space in the section, call PetscSectionSetup, and set the constraint indices
-    !!!      for each constrained dof. This is done in MEF90SectionAllocateConstraint
-    PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
-    Allocate(ConstraintTruthTableU(pEnd,numComponents),source=.FALSE.)
-    Allocate(ConstraintTruthTableU0(pEnd,numComponents),source=.FALSE.)
-
-    Allocate(constraints(numComponents))
-
-    setType = MEF90FaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-    PetscCallA(ISDestroy(SetIS,ierr))
-
-    setType = MEF90VertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-    PetscCallA(ISDestroy(SetIS,ierr))
-    DeAllocate(constraints)
-
-    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
-
-    DeAllocate(ConstraintTruthTableU)
-    DeAllocate(ConstraintTruthTableU0)
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-section_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-section_view",ierr))
-
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
 
-    PetscCallA(DMClone(dm,dmU,ierr))
-    PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
+    ! Create local Vec holding coordinates
+    name = "U"
+    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVec,ierr))
+    PetscCallA(VecGetDM(locVec,dmU,ierr))
+    PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMSetUseNatural(dmU,PETSC_TRUE,ierr))
 
-    PetscCallA(DMClone(dm,dmU0,ierr))
-    PetscCallA(DMSetLocalSection(dmU0,sectionU0,ierr))
+    ! Create local Vec holding constraints
+    name = "U0"
+    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecB,ierr))
+    PetscCallA(VecGetDM(locVecB,dmU0,ierr))
+    PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
     PetscCallA(DMSetUseNatural(dmU0,PETSC_TRUE,ierr))
 
-    ! Creating the GlobalToNatural SF
-    ! if (MEF90Ctx%NumProcs > 1) then
-    !     PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
-    !     PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
-    !     PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
-    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
-    !     PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
-    !     PetscCallA(PetscObjectDereference(natSFU, ierr))
-    !     PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
-    !     PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
-    !     PetscCallA(PetscObjectDereference(natSFU0, ierr))
-    ! end if
+    ! TODO: create cell Vec through MEF90VecCreate
+    PetscCallA(DMClone(dm,dmS,ierr))
+    PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionS,ierr))
+    PetscCallA(PetscObjectSetName(SectionS,"Section for Sigma",ierr))
+    PetscCallA(PetscSectionSetChart(sectionS,pStart,pEnd,ierr))
+    numCellComponents = 3
+    PetscCallA(MEF90CellSectionCreate(dm,numCellComponents,sectionS,ierr))
+    PetscCallA(DMSetLocalSection(dmS,sectionS,ierr))
+    PetscCallA(DMSetUseNatural(dmS,PETSC_TRUE,ierr))
 
-    PetscCallA(MEF90CreateLocalToConstraintSF(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
-    ! PetscCallA(MEF90CreateLocalToIOSF(MEF90Ctx,dmU,lioSF,ierr))
-    ! PetscCallA(MEF90CreateIOToLocalSF(MEF90Ctx,dmU,iolSF,ierr))
-    ! PetscCallA(MEF90CreateLocalToIOSF(MEF90Ctx,dmU0,lioBSF,ierr))
-    ! PetscCallA(MEF90CreateIOToLocalSF(MEF90Ctx,dmU0,iolBSF,ierr))
+    ! View all sections
+    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionS,PETSC_NULL_OPTIONS,"-sectionS_view",ierr))
 
-    ! PetscCallA(DMGetCoordinatesLocal(dmU,locCoord,ierr))
-    ! PetscCallA(DMGetLocalVector(dmU,locVec,ierr))
-    ! PetscCallA(DMGetLocalVector(dmU0,locVecB,ierr))
-    PetscCallA(DMGetGlobalVector(dmU,gVec,ierr))
-    PetscCallA(VecSet(gVec,-111.0_kr,ierr))
-    ! PetscCallA(VecSet(locVecB,999.0_kr,ierr))
-    ! PetscCallA(VecCopy(locCoord,locVec,ierr))
+    ! Create GlobalToNatural SF
+    if (MEF90Ctx%NumProcs > 1) then
+        PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
+        PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
+        PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
+        PetscCallA(DMPlexSetMigrationSF(dmS, naturalPointSF, ierr))
+        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
+        PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
+        PetscCallA(PetscSFDestroy(natSFU, ierr))
+        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
+        PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
+        PetscCallA(PetscSFDestroy(natSFU0, ierr))
+        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmS, PETSC_NULL_SECTION, naturalPointSF, natSFS, ierr))
+        PetscCallA(DMSetNaturalSF(dmS, natSFS, ierr))
+        PetscCallA(PetscSFDestroy(natSFS, ierr))
+    end if
 
-    ! PetscCallA(DMGlobalToLocalBegin(dmU,gVec,INSERT_VALUES,locVec,ierr))
-    ! PetscCallA(DMGlobalToLocalEnd(dmU,gVec,INSERT_VALUES,locVec,ierr))
+    ! Create all SFs for Vec reordering and copying constraint values
+    PetscCallA(MEF90LocalToConstraintSFCreate(MEF90Ctx,dmU,dmU0,lcSF,clSF,ierr))
+    PetscCallA(MEF90LocalToIOSFCreate(MEF90Ctx,dmU,lioSF,ierr))
+    PetscCallA(MEF90IOToLocalSFCreate(MEF90Ctx,dmU,iolSF,ierr))
+    PetscCallA(MEF90LocalToIOSFCreate(MEF90Ctx,dmU0,lioBSF,ierr))
+    PetscCallA(MEF90IOToLocalSFCreate(MEF90Ctx,dmU0,iolBSF,ierr))
+    PetscCallA(MEF90LocalToIOSFCreate(MEF90Ctx,dmS,lioSSF,ierr))
+    PetscCallA(MEF90IOToLocalSFCreate(MEF90Ctx,dmS,iolSSF,ierr))
 
-    ! PetscCallA(VecView(locVec,PETSC_VIEWER_STDOUT_SELF,ierr))
+    ! Fill locVec holding coordinates and copy constraint values = 10 from locVecB
+    PetscCallA(DMGetCoordinatesLocal(dmU,locCoord,ierr))
+    PetscCallA(VecSet(locVecB,10.0_kr,ierr))
+    PetscCallA(VecCopy(locCoord,locVec,ierr))
+    PetscCallA(MEF90VecReorder(locVecB,locVec,clSF,ierr))
 
-    ! PetscCallA(MEF90VecReorderingSF(locVecB,locVec,clSF,ierr))
+    ! Create IO Vec for writing (ioVec) and reading (ioVecRead)
+    PetscCallA(PetscSFGetGraph(lioSF,nroots,nleaves,ilocal,iremote,ierr))
+    PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,iovec,ierr))
+    PetscCallA(VecGetBlockSize(locVec,bs,ierr))
+    PetscCallA(VecSetBlockSize(iovec,bs,ierr))
+    PetscCallA(VecSetDM(iovec,dmU,ierr))
+    PetscCallA(PetscObjectSetName(iovec,"U",ierr))
+    PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,ioVecRead,ierr))
+    PetscCallA(VecSetBlockSize(ioVecRead,bs,ierr))
+    PetscCallA(VecSetDM(ioVecRead,dmU,ierr))
+    PetscCallA(PetscObjectSetName(ioVecRead,"U",ierr))
 
-    ! PetscCallMPIA(MPI_Barrier(PETSC_COMM_WORLD,ierr))
+    ! Reorder locVec into ioVec and write ioVec
+    PetscCallA(MEF90VecReorder(locVec,ioVec,lioSF,ierr))
+    PetscCallA(DMSetOutputSequenceNumber(dmU,0,time,ierr))
+    PetscCallA(VecViewFromOptions(ioVec,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
+    PetscCallA(MEF90EXOVecView(ioVec,viewer,ierr))
 
-    ! PetscCallA(VecView(locVec,PETSC_VIEWER_STDOUT_SELF,ierr))
+    ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
+    ! (iii) y geometric center
+    PetscCallA(DMGetGlobalVector(dmS,S,ierr))
+    PetscCallA(DMGetLocalVector(dmS,locS,ierr))
+    PetscCallA(DMGetCoordinateSection(dmS, coordSection,ierr))
+    PetscCallA(DMGetLabelIdIS(dmS, "Cell Sets", csIS,ierr))
+    PetscCallA(DMGetLabelSize(dmS, "Cell Sets",numCS,ierr))
+    PetscCallA(ISGetIndicesF90(csIS, csID,ierr))
+    do set = 1, numCS
+        PetscCallA(DMGetStratumIS(dmS, "Cell Sets", csID(set), cellIS,ierr))
+        PetscCallA(ISGetIndicesF90(cellIS, cellID,ierr))
+        PetscCallA(ISGetSize(cellIS, numCells,ierr))
+        do cell = 1,numCells
+            PetscCallA(DMPlexVecGetClosure(dmS, PETSC_NULL_SECTION, S, cellID(cell), cval,ierr))
+            PetscCallA(DMPlexVecGetClosure(dmS, coordSection, locCoord, cellID(cell), xyz,ierr))
+            cval(1) = MEF90Ctx%rank
+            cval(2) = 0.0_Kr
+            do c = 1, size(xyz),dim-1
+                cval(2) = cval(2) + xyz(c)
+            end do
+            cval(2) = cval(2) * dim / size(xyz)
+            cval(3) = 0.0_Kr
+            do c = 1, size(xyz),dim
+                cval(3) = cval(3) + xyz(c)
+            end do
+            cval(3) = cval(3) * dim / size(xyz)
+            PetscCallA(DMPlexVecSetClosure(dmS, PETSC_NULL_SECTION, S, cellID(cell), cval, INSERT_ALL_VALUES,ierr))
+            PetscCallA(DMPlexVecRestoreClosure(dmS, PETSC_NULL_SECTION, S, cellID(cell), cval,ierr))
+            PetscCallA(DMPlexVecRestoreClosure(dmS, coordSection, locCoord, cellID(cell), xyz,ierr))
+        end do
+        PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
+        PetscCallA(ISDestroy(cellIS,ierr))
+    end do
+    PetscCallA(ISRestoreIndicesF90(csIS, csID,ierr))
+    PetscCallA(ISDestroy(csIS,ierr))
+    PetscCallA(DMGlobalToLocalBegin(dmS, S, INSERT_VALUES, locS,ierr))
+    PetscCallA(DMGlobalToLocalEnd(dmS, S, INSERT_VALUES, locS,ierr))
+    PetscCallA(DMRestoreGlobalVector(dmS,S,ierr))
+    PetscCallA(PetscSFGetGraph(lioSSF,nroots,nleaves,ilocal,iremote,ierr))
 
-    ! PetscCallA(PetscSFGetGraph(lioSF,nroots,nleaves,ilocal,iremote,ierr))
-    ! PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,iovec,ierr))
-    ! PetscCallA(PetscObjectSetName(iovec,"U",ierr))
+    ! Create IO Vec for writing (ioS) and reading (ioSRead)
+    PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,ioS,ierr))
+    PetscCallA(VecGetBlockSize(locS,bs,ierr))
+    PetscCallA(VecSetBlockSize(ioS,bs,ierr))
+    PetscCallA(VecSetDM(ioS,dmS,ierr))
+    PetscCallA(PetscObjectSetName(ioS,"Sigma",ierr))
+    PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,ioSRead,ierr))
+    PetscCallA(VecSetBlockSize(ioSRead,bs,ierr))
+    PetscCallA(VecSetDM(ioSRead,dmS,ierr))
+    PetscCallA(PetscObjectSetName(ioSRead,"Sigma",ierr))
 
-    ! PetscCallA(MEF90VecReorderingSF(locVec,ioVec,lioSF,ierr))
+    ! Reorder and write ioS
+    PetscCallA(DMSetOutputSequenceNumber(dmS,0,time,ierr))
+    PetscCallA(MEF90VecReorder(locS,ioS,lioSSF,ierr))
+    PetscCallA(VecViewFromOptions(ioS,PETSC_NULL_OPTIONS,"-ios_view",ierr))
+    PetscCallA(MEF90EXOVecView(ioS,viewer,ierr))
 
-    ! PetscCallA(VecView(ioVec,PETSC_VIEWER_STDOUT_WORLD,ierr))
+    ! Test read ioVecRead and ioSRead
+    PetscCallA(MEF90EXOVecLoad(ioVecRead,viewer,ierr))
+    PetscCallA(VecViewFromOptions(ioVecRead,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
+    PetscCallA(MEF90EXOVecLoad(ioSRead,viewer,ierr))
+    PetscCallA(VecViewFromOptions(ioSRead,PETSC_NULL_OPTIONS,"-ios_view",ierr))
 
-    ! PetscCallMPIA(MPI_Barrier(PETSC_COMM_WORLD,ierr))
+    ! Cleanup Vec
+    PetscCallA(VecDestroy(locVec,ierr))
+    PetscCallA(VecDestroy(locVecB,ierr))
+    PetscCallA(DMRestoreLocalVector(dmS,locS,ierr))
+    PetscCallA(VecDestroy(ioVec,ierr))
+    PetscCallA(VecDestroy(ioVecRead,ierr))
+    PetscCallA(VecDestroy(ioS,ierr))
+    PetscCallA(VecDestroy(ioSRead,ierr))
 
-    PetscCallA(MEF90EXOVecView(gVec,viewer,ierr))
-
-    ! PetscCallA(DMRestoreLocalVector(dmU,locVec,ierr))
-    ! PetscCallA(DMRestoreLocalVector(dmU0,locVecB,ierr))
-    PetscCallA(DMRestoreGlobalVector(dmU,gVec,ierr))
-    ! PetscCallA(VecDestroy(ioVec,ierr))
-
+    ! Cleanup SF
     PetscCallA(PetscSFDestroy(lcSF,ierr))
     PetscCallA(PetscSFDestroy(clSF,ierr))
-    ! PetscCallA(PetscSFDestroy(lioSF,ierr))
-    ! PetscCallA(PetscSFDestroy(iolSF,ierr))
-    ! PetscCallA(PetscSFDestroy(lioBSF,ierr))
-    ! PetscCallA(PetscSFDestroy(iolBSF,ierr))
+    PetscCallA(PetscSFDestroy(lioSF,ierr))
+    PetscCallA(PetscSFDestroy(iolSF,ierr))
+    PetscCallA(PetscSFDestroy(lioBSF,ierr))
+    PetscCallA(PetscSFDestroy(iolBSF,ierr))
+    PetscCallA(PetscSFDestroy(lioSSF,ierr))
+    PetscCallA(PetscSFDestroy(iolSSF,ierr))
 
+    ! Cleanup Sections
     PetscCallA(PetscSectionDestroy(sectionU,ierr))
     PetscCallA(PetscSectionDestroy(sectionU0,ierr))
+    PetscCallA(PetscSectionDestroy(sectionS,ierr))
 
+    ! Cleanup DMs
     PetscCallA(DMDestroy(dmU,ierr))
     PetscCallA(DMDestroy(dmU0,ierr))
+    PetscCallA(DMDestroy(dmS,ierr))
     PetscCallA(DMDestroy(dm,ierr))
+
+    ! Exit nicely
     call MEF90CtxCloseEXO(viewer,ierr)
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
