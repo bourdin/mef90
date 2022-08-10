@@ -2,7 +2,6 @@ Program  TestVec
 #include <petsc/finclude/petsc.h>
 Use petsc
 Use m_MEF90
-Use m_MEF90_HeatXfer
 Implicit NONE   
     
     PetscErrorCode                                     :: ierr
@@ -10,39 +9,12 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions_default
     Type(MEF90CtxGlobalOptions_Type),Pointer           :: MEF90GlobalOptions
     Type(tDM)                                          :: dm
-    PetscBool                                          :: interpolate = PETSC_TRUE
+    PetscBool                                          :: flg,interpolate = PETSC_TRUE
     Character(len=MEF90MXSTRLEN)                       :: name
+    PetscInt                                           :: sDim = 1
 
     Type(tVec)                                         :: v
-    PetscBool,Dimension(:,:),Pointer                   :: cellSetBC,faceSetBC,vertexSetBC
-    Type(MEF90HeatXferCellSetOptions_Type),pointer     :: cellSetOptions,facesetOptions
-    Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: vertexSetOptions
-    PetscInt                                           :: set
-    Type(tIS)                                          :: setIS
-    PetscInt,Dimension(:),Pointer                      :: setID
-    PetscEnum                                          :: setType
 
-    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
-    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                          MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
-                                                          PETSC_FALSE,         & ! addNullSpace
-                                                          0.,                  & ! initialTemperature
-                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
-                                                          MEF90Scaling_Linear, & ! externalTempScaling
-                                                          MEF90Scaling_Linear)   ! fluxScaling
-    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-                                                          0.0_Kr,        & ! flux
-                                                          0.0_Kr,        & ! surfaceThermalConductivity
-                                                          0.0_Kr,        & ! externalTemp
-                                                          PETSC_FALSE,   & ! Has BC
-                                                          0.0_Kr,        & ! boundaryTemp
-                                                          [0.0_Kr,0.0_Kr,0.0_Kr]) ! AdvectionVelocity
-                                                          
-    Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                          PETSC_FALSE,   & ! Has BC
-                                                          0.0_Kr)          ! boundaryTemp
- 
     MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
     MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
@@ -73,62 +45,20 @@ Implicit NONE
             dm = dmDist
         End If
     End Block distribute
-    
-    !!! Create HeatXfer context, get all HeatXfer options
-    Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr);CHKERRQ(ierr)
-    Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions, &
-                                        MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr)
-  
-    setType = MEF90CellSetType
-    PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
-    PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
-    PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-Write(*,*) 'cell sets ', setID
-    Allocate(cellSetBC(size(setID),1))
-    Do set = 1,size(setID)
-        Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-        cellSetBC(set,:) = cellSetOptions%Has_BC
-    End Do ! set
-    PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-    PetscCall(ISDestroy(setIS,ierr))
-
-    setType = MEF90FaceSetType
-    PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
-    PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
-    PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-Write(*,*) 'face sets ', setID
-    Allocate(faceSetBC(size(setID),1))
-    Do set = 1,size(setID)
-        Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr);CHKERRQ(ierr)
-        faceSetBC(set,:) = faceSetOptions%Has_BC
-    End Do ! set
-    PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-    PetscCall(ISDestroy(setIS,ierr))
-
-    setType = MEF90VertexSetType
-    PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
-    PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
-    PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-Write(*,*) 'vertex sets ', setID
-    Allocate(vertexSetBC(size(setID),1))
-    Do set = 1,size(setID)
-        Call PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(MEF90HeatXferCtx%VertexSetOptionsBag(set),vertexSetOptions,ierr);CHKERRQ(ierr)
-        vertexSetBC(set,:) = vertexSetOptions%Has_BC
-    End Do ! set
-    PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-    PetscCall(ISDestroy(setIS,ierr))
-
-    write(*,*) 'cellSetBC:   ',cellSetBC
-    write(*,*) 'faceSetBC:   ',faceSetBC
-    write(*,*) 'vertexSetBC: ',vertexSetBC
 
     name = "Temperature"
-    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1,CellSetBC,FaceSetBC,VertexSetBC,name,V,ierr))
-    !PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-sdim',sdim,flg,ierr))
+    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,sdim,name,V,ierr))
 
-    DeAllocate(cellSetBC)
-    DeAllocate(faceSetBC)
-    DeAllocate(vertexSetBC)
+    ViewSec: block
+        Type(tPetscSection)     :: sectionV
+        Type(tDM)               :: dmV
+
+        PetscCallA(VecGetDM(V,dmV,ierr))
+        PetscCallA(DMGetLocalSection(dmV,sectionV,ierr))
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
+        PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
+    end block ViewSec
     PetscCallA(DMDestroy(dm,ierr))
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
