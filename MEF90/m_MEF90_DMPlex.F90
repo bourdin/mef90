@@ -57,8 +57,9 @@ Module m_MEF90_DMPlex
               MEF90VertexSetType,                                                    &
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
-              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90CreateIOToLocalSF,         &
-              MEF90CreateLocalToConstraintSF,MEF90VecGlobalToLocalConstraint,        &
+              MEF90CellSectionCreate,                                                &
+              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90IOToLocalSFCreate,         &
+              MEF90LocalToConstraintSFCreate,MEF90VecGlobalToLocalConstraint,        &
               MEF90VecCreate
 Contains
 
@@ -189,7 +190,7 @@ Contains
     End Subroutine MEF90SectionAllocateDof
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90SectionAllocateDofSet"
+#define __FUNCT__ "MEF90_SectionAllocateDofSet"
 !!!
 !!!  
 !!!  MEF90SectionAllocateDofSet: Associates dof to a section in a set
@@ -235,6 +236,56 @@ Contains
         PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
         PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SectionAllocateDofSet
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CellSectionCreate"
+!!!
+!!!  
+!!!  MEF90CellSectionCreate: create a section with numComponent dof at cells
+!!!  
+!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+    Subroutine MEF90CellSectionCreate(dm,numComponents,section,ierr)
+        Type(tDM),Intent(IN)               :: dm
+        PetscInt,Intent(IN)                :: numComponents
+        Type(tPetscSection),Intent(INOUT)  :: section
+        PetscErrorCode,Intent(INOUT)       :: ierr
+
+        Type(tIS)                          :: setIS, setPointIS
+        PetscInt,dimension(:),Pointer      :: setID, setPointID
+        PetscInt                           :: set, point
+        PetscInt,dimension(:),pointer      :: closure
+        PetscInt                           :: p,depth,dim
+
+        PetscCallA(DMGetDimension(dm,dim,ierr))
+        PetscCall(DMGetLabelIdIS(dm,'Cell Sets',setIS,ierr))
+        PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            PetscCall(DMGetStratumIS(dm,'Cell Sets',setID(set),setPointIS,ierr))
+            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            If (size(setPointID) > 0) Then
+                !!! This can probably be optimized by allocating closure outside of the loop
+                !!! But I can't figure out how it is done at the moment.
+                Nullify(closure)
+                Do point = 1,size(setPointID)
+                    PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                    Do p = 1,size(closure),2
+                        PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
+                        If (depth == dim) Then
+                            PetscCall(PetscSectionSetDof(section,closure(p),numComponents,ierr))
+                        End If
+                    End Do! p
+                    PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                End Do! cell
+            End If
+            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISDestroy(setPointIS,ierr))
+        End Do
+        PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCall(ISDestroy(setIS,ierr))
+        PetscCall(PetscSectionSetup(section,ierr))
+    End Subroutine MEF90CellSectionCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SetupConstraintTableSet"
@@ -382,7 +433,7 @@ Contains
     End subroutine MEF90LocalToIOSFCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90CreateIOToLocalSF"
+#define __FUNCT__ "MEF90IOToLocalSFCreate"
 !!!
 !!!  
 !!!  MEF90CreateIOToLocalSF: sf mapping between IO to local ordering and distribution
@@ -390,7 +441,7 @@ Contains
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90CreateIOToLocalSF(MEF90Ctx,dm,sf,ierr)
+    Subroutine MEF90IOToLocalSFCreate(MEF90Ctx,dm,sf,ierr)
         Type(tDM),intent(IN)               :: dm
         Type(tPetscSF),intent(OUT)         :: sf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -413,19 +464,19 @@ Contains
         Else
             sf = cglSF
         End If
-    End subroutine MEF90CreateIOToLocalSF
+    End subroutine MEF90IOToLocalSFCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90CreateLocalToConstraintSF"
+#define __FUNCT__ "MEF90LocalToConstraintSFCreate"
 !!!
 !!!  
-!!!  MEF90CreateLocalToConstraintSF: sf mapping between local and constraint Vec ordering and distribution
+!!!  MEF90LocalToConstraintSFCreate: sf mapping between local and constraint Vec ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!                Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90CreateLocalToConstraintSF(MEF90Ctx,dm,dmB,sf,invSF,ierr)
+    Subroutine MEF90LocalToConstraintSFCreate(MEF90Ctx,dm,dmB,sf,invSF,ierr)
         Type(tDM),intent(IN)                    :: dm, dmB
         Type(tPetscSF),intent(OUT)              :: sf, invSF
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
@@ -476,7 +527,7 @@ Contains
         PetscCall(PetscSFSetUp(sf, ierr))
         PetscCall(PetscSFCreateInverseSF(sf,invSF,ierr))
         PetscCall(PetscSFSetUp(invSF, ierr))
-    End Subroutine MEF90CreateLocalToConstraintSF
+    End Subroutine MEF90LocalToConstraintSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecGlobalToLocalConstraint"
@@ -534,17 +585,20 @@ Contains
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: ioRange, remoteRange
         PetscMPIInt                             :: rank, remoteRank
-        PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize
+        PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, localSize, bs
     
-        if (MEF90Ctx%NumProcs > 1) then
-            PetscCall(DMPlexCreateNaturalVector(dm,vnat,ierr))
+        PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
+        PetscCallA(VecGetSize(vnat, globalSize, ierr))
+        PetscCallA(VecGetBlockSize(vnat,bs,ierr))
+        if (MEF90Ctx%rank == 0) Then
+            localSize = (globalSize/bs)/MEF90Ctx%NumProcs + modulo(globalSize/bs,MEF90Ctx%NumProcs)
         else
-            PetscCall(DMCreateGlobalVector(dm,vnat,ierr))
+            localSize = (globalSize/bs)/MEF90Ctx%NumProcs
         end if
-        PetscCall(VecGetSize(vnat, globalSize, ierr))
-        PetscCall(VecCreateMPI(MEF90Ctx%Comm, PETSC_DECIDE, globalSize, vio, ierr))
-        PetscCall(VecGetLayout(vnat, natMap, ierr))
-        PetscCall(VecGetLayout(vio, ioMap, ierr))
+        localSize = localSize*bs
+        PetscCallA(VecCreateMPI(MEF90Ctx%Comm, localSize, PETSC_DECIDE, vio, ierr))
+        PetscCallA(VecGetLayout(vnat, natMap, ierr))
+        PetscCallA(VecGetLayout(vio, ioMap, ierr))
         PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
