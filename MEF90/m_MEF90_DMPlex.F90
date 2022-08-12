@@ -67,6 +67,9 @@ Contains
 !!!
 !!!  
 !!!  MEF90VecCreate: create a Vec associated with a FE space and constraints
+!!!      cell   set BC are obtained from the command line option -cs<set ID>_<name>BC [bool], [bool], ...
+!!!      face   set BC are obtained from the command line option -fs<set ID>_<name>BC [bool], [bool], ...
+!!!      vertex set BC are obtained from the command line option -vs<set ID>_<name>BC [bool], [bool], ...
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!

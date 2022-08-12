@@ -64,3 +64,9 @@ Implicit NONE
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)
 End Program  TestVec
+
+
+!!! TEST
+!!!
+!!! TestVec -geometry ../TestMeshes/SquareFaceSet.msh -sdim 1 -fs0020_TemperatureBC on
+!!! TestVec -geometry ../TestMeshes/SquareFaceSet.msh -sdim 4 -fs0021_TemperatureBC on,0,true,no

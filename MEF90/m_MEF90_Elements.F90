@@ -47,7 +47,7 @@ Module m_MEF90_Elements
    End Enum
 
    Character(kind=c_char,len=MEF90MXSTRLEN),dimension(4),Parameter,Public   :: MEF90ElementFamily = [ &
-      "Lagrange           ",     &  ! 1
+      "Lagrange           ",     &  ! 0
       "MEF90ElementFamily ",     &
       "prefix_            ",     &
       C_NULL_CHAR//"                  "]
