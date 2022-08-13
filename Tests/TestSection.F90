@@ -116,41 +116,45 @@ Implicit NONE
     constraints = .FALSE.
 
     setType = MEF90FaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-    PetscCallA(ISDestroy(SetIS,ierr))
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+    If (setIS /= PETSC_NULL_IS) Then
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            !!! setting the constrained components to an arbitrary value
+            !!! In real life, we would get constraint from the CS/FS/ES/VS bag
+            constraints = .FALSE.
+            constraints(mod(setID(set),numComponents)+1) = .TRUE.
+            PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+    End If ! setIS
+    PetscCallA(ISDestroy(setIS,ierr))
 
     setType = MEF90VertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-    PetscCallA(ISDestroy(SetIS,ierr))
+    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+    If (setIS /= PETSC_NULL_IS) Then
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            !!! setting the constrained components to an arbitrary value
+            !!! In real life, we would get constraint from the CS/FS/ES/VS bag
+            constraints = .FALSE.
+            constraints(mod(setID(set),numComponents)+1) = .TRUE.
+            PetscCallA(MEF90SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTable,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+    End If ! setIS
+    PetscCallA(ISDestroy(setIS,ierr))
     DeAllocate(constraints)
 
     PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTable,section,ierr))
 
     DeAllocate(ConstraintTruthTable)
-    PetscCallA(PetscSectionViewFromOptions(Section,PETSC_NULL_OPTIONS,"-section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(Section,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
 
     PetscCallA(DMSetLocalSection(dm,section,ierr))
     PetscCallA(DMCreateGlobalVector(dm,v,ierr))
     PetscCallA(VecSet(v,0.0_Kr,ierr))
-    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
     PetscCallA(VecGetBlockSize(v,sz,ierr))
     Write(IOBuffer,*) 'Global block size: ', sz,'\n'
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
@@ -158,7 +162,7 @@ Implicit NONE
 
     PetscCallA(DMCreateLocalVector(dm,v,ierr))
     PetscCallA(VecSet(v,0.0_Kr,ierr))
-    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-vec_view",ierr))
+    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
     PetscCallA(VecGetBlockSize(v,sz,ierr))
     Write(IOBuffer,*) 'Local block size: ', sz,'\n'
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))

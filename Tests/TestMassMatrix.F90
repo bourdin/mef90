@@ -50,7 +50,7 @@ Program  TestMassMatrix
             dm = dmDist
         end If
     end Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
@@ -114,8 +114,8 @@ Program  TestMassMatrix
         constraints = .FALSE.
 
         setType = MEF90_DMPlexfaceSetType
-        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),setIS,ierr))
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
         Do set = 1,size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
@@ -123,12 +123,12 @@ Program  TestMassMatrix
             constraints(mod(setID(set),numComponents)+1) = .TRUE.
             PetscCallA(MEF90_SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-        PetscCallA(ISDestroy(SetIS,ierr))
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISDestroy(setIS,ierr))
 
         setType = MEF90_DMPlexVertexSetType
-        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),setIS,ierr))
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
         Do set = 1,size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
@@ -136,8 +136,8 @@ Program  TestMassMatrix
             constraints(mod(setID(set),numComponents)+1) = .TRUE.
             PetscCallA(MEF90_SetupConstraintTableSet(dm,section,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-        PetscCallA(ISDestroy(SetIS,ierr))
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISDestroy(setIS,ierr))
         DeAllocate(constraints)
 
         PetscCallA(MEF90_SectionAllocateConstraint(dm,ConstraintTruthTableU,section,ierr))
@@ -146,7 +146,7 @@ Program  TestMassMatrix
     Else
         PetscCallA(PetscSectionSetup(section,ierr))
     End If
-    PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
 
     PetscCallA(DMSetLocalSection(dm,section,ierr))
     PetscCallA(DMCreateMatrix(dm,M,ierr))
@@ -168,30 +168,32 @@ Program  TestMassMatrix
     elementCreate: Block
         Type(MEF90Element2DVect),dimension(:),Pointer  :: elem2D
         Type(MEF90Element3DVect),dimension(:),Pointer  :: elem3D
-        PetscInt                                        :: quadratureOrder = 2
-        Type(tIS)                                       :: setPointIS
+        PetscInt                                       :: quadratureOrder = 2
+        Type(tIS)                                      :: setPointIS
 
         setType = MEF90_DMPlexcellSetType
-        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),SetIS,ierr))
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-        Do set = 1,size(setID)
-            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
-            If (dim == 2) Then
-                PetscCallA(MEF90ElementCreate(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
-                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem2D,cellSetElementType,ierr))
-            Else
-                PetscCallA(MEF90ElementCreate(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
-                PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem3D,cellSetElementType,ierr))
-            End If
-            PetscCallA(ISDestroy(setPointIS,ierr))
-        End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-        PetscCallA(ISDestroy(SetIS,ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(setType),setIS,ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(setType),setID(set),setPointIS,ierr))
+                If (dim == 2) Then
+                    PetscCallA(MEF90ElementCreate(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
+                    PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem2D,cellSetElementType,ierr))
+                Else
+                    PetscCallA(MEF90ElementCreate(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
+                    PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem3D,cellSetElementType,ierr))
+                End If
+                PetscCallA(ISDestroy(setPointIS,ierr))
+            End Do
+            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
+        PetscCallA(ISDestroy(setIS,ierr))
     End Block elementCreate
     PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
 
-    PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mat_view",ierr))
+    PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mef90mat_view",ierr))
 
     PetscCallA(MatDestroy(M,ierr))
     !PetscCallA(PetscSectionDestroy(section,ierr))

@@ -41,7 +41,7 @@ Program  TestMEF90Ctx
          dm = dmDist
       End If
    End Block distribute
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
    ! PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,dm,ierr))
    ! PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))

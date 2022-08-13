@@ -11,7 +11,7 @@ Implicit NONE
     PetscBool                           :: interpolate = PETSC_TRUE
 
     PetscInt                            :: set
-    type(tIS)                           :: setIS,pointIS
+    type(tIS)                           :: setIS,setPointIS
     PetscInt,Dimension(:),pointer       :: setID,pointID
     PetscInt                            :: i
 
@@ -33,7 +33,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -45,23 +45,26 @@ Implicit NONE
     End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
 
-    Do i = 1, size(MEF90_DMPlexSetLabelName)
-        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90_DMPlexSetLabelName(i))//' ===\n',ierr))
-        PetscCallA(DMGetLabelIdIS(dm,MEF90_DMPlexSetLabelName(i), SetIS, ierr))
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-        Write(*,*) trim(MEF90_DMPlexSetLabelName(i))//' ID: ', setID
-        Do set = 1, size(setID)
-            PetscCallA(DMGetStratumIS(dm,MEF90_DMPlexSetLabelName(i),setID(set),pointIS,ierr))
-            PetscCallA(ISGetIndicesF90(pointIS,pointID,ierr))
-            Write(*,*) '   points', pointID
-            PetscCallA(ISRestoreIndicesF90(pointIS,pointID,ierr))
-            PetscCallA(ISDestroy(pointIS,ierr))
-        End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
-        PetscCallA(ISDestroy(SetIS,ierr))
+    Do i = 1, size(MEF90SetLabelName)
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90SetLabelName(i))//' ===\n',ierr))
+        PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(i), setIS, ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            Write(*,*) trim(MEF90SetLabelName(i))//' ID: ', setID
+            Do set = 1, size(setID)
+                PetscCallA(DMGetStratumIS(dm,MEF90SetLabelName(i),setID(set),setPointIS,ierr))
+                If (setPointIS /= PETSC_NULL_IS) Then
+                    PetscCallA(ISGetIndicesF90(setPointIS,pointID,ierr))
+                    Write(*,*) '   points', pointID
+                    PetscCallA(ISRestoreIndicesF90(setPointIS,pointID,ierr))
+                End If ! setPointIS
+                PetscCallA(ISDestroy(setPointIS,ierr))
+            End Do
+            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
+        PetscCallA(ISDestroy(setIS,ierr))
     End Do
     PetscCallA(DMDestroy(dm,ierr))
-    PetscCallA(PetscFinalize(ierr))
     
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)

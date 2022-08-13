@@ -235,7 +235,6 @@ Implicit NONE
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
 
-    MEF90GlobalOptions_default%verbose           = 0
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
@@ -259,7 +258,7 @@ Implicit NONE
             dm = dmDist
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
@@ -327,30 +326,34 @@ Implicit NONE
 
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+    If (SetIS /= PETSC_NULL_IS) Then
+        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        Do set = 1,size(setID)
+            !!! setting the constrained components to an arbitrary value
+            !!! In real life, we would get constraint from the CS/FS/ES/VS bag
+            constraints = .FALSE.
+            constraints(mod(setID(set),numComponents)+1) = .TRUE.
+            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+    End If
     PetscCallA(ISDestroy(SetIS,ierr))
 
     setType = MEF90VertexSetType
     PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
-    Do set = 1,size(setID)
-        !!! setting the constrained components to an arbitrary value
-        !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-        constraints = .FALSE.
-        constraints(mod(setID(set),numComponents)+1) = .TRUE.
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-        PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+    If (setIS /= PETSC_NULL_IS) Then
+        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        Do set = 1,size(setID)
+            !!! setting the constrained components to an arbitrary value
+            !!! In real life, we would get constraint from the CS/FS/ES/VS bag
+            constraints = .FALSE.
+            constraints(mod(setID(set),numComponents)+1) = .TRUE.
+            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
+            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
+        End Do
+        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+    End If
     PetscCallA(ISDestroy(SetIS,ierr))
     DeAllocate(constraints)
 
@@ -359,8 +362,8 @@ Implicit NONE
 
     DeAllocate(ConstraintTruthTableU)
     DeAllocate(ConstraintTruthTableU0)
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-section_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
 
     PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))

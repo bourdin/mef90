@@ -113,21 +113,23 @@ Contains
             PetscCall(DMGetLabelIdIS(dmV,MEF90SetLabelName(setType),setIS,ierr))
             !!! Get a GLOBAL cell set IS
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-            Do set = 1,size(setID)
-                !!! Get cell type in order to pick the proper element type.
-                !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
-                PetscCall(DMGetStratumIS(dmV,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
-                PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
-                If (size(pointID) > 0) Then
-                    PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
-                    PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
-                    PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90SetType(setType),setID(set),elemType,sdim,sectionV,ierr))
-                End If ! size(pointID)
-                PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
-                PetscCall(ISDestroy(pointIS,ierr))
-            End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            If (setIS /= PETSC_NULL_IS) Then
+                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                Do set = 1,size(setID)
+                    !!! Get cell type in order to pick the proper element type.
+                    !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+                    PetscCall(DMGetStratumIS(dmV,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
+                    If (pointIS /= PETSC_NULL_IS) Then
+                        PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                        PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
+                        PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
+                        PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90SetType(setType),setID(set),elemType,sdim,sectionV,ierr))
+                        PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                    End If ! pointIS
+                    PetscCall(ISDestroy(pointIS,ierr))
+                End Do ! set
+                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            End If ! setIS
             PetscCall(ISDestroy(setIS,ierr))
         End Do ! setType
 
@@ -138,16 +140,18 @@ Contains
         Do setType = 1, size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-            Do set = 1,size(setID)
-                setConstraints = .FALSE.
-                write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
-                numBC = sDim
-                PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
-                PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
-             End Do
-             PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-             PetscCall(ISDestroy(setIS,ierr))
+            If (setIS /= PETSC_NULL_IS) Then
+                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                Do set = 1,size(setID)
+                    setConstraints = .FALSE.
+                    write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
+                    numBC = sDim
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
+                    PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
+                End Do
+                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            End If ! setIS
+            PetscCall(ISDestroy(setIS,ierr))
          End Do ! setType
 
         PetscCall(MEF90SectionAllocateConstraint(dmV,ConstraintTruthTable,sectionV,ierr))
@@ -181,11 +185,13 @@ Contains
         PetscInt                           :: set
 
         PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
-        PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-        Do set = 1,size(setID)
-            PetscCall(MEF90SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
-        End Do
-        PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                PetscCall(MEF90SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
+            End Do
+            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
     End Subroutine MEF90SectionAllocateDof
 
@@ -216,8 +222,8 @@ Contains
 
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-        PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
-        If (size(setPointID) > 0) Then
+        If (setPointIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
@@ -232,9 +238,9 @@ Contains
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
             End Do! cell
-        End If
-        PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
-        PetscCall(ISDestroy(setPointIS,ierr))
+            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+        End If ! setPointIS
+    PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SectionAllocateDofSet
 
 #undef __FUNCT__
@@ -260,29 +266,31 @@ Contains
 
         PetscCallA(DMGetDimension(dm,dim,ierr))
         PetscCall(DMGetLabelIdIS(dm,'Cell Sets',setIS,ierr))
-        PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-        Do set = 1,size(setID)
-            PetscCall(DMGetStratumIS(dm,'Cell Sets',setID(set),setPointIS,ierr))
-            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
-            If (size(setPointID) > 0) Then
-                !!! This can probably be optimized by allocating closure outside of the loop
-                !!! But I can't figure out how it is done at the moment.
-                Nullify(closure)
-                Do point = 1,size(setPointID)
-                    PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
-                    Do p = 1,size(closure),2
-                        PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
-                        If (depth == dim) Then
-                            PetscCall(PetscSectionSetDof(section,closure(p),numComponents,ierr))
-                        End If
-                    End Do! p
-                    PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
-                End Do! cell
-            End If
-            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                PetscCall(DMGetStratumIS(dm,'Cell Sets',setID(set),setPointIS,ierr))
+                If (setPointIS /= PETSC_NULL_IS) Then
+                    PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                    !!! This can probably be optimized by allocating closure outside of the loop
+                    !!! But I can't figure out how it is done at the moment.
+                    Nullify(closure)
+                    Do point = 1,size(setPointID)
+                        PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                        Do p = 1,size(closure),2
+                            PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
+                            If (depth == dim) Then
+                                PetscCall(PetscSectionSetDof(section,closure(p),numComponents,ierr))
+                            End If
+                        End Do! p
+                        PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                    End Do! cell
+                    PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
-        End Do
-        PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            End Do ! set
+            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
         PetscCall(PetscSectionSetup(section,ierr))
     End Subroutine MEF90CellSectionCreate
@@ -312,8 +320,8 @@ Contains
         PetscInt                           :: p
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-        PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
-        If (size(setPointID) > 0) Then
+        If (setPointIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
@@ -327,8 +335,8 @@ Contains
                 End Do! p
                 PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
             End Do! cell
-        End If
-        PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+        End If ! setPointIS
         PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SetupConstraintTableSet
 
@@ -486,11 +494,9 @@ Contains
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         Type(PetscInt),dimension(:),Pointer     :: local, cindices
         PetscInt                                :: pStart, pEnd, p, d, nleaves = 0, ldof, loff, cdof, coff, nsize = 0, nroots
-        PetscMPIInt                             :: rank
 
         nleaves = 0
         nsize   = 0
-        PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(PetscSectionGetStorageSize(locSection,nroots,ierr))
         PetscCall(DMGetLocalSection(dmB,locBSection,ierr))
@@ -505,17 +511,17 @@ Contains
             PetscCall(PetscSectionGetDoF(locSection,p,ldof,ierr))
             PetscCall(PetscSectionGetOffset(locSection,p,loff,ierr))
             PetscCall(PetscSectionGetConstraintDof(locBSection,p,cdof,ierr))
-            If (cdof > 0) then
+            If (cdof > 0) Then
                 PetscCall(PetscSectionGetConstraintIndicesF90(locBSection,p,cindices,ierr))
                 PetscCall(PetscSectionGetOffset(locBSection,p,coff,ierr))
                 If (coff >= 0) Then
                     Do d=1,cdof
-                        local(nsize+1) = coff+cindices(d)
-                        remote(nsize+1)%rank = rank
+                        local(nsize+1)        = coff+cindices(d)
+                        remote(nsize+1)%rank  = MEF90Ctx%rank
                         remote(nsize+1)%index = loff+cindices(d)
                         nsize = nsize + 1
-                    End Do
-                End If
+                    End Do ! d
+                End If ! coff
                 PetscCall(PetscSectionRestoreConstraintIndicesF90(locBSection,p,cindices,ierr))
             End If ! cdof
         End Do
@@ -584,31 +590,30 @@ Contains
         Type(PetscLayout)                       :: natMap, ioMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: ioRange, remoteRange
-        PetscMPIInt                             :: rank, remoteRank
+        PetscMPIInt                             :: remoteRank
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, localSize, bs
     
         PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
         PetscCallA(VecGetSize(vnat, globalSize, ierr))
         PetscCallA(VecGetBlockSize(vnat,bs,ierr))
-        if (MEF90Ctx%rank == 0) Then
+        If (MEF90Ctx%rank == 0) Then
             localSize = (globalSize/bs)/MEF90Ctx%NumProcs + modulo(globalSize/bs,MEF90Ctx%NumProcs)
-        else
+        Else
             localSize = (globalSize/bs)/MEF90Ctx%NumProcs
-        end if
+        End If
         localSize = localSize*bs
         PetscCallA(VecCreateMPI(MEF90Ctx%Comm, localSize, PETSC_DECIDE, vio, ierr))
         PetscCallA(VecGetLayout(vnat, natMap, ierr))
         PetscCallA(VecGetLayout(vio, ioMap, ierr))
-        PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
         PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
         PetscCall(PetscLayoutGetRangesF90(natMap, remoteRange, ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
-            globalIndex = ioRange(rank+1) + i
+            globalIndex = ioRange(MEF90Ctx%rank+1) + i
             PetscCall(PetscLayoutFindOwner(natMap, globalIndex, remoteRank, ierr))
-            remote(i+1)%rank = remoteRank
+            remote(i+1)%rank  = remoteRank
             remote(i+1)%index = globalIndex - remoteRange(remoteRank+1)
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
@@ -642,9 +647,7 @@ Contains
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: remoteOffsets
         PetscInt                                :: pStart, pEnd, p, n = 1
-        PetscMPIInt                             :: rank
     
-        PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
         PetscCall(PetscSectionCreateGlobalSection(locSection, overlapSF, PETSC_TRUE, PETSC_TRUE, gSection,ierr))
@@ -652,7 +655,7 @@ Contains
         n = pEnd-pStart
         Allocate(remote(n))
         Do p = 1,n
-            remote(p)%rank = rank
+            remote(p)%rank  = MEF90Ctx%rank
             remote(p)%index = p-1
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
@@ -692,9 +695,7 @@ Contains
         Type(PetscSFNode),dimension(:),Pointer  :: remote, tempRemote, lgRemote, glRemote
         PetscInt,dimension(:),Pointer           :: tempLocal, lgLocal, glLocal, remoteOffsets
         PetscInt                                :: pStart, pEnd, p, n = 1, lgNRoots, lgNLeaves, tempNRoots, tempNLeaves, glNRoots, glNLeaves
-        PetscMPIInt                             :: rank
     
-        PetscCallMPI(MPI_Comm_rank(MEF90Ctx%Comm, rank, ierr))
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
         PetscCall(PetscSectionCreateGlobalSection(locSection, overlapSF, PETSC_TRUE, PETSC_TRUE, gSection,ierr))
@@ -702,7 +703,7 @@ Contains
         n = pEnd-pStart
         Allocate(remote(n))
         Do p = 1,n
-            remote(p)%rank = rank
+            remote(p)%rank  = MEF90Ctx%rank
             remote(p)%index = p-1
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
@@ -729,26 +730,26 @@ Contains
             If (loc(lgLocal) .ne. loc(PETSC_NULL_INTEGER)) Then
                 Do p = 1,lgNLeaves
                     glLocal(p) = lgLocal(p)
-                    glRemote(p)%rank = lgRemote(p)%rank
+                    glRemote(p)%rank  = lgRemote(p)%rank
                     glRemote(p)%index = lgRemote(p)%index
                 End Do
             Else 
                 Do p = 1,lgNLeaves
                     glLocal(p) = p-1
-                    glRemote(p)%rank = lgRemote(p)%rank
+                    glRemote(p)%rank  = lgRemote(p)%rank
                     glRemote(p)%index = lgRemote(p)%index
                 End Do
             End If
             If (loc(tempLocal) .ne. loc(PETSC_NULL_INTEGER)) Then
                 Do p = 1,tempNLeaves
-                    glLocal(p+lgNLeaves) = tempLocal(p)
-                    glRemote(p+lgNLeaves)%rank = tempRemote(p)%rank
+                    glLocal(p+lgNLeaves)        = tempLocal(p)
+                    glRemote(p+lgNLeaves)%rank  = tempRemote(p)%rank
                     glRemote(p+lgNLeaves)%index = tempRemote(p)%index
                 End Do
             Else
                 Do p = 1,tempNLeaves
-                    glLocal(p+lgNLeaves) = p+lgNLeaves-1
-                    glRemote(p+lgNLeaves)%rank = tempRemote(p)%rank
+                    glLocal(p+lgNLeaves)        = p+lgNLeaves-1
+                    glRemote(p+lgNLeaves)%rank  = tempRemote(p)%rank
                     glRemote(p+lgNLeaves)%index = tempRemote(p)%index
                 End Do
             End If
@@ -767,6 +768,4 @@ Contains
         PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
     End subroutine CreateCGlobalToLocalSF_Private                    
-
-    
 End Module m_MEF90_DMPlex
