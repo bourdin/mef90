@@ -100,9 +100,14 @@ Contains
         Character(len=MEF90MXSTRLEN)            :: BCOptionName
 
         PetscCall(DMClone(dm,dmV,ierr))
+        PetscCall(PetscObjectSetName(dmv,name,ierr))
+        PetscCall(DMGetUseNatural(dm,flg,ierr))
+        PetscCall(DMSetUseNatural(dmV,flg,ierr))
+
         PetscCall(PetscObjectGetComm(dmV,comm,ierr))
 
         PetscCall(PetscSectionCreate(comm,sectionV,ierr))
+        PetscCall(PetscObjectSetName(sectionV,name,ierr))
         PetscCall(PetscSectionSetNumFields(sectionV,sDim,ierr))
         PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
         PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
