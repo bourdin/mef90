@@ -16,6 +16,7 @@ PetscBag Object:  MEF90Ctx MEF90 Global options object
   time_numCycle = 1 ; Time: number of cycles
   file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
  
+ EXO file data/CubeNG_Y-tetra4_out.gen does not seem to exist. Creating it. 
 PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
   heatxfer_timeStepping_type = SteadyState; (MEF90_HeatXFer_timeSteppingType) Type of heat transfer computation
   heatxfer_addNullSpace =  FALSE; Add null space to SNES
@@ -113,6 +114,13 @@ PetscBag Object:  Cell set    1 MatProp3D object: material properties
   drivingForce_Gamma = 2 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
+  RotationMatrix_phi1 = 0 ; [radians] (phi1) First Bunge-Euler angle
+  RotationMatrix_Phi = 0 ; [radians] (Phi) Second Bunge-Euler angle
+  RotationMatrix_phi2 = 0 ; [radians] (phi2) Third Bunge-Euler angle
+  RotationMatrix_V1 = 1 0 0 ; [] (V1) First column of the rotation matrix
+  RotationMatrix_V2 = 0 1 0 ; [] (V2) Second column of the rotation matrix
+  RotationMatrix_V3 = 0 0 1 ; [] (V3) Third column of the rotation matrix
+  RotationMatrix_fromEuler =  FALSE; Define rotation matrix from Bunge-Euler angles
  
 Registering materials properties for cell set   10: cs0010_ 
 PetscBag Object:  Cell set   10 MatProp3D object: material properties
@@ -155,6 +163,13 @@ PetscBag Object:  Cell set   10 MatProp3D object: material properties
   drivingForce_Gamma = 2 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
+  RotationMatrix_phi1 = 0 ; [radians] (phi1) First Bunge-Euler angle
+  RotationMatrix_Phi = 0 ; [radians] (Phi) Second Bunge-Euler angle
+  RotationMatrix_phi2 = 0 ; [radians] (phi2) Third Bunge-Euler angle
+  RotationMatrix_V1 = 1 0 0 ; [] (V1) First column of the rotation matrix
+  RotationMatrix_V2 = 0 1 0 ; [] (V2) Second column of the rotation matrix
+  RotationMatrix_V3 = 0 0 1 ; [] (V3) Third column of the rotation matrix
+  RotationMatrix_fromEuler =  FALSE; Define rotation matrix from Bunge-Euler angles
  
 Registering materials properties for cell set   20: cs0020_ 
 PetscBag Object:  Cell set   20 MatProp3D object: material properties
@@ -197,6 +212,13 @@ PetscBag Object:  Cell set   20 MatProp3D object: material properties
   drivingForce_Gamma = 2 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
+  RotationMatrix_phi1 = 0 ; [radians] (phi1) First Bunge-Euler angle
+  RotationMatrix_Phi = 0 ; [radians] (Phi) Second Bunge-Euler angle
+  RotationMatrix_phi2 = 0 ; [radians] (phi2) Third Bunge-Euler angle
+  RotationMatrix_V1 = 1 0 0 ; [] (V1) First column of the rotation matrix
+  RotationMatrix_V2 = 0 1 0 ; [] (V2) Second column of the rotation matrix
+  RotationMatrix_V3 = 0 0 1 ; [] (V3) Third column of the rotation matrix
+  RotationMatrix_fromEuler =  FALSE; Define rotation matrix from Bunge-Euler angles
  
 Time values array: 
  0:   0.0000e+00   5.0000e-01   1.0000e+00
@@ -208,7 +230,7 @@ cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
-  Linear solve converged due to CONVERGED_RTOL iterations 22
+  Linear solve converged due to CONVERGED_RTOL iterations 27
 cell set    1 thermal energy:  1.25000E-01 fluxes work:  0.00000E+00 total:  1.25000E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 

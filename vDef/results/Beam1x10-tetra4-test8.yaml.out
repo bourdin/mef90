@@ -5,10 +5,10 @@
 Heat transfer: solving steady state step    1, t= 0.00000E+00 
  
 Thermal energies:  
-cell set    1 thermal energy:  3.48008E-02 fluxes work:  0.00000E+00 total:  3.48008E-02 
-cell set   10 thermal energy:  3.48008E-02 fluxes work:  0.00000E+00 total:  3.48008E-02 
-cell set   20 thermal energy:  3.48008E-02 fluxes work:  0.00000E+00 total:  3.48008E-02 
-======= Total thermal energy:  1.04402E-01 fluxes work:  0.00000E+00 total:  1.04402E-01 
+cell set    1 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
  
 Mechanics: step    1, t= 0.00000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -23,9 +23,9 @@ Heat transfer: solving steady state step    2, t= 7.50000E-01
  
 Thermal energies:  
 cell set    1 thermal energy:  2.81250E+02 fluxes work:  0.00000E+00 total:  2.81250E+02 
-cell set   10 thermal energy:  2.81250E+02 fluxes work:  0.00000E+00 total:  2.81250E+02 
-cell set   20 thermal energy:  2.81250E+02 fluxes work:  0.00000E+00 total:  2.81250E+02 
-======= Total thermal energy:  8.43750E+02 fluxes work:  0.00000E+00 total:  8.43750E+02 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.81250E+02 fluxes work:  0.00000E+00 total:  2.81250E+02 
  
 Mechanics: step    2, t= 7.50000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -40,9 +40,9 @@ Heat transfer: solving steady state step    3, t= 1.50000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  1.12500E+03 fluxes work:  0.00000E+00 total:  1.12500E+03 
-cell set   10 thermal energy:  1.12500E+03 fluxes work:  0.00000E+00 total:  1.12500E+03 
-cell set   20 thermal energy:  1.12500E+03 fluxes work:  0.00000E+00 total:  1.12500E+03 
-======= Total thermal energy:  3.37500E+03 fluxes work:  0.00000E+00 total:  3.37500E+03 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.12500E+03 fluxes work:  0.00000E+00 total:  1.12500E+03 
  
 Mechanics: step    3, t= 1.50000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -57,9 +57,9 @@ Heat transfer: solving steady state step    4, t= 2.25000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  2.53125E+03 fluxes work:  0.00000E+00 total:  2.53125E+03 
-cell set   10 thermal energy:  2.53125E+03 fluxes work:  0.00000E+00 total:  2.53125E+03 
-cell set   20 thermal energy:  2.53125E+03 fluxes work:  0.00000E+00 total:  2.53125E+03 
-======= Total thermal energy:  7.59375E+03 fluxes work:  0.00000E+00 total:  7.59375E+03 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.53125E+03 fluxes work:  0.00000E+00 total:  2.53125E+03 
  
 Mechanics: step    4, t= 2.25000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -74,9 +74,9 @@ Heat transfer: solving steady state step    5, t= 3.00000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  4.50000E+03 fluxes work:  0.00000E+00 total:  4.50000E+03 
-cell set   10 thermal energy:  4.50000E+03 fluxes work:  0.00000E+00 total:  4.50000E+03 
-cell set   20 thermal energy:  4.50000E+03 fluxes work:  0.00000E+00 total:  4.50000E+03 
-======= Total thermal energy:  1.35000E+04 fluxes work:  0.00000E+00 total:  1.35000E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.50000E+03 fluxes work:  0.00000E+00 total:  4.50000E+03 
  
 Mechanics: step    5, t= 3.00000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -91,9 +91,9 @@ Heat transfer: solving steady state step    6, t= 3.75000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  7.03125E+03 fluxes work:  0.00000E+00 total:  7.03125E+03 
-cell set   10 thermal energy:  7.03125E+03 fluxes work:  0.00000E+00 total:  7.03125E+03 
-cell set   20 thermal energy:  7.03125E+03 fluxes work:  0.00000E+00 total:  7.03125E+03 
-======= Total thermal energy:  2.10938E+04 fluxes work:  0.00000E+00 total:  2.10938E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  7.03125E+03 fluxes work:  0.00000E+00 total:  7.03125E+03 
  
 Mechanics: step    6, t= 3.75000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -108,9 +108,9 @@ Heat transfer: solving steady state step    7, t= 4.50000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  1.01250E+04 fluxes work:  0.00000E+00 total:  1.01250E+04 
-cell set   10 thermal energy:  1.01250E+04 fluxes work:  0.00000E+00 total:  1.01250E+04 
-cell set   20 thermal energy:  1.01250E+04 fluxes work:  0.00000E+00 total:  1.01250E+04 
-======= Total thermal energy:  3.03750E+04 fluxes work:  0.00000E+00 total:  3.03750E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.01250E+04 fluxes work:  0.00000E+00 total:  1.01250E+04 
  
 Mechanics: step    7, t= 4.50000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -125,9 +125,9 @@ Heat transfer: solving steady state step    8, t= 5.25000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  1.37813E+04 fluxes work:  0.00000E+00 total:  1.37813E+04 
-cell set   10 thermal energy:  1.37813E+04 fluxes work:  0.00000E+00 total:  1.37813E+04 
-cell set   20 thermal energy:  1.37813E+04 fluxes work:  0.00000E+00 total:  1.37813E+04 
-======= Total thermal energy:  4.13438E+04 fluxes work:  0.00000E+00 total:  4.13438E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.37813E+04 fluxes work:  0.00000E+00 total:  1.37813E+04 
  
 Mechanics: step    8, t= 5.25000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -142,9 +142,9 @@ Heat transfer: solving steady state step    9, t= 6.00000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  1.80000E+04 fluxes work:  0.00000E+00 total:  1.80000E+04 
-cell set   10 thermal energy:  1.80000E+04 fluxes work:  0.00000E+00 total:  1.80000E+04 
-cell set   20 thermal energy:  1.80000E+04 fluxes work:  0.00000E+00 total:  1.80000E+04 
-======= Total thermal energy:  5.40000E+04 fluxes work:  0.00000E+00 total:  5.40000E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.80000E+04 fluxes work:  0.00000E+00 total:  1.80000E+04 
  
 Mechanics: step    9, t= 6.00000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -159,9 +159,9 @@ Heat transfer: solving steady state step   10, t= 6.75000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  2.27813E+04 fluxes work:  0.00000E+00 total:  2.27813E+04 
-cell set   10 thermal energy:  2.27813E+04 fluxes work:  0.00000E+00 total:  2.27813E+04 
-cell set   20 thermal energy:  2.27813E+04 fluxes work:  0.00000E+00 total:  2.27813E+04 
-======= Total thermal energy:  6.83438E+04 fluxes work:  0.00000E+00 total:  6.83438E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.27813E+04 fluxes work:  0.00000E+00 total:  2.27813E+04 
  
 Mechanics: step   10, t= 6.75000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -176,9 +176,9 @@ Heat transfer: solving steady state step   11, t= 7.50000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  2.81250E+04 fluxes work:  0.00000E+00 total:  2.81250E+04 
-cell set   10 thermal energy:  2.81250E+04 fluxes work:  0.00000E+00 total:  2.81250E+04 
-cell set   20 thermal energy:  2.81250E+04 fluxes work:  0.00000E+00 total:  2.81250E+04 
-======= Total thermal energy:  8.43750E+04 fluxes work:  0.00000E+00 total:  8.43750E+04 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  2.81250E+04 fluxes work:  0.00000E+00 total:  2.81250E+04 
  
 Mechanics: step   11, t= 7.50000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
@@ -193,9 +193,9 @@ Heat transfer: solving steady state step   12, t= 8.25000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
-cell set   10 thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
-cell set   20 thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
-======= Total thermal energy:  1.02094E+05 fluxes work:  0.00000E+00 total:  1.02094E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  3.40313E+04 fluxes work:  0.00000E+00 total:  3.40313E+04 
  
 Mechanics: step   12, t= 8.25000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.09119E-03, max change  1.09119E-03 
@@ -211,9 +211,9 @@ Heat transfer: solving steady state step   13, t= 9.00000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  4.05000E+04 fluxes work:  0.00000E+00 total:  4.05000E+04 
-cell set   10 thermal energy:  4.05000E+04 fluxes work:  0.00000E+00 total:  4.05000E+04 
-cell set   20 thermal energy:  4.05000E+04 fluxes work:  0.00000E+00 total:  4.05000E+04 
-======= Total thermal energy:  1.21500E+05 fluxes work:  0.00000E+00 total:  1.21500E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.05000E+04 fluxes work:  0.00000E+00 total:  4.05000E+04 
  
 Mechanics: step   13, t= 9.00000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  7.41652E-03, max change  6.56027E-03 
@@ -232,9 +232,9 @@ Heat transfer: solving steady state step   14, t= 9.75000E+00
  
 Thermal energies:  
 cell set    1 thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
-cell set   10 thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
-cell set   20 thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
-======= Total thermal energy:  1.42594E+05 fluxes work:  0.00000E+00 total:  1.42594E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  4.75313E+04 fluxes work:  0.00000E+00 total:  4.75313E+04 
  
 Mechanics: step   14, t= 9.75000E+00 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.39321E-01, max change  1.39271E-01 
@@ -250,7 +250,7 @@ Mechanics: step   14, t= 9.75000E+00
    Alt. Min. step    11 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.86385E-02 
    Alt. Min. step    12 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.51836E-02 
    Alt. Min. step    13 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.38840E-03 
-   Alt. Min. step    14 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.92724E-04 
+   Alt. Min. step    14 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.92725E-04 
    Alt. Min. step    15 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.38296E-05 
  
 Mechanical energies:  
@@ -263,9 +263,9 @@ Heat transfer: solving steady state step   15, t= 1.05000E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  5.51250E+04 fluxes work:  0.00000E+00 total:  5.51250E+04 
-cell set   10 thermal energy:  5.51250E+04 fluxes work:  0.00000E+00 total:  5.51250E+04 
-cell set   20 thermal energy:  5.51250E+04 fluxes work:  0.00000E+00 total:  5.51250E+04 
-======= Total thermal energy:  1.65375E+05 fluxes work:  0.00000E+00 total:  1.65375E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  5.51250E+04 fluxes work:  0.00000E+00 total:  5.51250E+04 
  
 Mechanics: step   15, t= 1.05000E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.27596E-03 
@@ -285,16 +285,16 @@ Heat transfer: solving steady state step   16, t= 1.12500E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
-cell set   10 thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
-cell set   20 thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
-======= Total thermal energy:  1.89844E+05 fluxes work:  0.00000E+00 total:  1.89844E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  6.32812E+04 fluxes work:  0.00000E+00 total:  6.32812E+04 
  
 Mechanics: step   16, t= 1.12500E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.28502E-03 
    Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.53064E-03 
    Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.21308E-04 
    Alt. Min. step     4 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.16925E-04 
-   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.51355E-05 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.51356E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  4.80548E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18887E+00 total:  1.23692E+00 
@@ -306,16 +306,16 @@ Heat transfer: solving steady state step   17, t= 1.20000E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  7.20000E+04 fluxes work:  0.00000E+00 total:  7.20000E+04 
-cell set   10 thermal energy:  7.20000E+04 fluxes work:  0.00000E+00 total:  7.20000E+04 
-cell set   20 thermal energy:  7.20000E+04 fluxes work:  0.00000E+00 total:  7.20000E+04 
-======= Total thermal energy:  2.16000E+05 fluxes work:  0.00000E+00 total:  2.16000E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  7.20000E+04 fluxes work:  0.00000E+00 total:  7.20000E+04 
  
 Mechanics: step   17, t= 1.20000E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.50441E-03 
    Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.95418E-04 
    Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.46466E-04 
    Alt. Min. step     4 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00282E-04 
-   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.88750E-05 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.88749E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  5.22993E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19109E+00 total:  1.24339E+00 
@@ -327,9 +327,9 @@ Heat transfer: solving steady state step   18, t= 1.27500E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
-cell set   10 thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
-cell set   20 thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
-======= Total thermal energy:  2.43844E+05 fluxes work:  0.00000E+00 total:  2.43844E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  8.12813E+04 fluxes work:  0.00000E+00 total:  8.12813E+04 
  
 Mechanics: step   18, t= 1.27500E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.88803E-03 
@@ -347,15 +347,15 @@ Heat transfer: solving steady state step   19, t= 1.35000E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  9.11250E+04 fluxes work:  0.00000E+00 total:  9.11250E+04 
-cell set   10 thermal energy:  9.11250E+04 fluxes work:  0.00000E+00 total:  9.11250E+04 
-cell set   20 thermal energy:  9.11250E+04 fluxes work:  0.00000E+00 total:  9.11250E+04 
-======= Total thermal energy:  2.73375E+05 fluxes work:  0.00000E+00 total:  2.73375E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  9.11250E+04 fluxes work:  0.00000E+00 total:  9.11250E+04 
  
 Mechanics: step   19, t= 1.35000E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.42214E-03 
    Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.65279E-04 
    Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.29772E-04 
-   Alt. Min. step     4 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.97275E-05 
+   Alt. Min. step     4 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.97274E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  6.22787E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19455E+00 total:  1.25683E+00 
@@ -367,9 +367,9 @@ Heat transfer: solving steady state step   20, t= 1.42500E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  1.01531E+05 fluxes work:  0.00000E+00 total:  1.01531E+05 
-cell set   10 thermal energy:  1.01531E+05 fluxes work:  0.00000E+00 total:  1.01531E+05 
-cell set   20 thermal energy:  1.01531E+05 fluxes work:  0.00000E+00 total:  1.01531E+05 
-======= Total thermal energy:  3.04594E+05 fluxes work:  0.00000E+00 total:  3.04594E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.01531E+05 fluxes work:  0.00000E+00 total:  1.01531E+05 
  
 Mechanics: step   20, t= 1.42500E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.04449E-03 
@@ -386,9 +386,9 @@ Heat transfer: solving steady state step   21, t= 1.50000E+01
  
 Thermal energies:  
 cell set    1 thermal energy:  1.12500E+05 fluxes work:  0.00000E+00 total:  1.12500E+05 
-cell set   10 thermal energy:  1.12500E+05 fluxes work:  0.00000E+00 total:  1.12500E+05 
-cell set   20 thermal energy:  1.12500E+05 fluxes work:  0.00000E+00 total:  1.12500E+05 
-======= Total thermal energy:  3.37500E+05 fluxes work:  0.00000E+00 total:  3.37500E+05 
+cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
+======= Total thermal energy:  1.12500E+05 fluxes work:  0.00000E+00 total:  1.12500E+05 
  
 Mechanics: step   21, t= 1.50000E+01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.75386E-03 
