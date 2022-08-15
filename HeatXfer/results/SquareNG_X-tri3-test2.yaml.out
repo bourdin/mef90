@@ -13,7 +13,7 @@ PetscBag Object:  MEF90Ctx MEF90 Global options object
   time_max = 1 ; Time: max
   time_numstep = 3 ; Time: number of time steps
   time_skip = 0 ; Time: number of time steps
-  time_frequency = 1 ; Time: frequency   (1+t) cos(2 k Pi t)
+  time_numCycle = 1 ; Time: number of cycles
   file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
  
 PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat transfer global options
@@ -31,41 +31,45 @@ PetscBag Object:  MEF90HeatXfer Global Ctx HeatXferGlobalOptions MEF90 Heat tran
 Registering cell set    1 prefix: cs0001_ 
 PetscBag Object:  Cell set    1 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
   ShortID = 1 ; Element type ShortID
-  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
-  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
   externalTemp = 0 ; Reference temperature T [K]
   TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
   boundaryTemp = 0 ; Temperature boundary value
+  advectionVector = 0 0 0 ; [m.s^(-1)] (V): advection vector
  
  
 Registering cell set   10 prefix: cs0010_ 
 PetscBag Object:  Cell set   10 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
   ShortID = 7 ; Element type ShortID
-  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
-  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  Flux = 0 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
   externalTemp = 0 ; Reference temperature T [K]
   TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
   boundaryTemp = 0 ; Temperature boundary value
+  advectionVector = 0 0 0 ; [m.s^(-1)] (V): advection vector
  
  
 Registering cell set   20 prefix: cs0020_ 
 PetscBag Object:  Cell set   20 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
   ShortID = 7 ; Element type ShortID
-  Flux = 1 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
-  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  Flux = 1 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
   externalTemp = 0 ; Reference temperature T [K]
   TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
   boundaryTemp = 0 ; Temperature boundary value
+  advectionVector = 0 0 0 ; [m.s^(-1)] (V): advection vector
  
  
 Registering cell set   30 prefix: cs0030_ 
 PetscBag Object:  Cell set   30 HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
   ShortID = 7 ; Element type ShortID
-  Flux = 1 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
-  SurfaceThermalConductivity = 0 ; [J.s^(-2).m^(-1).K^(-1)] (H) Surface Thermal Conductivity
+  Flux = 1 ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0 ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
   externalTemp = 0 ; Reference temperature T [K]
   TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
   boundaryTemp = 0 ; Temperature boundary value
+  advectionVector = 0 0 0 ; [m.s^(-1)] (V): advection vector
  
  
 Registering vertex set   10 prefix: vs0010_ 
@@ -84,6 +88,7 @@ PetscBag Object:  Cell set    1 MatProp2D object: material properties
   Name = MEF90Mathium2D; 
   Density = 1 ; [kg.m^(-2)] (rho) Density
   FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1 1 0 ; [] toughness Anisotropy Matrix
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
@@ -92,7 +97,6 @@ PetscBag Object:  Cell set    1 MatProp2D object: material properties
   hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
   hookeslaw_planeStress =  FALSE; Use plane stress elasticity
   internalLength = 1 ; [m] (l) Internal Length
-  CoefficientLinSoft = 0 ; [] (k) Linear softening coefficient for LinSoft
   yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
   residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
   DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
@@ -115,6 +119,10 @@ PetscBag Object:  Cell set    1 MatProp2D object: material properties
   delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0 ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0 ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0 ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
@@ -123,6 +131,7 @@ PetscBag Object:  Cell set   10 MatProp2D object: material properties
   Name = MEF90Mathium2D; 
   Density = 1 ; [kg.m^(-2)] (rho) Density
   FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1 1 0 ; [] toughness Anisotropy Matrix
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
@@ -131,7 +140,6 @@ PetscBag Object:  Cell set   10 MatProp2D object: material properties
   hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
   hookeslaw_planeStress =  FALSE; Use plane stress elasticity
   internalLength = 1 ; [m] (l) Internal Length
-  CoefficientLinSoft = 0 ; [] (k) Linear softening coefficient for LinSoft
   yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
   residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
   DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
@@ -154,6 +162,10 @@ PetscBag Object:  Cell set   10 MatProp2D object: material properties
   delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0 ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0 ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0 ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
@@ -162,6 +174,7 @@ PetscBag Object:  Cell set   20 MatProp2D object: material properties
   Name = MEF90Mathium2D; 
   Density = 1 ; [kg.m^(-2)] (rho) Density
   FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1 1 0 ; [] toughness Anisotropy Matrix
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
@@ -170,7 +183,6 @@ PetscBag Object:  Cell set   20 MatProp2D object: material properties
   hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
   hookeslaw_planeStress =  FALSE; Use plane stress elasticity
   internalLength = 1 ; [m] (l) Internal Length
-  CoefficientLinSoft = 0 ; [] (k) Linear softening coefficient for LinSoft
   yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
   residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
   DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
@@ -193,6 +205,10 @@ PetscBag Object:  Cell set   20 MatProp2D object: material properties
   delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0 ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0 ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0 ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
@@ -201,6 +217,7 @@ PetscBag Object:  Cell set   30 MatProp2D object: material properties
   Name = MEF90Mathium2D; 
   Density = 1 ; [kg.m^(-2)] (rho) Density
   FractureToughness = 1 ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1 1 0 ; [] toughness Anisotropy Matrix
   SpecificHeat = 1 ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
   ThermalConductivity = 1 1 0 ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
   LinearThermalExpansion = 1 1 0 ; [K^(-1)] (alpha) Linear thermal expansion matrix
@@ -209,7 +226,6 @@ PetscBag Object:  Cell set   30 MatProp2D object: material properties
   hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
   hookeslaw_planeStress =  FALSE; Use plane stress elasticity
   internalLength = 1 ; [m] (l) Internal Length
-  CoefficientLinSoft = 0 ; [] (k) Linear softening coefficient for LinSoft
   yieldStress = 1 ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
   residualyieldStress = 0 ; [unit-less] (eta) residual yield stress
   DuctileCouplingPower = 2 ; [] power of the coupling between the damage and the plasticity
@@ -232,6 +248,10 @@ PetscBag Object:  Cell set   30 MatProp2D object: material properties
   delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
   cohesiveStiffness = 0 ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
   residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0 ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0 ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0 ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0 ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
   isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
   isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
  
@@ -246,7 +266,7 @@ cell set   20 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.0
 cell set   30 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 ======= Total thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 Solving steady state step    2, t= 5.00000E-01 
-  Linear solve converged due to CONVERGED_RTOL iterations 26
+  Linear solve converged due to CONVERGED_RTOL iterations 29
 cell set    1 thermal energy:  5.77138E-01 fluxes work:  0.00000E+00 total:  5.77138E-01 
 cell set   10 thermal energy:  0.00000E+00 fluxes work:  0.00000E+00 total:  0.00000E+00 
 cell set   20 thermal energy:  0.00000E+00 fluxes work:  5.00000E-01 total: -5.00000E-01 
