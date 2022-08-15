@@ -567,7 +567,6 @@ Contains
       matprop%RotationMatrix%V3 = default%RotationMatrix%V3
       Call PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr)      
       Call PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr);CHKERRQ(ierr)
-
       Call PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)
@@ -660,7 +659,6 @@ Contains
       matprop%RotationMatrix%V3 = default%RotationMatrix%V3
       Call PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr)      
       Call PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr);CHKERRQ(ierr)
-
       Call PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr);CHKERRQ(ierr)
       Call PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr);CHKERRQ(ierr)

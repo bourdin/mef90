@@ -123,6 +123,15 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   hookeslaw:
     type: <Isotropic> #Type of Hooke's law (choose one of)  Full Isotropic
   hookeslaw:
+    tensor: <1.34615,0.57692,0.57692,0.0,0.0,0.0,1.34615,0.57692,0.0,0.0,0.0,1.34615,0.0,0.0,0.0,0.38462,0.0,0.0,0.38462,0.0,0.38462_Kr> #[N.m^(-2)] Full Hooke's law tensor (21 components) expressed in the material reference frame
+    RotationMatrix:
+      fromEuler: <FALSE> #Rotation matrix is computed from the provided Bunge-Euler angles instead of vectors V1, V2, V3
+      V1: <1,0,0> #[-] first column of the rotation matrix defining the rotation from the material frame to the global frame
+      V2: <0,1,0> #[-] second column of the rotation matrix defining the rotation from the material frame to the global frame
+      V3: <0,0,1> #[-] third column of the rotation matrix defining the rotation from the material frame to the global frame
+      phi1: <0> #[radians] first Bunge-Euler angle angle phi1
+      Phi:  <0> #[radians] second Bunge-Euler angle angle Phi
+      phi2: <0> #[radians] third Bunge-Euler angle angle phi2
     YoungsModulus: <1> #[N.m^(-2)] (E) Young's Modulus 
     PoissonRatio: <0.3> #[unit-less] (nu) Poisson Modulus 
     planeStress: <FALSE> #Use plane stress elasticity (2D only)
