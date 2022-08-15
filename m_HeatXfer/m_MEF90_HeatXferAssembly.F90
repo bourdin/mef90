@@ -348,10 +348,12 @@ Contains
          elemType = MEF90knownElements(cellSetOptions%ElemTypeShortID)
          QuadratureOrder = elemType%order * 2
          Call MEF90Element_Create(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)   
-         
-         Call MEF90DiffusionEnergySet(myenergy,temperatureSec,externalTemperatureSec,MEF90HeatXferCtx%DMScal,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,setIS,elem,elemType,ierr);CHKERRQ(ierr)
-         Call MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         
+
+         If (elemType%coDim == 0) Then
+            Call MEF90DiffusionEnergySet(myenergy,temperatureSec,externalTemperatureSec,MEF90HeatXferCtx%DMScal,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,setIS,elem,elemType,ierr);CHKERRQ(ierr)
+            Call MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+         End If
+
          If (MEF90HeatXferGlobalOptions%fluxScaling /= MEF90Scaling_Null) Then
             Call MEF90DiffusionWorkSetCell(mywork,temperatureSec,MEF90HeatXferCtx%DMScal,fluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
             Call MPI_AllReduce(myWork,work(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
