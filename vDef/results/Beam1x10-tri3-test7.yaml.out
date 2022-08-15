@@ -11,7 +11,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
  
-Mechanics: step    2, t= 7.50000E-01 
+Mechanics: step    2, t= 7.50000E-02 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -20,7 +20,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  3.11017E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.11017E-02 
  
-Mechanics: step    3, t= 1.50000E+00 
+Mechanics: step    3, t= 1.50000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -29,7 +29,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  1.24407E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.24407E-01 
  
-Mechanics: step    4, t= 2.25000E+00 
+Mechanics: step    4, t= 2.25000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -38,7 +38,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  2.79915E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.79915E-01 
  
-Mechanics: step    5, t= 3.00000E+00 
+Mechanics: step    5, t= 3.00000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -47,7 +47,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  4.97627E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.97627E-01 
  
-Mechanics: step    6, t= 3.75000E+00 
+Mechanics: step    6, t= 3.75000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -56,7 +56,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  7.77543E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.77543E-01 
  
-Mechanics: step    7, t= 4.50000E+00 
+Mechanics: step    7, t= 4.50000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -65,7 +65,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  1.11966E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.11966E+00 
  
-Mechanics: step    8, t= 5.25000E+00 
+Mechanics: step    8, t= 5.25000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -74,7 +74,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  1.52398E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.52398E+00 
  
-Mechanics: step    9, t= 6.00000E+00 
+Mechanics: step    9, t= 6.00000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -83,7 +83,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  1.99051E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.99051E+00 
  
-Mechanics: step   10, t= 6.75000E+00 
+Mechanics: step   10, t= 6.75000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -92,7 +92,7 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  2.51924E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.51924E+00 
  
-Mechanics: step   11, t= 7.50000E+00 
+Mechanics: step   11, t= 7.50000E-01 
    Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
  
 Mechanical energies:  
@@ -101,48 +101,46 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  3.11017E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.11017E+00 
  
-Mechanics: step   12, t= 8.25000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.78144E-03, max change  9.78144E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.63264E-02, max change  6.54524E-03 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  2.75951E-02, max change  1.12714E-02 
-   Alt. Min. step     4 alpha min / max 0.00000E+00 /  5.34288E-02, max change  2.58386E-02 
-   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.10145E-01, max change  5.67199E-02 
-   Alt. Min. step     6 alpha min / max 0.00000E+00 /  2.24875E-01, max change  1.14735E-01 
-   Alt. Min. step     7 alpha min / max 0.00000E+00 /  4.32302E-01, max change  2.07427E-01 
-   Alt. Min. step     8 alpha min / max 0.00000E+00 /  7.25171E-01, max change  2.92869E-01 
+Mechanics: step   12, t= 8.25000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  9.78150E-03, max change  9.78150E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.63271E-02, max change  6.54587E-03 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  2.75956E-02, max change  1.12716E-02 
+   Alt. Min. step     4 alpha min / max 0.00000E+00 /  5.34298E-02, max change  2.58382E-02 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  1.10147E-01, max change  5.67197E-02 
+   Alt. Min. step     6 alpha min / max 0.00000E+00 /  2.24875E-01, max change  1.14736E-01 
+   Alt. Min. step     7 alpha min / max 0.00000E+00 /  4.32303E-01, max change  2.07428E-01 
+   Alt. Min. step     8 alpha min / max 0.00000E+00 /  7.25172E-01, max change  2.92869E-01 
    Alt. Min. step     9 alpha min / max 0.00000E+00 /  9.48639E-01, max change  2.23468E-01 
-   Alt. Min. step    10 alpha min / max 0.00000E+00 /  9.98335E-01, max change  3.22259E-01 
-   Alt. Min. step    11 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.68998E-01 
-   Alt. Min. step    12 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.29579E-03 
-   Alt. Min. step    13 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.39735E-03 
-   Alt. Min. step    14 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.74238E-02 
-   Alt. Min. step    15 alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.02553E-02 
-   Alt. Min. step    16 alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.28116E-02 
-   Alt. Min. step    17 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.85694E-02 
-   Alt. Min. step    18 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.43508E-02 
-   Alt. Min. step    19 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.69846E-04 
-   Alt. Min. step    20 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.48360E-06 
+   Alt. Min. step    10 alpha min / max 0.00000E+00 /  9.98335E-01, max change  3.22273E-01 
+   Alt. Min. step    11 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.69045E-01 
+   Alt. Min. step    12 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.80599E-03 
+   Alt. Min. step    13 alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.40351E-03 
+   Alt. Min. step    14 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.73644E-02 
+   Alt. Min. step    15 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.15539E-01 
+   Alt. Min. step    16 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.07635E-02 
+   Alt. Min. step    17 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.04634E-02 
+   Alt. Min. step    18 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.10237E-03 
+   Alt. Min. step    19 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.72390E-05 
  
 Mechanical energies:  
-cell set    1  elastic energy:  8.60062E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.17874E+00 total:  1.18734E+00 
+cell set    1  elastic energy:  8.60095E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.17874E+00 total:  1.18734E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  8.60062E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.17874E+00 total:  1.18734E+00 
+======= Total: elastic energy:  8.60095E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.17874E+00 total:  1.18734E+00 
  
-Mechanics: step   13, t= 9.00000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.20478E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00827E-04 
-   Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.88117E-06 
+Mechanics: step   13, t= 9.00000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.20596E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00705E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  7.31067E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18142E+00 total:  1.18873E+00 
+cell set    1  elastic energy:  7.31285E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18141E+00 total:  1.18873E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  7.31067E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18142E+00 total:  1.18873E+00 
+======= Total: elastic energy:  7.31285E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18141E+00 total:  1.18873E+00 
  
-Mechanics: step   14, t= 9.75000E+00 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.73181E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.98139E-05 
+Mechanics: step   14, t= 9.75000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.73570E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.97900E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  6.29081E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18352E+00 total:  1.18981E+00 
@@ -150,9 +148,9 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  6.29081E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18352E+00 total:  1.18981E+00 
  
-Mechanics: step   15, t= 1.05000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.38682E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.68416E-05 
+Mechanics: step   15, t= 1.05000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.38694E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.66301E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  5.46839E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18521E+00 total:  1.19068E+00 
@@ -160,9 +158,9 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  5.46839E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18521E+00 total:  1.19068E+00 
  
-Mechanics: step   16, t= 1.12500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12589E-03 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.33309E-05 
+Mechanics: step   16, t= 1.12500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12609E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.31354E-05 
  
 Mechanical energies:  
 cell set    1  elastic energy:  4.79660E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18659E+00 total:  1.19139E+00 
@@ -170,53 +168,48 @@ cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.0000
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 ======= Total: elastic energy:  4.79660E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18659E+00 total:  1.19139E+00 
  
-Mechanics: step   17, t= 1.20000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.26707E-04 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.51806E-05 
+Mechanics: step   17, t= 1.20000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.26892E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  4.24075E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18773E+00 total:  1.19197E+00 
+cell set    1  elastic energy:  4.25291E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18772E+00 total:  1.19197E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  4.24075E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18773E+00 total:  1.19197E+00 
+======= Total: elastic energy:  4.25291E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18772E+00 total:  1.19197E+00 
  
-Mechanics: step   18, t= 1.27500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.71895E-04 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.00454E-05 
+Mechanics: step   18, t= 1.27500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.86884E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.77565E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18868E+00 total:  1.19246E+00 
+cell set    1  elastic energy:  3.78384E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18867E+00 total:  1.19246E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.77565E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18868E+00 total:  1.19246E+00 
+======= Total: elastic energy:  3.78384E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18867E+00 total:  1.19246E+00 
  
-Mechanics: step   19, t= 1.35000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.49796E-04 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.83102E-06 
+Mechanics: step   19, t= 1.35000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.59912E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.38260E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18948E+00 total:  1.19287E+00 
+cell set    1  elastic energy:  3.38814E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18948E+00 total:  1.19287E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.38260E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18948E+00 total:  1.19287E+00 
+======= Total: elastic energy:  3.38814E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18948E+00 total:  1.19287E+00 
  
-Mechanics: step   20, t= 1.42500E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.52144E-04 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.74009E-06 
+Mechanics: step   20, t= 1.42500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.58925E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  3.04750E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19017E+00 total:  1.19321E+00 
+cell set    1  elastic energy:  3.05132E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19016E+00 total:  1.19321E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  3.04750E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19017E+00 total:  1.19321E+00 
+======= Total: elastic energy:  3.05132E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19016E+00 total:  1.19321E+00 
  
-Mechanics: step   21, t= 1.50000E+01 
-   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.73183E-04 
-   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.34860E-06 
+Mechanics: step   21, t= 1.50000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.77703E-04 
  
 Mechanical energies:  
-cell set    1  elastic energy:  2.75953E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19075E+00 total:  1.19351E+00 
+cell set    1  elastic energy:  2.76222E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19075E+00 total:  1.19351E+00 
 cell set   10  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
 cell set   20  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
-======= Total: elastic energy:  2.75953E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19075E+00 total:  1.19351E+00 
- Total number of alternate minimizations:          50  
+======= Total: elastic energy:  2.76222E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19075E+00 total:  1.19351E+00 
+ Total number of alternate minimizations:          43  
