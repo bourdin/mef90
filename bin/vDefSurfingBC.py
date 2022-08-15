@@ -16,12 +16,14 @@ def parse(args=None):
     parser.add_argument("--time_numstep",type=int,help="number of time step",default=11)
     parser.add_argument("--E",type=float,help="Youngs modulus",default=1.)
     parser.add_argument("--nu",type=float,help="Poisson Ratio",default=.3)
+    parser.add_argument("--Gc",type=float,help="Critical Energy Release Rate",default=1.)
     parser.add_argument("--ampl",type=float,help="Amplification",default=1.)    
     parser.add_argument("--initialpos",type=float,nargs=3,help="initial crack tip postion",default=[0.,0,0])
     parser.add_argument("--cs",type=int,nargs='*',help="list of cell sets where surfing boundary displacements are applied",default=[])
     parser.add_argument("--vs",type=int,nargs='*',help="list of vertex sets where surfing boundary displacements are applied",default=[])
     parser.add_argument("--plasticity",default=False,action="store_true",help="Add extended variables for plasticity related fields")
     parser.add_argument("--force",action="store_true",default=False,help="Overwrite existing files without prompting")
+    parser.add_argument("--planestrain",action="store_true",default=False,help="Apply plane strain surfing BCs: kappa=3-4*nu")
     return parser.parse_args()
     
 def exoformat(e,plasticity=False):
@@ -67,11 +69,17 @@ def cart2polar(x, y):
     theta = np.arctan2(y, x)
     return r, theta
         
-def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
+def surfingBC(e,t,Xc,cslist,vslist,E,nu,Gc,ampl,planestrain):
     import numpy as np
     
-    kappa = (3.0-nu)/(1.0+nu)
+    if planestrain:
+        kappa = (3.0-nu)/(1.0+nu)
+        Ep    = E / (1. - nu**2)
+    else:
+        kappa = 3.0-4.0*nu
+        Ep    = E
     mu = E / (1. + nu) * .5
+    KI = np.sqrt(Gc * Ep)
 
     dim = e.num_dimensions()
     X,Y,Z=e.get_coords()
@@ -85,16 +93,16 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
             for v in vertices:
                 r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
                 z = Z[v-1]-Xc[2]
-                U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-                U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+                U[0,v-1] = ampl * KI * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
+                U[1,v-1] = ampl * KI * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
                 U[2,v-1] = 0.0
         
     for set in vslist:
         for v in e.get_node_set_nodes(set):
             r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
             z = Z[v-1]
-            U[0,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
-            U[1,v-1] = ampl * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+            U[0,v-1] = ampl * KI * np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
+            U[1,v-1] = ampl * KI * np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
             U[2,v-1] = 0.0
     return U
 
@@ -132,7 +140,7 @@ def main():
     for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
         print ("writing step {0}, t = {1:0.4f}".format(step+1,t))
         exoout.put_time(step+1,t)
-        U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.ampl)
+        U = surfingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu,options.Gc,options.ampl,options.planestrain)
         X,Y,Z=exoout.get_coords()
         exoout.put_node_variable_values("Displacement_X",step+1,U[0,:])
         exoout.put_node_variable_values("Displacement_Y",step+1,U[1,:])
