@@ -66,33 +66,30 @@ Contains
 !!!
    Subroutine MEF90EXOFormat(Viewer,NameG,NameC,NameV,numstep,ierr)
       Type(tPetscViewer),Intent(IN)                         :: Viewer
-      Character(len=MXSTLN),Dimension(:),Pointer,Intent(IN) :: nameG,nameC,nameV
+      Character(len=*),Dimension(:),Pointer,Intent(IN)      :: nameG,nameC,nameV
       PetscInt,Intent(IN)                                   :: numstep
       PetscErrorCode,Intent(INOUT)                          :: ierr
       
       PetscInt                                              :: numCS
       Integer                                               :: exoid
       PetscInt                                              :: step
-      Character(len=MXSTLN)                                 :: sJunk, testV(size(nameV)), testC(size(nameC)), testG(size(nameG))
+      Character(len=MXSTLN)                                 :: sJunk
       Logical,Dimension(:,:),Pointer                        :: truthtable
 
       PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       If (exoid > 0) Then
          !!! Write variable names
          If (size(nameG) > 0) Then
-            testG = nameG
             PetscCallA(expvp(exoid,"g",size(nameG),ierr))
-            PetscCallA(expvan(exoid,"g",size(nameG),testG,ierr))
+            PetscCallA(expvan(exoid,"g",size(nameG),nameG,ierr))
          End If
          If (size(nameC) > 0) Then
-            testC = nameC
             PetscCallA(expvp(exoid,"e",size(nameC),ierr))
-            PetscCallA(expvan(exoid,"e",size(nameC),testC,ierr))
+            PetscCallA(expvan(exoid,"e",size(nameC),nameC,ierr))
          End If
          If (size(nameV) > 0) Then
-            testV = nameV
             PetscCallA(expvp(exoid,"n",size(nameV),ierr))
-            PetscCallA(expvan(exoid,"n",size(nameV),testV,ierr))
+            PetscCallA(expvan(exoid,"n",size(nameV),nameV,ierr))
          End If
 
          !!! Write truth tables
