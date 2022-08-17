@@ -9,7 +9,7 @@ Module m_MEF90_Ctx_Type
    
    Type MEF90Ctx_Type
       MPI_Comm                                        :: comm
-      Integer                                         :: rank,numProcs
+      PetscMPIInt                                     :: rank,numProcs
       Character(len=MEF90MXSTRLEN,kind=C_char)        :: geometryfile,resultfile
       PetscBag                                        :: GlobalOptionsBag      
       End Type MEF90Ctx_Type
@@ -178,11 +178,12 @@ Contains
       MPI_Comm,Intent(IN)                          :: comm
       Type(MEF90Ctx_type),Intent(OUT)              :: MEF90Ctx
       Type(MEF90CtxGlobalOptions_Type),Intent(IN)  :: default
-      PetscInt,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                 :: ierr
       
       Type(MEF90CtxGlobalOptions_Type),pointer     :: GlobalOptions
-      Character(len=MEF90MXSTRLEN)                :: IOBuffer,tmpPrefix
+      Character(len=MEF90MXSTRLEN)                 :: IOBuffer,tmpPrefix
       PetscBool                                    :: hasPrefix,hasGeometry,hasResult
+
 #ifdef PETSC_USE_DEBUG
       Character(len=MPI_MAX_PROCESSOR_NAME)        :: procName
       Integer                                      :: procNameLength

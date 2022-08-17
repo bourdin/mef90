@@ -67,10 +67,11 @@ Contains
    Subroutine MEF90EXOFormat(Viewer,NameG,NameC,NameV,numstep,ierr)
       Type(tPetscViewer),Intent(IN)                         :: Viewer
       Character(len=MXSTLN),Dimension(:),Pointer,Intent(IN) :: nameG,nameC,nameV
-      Integer,Intent(IN)                                    :: numstep
+      PetscInt,Intent(IN)                                   :: numstep
       PetscErrorCode,Intent(INOUT)                          :: ierr
       
-      Integer                                               :: numCS, exoid
+      PetscInt                                              :: numCS
+      Integer                                               :: exoid
       PetscInt                                              :: step
       Character(len=MXSTLN)                                 :: sJunk, testV(size(nameV)), testC(size(nameC)), testG(size(nameG))
       Logical,Dimension(:,:),Pointer                        :: truthtable
@@ -153,7 +154,8 @@ Contains
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(tDM)                                          :: dm
-      PetscInt                                           :: exoid, offsetN = -1, offsetZ = -1, step
+      Integer                                            :: exoid
+      PetscInt                                           :: offsetN = -1, offsetZ = -1, step
       PetscReal                                          :: time
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
 
@@ -189,7 +191,8 @@ Contains
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(tDM)                                          :: dm
-      PetscInt                                           :: exoid, offsetN = -1, offsetZ = -1, step
+      Integer                                            :: exoid
+      PetscInt                                           :: offsetN = -1, offsetZ = -1, step
       PetscReal                                          :: time
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
 
@@ -216,10 +219,10 @@ Contains
       Integer,Intent(IN)               :: exoid
       Character(len=MXSTLN),Intent(IN) :: name
       Character(len=1),Intent(IN)      :: obj_type
-      Integer,Intent(OUT)              :: varIndex
+      PetscInt,Intent(OUT)             :: varIndex
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: i, j, num_suffix = 5, num_vars
+      PetscInt                         :: i, j, num_suffix = 5, num_vars
       Character(len=MXSTLN)            :: var_name,ext_name, suffix(5)
    
       suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
@@ -241,11 +244,12 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewNodal_Private"
    Subroutine MEF90EXOVecViewNodal_Private(v,exoid,step,offset,ierr)
-      Integer,Intent(IN)               :: exoid, step, offset
+      Integer,Intent(IN)               :: exoid
+      PetscInt,Intent(IN)              :: step, offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: xs,xe,bs,c
+      PetscInt                         :: xs,xe,bs,c
       PetscScalar,Dimension(:),Pointer :: varray
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
@@ -273,11 +277,12 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoadNodal_Private"
    Subroutine MEF90EXOVecLoadNodal_Private(v,exoid,step,offset,ierr)
-      Integer,Intent(IN)               :: exoid, step, offset
+      Integer,Intent(IN)               :: exoid
+      PetscInt,Intent(IN)              :: step, offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: xs,xe,bs,c
+      PetscInt                         :: xs,xe,bs,c
       PetscScalar,Dimension(:),Pointer :: varray
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
@@ -306,13 +311,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewZonal_Private"
    Subroutine MEF90EXOVecViewZonal_Private(v,exoid,step,offset,ierr)
-      Integer,Intent(IN)               :: exoid, step, offset
+      Integer,Intent(IN)               :: exoid
+      PetscInt,Intent(IN)              :: step, offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
+      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
       PetscScalar,Dimension(:),Pointer :: varray
-      Integer,Dimension(:),Pointer     :: csID,csSize
+      PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
       Character(len=MXSTLN)            :: elemType
@@ -362,13 +368,14 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoadZonal_Private"
    Subroutine MEF90EXOVecLoadZonal_Private(v,exoid,step,offset,ierr)
-      Integer,Intent(IN)               :: exoid, step, offset
+      Integer,Intent(IN)               :: exoid
+      PetscInt,Intent(IN)              :: step, offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
+      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
       PetscScalar,Dimension(:),Pointer :: varray
-      Integer,Dimension(:),Pointer     :: csID,csSize
+      PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
       Character(len=MXSTLN)            :: elemType

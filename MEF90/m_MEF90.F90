@@ -33,7 +33,7 @@ Contains
 !!!
 
    Subroutine MEF90Initialize(ierr)
-      PetscInt,Intent(OUT)                               :: ierr
+      PetscErrorCode,Intent(INOUT)                      :: ierr
 
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
        
@@ -93,9 +93,9 @@ Contains
 !!!
 
    Subroutine MEF90Finalize(ierr)
-      PetscInt,Intent(OUT)                   :: ierr
+      PetscErrorCode,Intent(INOUT)                   :: ierr
       
-      Call MEF90MPIFinalize_Private(ierr);CHKERRQ(ierr)
+      PetscCall(MEF90MPIFinalize_Private(ierr))
    End Subroutine MEF90Finalize
 End Module m_MEF90
 

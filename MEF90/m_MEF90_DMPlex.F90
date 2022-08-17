@@ -114,7 +114,7 @@ Contains
         PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
         PetscCall(PetscSectionSetChart(sectionV,pStart,pEnd,ierr))
     
-        Do setType = 1, size(MEF90SetType)
+        Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dmV,MEF90SetLabelName(setType),setIS,ierr))
             !!! Get a GLOBAL cell set IS
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
@@ -142,7 +142,7 @@ Contains
         ConstraintTruthTable = .FALSE.
         Allocate(setConstraints(sDim))
 
-        Do setType = 1, size(MEF90SetType)
+        Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
             If (setIS /= PETSC_NULL_IS) Then
@@ -263,9 +263,9 @@ Contains
         Type(tPetscSection),Intent(INOUT)  :: section
         PetscErrorCode,Intent(INOUT)       :: ierr
 
-        Type(tIS)                          :: setIS, setPointIS
-        PetscInt,dimension(:),Pointer      :: setID, setPointID
-        PetscInt                           :: set, point
+        Type(tIS)                          :: setIS,setPointIS
+        PetscInt,dimension(:),Pointer      :: setID,setPointID
+        PetscInt                           :: set,point
         PetscInt,dimension(:),pointer      :: closure
         PetscInt                           :: p,depth,dim
 
@@ -365,7 +365,7 @@ Contains
         PetscInt                           :: field = 0
 
         PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
-        Do p = 1, pEnd
+        Do p = 1,pEnd
             numConstraints = count(table(p,:))
             If (numConstraints > 0) Then
                 PetscCall(PetscSectionSetConstraintDof(section,p-1,numConstraints,ierr))
@@ -376,11 +376,11 @@ Contains
         PetscCall(PetscSectionSetup(section,ierr))
 
         numComponents = size(table,2)
-        Do p = 1, pEnd
+        Do p = 1,pEnd
             numConstraints = count(table(p,:))
             If (numConstraints > 0) Then
                 Allocate(constraints(numConstraints))
-                constraints = pack([ (i-1, i = 1,numComponents) ],table(p,:))
+                constraints = pack([ (i-1,i = 1,numComponents) ],table(p,:))
                 PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
                 PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
                 DeAllocate(constraints)
@@ -403,14 +403,14 @@ Contains
         Type(tPetscSF),intent(IN)          :: sf
         PetscErrorCode,intent(INOUT)       :: ierr
 
-        PetscScalar,dimension(:),Pointer   :: arrayin, arrayout
+        PetscScalar,dimension(:),Pointer   :: arrayin,arrayout
 
-        PetscCall(VecGetArrayReadF90(vin, arrayin, ierr))
-        PetscCall(VecGetArrayF90(vout, arrayout, ierr))
-        PetscCall(PetscSFBcastBegin(sf, MPIU_SCALAR, arrayin, arrayout, MPI_REPLACE, ierr))
-        PetscCall(PetscSFBcastEnd(sf, MPIU_SCALAR, arrayin, arrayout, MPI_REPLACE, ierr))
-        PetscCall(VecRestoreArrayReadF90(vin, arrayin, ierr))
-        PetscCall(VecRestoreArrayF90(vout, arrayout, ierr))
+        PetscCall(VecGetArrayReadF90(vin,arrayin,ierr))
+        PetscCall(VecGetArrayF90(vout,arrayout,ierr))
+        PetscCall(PetscSFBcastBegin(sf,MPIU_SCALAR,arrayin,arrayout,MPI_REPLACE,ierr))
+        PetscCall(PetscSFBcastEnd(sf,MPIU_SCALAR,arrayin,arrayout,MPI_REPLACE,ierr))
+        PetscCall(VecRestoreArrayReadF90(vin,arrayin,ierr))
+        PetscCall(VecRestoreArrayF90(vout,arrayout,ierr))
     End subroutine MEF90VecReorder
 
 #undef __FUNCT__
@@ -428,7 +428,7 @@ Contains
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
         PetscErrorCode,intent(INOUT)       :: ierr
 
-        Type(tPetscSF)                     :: naturalSF, ioSF, lcgSF, tempSF
+        Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,tempSF
 
         PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
@@ -460,7 +460,7 @@ Contains
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
         PetscErrorCode,intent(INOUT)       :: ierr
 
-        Type(tPetscSF)                     :: naturalSF, ioSF, cglSF, tempSF, invTempSF
+        Type(tPetscSF)                     :: naturalSF,ioSF,cglSF,tempSF,invTempSF
 
         PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
@@ -490,22 +490,22 @@ Contains
 !!!
 
     Subroutine MEF90LocalToConstraintSFCreate(MEF90Ctx,dm,dmB,sf,invSF,ierr)
-        Type(tDM),intent(IN)                    :: dm, dmB
-        Type(tPetscSF),intent(OUT)              :: sf, invSF
+        Type(tDM),intent(IN)                    :: dm,dmB
+        Type(tPetscSF),intent(OUT)              :: sf,invSF
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         PetscErrorCode,intent(INOUT)            :: ierr
 
-        Type(tPetscSection)                     :: locSection, locBSection
+        Type(tPetscSection)                     :: locSection,locBSection
         Type(PetscSFNode),dimension(:),Pointer  :: remote
-        Type(PetscInt),dimension(:),Pointer     :: local, cindices
-        PetscInt                                :: pStart, pEnd, p, d, nleaves = 0, ldof, loff, cdof, coff, nsize = 0, nroots
+        Type(PetscInt),dimension(:),Pointer     :: local,cindices
+        PetscInt                                :: pStart,pEnd,p,d,nleaves = 0,ldof,loff,cdof,coff,nsize = 0,nroots
 
         nleaves = 0
         nsize   = 0
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(PetscSectionGetStorageSize(locSection,nroots,ierr))
         PetscCall(DMGetLocalSection(dmB,locBSection,ierr))
-        PetscCall(PetscSectionGetChart(locBSection, pStart, pEnd, ierr))
+        PetscCall(PetscSectionGetChart(locBSection,pStart,pEnd,ierr))
         Do p = pStart,pEnd-1
             PetscCall(PetscSectionGetConstraintDof(locBSection,p,cdof,ierr))
             nleaves = nleaves + cdof
@@ -530,14 +530,14 @@ Contains
                 PetscCall(PetscSectionRestoreConstraintIndicesF90(locBSection,p,cindices,ierr))
             End If ! cdof
         End Do
-        PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
-        PetscCall(PetscSFSetFromOptions(sf, ierr))
-        PetscCall(PetscSFSetGraph(sf, nroots, nleaves, local, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
+        PetscCall(PetscSFSetFromOptions(sf,ierr))
+        PetscCall(PetscSFSetGraph(sf,nroots,nleaves,local,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         DeAllocate(remote)
         DeAllocate(local)
-        PetscCall(PetscSFSetUp(sf, ierr))
+        PetscCall(PetscSFSetUp(sf,ierr))
         PetscCall(PetscSFCreateInverseSF(sf,invSF,ierr))
-        PetscCall(PetscSFSetUp(invSF, ierr))
+        PetscCall(PetscSFSetUp(invSF,ierr))
     End Subroutine MEF90LocalToConstraintSFCreate
 
 #undef __FUNCT__
@@ -591,15 +591,15 @@ Contains
         Type(tPetscSF),intent(OUT)              :: sf
         PetscErrorCode,intent(INOUT)            :: ierr
     
-        Type(tVec)                              :: vnat, vio
-        Type(PetscLayout)                       :: natMap, ioMap
+        Type(tVec)                              :: vnat,vio
+        Type(PetscLayout)                       :: natMap,ioMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
-        PetscInt,dimension(:),Pointer           :: ioRange, remoteRange
+        PetscInt,dimension(:),Pointer           :: ioRange,remoteRange
         PetscMPIInt                             :: remoteRank
-        PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, localSize, bs
+        PetscInt                                :: nroots,nleaves,globalIndex,i,globalSize,localSize,bs
     
         PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
-        PetscCallA(VecGetSize(vnat, globalSize, ierr))
+        PetscCallA(VecGetSize(vnat,globalSize,ierr))
         PetscCallA(VecGetBlockSize(vnat,bs,ierr))
         If (MEF90Ctx%rank == 0) Then
             localSize = (globalSize/bs)/MEF90Ctx%NumProcs + modulo(globalSize/bs,MEF90Ctx%NumProcs)
@@ -607,25 +607,25 @@ Contains
             localSize = (globalSize/bs)/MEF90Ctx%NumProcs
         End If
         localSize = localSize*bs
-        PetscCallA(VecCreateMPI(MEF90Ctx%Comm, localSize, PETSC_DECIDE, vio, ierr))
-        PetscCallA(VecGetLayout(vnat, natMap, ierr))
-        PetscCallA(VecGetLayout(vio, ioMap, ierr))
-        PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
-        PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
-        PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
-        PetscCall(PetscLayoutGetRangesF90(natMap, remoteRange, ierr))
+        PetscCallA(VecCreateMPI(MEF90Ctx%Comm,localSize,PETSC_DECIDE,vio,ierr))
+        PetscCallA(VecGetLayout(vnat,natMap,ierr))
+        PetscCallA(VecGetLayout(vio,ioMap,ierr))
+        PetscCall(PetscLayoutGetLocalSize(natMap,nroots,ierr))
+        PetscCall(PetscLayoutGetLocalSize(ioMap,nleaves,ierr))
+        PetscCall(PetscLayoutGetRangesF90(ioMap,ioRange,ierr))
+        PetscCall(PetscLayoutGetRangesF90(natMap,remoteRange,ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
             globalIndex = ioRange(MEF90Ctx%rank+1) + i
-            PetscCall(PetscLayoutFindOwner(natMap, globalIndex, remoteRank, ierr))
+            PetscCall(PetscLayoutFindOwner(natMap,globalIndex,remoteRank,ierr))
             remote(i+1)%rank  = remoteRank
             remote(i+1)%index = globalIndex - remoteRange(remoteRank+1)
         End Do
-        PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
-        PetscCall(PetscObjectSetName(sf, "Natural-To-IO SF", ierr))
-        PetscCall(PetscSFSetFromOptions(sf, ierr))
-        PetscCall(PetscSFSetGraph(sf, nroots, nleaves, PETSC_NULL_INTEGER, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
-        PetscCall(PetscSFSetUp(sf, ierr))
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
+        PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
+        PetscCall(PetscSFSetFromOptions(sf,ierr))
+        PetscCall(PetscSFSetGraph(sf,nroots,nleaves,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetUp(sf,ierr))
         PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-naturaltoio_sf_view",ierr))
         PetscCall(VecDestroy(vio,ierr))
         PetscCall(VecDestroy(vnat,ierr))
@@ -647,32 +647,32 @@ Contains
         Type(tPetscSF),intent(OUT)              :: sf
         PetscErrorCode,intent(INOUT)            :: ierr
     
-        Type(tPetscSection)                     :: locSection, gSection
-        Type(tPetscSF)                          :: overlapSF, idSF
+        Type(tPetscSection)                     :: locSection,gSection
+        Type(tPetscSF)                          :: overlapSF,idSF
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: remoteOffsets
-        PetscInt                                :: pStart, pEnd, p, n = 1
+        PetscInt                                :: pStart,pEnd,p,n = 1
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
-        PetscCall(PetscSectionCreateGlobalSection(locSection, overlapSF, PETSC_TRUE, PETSC_TRUE, gSection,ierr))
-        PetscCall(PetscSectionGetChart(locSection, pStart, pEnd, ierr))
+        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
+        PetscCall(PetscSectionGetChart(locSection,pStart,pEnd,ierr))
         n = pEnd-pStart
         Allocate(remote(n))
         Do p = 1,n
             remote(p)%rank  = MEF90Ctx%rank
             remote(p)%index = p-1
         End Do
-        PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
-        PetscCall(PetscSFSetFromOptions(idSF, ierr))
-        PetscCall(PetscSFSetGraph(idSF, n, n, PETSC_NULL_INTEGER, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
-        PetscCall(PetscSFSetUp(idSF, ierr))
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,idSF,ierr))
+        PetscCall(PetscSFSetFromOptions(idSF,ierr))
+        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetUp(idSF,ierr))
         PetscCall(PetscSFCreateRemoteOffsetsF90(idSF,locSection,gSection,remoteOffsets,ierr))
         PetscCall(PetscSFCreateSectionSFF90(idSF,locSection,remoteOffsets,gSection,sf,ierr))
         PetscCall(PetscIntArray1dDestroyF90(remoteOffsets,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
-        PetscCall(PetscObjectSetName(sf, "Local-To-CGlobal SF", ierr))
-        PetscCall(PetscSFSetFromOptions(sf, ierr))
+        PetscCall(PetscObjectSetName(sf,"Local-To-CGlobal SF",ierr))
+        PetscCall(PetscSFSetFromOptions(sf,ierr))
         PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-localtocglobal_sf_view",ierr))
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
@@ -695,26 +695,26 @@ Contains
         Type(tPetscSF),intent(OUT)              :: sf
         PetscErrorCode,intent(INOUT)            :: ierr
     
-        Type(tPetscSection)                     :: locSection, gSection
-        Type(tPetscSF)                          :: overlapSF, idSF, tempSF, ttempSF
-        Type(PetscSFNode),dimension(:),Pointer  :: remote, tempRemote, lgRemote, glRemote
-        PetscInt,dimension(:),Pointer           :: tempLocal, lgLocal, glLocal, remoteOffsets
-        PetscInt                                :: pStart, pEnd, p, n = 1, lgNRoots, lgNLeaves, tempNRoots, tempNLeaves, glNRoots, glNLeaves
+        Type(tPetscSection)                     :: locSection,gSection
+        Type(tPetscSF)                          :: overlapSF,idSF,tempSF,ttempSF
+        Type(PetscSFNode),dimension(:),Pointer  :: remote,tempRemote,lgRemote,glRemote
+        PetscInt,dimension(:),Pointer           :: tempLocal,lgLocal,glLocal,remoteOffsets
+        PetscInt                                :: pStart,pEnd,p,n = 1,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
-        PetscCall(PetscSectionCreateGlobalSection(locSection, overlapSF, PETSC_TRUE, PETSC_TRUE, gSection,ierr))
-        PetscCall(PetscSectionGetChart(locSection, pStart, pEnd, ierr))
+        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
+        PetscCall(PetscSectionGetChart(locSection,pStart,pEnd,ierr))
         n = pEnd-pStart
         Allocate(remote(n))
         Do p = 1,n
             remote(p)%rank  = MEF90Ctx%rank
             remote(p)%index = p-1
         End Do
-        PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
-        PetscCall(PetscSFSetFromOptions(idSF, ierr))
-        PetscCall(PetscSFSetGraph(idSF, n, n, PETSC_NULL_INTEGER, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
-        PetscCall(PetscSFSetUp(idSF, ierr))
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,idSF,ierr))
+        PetscCall(PetscSFSetFromOptions(idSF,ierr))
+        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetUp(idSF,ierr))
         PetscCall(PetscSFCreateRemoteOffsetsF90(idSF,locSection,gSection,remoteOffsets,ierr))
         PetscCall(PetscSFCreateSectionSFF90(idSF,locSection,remoteOffsets,gSection,tempSF,ierr))
         PetscCall(PetscSFCreateInverseSF(tempSF,sf,ierr))
@@ -760,8 +760,8 @@ Contains
             End If
             PetscCall(PetscSFDestroy(tempSF,ierr))
             PetscCall(PetscSFDestroy(sf,ierr))
-            PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
-            PetscCall(PetscSFSetFromOptions(sf, ierr))
+            PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
+            PetscCall(PetscSFSetFromOptions(sf,ierr))
             PetscCall(PetscSFSetGraph(sf,glNRoots,glNLeaves,glLocal,PETSC_COPY_VALUES,glRemote,PETSC_COPY_VALUES,ierr))
             PetscCall(PetscSFSetUp(sf,ierr))
             DeAllocate(glLocal)
@@ -769,7 +769,7 @@ Contains
         End If
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
-        PetscCall(PetscObjectSetName(sf, "CGlobal-To-Local SF", ierr))
+        PetscCall(PetscObjectSetName(sf,"CGlobal-To-Local SF",ierr))
         PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
     End subroutine CreateCGlobalToLocalSF_Private                    

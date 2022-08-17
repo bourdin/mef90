@@ -105,9 +105,11 @@ Contains
 
       Type(tIS)                        :: tmpIS
       PetscInt,Dimension(:),pointer    :: indices
+      PetscInt                         :: sz
       
       PetscCall(ISGetIndicesF90(is,indices,ierr))
-      PetscCall(ISCreateGeneral(Comm,size(indices),indices,PETSC_COPY_VALUES,tmpIS,ierr))
+      sz = size(indices)
+      PetscCall(ISCreateGeneral(Comm,sz,indices,PETSC_COPY_VALUES,tmpIS,ierr))
       PetscCall(ISRestoreIndicesF90(is,indices,ierr))
       PetscCall(ISDestroy(is,ierr))
       PetscCall(ISAllGather(tmpIS,is,ierr))
