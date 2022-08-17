@@ -219,7 +219,7 @@ Contains
       PetscInt,Intent(OUT)             :: varIndex
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: i, j, num_suffix = 5, num_vars
+      Integer                         :: i, j, num_suffix = 5, num_vars
       Character(len=MXSTLN)            :: var_name,ext_name, suffix(5)
    
       suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
