@@ -14,7 +14,7 @@ Implicit NONE
 
     Type(MEF90ElementType)              :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents
-    PetscInt                            :: set,order = 1
+    PetscInt                            :: set,order = 1,sdim = 1
     PetscBool                           :: flg
     type(tIS)                           :: setIS
     PetscInt,Dimension(:),pointer       :: setID
@@ -46,20 +46,20 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
-    
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
     distribute: Block 
         Type(tDM),target                    :: dmDist
+        PetscInt                            :: ovlp = 0
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,section,ierr))
-    PetscCallA(PetscSectionSetNumFields(section, 1,ierr))
+    PetscCallA(PetscSectionSetNumFields(section,sdim,ierr))
     PetscCallA(PetscSectionSetFieldName(section,field,"U",ierr))
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(PetscSectionSetFieldComponents(section,field,dim,ierr))

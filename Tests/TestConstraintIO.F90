@@ -65,8 +65,9 @@ Implicit NONE
     ! Distribute DM
     distribute: Block 
         Type(tDM),target                    :: dmDist
+        PetscInt                            :: ovlp = 0
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,0,naturalPointSF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
             PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
             PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
             PetscCallA(DMDestroy(dm,ierr))

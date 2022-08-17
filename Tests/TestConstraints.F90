@@ -174,18 +174,19 @@ contains
 
     Subroutine MyVecView(v,ierr)
         Type(tVec),Intent(IN)               :: v
-        PetscErrorCode,Intent(OUT)          :: ierr
+        PetscErrorCode,Intent(INOUT)        :: ierr
 
         Type(tDM)                           :: dm
         PetscInt                            :: p,pStart,pEnd
-        Character(len=MEF90MXSTRLEN)       :: IOBuffer
+        Character(len=MEF90MXSTRLEN)        :: IOBuffer
         PetscScalar,Dimension(:),Pointer    :: vArray
+        PetscInt                            :: height = 0
 
 
         PetscCall(VecGetDM(v,dm,ierr))
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Cell closure\n",ierr))
-        PetscCall(DMPlexGetHeightStratum(dm,0,pStart,pEnd,ierr))
+        PetscCall(DMPlexGetHeightStratum(dm,height,pStart,pEnd,ierr))
         Do p = pStart,pEnd-1
             PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
             Write(IOBuffer,*) p, vArray,"\n"
@@ -224,7 +225,7 @@ Implicit NONE
     PetscInt                            :: set
     type(tIS)                           :: setIS
     PetscInt,Dimension(:),pointer       :: setID
-    PetscInt                            :: dim,pStart,pEnd,order = 1
+    PetscInt                            :: dim,pStart,pEnd,order = 1,sdim = 1
     PetscBool                           :: flg
     Type(tPetscSection)                 :: sectionU,sectionU0
     Logical,Dimension(:,:),Pointer      :: ConstraintTruthTableU,ConstraintTruthTableU0
@@ -252,8 +253,9 @@ Implicit NONE
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
+        PetscInt                            :: ovlp = 0
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
         End If
@@ -265,7 +267,7 @@ Implicit NONE
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU,ierr))
     PetscCallA(PetscObjectSetName(SectionU,"Section for U",ierr))
-    PetscCallA(PetscSectionSetNumFields(sectionU,1,ierr))
+    PetscCallA(PetscSectionSetNumFields(sectionU,sdim,ierr))
     PetscCallA(PetscSectionSetChart(sectionU,pStart,pEnd,ierr))
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU0,ierr))
