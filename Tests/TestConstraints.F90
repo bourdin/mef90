@@ -272,7 +272,7 @@ Implicit NONE
 
     PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU0,ierr))
     PetscCallA(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
-    PetscCallA(PetscSectionSetNumFields(sectionU0,1,ierr))
+    PetscCallA(PetscSectionSetNumFields(sectionU0,sdim,ierr))
     PetscCallA(PetscSectionSetChart(sectionU0,pStart,pEnd,ierr))
 
     numComponents = dim
