@@ -227,6 +227,7 @@ Contains
       MEF90ElementFamilyList(2) = 'MEF90ElementFamily'
       MEF90ElementFamilyList(3) = '_MEF90ElementFamily'
       MEF90ElementFamilyList(4) = ''
+      ierr = 0
    End Subroutine MEF90ElementsInitialize_Private
 
 #undef __FUNCT__

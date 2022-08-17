@@ -16,3 +16,5 @@ Tests/TestSection
 Tests/TestVec
 
 Tests/TestLabels
+
+Tests/viewDAG
