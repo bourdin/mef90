@@ -60,7 +60,7 @@ Module m_MEF90_Elements
    !!!
    Type(MEF90ElementType),Parameter,Public :: MEF90P0Lagrange2D = MEF90ElementType(   &
    "MEF90P0Lagrange2D",                         &  ! name
-   [0,0,0,1],1,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+   [0,0,1,0],1,                                 &  ! numVertexDof,numEdgeDof,numCellDof,unused,numDof
    2,0,0                                        &  ! dim,codim,order
    )
    Type(MEF90ElementType),Parameter,Public :: MEF90P0Lagrange3D = MEF90ElementType(   &
@@ -69,12 +69,12 @@ Module m_MEF90_Elements
    3,0,0                                        &  ! dim,codim,order
    )
    Type(MEF90ElementType),Parameter,Public :: MEF90P0Lagrange2DBoundary = MEF90ElementType(   &
-   "MEF90P0Lagrange2D",                         &  ! name
-   [0,1,0,0],1,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
+   "MEF90P0Lagrange2DBoundary",                 &  ! name
+   [0,1,0,0],1,                                 &  ! numVertexDof,numEdgeDof,numCellDof,unused,numDof
    2,0,0                                        &  ! dim,codim,order
    )
    Type(MEF90ElementType),Parameter,Public :: MEF90P0Lagrange3DBoundary = MEF90ElementType(   &
-   "MEF90P0Lagrange3D",                         &  ! name
+   "MEF90P0Lagrange3DBoundary",                 &  ! name
    [0,0,1,0],1,                                 &  ! numVertexDof,numEdgeDof,numFaceDof,numCellDof,numDof
    3,0,0                                        &  ! dim,codim,order
    )
@@ -254,6 +254,8 @@ Contains
          Select Case(cellType)
          Case(DM_POLYTOPE_TRIANGLE)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange2D
             Case(1)
                elemType = MEF90P1Lagrange2D
             Case(2)
@@ -264,6 +266,8 @@ Contains
             End Select ! order
          Case(DM_POLYTOPE_TETRAHEDRON)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange3D
             Case(1)
                elemType = MEF90P1Lagrange3D
             Case(2)
@@ -274,6 +278,8 @@ Contains
             End Select ! order
          Case(DM_POLYTOPE_QUADRILATERAL)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange2D
             Case(1)
                elemType = MEF90Q1Lagrange2D
             Case(2)
@@ -284,6 +290,8 @@ Contains
             End Select ! order
          Case(DM_POLYTOPE_HEXAHEDRON)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange3D
             Case(1)
                elemType = MEF90Q1Lagrange3D
             Case(2)
@@ -311,10 +319,10 @@ Contains
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90ElementGetTypeBoundary(elemFamily,cellType,order,elemType,ierr)
+   Subroutine MEF90ElementGetTypeBoundary(elemFamily,order,cellType,elemType,ierr)
       PetscEnum,Intent(IN)                             :: elemFamily
-      PetscEnum,Intent(IN)                             :: cellType
       PetscInt,Intent(IN)                              :: order
+      PetscEnum,Intent(IN)                             :: cellType
       Type(MEF90ElementType),Intent(OUT)               :: elemType
       PetscErrorCode,Intent(INOUT)                     :: ierr
 
@@ -323,6 +331,8 @@ Contains
          Select Case(cellType)
          Case(DM_POLYTOPE_SEGMENT)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange2DBoundary
             Case(1)
                elemType = MEF90P1Lagrange2DBoundary
             Case(2)
@@ -333,6 +343,8 @@ Contains
             End Select ! order
          Case(DM_POLYTOPE_TRIANGLE)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange3DBoundary
             Case(1)
                elemType = MEF90P1Lagrange3DBoundary
             Case(2)
@@ -343,6 +355,8 @@ Contains
             End Select ! order
          Case(DM_POLYTOPE_QUADRILATERAL)
             Select Case(order)
+            Case(0)
+               elemType = MEF90P0Lagrange3DBoundary
             Case(1)
                elemType = MEF90Q1Lagrange3DBoundary
             Case(2)
@@ -352,7 +366,7 @@ Contains
                ierr = PETSC_ERR_SUP
             End Select ! order
          Case Default
-            Write(*,*) __FUNCT__,': Unknown cell type (see $PETSC_DIR/srcdm/f90-mod/petscdm.h)',cellType
+            Write(*,*) __FUNCT__,': Unknown cell type (see $PETSC_DIR/src/dm/f90-mod/petscdm.h)',cellType
             ierr = PETSC_ERR_SUP
          End Select ! cellType
       Case Default
