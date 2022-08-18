@@ -115,29 +115,52 @@ Contains
         PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
         PetscCall(PetscSectionSetChart(sectionV,pStart,pEnd,ierr))
     
-        Do setType = 1,size(MEF90SetType)
-            PetscCall(DMGetLabelIdIS(dmV,MEF90SetLabelName(setType),setIS,ierr))
-            !!! Get a GLOBAL cell set IS
-            ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            If (setIS /= PETSC_NULL_IS) Then
-                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-                Do set = 1,size(setID)
-                    !!! Get cell type in order to pick the proper element type.
-                    !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
-                    PetscCall(DMGetStratumIS(dmV,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
-                    If (pointIS /= PETSC_NULL_IS) Then
-                        PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
-                        PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
-                        PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
-                        PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90SetType(setType),setID(set),elemType,sdim,sectionV,ierr))
-                        PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
-                    End If ! pointIS
-                    PetscCall(ISDestroy(pointIS,ierr))
-                End Do ! set
-                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-            End If ! setIS
-            PetscCall(ISDestroy(setIS,ierr))
-        End Do ! setType
+        PetscCall(DMGetLabelIdIS(dmV,MEF90CellSetLabelName,setIS,ierr))
+        !!! Get a GLOBAL cell set IS
+        ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                !!! Get cell type in order to pick the proper element type.
+                !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+                PetscCall(DMGetStratumIS(dmV,MEF90CellSetLabelName,setID(set),pointIS,ierr))
+                If (pointIS /= PETSC_NULL_IS) Then
+                    PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                    PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
+                    PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
+                    PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90CellSetType,setID(set),elemType,sdim,sectionV,ierr))
+                    PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                End If ! pointIS
+                PetscCall(ISDestroy(pointIS,ierr))
+            End Do ! set
+            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
+        PetscCall(ISDestroy(setIS,ierr))
+
+!!! removing DOF allocation at face sets for now.
+!!! Instead, I will create Boundary Vecs
+        
+        ! PetscCall(DMGetLabelIdIS(dmV,MEF90FaceSetLabelName,setIS,ierr))
+        ! !!! Get a GLOBAL face set IS
+        ! ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        ! If (setIS /= PETSC_NULL_IS) Then
+        !     PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+        !     Do set = 1,size(setID)
+        !         !!! Get cell type in order to pick the proper element type.
+        !         !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+        !         PetscCall(DMGetStratumIS(dmV,MEF90FaceSetLabelName,setID(set),pointIS,ierr))
+        !         If (pointIS /= PETSC_NULL_IS) Then
+        !             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+        !             PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
+        !             PetscCall(MEF90ElementGetTypeBoundary(elemFamily,elemOrder,cellType,elemType,ierr))
+        !             PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
+        !             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+        !         End If ! pointIS
+        !         PetscCall(ISDestroy(pointIS,ierr))
+        !     End Do ! set
+        !     PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        ! End If ! setIS
+        ! PetscCall(ISDestroy(setIS,ierr))
 
         Allocate(ConstraintTruthTable(pEnd,sDim))
         ConstraintTruthTable = .FALSE.
