@@ -58,8 +58,9 @@ Module m_MEF90_DMPlex
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
               MEF90CellSectionCreate,                                                &
-              MEF90VecReorder,MEF90LocalToIOSFCreate,MEF90IOToLocalSFCreate,         &
-              MEF90LocalToConstraintSFCreate,MEF90VecGlobalToLocalConstraint,        &
+              MEF90VecCopySF,MEF90IOSFCreate,                                        &
+              MEF90ConstraintSFCreate,MEF90VecGlobalToLocalConstraint,               &
+              MEF90VecCreateIO,                                                      &
               MEF90VecCreate
 Contains
 
@@ -389,15 +390,15 @@ Contains
     End Subroutine MEF90SectionAllocateConstraint
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90VecReorder"
+#define __FUNCT__ "MEF90VecCopySF"
 !!!
 !!!  
-!!!  MEF90VecReorder: rearrange a Vec according to the given SF
+!!!  MEF90VecCopySF: rearrange a Vec according to the given SF
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90VecReorder(vin,vout,sf,ierr)
+    Subroutine MEF90VecCopySF(vin,vout,sf,ierr)
         Type(tVec),intent(IN)              :: vin
         Type(tVec),intent(INOUT)           :: vout
         Type(tPetscSF),intent(IN)          :: sf
@@ -411,90 +412,68 @@ Contains
         PetscCall(PetscSFBcastEnd(sf,MPIU_SCALAR,arrayin,arrayout,MPI_REPLACE,ierr))
         PetscCall(VecRestoreArrayReadF90(vin,arrayin,ierr))
         PetscCall(VecRestoreArrayF90(vout,arrayout,ierr))
-    End subroutine MEF90VecReorder
+    End subroutine MEF90VecCopySF
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90LocalToIOSFCreate"
+#define __FUNCT__ "MEF90IOSFCreate"
 !!!
 !!!  
-!!!  MEF90LocalToIOSFCreate: sf mapping between local to IO ordering and distribution
+!!!  MEF90IOSFCreate: sf mapping between local and IO ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90LocalToIOSFCreate(MEF90Ctx,dm,sf,ierr)
-        Type(tDM),intent(IN)               :: dm
-        Type(tPetscSF),intent(OUT)         :: sf
+    Subroutine MEF90IOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
+        Type(tVec),intent(IN)              :: v
+        Type(tPetscSF),intent(OUT)         :: liosf,iolsf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
         PetscErrorCode,intent(INOUT)       :: ierr
 
-        Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,tempSF
+        Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,cglSF,tempSF,invTempSF
+        Type(tDM)                          :: dm
 
+        PetscCallA(VecGetDM(v,dm,ierr))
         PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
-        If (MEF90Ctx%NumProcs > 1) Then
-            PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
-            PetscCall(DMGetNaturalSF(dm,naturalSF,ierr))
-            PetscCall(PetscSFCompose(lcgSF,naturalSF,tempSF,ierr))
-            PetscCall(PetscSFCompose(tempSF,ioSF,sf,ierr))
-            PetscCall(PetscSFDestroy(lcgSF,ierr))
-            PetscCall(PetscSFDestroy(ioSF,ierr))
-            PetscCall(PetscSFDestroy(tempSF,ierr))
-            PetscCall(PetscSFSetUp(sf,ierr))
-        Else
-            sf = lcgSF
-        End If
-    End subroutine MEF90LocalToIOSFCreate
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90IOToLocalSFCreate"
-!!!
-!!!  
-!!!  MEF90CreateIOToLocalSF: sf mapping between IO to local ordering and distribution
-!!!  
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
-!!!
-
-    Subroutine MEF90IOToLocalSFCreate(MEF90Ctx,dm,sf,ierr)
-        Type(tDM),intent(IN)               :: dm
-        Type(tPetscSF),intent(OUT)         :: sf
-        Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
-        PetscErrorCode,intent(INOUT)       :: ierr
-
-        Type(tPetscSF)                     :: naturalSF,ioSF,cglSF,tempSF,invTempSF
-
         PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
             PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
             PetscCall(DMGetNaturalSF(dm,naturalSF,ierr))
+            PetscCall(PetscSFCompose(lcgSF,naturalSF,tempSF,ierr))
+            PetscCall(PetscSFCompose(tempSF,ioSF,liosf,ierr))
+            PetscCall(PetscSFSetUp(liosf,ierr))
+            PetscCall(PetscSFDestroy(tempSF,ierr))
             PetscCall(PetscSFCompose(naturalSF,ioSF,tempSF,ierr))
             PetscCall(PetscSFCreateInverseSF(tempSF,invTempSF,ierr))
-            PetscCall(PetscSFCompose(invTempSF,cglSF,sf,ierr))
+            PetscCall(PetscSFCompose(invTempSF,cglSF,iolsf,ierr))
+            PetscCall(PetscSFSetUp(iolsf,ierr))
             PetscCall(PetscSFDestroy(ioSF,ierr))
             PetscCall(PetscSFDestroy(cglSF,ierr))
+            PetscCall(PetscSFDestroy(lcgSF,ierr))
             PetscCall(PetscSFDestroy(tempSF,ierr))
             PetscCall(PetscSFDestroy(invTempSF,ierr))
-            PetscCall(PetscSFSetUp(sf,ierr))
         Else
-            sf = cglSF
+            liosf = lcgSF
+            iolsf = cglSF
         End If
-    End subroutine MEF90IOToLocalSFCreate
+    End subroutine MEF90IOSFCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90LocalToConstraintSFCreate"
+#define __FUNCT__ "MEF90ConstraintSFCreate"
 !!!
 !!!  
-!!!  MEF90LocalToConstraintSFCreate: sf mapping between local and constraint Vec ordering and distribution
+!!!  MEF90ConstraintSFCreate: sf mapping between local and constraint Vec ordering and distribution
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!                Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
-    Subroutine MEF90LocalToConstraintSFCreate(MEF90Ctx,dm,dmB,sf,invSF,ierr)
-        Type(tDM),intent(IN)                    :: dm,dmB
+    Subroutine MEF90ConstraintSFCreate(MEF90Ctx,v,vB,sf,invSF,ierr)
+        Type(tVec),intent(IN)                   :: v,vB
         Type(tPetscSF),intent(OUT)              :: sf,invSF
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         PetscErrorCode,intent(INOUT)            :: ierr
 
+        Type(tDM)                               :: dm,dmB
         Type(tPetscSection)                     :: locSection,locBSection
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         Type(PetscInt),dimension(:),Pointer     :: local,cindices
@@ -502,6 +481,8 @@ Contains
 
         nleaves = 0
         nsize   = 0
+        PetscCall(VecGetDM(v,dm,ierr))
+        PetscCall(VecGetDM(vB,dmB,ierr))
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(PetscSectionGetStorageSize(locSection,nroots,ierr))
         PetscCall(DMGetLocalSection(dmB,locBSection,ierr))
@@ -537,8 +518,8 @@ Contains
         DeAllocate(local)
         PetscCall(PetscSFSetUp(sf,ierr))
         PetscCall(PetscSFCreateInverseSF(sf,invSF,ierr))
-        PetscCall(PetscSFSetUp(invSF,ierr))
-    End Subroutine MEF90LocalToConstraintSFCreate
+        PetscCall(PetscSFSetUp(invSF, ierr))
+    End Subroutine MEF90ConstraintSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecGlobalToLocalConstraint"
@@ -577,6 +558,32 @@ Contains
     End Subroutine MEF90VecGlobalToLocalConstraint
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90VecCreateIO"
+!!!
+!!!  
+!!!  MEF90VecCreateIO: create IO Vec
+!!!  
+!!!  (c) 2022      Alexis Marboeuf  marboeua@mcmaster.ca
+!!!
+
+    Subroutine MEF90VecCreateIO(MEF90Ctx,v,bs,sf,ierr)
+        Type(tPetscSF),Intent(IN)               :: sf
+        Type(tVec),Intent(INOUT)                :: v
+        PetscInt,Intent(IN)                     :: bs
+        Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
+        PetscErrorCode,Intent(INOUT)            :: ierr
+
+        PetscInt                                :: nroots, nleaves
+        Type(PetscSFNode),Dimension(:),Pointer  :: iremote
+        PetscInt,Dimension(:),Pointer           :: ilocal
+
+        PetscCallA(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
+        PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
+        PetscCallA(VecSetBlockSize(v,bs,ierr))
+
+    End Subroutine MEF90VecCreateIO
+
+#undef __FUNCT__
 #define __FUNCT__ "CreateNaturalToIOSF_Private"
 !!!
 !!!  
@@ -594,26 +601,23 @@ Contains
         Type(tVec)                              :: vnat,vio
         Type(PetscLayout)                       :: natMap,ioMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
-        PetscInt,dimension(:),Pointer           :: ioRange,remoteRange
+        PetscInt,dimension(:),Pointer           :: ioRange, remoteRange
         PetscMPIInt                             :: remoteRank
-        PetscInt                                :: nroots,nleaves,globalIndex,i,globalSize,localSize,bs
+        PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
     
         PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
-        PetscCallA(VecGetSize(vnat,globalSize,ierr))
+        PetscCallA(VecGetSize(vnat, globalSize, ierr))
         PetscCallA(VecGetBlockSize(vnat,bs,ierr))
-        If (MEF90Ctx%rank == 0) Then
-            localSize = (globalSize/bs)/MEF90Ctx%NumProcs + modulo(globalSize/bs,MEF90Ctx%NumProcs)
-        Else
-            localSize = (globalSize/bs)/MEF90Ctx%NumProcs
-        End If
-        localSize = localSize*bs
-        PetscCallA(VecCreateMPI(MEF90Ctx%Comm,localSize,PETSC_DECIDE,vio,ierr))
-        PetscCallA(VecGetLayout(vnat,natMap,ierr))
-        PetscCallA(VecGetLayout(vio,ioMap,ierr))
-        PetscCall(PetscLayoutGetLocalSize(natMap,nroots,ierr))
-        PetscCall(PetscLayoutGetLocalSize(ioMap,nleaves,ierr))
-        PetscCall(PetscLayoutGetRangesF90(ioMap,ioRange,ierr))
-        PetscCall(PetscLayoutGetRangesF90(natMap,remoteRange,ierr))
+        PetscCallA(VecCreate(MEF90Ctx%Comm,vio,ierr))
+        PetscCallA(VecSetBlockSize(vio,bs,ierr))
+        PetscCallA(VecSetSizes(vio,PETSC_DETERMINE,globalSize,ierr))
+        PetscCallA(VecSetFromOptions(vio,ierr))
+        PetscCallA(VecGetLayout(vnat, natMap, ierr))
+        PetscCallA(VecGetLayout(vio, ioMap, ierr))
+        PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
+        PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
+        PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
+        PetscCall(PetscLayoutGetRangesF90(natMap, remoteRange, ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
             globalIndex = ioRange(MEF90Ctx%rank+1) + i

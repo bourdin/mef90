@@ -117,16 +117,14 @@ Contains
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXODMView(dm,Viewer,ierr)
+   Subroutine MEF90EXODMView(dm,Viewer,order,ierr)
       Type(tPetscViewer),Intent(IN)                      :: Viewer
       Type(tDM),Intent(IN)                               :: dm
+      PetscInt,Intent(IN)                                :: order
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
-      PetscInt                                           :: order = 1
-      PetscBool                                          :: flg
       Character(len=PETSC_MAX_PATH_LEN)                  :: IOBuffer
 
-      PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-order",order,flg,ierr))
       if ((order > 2) .or. (order < 1)) then
           write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') order
           SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
@@ -145,21 +143,18 @@ Contains
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXOVecView(v,Viewer,ierr)
+   Subroutine MEF90EXOVecView(v,Viewer,step,ierr)
       Type(tVec),Intent(IN)                              :: v
       Type(tPetscViewer),Intent(IN)                      :: Viewer
+      PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
-      Type(tDM)                                          :: dm
       Integer                                            :: exoid
-      PetscInt                                           :: offsetN = -1, offsetZ = -1, step
-      PetscReal                                          :: time
-      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
+      PetscInt                                           :: offsetN = -1,offsetZ = -1
+      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
       PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCallA(PetscObjectGetName(v, vecname,ierr))
-      PetscCallA(VecGetDM(v,dm,ierr))
-      PetscCallA(DMGetOutputSequenceNumber(dm,step,time,ierr))
 
       PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
       PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
@@ -182,21 +177,18 @@ Contains
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXOVecLoad(v,Viewer,ierr)
+   Subroutine MEF90EXOVecLoad(v,Viewer,step,ierr)
       Type(tVec),Intent(IN)                              :: v
       Type(tPetscViewer),Intent(IN)                      :: Viewer
+      PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
-      Type(tDM)                                          :: dm
-      Integer                                            :: exoid
-      PetscInt                                           :: offsetN = -1, offsetZ = -1, step
-      PetscReal                                          :: time
-      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname, IOBuffer
+      Integer                                            :: exoid 
+      PetscInt                                           :: offsetN = -1,offsetZ = -1
+      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
       PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
-      PetscCallA(PetscObjectGetName(v, vecname,ierr))
-      PetscCallA(VecGetDM(v,dm,ierr))
-      PetscCallA(DMGetOutputSequenceNumber(dm,step,time,ierr))
+      PetscCallA(PetscObjectGetName(v,vecname,ierr))
 
       PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
       PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
@@ -219,8 +211,8 @@ Contains
       PetscInt,Intent(OUT)             :: varIndex
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                         :: i, j, num_suffix = 5, num_vars
-      Character(len=MXSTLN)            :: var_name,ext_name, suffix(5)
+      Integer                          :: i,j,num_suffix = 5,num_vars
+      Character(len=MXSTLN)            :: var_name,ext_name,suffix(5)
    
       suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
       
@@ -242,7 +234,7 @@ Contains
 #define __FUNCT__ "MEF90EXOVecViewNodal_Private"
    Subroutine MEF90EXOVecViewNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
-      PetscInt,Intent(IN)              :: step, offset
+      PetscInt,Intent(IN)              :: step,offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
