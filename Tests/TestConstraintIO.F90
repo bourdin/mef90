@@ -22,7 +22,7 @@ Implicit NONE
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, globVecSigma, locVecSigma, ioS, ioVecRead, ioSRead
     Type(tPetscViewer)                                  :: viewer
     PetscScalar,dimension(:),pointer                    :: cval,xyz
-    PetscInt                                            :: orderSigma = 0,numCompSigma = 3
+    PetscInt                                            :: orderSigma = 0
     PetscInt                                            :: step = 0
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
@@ -96,7 +96,7 @@ Implicit NONE
 
     ! create cell Vec holding sigma
     name = "Sigma"
-    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,orderSigma,numCompSigma,name,locVecSigma,ierr))
+    PetscCallA(MEF90VecCreate(dm,MEF90GlobalOptions%elementFamily,orderSigma,numCellVar,name,locVecSigma,ierr))
     PetscCallA(VecGetDM(locVecSigma,dmSigma,ierr))
     PetscCallA(DMGetLocalSection(dmSigma,sectionSigma,ierr))
 
@@ -199,8 +199,7 @@ Implicit NONE
         PetscCallA(DMGetStratumIS(dmSigma, "Cell Sets", csID(set), cellIS,ierr))
         If (cellIS /= PETSC_NULL_IS) Then
             PetscCallA(ISGetIndicesF90(cellIS, cellID,ierr))
-            PetscCallA(ISGetSize(cellIS, numCells,ierr))
-            Do cell = 1,numCells
+            Do cell = 1,size(cellID)
                 PetscCallA(DMPlexVecGetClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
                 PetscCallA(DMPlexVecGetClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
                 cval(1) = MEF90Ctx%rank
@@ -217,6 +216,8 @@ Implicit NONE
                 PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval, INSERT_ALL_VALUES,ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dmSigma, sectionSigma, locVecSigma, cellID(cell), cval,ierr))
+                !PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
         End If ! cellIS
