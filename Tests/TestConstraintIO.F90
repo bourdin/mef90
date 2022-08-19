@@ -24,6 +24,9 @@ Implicit NONE
     PetscScalar,dimension(:),pointer                    :: cval,xyz
     PetscInt                                            :: orderSigma = 0
     PetscInt                                            :: step = 0
+    PetscInt                                            :: nLeaves,nRoots
+    PetscInt,Dimension(:),Pointer                       :: iLocal
+    Type(PETSCSFNode),Dimension(:),Pointer              :: iRemote
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
@@ -185,7 +188,7 @@ Implicit NONE
     ! Reorder locVecU into ioVec and write ioVec
     PetscCallA(MEF90VecCopySF(locVecU,ioVec,lioSF,ierr))
     PetscCallA(VecViewFromOptions(ioVec,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioVec,viewer,0,ierr))
+    PetscCallA(MEF90EXOVecView(ioVec,viewer,step,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
@@ -213,11 +216,11 @@ Implicit NONE
                     cval(3) = cval(3) + xyz(c)
                 End Do
                 cval(3) = cval(3) * dim / size(xyz)
-                PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval, INSERT_ALL_VALUES,ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma, sectionSigma, locVecSigma, cellID(cell), cval,ierr))
+                !PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval, INSERT_ALL_VALUES,ierr))
                 !PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
+                !PetscCallA(DMPlexVecRestoreClosure(dmSigma, sectionSigma, locVecSigma, cellID(cell), cval,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, globVecSigma, cellID(cell), cval,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
         End If ! cellIS
@@ -240,12 +243,12 @@ Implicit NONE
     ! Reorder and write ioS
     PetscCallA(MEF90VecCopySF(locVecSigma,ioS,lioSSF,ierr))
     PetscCallA(VecViewFromOptions(ioS,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioS,viewer,0,ierr))
+    PetscCallA(MEF90EXOVecView(ioS,viewer,step,ierr))
 
     ! Test read ioVecRead and ioSRead
-    PetscCallA(MEF90EXOVecLoad(ioVecRead,viewer,0,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioVecRead,viewer,step,ierr))
     PetscCallA(VecViewFromOptions(ioVecRead,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecLoad(ioSRead,viewer,0,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioSRead,viewer,step,ierr))
     PetscCallA(VecViewFromOptions(ioSRead,PETSC_NULL_OPTIONS,"-ios_view",ierr))
 
     ! Cleanup Vec
