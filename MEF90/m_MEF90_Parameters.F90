@@ -13,7 +13,7 @@ Module m_MEF90_Parameters
    Integer,Parameter,Public            :: Kr = Selected_Real_Kind(Precision(PReal))
                                          
    PetscInt,Parameter                  :: PInt = 1
-   Integer,Parameter,Public            :: Ki = Selected_Int_Kind(PInt)
+   Integer,Parameter,Public            :: Ki = kind(PInt)
    
    PetscLogDouble,Parameter            :: flop = 1.0
    Integer,Parameter,Public            :: PFlop = Selected_Real_Kind(Precision(flop))
