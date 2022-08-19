@@ -2,7 +2,29 @@ MEF90_DEFMECH_OBJS = ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechCtx.o       
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechAssembly2D.o         \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechAssembly3D.o         \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticity2D.o       \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCtx2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityNone2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCap2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCrystalBCC2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCrystalSingleSlip2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityDruckerPragerCap2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityGreen2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityGurson2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityHill2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityTresca2D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityVonMises2D.o   \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticity3D.o       \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCtx3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityNone3D.o   \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCap3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCrystalBCC3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityCrystalSingleSlip3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityDruckerPragerCap3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityGreen3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityGurson3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityHill3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityTresca3D.o    \
+                     ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechPlasticityVonMises3D.o   \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitClass2D.o       \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitClass3D.o       \
                      ${MEF90_DIR}/objs/${PETSC_ARCH}/m_MEF90_DefMechSplitNone2D.o        \

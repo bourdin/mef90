@@ -291,7 +291,7 @@ Module m_MEF90_DefMechCtx
                      MEF90DefMech_PlasticityTypeGreen,                  &
                      MEF90DefMech_PlasticityTypeGurson,                 &
                      MEF90DefMech_PlasticityTypeCrystalSingleSlip,      &
-                     MEF90DefMech_PlasticityTypeCrystalBCC       
+                     MEF90DefMech_PlasticityTypeCrystalBCC
    End Enum
    Character(len = MEF90_MXSTRLEN),Dimension(15),protected   :: MEF90DefMech_plasticityTypeList
    

@@ -1,6 +1,9 @@
 The following people have contributed parts of mef90:
-Blaise Bourdin <bourdin@lsu.edu>
-Erwan Tanné    <erwan.tanne@gmail.com>
-Stella Brach   <brach@caltech.edu>
-Jeffrey Frey   <frey@udel.edu>
+Blaise Bourdin      <bourdin@lsu.edu> 
+                    <bourdin@mcmaster.ca>
+Erwan TannÃ©         <erwan.tanne@gmail.com>
+Stella Brach        <brach@caltech.edu>
+Jeffrey Frey        <frey@udel.edu>
+Alexis Marboeuf     <marboeua@mcmaster.ca>
+Jean-Michel Scherer <scherer@caltech.edu>
 

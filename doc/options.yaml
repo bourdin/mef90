@@ -94,7 +94,7 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   damage:
     type: <AT1> #Type of damage law (choose one of)  AT1 AT2 LinSoft KKL AT1Elastic AT2Elastic LinSoftElastic KKLElastic
   plasticity:
-    type: <None> #Type of plasticity law (choose one of)  None Tresca VonMises VonMisesPlaneTheory CapModel DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson
+    type: <None> #Type of plasticity law (choose one of)  None Tresca VonMises VonMisesPlaneTheory CapModel DruckerPragerCapModel VonMises1D HillPlaneTheory Green Gurson CrystalSingleSlip CrystalBCC
   unilateralContact:
     type: <None> #Type of handling of unilateral contact (choose one of)  None HydrostaticDeviatoric BrittleDuctile PositiveHydrostatic HybridHydrostaticDeviatoric Deviatoric PrincipalStrains Masonry
   DisplacementBC: <0 1 2 > #Displacement has Dirichlet boundary Condition (Y/N, yes/no, true/false, 0,1) 
@@ -123,6 +123,15 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   hookeslaw:
     type: <Isotropic> #Type of Hooke's law (choose one of)  Full Isotropic
   hookeslaw:
+    tensor: <1.34615,0.57692,0.57692,0.0,0.0,0.0,1.34615,0.57692,0.0,0.0,0.0,1.34615,0.0,0.0,0.0,0.38462,0.0,0.0,0.38462,0.0,0.38462_Kr> #[N.m^(-2)] Full Hooke's law tensor (21 components) expressed in the material reference frame
+    RotationMatrix:
+      fromEuler: <FALSE> #Rotation matrix is computed from the provided Bunge-Euler angles instead of vectors V1, V2, V3
+      V1: <1,0,0> #[-] first column of the rotation matrix defining the rotation from the material frame to the global frame
+      V2: <0,1,0> #[-] second column of the rotation matrix defining the rotation from the material frame to the global frame
+      V3: <0,0,1> #[-] third column of the rotation matrix defining the rotation from the material frame to the global frame
+      phi1: <0> #[radians] first Bunge-Euler angle angle phi1
+      Phi:  <0> #[radians] second Bunge-Euler angle angle Phi
+      phi2: <0> #[radians] third Bunge-Euler angle angle phi2
     YoungsModulus: <1> #[N.m^(-2)] (E) Young's Modulus 
     PoissonRatio: <0.3> #[unit-less] (nu) Poisson Modulus 
     planeStress: <FALSE> #Use plane stress elasticity (2D only)
@@ -152,3 +161,7 @@ cs0001: # ID of cell set formatted with 4 digits padded to the left by zeros
   residualStiffness: <1e-09> #[unit-less] (eta) residual stiffness 
   isLinearIsotropicHardening: <FALSE> #[bool] Plasticity with Linear Isotropic Hardening 
   isNoPlCoupling: <FALSE> #[bool] Coupling between damage and plastic dissipation 
+  isViscousPlasticity: <FALSE> #[bool] Visco-plastic power law behaviour (crystal plasticity)
+  ViscosityGamma0: <1> #[s^-1] Reference plastic slip rate
+  ViscosityN: <1> #[unit-less] Visco-plastic power law exponent
+  Viscositydt: <1> #[s] Time step size
