@@ -63,7 +63,8 @@ Module m_MEF90_DMPlex
               MEF90VecCreateIO,                                                      &
               MEF90CreateLocalVector,                                                &
               MEF90CreateBoundaryLocalVector,                                        &
-              MEF90CreateCellVector
+              MEF90CreateCellVector,                                                 &
+              MEF90CreateBoundaryCellVector
 Contains
 
 #undef __FUNCT__
@@ -111,7 +112,7 @@ Contains
 
         PetscCall(PetscSectionCreate(comm,sectionV,ierr))
         PetscCall(PetscObjectSetName(sectionV,name,ierr))
-        PetscCall(PetscSectionSetNumFields(sectionV,sDim,ierr))
+        PetscCall(PetscSectionSetNumFields(sectionV,1_Ki,ierr))
         PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
         PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
         PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
@@ -205,7 +206,7 @@ Contains
 
         PetscCall(PetscSectionCreate(comm,sectionV,ierr))
         PetscCall(PetscObjectSetName(sectionV,name,ierr))
-        PetscCall(PetscSectionSetNumFields(sectionV,sDim,ierr))
+        PetscCall(PetscSectionSetNumFields(sectionV,1_Ki,ierr))
         PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
         PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
         PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
@@ -213,7 +214,7 @@ Contains
 
         PetscCall(DMGetDimension(dm,dim,ierr))    
         If (dim == 2) Then
-            ElemType = MEF90P0Lagrange2D
+            elemType = MEF90P0Lagrange2D
         Else
             elemType = MEF90P0Lagrange3D
         End If
@@ -281,7 +282,7 @@ Contains
 
         PetscCall(PetscSectionCreate(comm,sectionV,ierr))
         PetscCall(PetscObjectSetName(sectionV,name,ierr))
-        PetscCall(PetscSectionSetNumFields(sectionV,sDim,ierr))
+        PetscCall(PetscSectionSetNumFields(sectionV,1_Ki,ierr))
         PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
         PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
         PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
@@ -299,7 +300,7 @@ Contains
                 If (pointIS /= PETSC_NULL_IS) Then
                     PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                     PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
-                    PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
+                    PetscCall(MEF90ElementGetTypeBoundary(elemFamily,elemOrder,cellType,elemType,ierr))
                     PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
                     PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
                 End If ! pointIS
@@ -339,6 +340,73 @@ Contains
         PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateBoundaryLocalVector
     
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CreateBoundaryCellVector"
+!!!
+!!!  
+!!!  MEF90CreateBoundaryCellVector: create a Vec for a cell-based vector
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+    Subroutine MEF90CreateBoundaryCellVector(dm,sDim,name,V,ierr)
+        Type(tDM),Intent(IN)                    :: dm
+        PetscInt,Intent(IN)                     :: sDim
+        Character(len=MEF90MXSTRLEN),Intent(IN) :: name
+        Type(tVec),Intent(OUT)                  :: V
+        PetscErrorCode,Intent(INOUT)            :: ierr
+
+        PetscInt                                :: dim
+        Type(tPetscSection)                     :: sectionV
+        Type(tDM)                               :: dmV
+        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: pStart,pEnd
+        MPI_Comm                                :: comm
+        PetscInt                                :: set
+        PetscInt,Dimension(:),pointer           :: setID
+        Type(tIS)                               :: setIS
+        Type(MEF90ElementType)                  :: elemType
+        PetscBool                               :: flg
+
+        PetscCall(DMClone(dm,dmV,ierr))
+        PetscCall(PetscObjectSetName(dmv,name,ierr))
+        PetscCall(DMGetUseNatural(dm,flg,ierr))
+        PetscCall(DMSetUseNatural(dmV,flg,ierr))
+
+        PetscCall(PetscObjectGetComm(dmV,comm,ierr))
+
+        PetscCall(PetscSectionCreate(comm,sectionV,ierr))
+        PetscCall(PetscObjectSetName(sectionV,name,ierr))
+        PetscCall(PetscSectionSetNumFields(sectionV,1_Ki,ierr))
+        PetscCall(PetscSectionSetFieldName(sectionV,fieldV,trim(name),ierr))
+        PetscCall(PetscSectionSetFieldComponents(sectionV,fieldV,sdim,ierr))
+        PetscCall(DMPlexGetChart(dmV,pStart,pEnd,ierr))
+        PetscCall(PetscSectionSetChart(sectionV,pStart,pEnd,ierr))
+
+        PetscCall(DMGetDimension(dm,dim,ierr))    
+        If (dim == 2) Then
+            elemType = MEF90P0Lagrange2DBoundary
+        Else
+            elemType = MEF90P0Lagrange3DBoundary
+        End If
+
+        PetscCall(DMGetLabelIdIS(dmV,MEF90FaceSetLabelName,setIS,ierr))
+        !!! Get a GLOBAL cell set IS
+        ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+        If (setIS /= PETSC_NULL_IS) Then
+            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            Do set = 1,size(setID)
+                PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
+            End Do ! set
+            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+        End If ! setIS
+        PetscCall(ISDestroy(setIS,ierr))
+        PetscCall(PetscSectionSetup(sectionV,ierr))
+    
+        PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
+        PetscCall(DMCreateLocalVector(dmV,V,ierr))
+        PetscCall(PetscObjectSetName(V,name,ierr))
+    End Subroutine MEF90CreateBoundaryCellVector
+        
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SectionAllocateDof"
 !!!

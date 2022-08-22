@@ -326,6 +326,7 @@ Contains
       Type(MEF90ElementType),Intent(OUT)               :: elemType
       PetscErrorCode,Intent(INOUT)                     :: ierr
 
+      elemType = MEF90_NULL_ELEMENT
       Select Case(elemFamily)
       Case(MEF90ElementFamilyLagrange)
          Select Case(cellType)
@@ -337,9 +338,9 @@ Contains
                elemType = MEF90P1Lagrange2DBoundary
             Case(2)
                elemType = MEF90P2Lagrange2DBoundary
-            Case Default
-               Write(*,*) __FUNCT__,': Unimplemented order',order
-               ierr = PETSC_ERR_SUP
+            ! Case Default
+            !    Write(*,*) __FUNCT__,': Unimplemented order',order
+            !    ierr = PETSC_ERR_SUP
             End Select ! order
          Case(DM_POLYTOPE_TRIANGLE)
             Select Case(order)
@@ -349,9 +350,9 @@ Contains
                elemType = MEF90P1Lagrange3DBoundary
             Case(2)
                elemType = MEF90P1Lagrange3DBoundary
-            Case Default
-               Write(*,*) __FUNCT__,': Unimplemented order',order
-               ierr = PETSC_ERR_SUP
+            ! Case Default
+            !    Write(*,*) __FUNCT__,': Unimplemented order',order
+            !    ierr = PETSC_ERR_SUP
             End Select ! order
          Case(DM_POLYTOPE_QUADRILATERAL)
             Select Case(order)
@@ -361,17 +362,17 @@ Contains
                elemType = MEF90Q1Lagrange3DBoundary
             Case(2)
                elemType = MEF90Q2Lagrange3DBoundary
-            Case Default
-               Write(*,*) __FUNCT__,': Unimplemented order',order
-               ierr = PETSC_ERR_SUP
+            ! Case Default
+            !    Write(*,*) __FUNCT__,': Unimplemented order',order
+            !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case Default
-            Write(*,*) __FUNCT__,': Unknown cell type (see $PETSC_DIR/src/dm/f90-mod/petscdm.h)',cellType
-            ierr = PETSC_ERR_SUP
+         ! Case Default
+         !    Write(*,*) __FUNCT__,': Unknown cell type (see $PETSC_DIR/src/dm/f90-mod/petscdm.h)',cellType
+         !    ierr = PETSC_ERR_SUP
          End Select ! cellType
-      Case Default
-      Write(*,*) __FUNCT__,': Unknown element family',elemFamily
-      ierr = PETSC_ERR_SUP
+      ! Case Default
+      ! Write(*,*) __FUNCT__,': Unknown element family',elemFamily
+      ! ierr = PETSC_ERR_SUP
       End Select
    End Subroutine MEF90ElementGetTypeBoundary
    

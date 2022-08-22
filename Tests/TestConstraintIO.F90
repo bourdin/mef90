@@ -90,7 +90,7 @@ Implicit NONE
 
     ! Create nodal local Vec holding constraints
     name = "U0"
-    PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
+    PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
     PetscCallA(VecGetDM(locVecU0,dmU0,ierr))
     PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
     PetscCallA(DMSetUseNatural(dmU0,PETSC_TRUE,ierr))
