@@ -217,10 +217,10 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
     Type(tDM)                           :: dm,dmU,dmU0
     PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90MXSTRLEN)       :: IOBuffer
+    Character(len=MEF90MXSTRLEN)        :: IOBuffer
     PetscEnum                           :: setType
 
-    Type(MEF90ElementType)             :: cellSetElementType,faceSetElementType
+    Type(MEF90ElementType)              :: cellSetElementType,faceSetElementType
     PetscInt                            :: numComponents
     PetscInt                            :: set
     type(tIS)                           :: setIS

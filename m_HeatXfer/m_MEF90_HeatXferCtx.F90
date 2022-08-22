@@ -11,10 +11,11 @@ Module m_MEF90_HeatXferCtx_Type
    
    Type MEF90HeatXferCtx_Type
       Type(tVec),pointer               :: temperatureLocal
-      Type(tVec),pointer               :: boundaryTemperatureLocal
+      !Type(tVec),pointer               :: boundaryTemperatureLocal
       Type(tVec),pointer               :: fluxLocal
       Type(tVec),pointer               :: boundaryFluxLocal
       Type(tVec),pointer               :: externalTemperatureLocal
+      Type(tPetscSF),pointer           :: temperatureToIOSF,IOToTemperatureIOSF
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
@@ -22,7 +23,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
-      Type(tDM),pointer                :: megaDM
+      Type(tDM)                        :: megaDM
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
@@ -224,6 +225,7 @@ Contains
       Type(tIS)                                          :: setIS
       PetscInt                                           :: set,numSet
       Character(len=MEF90MXSTRLEN)                       :: vecName
+      Type(tDM),Dimension(:),Pointer                     :: dmList
 
       Call MEF90HeatXferCtxInitialize_Private(ierr)
       HeatXferCtx%MEF90Ctx => MEF90Ctx
@@ -268,13 +270,24 @@ Contains
 
       Allocate(HeatXferCtx%externalTemperatureLocal)
       vecName = "External Temperature"
-      PetscCall(MEF90CreateCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
+      PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
 
-      !!! Skipping boundary fields for now
-      !!! Allocate(HeatXferCtx%boundaryFluxLocal)
-      !!! vecName = "Boundary Flux"
-      !!!Allocate(HeatXferCtx%boundaryTemperatureLocal)
-      !!!vecName = "Boundary Temperature"
+      ! Allocate(HeatXferCtx%boundaryTemperatureLocal)
+      ! vecName = "Boundary Temperature"
+      ! PetscCall(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%boundaryTemperatureLocal,ierr))
+
+      Allocate(HeatXferCtx%boundaryFluxLocal)
+      vecName = "Boundary Flux"
+      PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
+
+      !!! Create the  unknowns and parameters superDM
+      Allocate(dmList(4))
+      PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(1),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(2),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(3),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(4),ierr))
+      PetscCall(DMCreateSuperDM(dmList,4_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
+      DeAllocate(dmList)
    End Subroutine MEF90HeatXferCtxCreate
    
 #undef __FUNCT__
@@ -297,10 +310,10 @@ Contains
          PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
          Nullify(HeatXferCtx%temperatureLocal)
       End If
-      If (Associated(HeatXferCtx%boundaryTemperatureLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%boundaryTemperatureLocal,ierr))
-         Nullify(HeatXferCtx%boundaryTemperatureLocal)
-      End If
+      ! If (Associated(HeatXferCtx%boundaryTemperatureLocal)) Then
+      !    PetscCall(VecDestroy(HeatXferCtx%boundaryTemperatureLocal,ierr))
+      !    Nullify(HeatXferCtx%boundaryTemperatureLocal)
+      ! End If
       If (Associated(HeatXferCtx%ExternalTemperatureLocal)) Then
          PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
          Nullify(HeatXferCtx%ExternalTemperatureLocal)
@@ -329,6 +342,8 @@ Contains
          PetscCall(PetscBagDestroy(HeatXferCtx%VertexSetOptionsBag(set),ierr))
       End Do
       DeAllocate(HeatXferCtx%VertexSetOptionsBag)
+
+      PetscCall(DMDestroy(HeatXferCtx%megaDM,ierr))
    End Subroutine MEF90HeatXferCtxDestroy
 
 #undef __FUNCT__
@@ -527,37 +542,4 @@ Contains
 303 Format('\nRegistering face set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90HeatXferCtxSetFromOptions
    
-! #undef __FUNCT__
-! #define __FUNCT__ "MEF90HeatXferCtxCreateVectors"
-! !!!
-! !!!  
-! !!!  MEF90HeatXferCtxCreateVectors:
-! !!!  
-! !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-! !!!
-
-!    Subroutine MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
-!       Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: MEF90HeatXferCtx
-!       PetscErrorCode,Intent(OUT)                            :: ierr
-
-!       Allocate(MEF90HeatXferCtx%temperature)
-!       PetscCall(DMCreateGlobalVector(MEF90HeatXferCtx%dmScal,MEF90HeatXferCtx%temperature,ierr))
-!       PetscCall(PetscObjectSetName(MEF90HeatXferCtx%temperature,"Temperature",ierr))
-!       PetscCall(VecSet(MEF90HeatXferCtx%temperature,0.0_Kr,ierr))
-!       Allocate(MEF90HeatXferCtx%boundaryTemperature)
-!       PetscCall(DMCreateGlobalVector(MEF90HeatXferCtx%dmScal,MEF90HeatXferCtx%boundaryTemperature,ierr))
-!       PetscCall(PetscObjectSetName(MEF90HeatXferCtx%boundaryTemperature,"Boundary_Temperature",ierr))
-!       PetscCall(VecSet(MEF90HeatXferCtx%boundaryTemperature,0.0_Kr,ierr))
-   
-!       Allocate(MEF90HeatXferCtx%externalTemperature)
-!       PetscCall(DMCreateGlobalVector(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,ierr))
-!       PetscCall(PetscObjectSetName(MEF90HeatXferCtx%externalTemperature,"External_Temperature",ierr))
-!       PetscCall(VecSet(MEF90HeatXferCtx%externalTemperature,0.0_Kr,ierr))
-
-!       Allocate(MEF90HeatXferCtx%flux)
-!       PetscCall(DMCreateGlobalVector(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,ierr))
-!       PetscCall(PetscObjectSetName(MEF90HeatXferCtx%flux,"Flux",ierr))
-!       PetscCall(VecSet(MEF90HeatXferCtx%flux,0.0_Kr,ierr))
-!    End Subroutine MEF90HeatXferCtxCreateVectors   
-
 End Module m_MEF90_HeatXferCtx

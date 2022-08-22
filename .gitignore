@@ -18,3 +18,5 @@ Tests/TestVec
 Tests/TestLabels
 
 Tests/viewDAG
+
+Tests/TestVecSetBCFromOptions

@@ -1,4 +1,4 @@
-Program  TestVec
+Program  TestVecSetBCFromOptions
 #include <petsc/finclude/petsc.h>
 Use petsc
 Use m_MEF90
@@ -14,6 +14,7 @@ Implicit NONE
     PetscInt                                           :: sDim = 1
 
     Type(tVec)                                         :: v
+    PetscReal                                          :: scalingFactor
 
     MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
@@ -50,6 +51,9 @@ Implicit NONE
     name = "Temperature"
     PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-sdim',sdim,flg,ierr))
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,sdim,name,V,ierr))
+    PetscCallA(VecSet(v,-1.234_Kr,ierr))
+    scalingFactor = 1.0_kI
+    PetscCallA(MEF90VecSetBCFromOptions(V,scalingFactor,ierr))
 
     ViewSec: block
         Type(tPetscSection)     :: sectionV
@@ -61,15 +65,10 @@ Implicit NONE
         PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
     end block ViewSec
 
+
     PetscCallA(VecDestroy(v,ierr))
     PetscCallA(DMDestroy(dm,ierr))
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)
-End Program  TestVec
-
-
-!!! TEST
-!!!
-!!! TestVec -geometry ../TestMeshes/SquareFaceSet.msh -sdim 1 -fs0020_TemperatureBC on
-!!! TestVec -geometry ../TestMeshes/SquareFaceSet.msh -sdim 4 -fs0021_TemperatureBC on,0,true,no
+End Program  TestVecSetBCFromOptions

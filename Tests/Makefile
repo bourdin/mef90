@@ -8,6 +8,15 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 #include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+TestVecSetBCFromOptions.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptions.F90 MEF90
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestVecSetBCFromOptions: TestVecSetBCFromOptions.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 TestEXO.o: ${MEF90_DIR}/Tests/TestEXO.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<

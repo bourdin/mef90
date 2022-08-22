@@ -64,7 +64,8 @@ Module m_MEF90_DMPlex
               MEF90CreateLocalVector,                                                &
               MEF90CreateBoundaryLocalVector,                                        &
               MEF90CreateCellVector,                                                 &
-              MEF90CreateBoundaryCellVector
+              MEF90CreateBoundaryCellVector,                                         &
+              MEF90VecSetBCFromOptions
 Contains
 
 #undef __FUNCT__
@@ -821,6 +822,84 @@ Contains
 
     End Subroutine MEF90VecCreateIO
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90VecSetBCFromOptions"
+!!!
+!!!  
+!!!  MEF90VecSetBCFromOptions: Fill boundary values of a Vec using command line options
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+    Subroutine MEF90VecSetBCFromOptions(v,scalingFactor,ierr)
+        Type(tVec),Intent(INOUT)                :: v
+        PetscReal,Intent(IN)                    :: scalingFactor
+        PetscErrorCode,Intent(INOUT)            :: ierr
+
+        Type(tDM)                               :: dm
+        PetscEnum                               :: setType
+        PetscInt                                :: set,point,c
+        Type(tIS)                               :: setIS,pointIS
+        PetscInt,Dimension(:),Pointer           :: setID,pointID
+        Character(len=MEF90MXSTRLEN)            :: BCOptionKey,BCValueKey,name
+        PetscBool,Dimension(:),Pointer          :: setBC
+        PetscBool                               :: flg
+        PetscInt                                :: dim,numBC,bs
+        PetscReal,Dimension(:),pointer          :: BCVal,vArray
+        Type(tPetscSection)                     :: section
+
+        PetscCall(VecGetDM(v,dm,ierr))
+        PetscCall(PetscObjectGetName(v,name,ierr))
+        PetscCall(DMGetLocalSection(dm,section,ierr))
+
+        PetscCall(DMGetDimension(dm,dim,ierr))
+        PetscCall(VecGetBlockSize(v,bs,ierr))
+        Allocate(setBC(bs))
+        Allocate(BCVal(bs))
+
+        Do setType = 1,size(MEF90SetType)
+            PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
+            ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+            If (setIS /= PETSC_NULL_IS) Then
+                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                Do set = 1,size(setID)
+                    setBC = .FALSE.
+                    write(BCOptionKey,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
+                    numBC = bs
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionKey),setBC,numBC,flg,ierr))
+                    If (any(setBC)) Then
+                        !!! At least 2 dof has a boundary condition
+                        !!! Get the unit BC value on the set
+                        write(BCValueKey,'("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType),setID(set),trim(name)
+                        numBC = bs
+                        PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
+                        PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
+                        !!! Set the boundary values on the closure of the current point
+                        If (pointIS /= PETSC_NULL_IS) Then
+                            PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                            Do point = 1, size(pointID)
+                                PetscCallA(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                Do c = 1, bs
+                                    If (setBC(c)) Then
+                                        vArray(c::bs) = scalingFactor * BCVal(c)
+                                        PetscCallA(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
+                                    End If ! setBC
+                                End Do ! c
+                                PetscCallA(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                            End Do ! point
+                            PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                        End If
+                    End If ! setBC
+                End Do
+                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            End If ! setIS
+            PetscCall(ISDestroy(setIS,ierr))
+        End Do ! setType
+        DeAllocate(setBC)
+        DeAllocate(BCVal)
+    End Subroutine MEF90VecSetBCFromOptions
+
+!!! Private functions below
 #undef __FUNCT__
 #define __FUNCT__ "CreateNaturalToIOSF_Private"
 !!!
