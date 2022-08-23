@@ -42,7 +42,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscReal                        :: surfaceThermalConductivity
       PetscReal                        :: externalTemp
       PetscBool                        :: Has_BC
-      PetscReal                        :: boundaryTemp
+      PetscReal                        :: boundaryTemperature
       PetscReal,dimension(3)           :: advectionVector
    End Type MEF90HeatXferCellSetOptions_Type
 
