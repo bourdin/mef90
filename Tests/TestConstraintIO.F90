@@ -16,15 +16,12 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)                        :: name
     type(tIS)                                           :: cellIS,csIS
     PetscInt,Dimension(:),pointer                       :: cellID,csID
-    PetscInt                                            :: dim,pStart,pEnd,size,bs,cell,c,set,numCells
+    PetscInt                                            :: dim,pStart,pEnd,size,bs,cell,c,set
     Type(tPetscSection)                                 :: sectionU, sectionU0, sectionSigma, coordSection
     Type(tPetscSF)                                      :: naturalPointSF, natSFU, natSFU0, natSFS, lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, locVecSigma, ioS, ioVecRead, ioSRead
     Type(tPetscViewer)                                  :: viewer
     PetscScalar,dimension(:),pointer                    :: cval,xyz
-    PetscInt                                            :: nLeaves,nRoots
-    PetscInt,Dimension(:),Pointer                       :: iLocal
-    Type(PETSCSFNode),Dimension(:),Pointer              :: iRemote
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     Call MEF90Initialize(ierr)
@@ -97,7 +94,7 @@ Implicit NONE
 
     ! create cell Vec holding sigma
     name = "Sigma"
-    PetscCall(MEF90CreateCellVector(dm,1_Ki,name,locVecSigma,ierr))
+    PetscCall(MEF90CreateCellVector(dm,3_Ki,name,locVecSigma,ierr))
     PetscCallA(VecGetDM(locVecSigma,dmSigma,ierr))
     PetscCallA(DMGetLocalSection(dmSigma,sectionSigma,ierr))
 
@@ -105,38 +102,6 @@ Implicit NONE
     PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionSigma,PETSC_NULL_OPTIONS,"-sectionSigma_view",ierr))
-
-    PetscCallA(DMGetCoordinatesLocal(dmSigma,locCoord,ierr))
-    PetscCallA(DMGetCoordinateSection(dmSigma, coordSection,ierr))
-    PetscCallA(DMGetLabelIdIS(dmSigma, "Cell Sets", csIS,ierr))
-    PetscCallA(ISGetIndicesF90(csIS, csID,ierr))
-    do set = 1, size(csID)
-        PetscCallA(DMGetStratumIS(dmSigma, "Cell Sets", csID(set), cellIS,ierr))
-        PetscCallA(ISGetIndicesF90(cellIS, cellID,ierr))
-        PetscCallA(ISGetSize(cellIS, numCells,ierr))
-        do cell = 1,numCells
-            PetscCallA(DMPlexVecGetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
-            PetscCallA(DMPlexVecGetClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-            cval(1) = MEF90Ctx%rank
-            cval(2) = 0.0_Kr
-            do c = 1, size(xyz),dim-1
-                cval(2) = cval(2) + xyz(c)
-            end do
-            cval(2) = cval(2) * dim / size(xyz)
-            cval(3) = 0.0_Kr
-            do c = 1, size(xyz),dim
-                cval(3) = cval(3) + xyz(c)
-            end do
-            cval(3) = cval(3) * dim / size(xyz)
-            PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_ALL_VALUES,ierr))
-            PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
-            PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-        end do
-        PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
-        PetscCallA(ISDestroy(cellIS,ierr))
-    end do
-    PetscCallA(ISRestoreIndicesF90(csIS, csID,ierr))
-    PetscCallA(ISDestroy(csIS,ierr))
 
     ! Create GlobalToNatural SFs
     if (MEF90Ctx%NumProcs > 1) then
@@ -167,6 +132,7 @@ Implicit NONE
     ! Fill locVecU holding coordinates and copy constraint values = 10 from locVecU0
     PetscCallA(VecSet(locVecU0,10.0_kr,ierr))
     ! locCoord is obtained from dmSigma but all DMs have the same coordinates
+    PetscCallA(DMGetCoordinatesLocal(dmSigma,locCoord,ierr))
     PetscCallA(VecCopy(locCoord,locVecU,ierr))
     PetscCallA(MEF90VecCopySF(locVecU0,locVecU,clSF,ierr))
 
@@ -184,7 +150,6 @@ Implicit NONE
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
-    PetscCallA(DMCreateLocalVector(dmSigma,locVecSigma,ierr))
     PetscCallA(DMGetCoordinateSection(dmSigma, coordSection,ierr))
     PetscCallA(DMGetLabelIdIS(dmSigma, "Cell Sets", csIS,ierr))
     PetscCallA(ISGetIndicesF90(csIS, csID,ierr))
@@ -207,6 +172,7 @@ Implicit NONE
                 End Do
                 cval(3) = cval(3) * dim / size(xyz)
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
+                PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_VALUES, ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
@@ -215,7 +181,6 @@ Implicit NONE
     End Do
     PetscCallA(ISRestoreIndicesF90(csIS, csID,ierr))
     PetscCallA(ISDestroy(csIS,ierr))
-    PetscCallA(PetscSFGetGraph(lioSSF,nroots,nleaves,ilocal,iremote,ierr))
 
     ! Create IO Vec for writing (ioS) and reading (ioSRead)
     PetscCallA(VecGetBlockSize(locVecSigma,bs,ierr))
