@@ -53,7 +53,13 @@ Implicit NONE
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,sdim,name,V,ierr))
     PetscCallA(VecSet(v,-1.234_Kr,ierr))
     scalingFactor = 1.0_kI
-    PetscCallA(MEF90VecSetBCFromOptions(V,scalingFactor,ierr))
+    PetscCallA(MEF90VecSetBCValuesFromOptions(V,scalingFactor,ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-temperature_vec_view",ierr))
+
+    PetscCallA(VecSet(v,5.678_Kr,ierr))
+    scalingFactor = 1.0_kI
+    PetscCallA(MEF90VecSetValuesFromOptions(V,scalingFactor,ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-temperature_vec_view",ierr))
 
     ViewSec: block
         Type(tPetscSection)     :: sectionV
@@ -61,8 +67,7 @@ Implicit NONE
 
         PetscCallA(VecGetDM(V,dmV,ierr))
         PetscCallA(DMGetLocalSection(dmV,sectionV,ierr))
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
-        PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-temperature_section_view",ierr))
     end block ViewSec
 
 
@@ -72,3 +77,9 @@ Implicit NONE
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)
 End Program  TestVecSetBCFromOptions
+
+!!! TEST
+!!! ./TestVecSetBCFromOptions -geometry ../TestMeshes/SquareFaceSet.gen -temperature_section_view    \
+!!!     -temperature_vec_view -sdim 2 -fs0021_temperatureBC yes,no -fs0021_boundaryTemperature 10,20 \
+!!!     -vs0010_temperatureBC yes,yes -vs0010_boundaryTemperature 100,101 -cs0001_temperature 1000   \
+!!!     -vs0010_temperature -2 -fs0020_temperature 20 -fs0021_temperature 21 -vs0010_temperature 100 

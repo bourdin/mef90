@@ -11,7 +11,7 @@ Module m_MEF90_HeatXferCtx_Type
    
    Type MEF90HeatXferCtx_Type
       Type(tVec),pointer               :: temperatureLocal
-      !Type(tVec),pointer               :: boundaryTemperatureLocal
+      Type(tVec),pointer               :: boundaryTemperatureLocal
       Type(tVec),pointer               :: fluxLocal
       Type(tVec),pointer               :: boundaryFluxLocal
       Type(tVec),pointer               :: externalTemperatureLocal
@@ -272,9 +272,9 @@ Contains
       vecName = "External Temperature"
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
 
-      ! Allocate(HeatXferCtx%boundaryTemperatureLocal)
-      ! vecName = "Boundary Temperature"
-      ! PetscCall(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%boundaryTemperatureLocal,ierr))
+      Allocate(HeatXferCtx%boundaryTemperatureLocal)
+      vecName = "Boundary Temperature"
+      PetscCall(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%boundaryTemperatureLocal,ierr))
 
       Allocate(HeatXferCtx%boundaryFluxLocal)
       vecName = "Boundary Flux"
@@ -402,8 +402,8 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemp,default%externalTemp,'externalTemp','Reference temperature T [K]',ierr))
-      PetscCall(PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr))
+      PetscCall(PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTempemperature','Temperature boundary value',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
 
@@ -475,12 +475,12 @@ Contains
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       
       Do set = 1, size(setID)
-         Write(setName,100) setID(set)
-         Write(setprefix,101) setID(set)
+         Write(setName,"('Cell set ',I4)") setID(set)
+         Write(setprefix,"('cs',I4.4,'_')") setID(set)
          mydefaultCellSetOptions = defaultCellSetOptions
          PetscCall(PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr))
          If (MEF90CtxGlobalOptions%verbose > 0) Then
-            Write(IOBuffer,103) setID(set),trim(setprefix)
+            Write(IOBuffer,"('\nRegistering cell set ',I4,' prefix: ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr))
             PetscCall(PetscBagView(heatXferCtx%CellSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr))
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
@@ -497,12 +497,12 @@ Contains
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       
       Do set = 1, size(setID)
-         Write(setName,300) setID(set)
-         Write(setprefix,301) setID(set)
+         Write(setName,"('Face set ',I4)") setID(set)
+         Write(setprefix,"('fs',I4.4,'_')") setID(set)
          mydefaultCellSetOptions = defaultCellSetOptions
          PetscCall(PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%FaceSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr))
          If (MEF90CtxGlobalOptions%verbose > 0) Then
-            Write(IOBuffer,303) setID(set),trim(setprefix)
+            Write(IOBuffer,"('\nRegistering face set ',I4,' prefix: ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr))
             PetscCall(PetscBagView(heatXferCtx%FaceSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr))
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
@@ -519,27 +519,17 @@ Contains
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       
       Do set = 1, size(setID)
-         Write(setName,200) setID(set)
-         Write(setprefix,201) setID(set)
+         Write(setName,"('Vertex set ',I4)") setID(set)
+         Write(setprefix,"('vs',I4.4,'_')") setID(set)
          PetscCall(PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(heatXferCtx%VertexSetOptionsBag(set),setName,setPrefix,defaultVertexSetOptions,ierr))
          If (MEF90CtxGlobalOptions%verbose > 0) Then
-            Write(IOBuffer,203) setID(set),trim(setprefix)
+            Write(IOBuffer,"('\nRegistering vertex set ',I4,' prefix: ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr))
             PetscCall(PetscBagView(heatXferCtx%VertexSetOptionsBag(set),PETSC_VIEWER_STDOUT_WORLD,ierr))
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
       PetscCall(ISDestroy(setIS,ierr))
-
-100 Format('Cell set ',I4)
-101 Format('cs',I4.4,'_')
-103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
-200 Format('Vertex set ',I4)
-201 Format('vs',I4.4,'_')
-203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
-300 Format('Face set ',I4)
-301 Format('fs',I4.4,'_')
-303 Format('\nRegistering face set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90HeatXferCtxSetFromOptions
    
 End Module m_MEF90_HeatXferCtx

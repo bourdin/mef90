@@ -222,7 +222,7 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
    call MPI_Get_processor_name(procName,procNameLength,ierr)
-   write(*,200) MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
+   write(*,"(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
    ! Write(IOBuffer,200) MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
    ! Call PetscSynchronizedPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
    ! Call PetscSynchronizedFlush(MEF90Ctx%comm,ierr);CHKERRQ(ierr)
@@ -231,19 +231,15 @@ Contains
    If (GlobalOptions%verbose > 0) Then
       Write(IOBuffer,*) 'MEF90 Global Context: \n'
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-      Write(IOBuffer,100) trim(MEF90Ctx%geometryFile)
+      Write(IOBuffer,"('  geometry file:       ',(A),'\n')") trim(MEF90Ctx%geometryFile)
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-      Write(IOBuffer,101) trim(MEF90Ctx%resultFile)
+      Write(IOBuffer,"('  result file:         ',(A),'\n')") trim(MEF90Ctx%resultFile)
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-      Write(IOBuffer,102) trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
+      Write(IOBuffer,"('  log file:            ',(A),'\n')") trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr))
       PetscCall(PetscPrintf(comm,"\n",ierr))
    End If
-100 Format('  geometry file:       ',(A),'\n')
-101 Format('  result file:         ',(A),'\n')
-102 Format('  log file:            ',(A),'\n')
-200 format(' # Task ',I6,'/',I6,' running on processor ',A,'\n')
    End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__

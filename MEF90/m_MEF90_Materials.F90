@@ -553,10 +553,10 @@ Contains
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
-         Write(setName,100) setID(set)
-         Write(setprefix,101) setID(set)
+         Write(setName,"('Cell set ',I4)") setID(set)
+         Write(setprefix,"('cs',I4.4,'_')") setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
-            Write(IOBuffer,102) setID(set),trim(setprefix)
+            Write(IOBuffer,"('Registering materials properties for cell set ', I4,': ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
          PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,MEF90MatPropBag(set),ierr))
@@ -568,9 +568,6 @@ Contains
       End Do
       PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
-100 Format('Cell set ',I4)
-101 Format('cs',I4.4,'_')
-102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
    End Subroutine MEF90MatPropBagSetFromOptions2D
 
 #undef __FUNCT__
@@ -603,10 +600,10 @@ Contains
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
-         Write(setName,100) setID(set)
-         Write(setprefix,101) setID(set)
+         Write(setName,"('Cell set ',I4)") setID(set)
+         Write(setprefix,"('cs',I4.4,'_')") setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
-            Write(IOBuffer,102) setID(set),trim(setprefix)
+            Write(IOBuffer,"('Registering materials properties for cell set ', I4,': ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
          PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp3D,MEF90MatPropBag(set),ierr))
@@ -618,9 +615,6 @@ Contains
       End Do
       PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
-100 Format('Cell set ',I4)
-101 Format('cs',I4.4,'_')
-102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
    End Subroutine MEF90MatPropBagSetFromOptions3D
 
 
