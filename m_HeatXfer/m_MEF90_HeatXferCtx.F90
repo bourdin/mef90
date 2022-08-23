@@ -10,28 +10,36 @@ Module m_MEF90_HeatXferCtx_Type
    Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
-      Type(tVec),pointer               :: temperatureLocal
-      Type(tVec),pointer               :: boundaryTemperatureLocal
-      Type(tVec),pointer               :: fluxLocal
-      Type(tVec),pointer               :: boundaryFluxLocal
-      Type(tVec),pointer               :: externalTemperatureLocal
-      Type(tPetscSF),pointer           :: temperatureToIOSF,IOToTemperatureIOSF
+      Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
+      Type(tDM)                        :: megaDM
+
+      Type(tVec)                       :: temperatureLocal
+      Type(tVec)                       :: boundaryTemperatureLocal
+      Type(tVec)                       :: externalTemperatureLocal
+      Type(tVec)                       :: fluxLocal
+      Type(tVec)                       :: boundaryFluxLocal
+
+      Type(tPetscViewer)               :: viewer
+      Type(tPetscSF)                   :: temperatureToIOSF,IOToTemperatureSF
+      Type(tPetscSF)                   :: boundaryToTemperatureSF
+      Type(tPetscSF)                   :: boundaryTemperatureToIOSF,IOToboundaryTemperatureSF
+      Type(tPetscSF)                   :: externalTemperatureToIOSF,IOToexternalTemperatureSF
+      Type(tPetscSF)                   :: fluxToIOSF,IOTofluxSF
+      Type(tPetscSF)                   :: boundaryFluxToIOSF,IOToboundaryFluxSF
 
       PetscBag                         :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: FaceSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
       PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
-      Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
-      Type(tDM)                        :: megaDM
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
       PetscEnum                        :: timeSteppingType
       PetscBool                        :: addNullSpace
       PetscReal                        :: initialTemperature
-      PetscEnum                        :: boundaryTempScaling
-      PetscEnum                        :: externalTempScaling
+      PetscEnum                        :: boundaryTemperatureScaling
+      PetscEnum                        :: externalTemperatureScaling
       PetscEnum                        :: fluxScaling
       PetscEnum                        :: boundaryFluxScaling
       !!! scaling = time (step) scaling law currently CST, Linear, Null (not present), File
@@ -40,7 +48,7 @@ Module m_MEF90_HeatXferCtx_Type
    Type MEF90HeatXferCellSetOptions_Type
       PetscReal                        :: flux
       PetscReal                        :: surfaceThermalConductivity
-      PetscReal                        :: externalTemp
+      PetscReal                        :: externalTemperature
       PetscBool                        :: Has_BC
       PetscReal                        :: boundaryTemperature
       PetscReal,dimension(3)           :: advectionVector
@@ -48,7 +56,7 @@ Module m_MEF90_HeatXferCtx_Type
 
    Type MEF90HeatXferVertexSetOptions_Type
       PetscBool                        :: Has_BC
-      PetscReal                        :: boundaryTemp
+      PetscReal                        :: boundaryTemperature
    End Type MEF90HeatXferVertexSetOptions_Type 
 End Module m_MEF90_HeatXferCtx_Type
 
@@ -226,11 +234,13 @@ Contains
       PetscInt                                           :: set,numSet
       Character(len=MEF90MXSTRLEN)                       :: vecName
       Type(tDM),Dimension(:),Pointer                     :: dmList
+      Type(tPetscSF)                                     :: dummySF
 
-      Call MEF90HeatXferCtxInitialize_Private(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+
+      PetscCall(MEF90HeatXferCtxInitialize_Private(ierr))
       HeatXferCtx%MEF90Ctx => MEF90Ctx
       PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferGlobalOptions,HeatXferCtx%GlobalOptionsBag,ierr))
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
       
       !!! I need to allocate for the overall number of sets, not the local one
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName, SetIS, ierr))
@@ -260,34 +270,47 @@ Contains
       End Do
       PetscCall(ISDestroy(setIS,ierr))
       
-      Allocate(HeatXferCtx%temperatureLocal)
+      !Allocate(HeatXferCtx%temperatureLocal)
       vecName = "Temperature"
       PetscCall(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%temperatureLocal,ierr))
 
-      Allocate(HeatXferCtx%fluxLocal)
-      vecName = "Flux"
-      PetscCall(MEF90CreateCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
-
-      Allocate(HeatXferCtx%externalTemperatureLocal)
+      !Allocate(HeatXferCtx%externalTemperatureLocal)
       vecName = "External Temperature"
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
 
-      Allocate(HeatXferCtx%boundaryTemperatureLocal)
+      !Allocate(HeatXferCtx%boundaryTemperatureLocal)
       vecName = "Boundary Temperature"
       PetscCall(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%boundaryTemperatureLocal,ierr))
 
-      Allocate(HeatXferCtx%boundaryFluxLocal)
+      !Allocate(HeatXferCtx%fluxLocal)
+      vecName = "Flux"
+      PetscCall(MEF90CreateCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
+
+      !Allocate(HeatXferCtx%boundaryFluxLocal)
       vecName = "Boundary Flux"
-      PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
+      PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%boundaryFluxLocal,ierr))
 
       !!! Create the  unknowns and parameters superDM
-      Allocate(dmList(4))
-      PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(1),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(2),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(3),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(4),ierr))
-      PetscCall(DMCreateSuperDM(dmList,4_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
+      Allocate(dmList(5))
+      dmList(1) = dm
+      PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(2),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%boundaryTemperatureLocal,dmList(3),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(4),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(5),ierr))
+      PetscCall(DMCreateSuperDM(dmList,5_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
       DeAllocate(dmList)
+
+      !!! Create the IO SF for all fields
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%TemperatureLocal,HeatXferCtx%temperatureToIOSF,HeatXferCtx%IOToTemperatureSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%boundaryTemperatureLocal,HeatXferCtx%boundaryTemperatureToIOSF,HeatXferCtx%IOToBoundaryTemperatureSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%externalTemperatureLocal,HeatXferCtx%externalTemperatureToIOSF,HeatXferCtx%IOToExternalTemperatureSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%fluxLocal,HeatXferCtx%fluxToIOSF,HeatXferCtx%IOToFluxSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%boundaryFluxLocal,HeatXferCtx%boundaryFluxToIOSF,HeatXferCtx%IOToBoundaryFluxSF,ierr))
+
+      !!! Create the SF to exchange boundary values of the temperature. 
+      !!! We never need temperature to boundaryTemperature, so we set sfInv to NULL
+      PetscCall(MEF90ConstraintSFCreate(HeatXferCtx%MEF90Ctx,HeatXferCtx%TemperatureLocal,HeatXferCtx%boundaryTemperatureLocal,HeatXferCtx%boundaryToTemperatureSF,dummySF,ierr))
+      PetscCall(PetscSFDestroy(dummySF,ierr))
    End Subroutine MEF90HeatXferCtxCreate
    
 #undef __FUNCT__
@@ -300,32 +323,45 @@ Contains
 !!!
 
    Subroutine MEF90HeatXferCtxDestroy(HeatXferCtx,ierr)
-      Type(MEF90HeatXferCtx_Type),Intent(OUT)         :: HeatXferCtx
+      Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: HeatXferCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: set
    
-      !Nullify(HeatXferCtx%dm)
-      If (Associated(HeatXferCtx%temperatureLocal)) Then
+      !If (Associated(HeatXferCtx%temperatureLocal)) Then
          PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
-         Nullify(HeatXferCtx%temperatureLocal)
-      End If
-      ! If (Associated(HeatXferCtx%boundaryTemperatureLocal)) Then
-      !    PetscCall(VecDestroy(HeatXferCtx%boundaryTemperatureLocal,ierr))
-      !    Nullify(HeatXferCtx%boundaryTemperatureLocal)
-      ! End If
-      If (Associated(HeatXferCtx%ExternalTemperatureLocal)) Then
+      !   Nullify(HeatXferCtx%temperatureLocal)
+      !End If
+      !If (Associated(HeatXferCtx%boundaryTemperatureLocal)) Then
+         PetscCall(VecDestroy(HeatXferCtx%boundaryTemperatureLocal,ierr))
+      !   Nullify(HeatXferCtx%boundaryTemperatureLocal)
+      !End If
+      !If (Associated(HeatXferCtx%ExternalTemperatureLocal)) Then
          PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
-         Nullify(HeatXferCtx%ExternalTemperatureLocal)
-      End If
-      If (Associated(HeatXferCtx%fluxLocal)) Then
+      !   Nullify(HeatXferCtx%ExternalTemperatureLocal)
+      !End If
+      !If (Associated(HeatXferCtx%fluxLocal)) Then
          PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
-         Nullify(HeatXferCtx%fluxLocal)
-      End If
-      If (Associated(HeatXferCtx%boundaryFluxLocal)) Then
+      !   Nullify(HeatXferCtx%fluxLocal)
+      !End If
+      !If (Associated(HeatXferCtx%boundaryFluxLocal)) Then
          PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
-         Nullify(HeatXferCtx%boundaryFluxLocal)
-      End If
+      !   Nullify(HeatXferCtx%boundaryFluxLocal)
+      !End If
+
+      !!! Destroy SFs
+      PetscCall(PetscSFDestroy(HeatXferCtx%temperatureToIOSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%IOToTemperatureSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%boundaryTemperatureToIOSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%IOToBoundaryTemperatureSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%externalTemperatureToIOSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%IOToExternalTemperatureSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%fluxToIOSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%IOToFluxSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%boundaryFluxToIOSF,ierr))
+      PetscCall(PetscSFDestroy(HeatXferCtx%IOToBoundaryFluxSF,ierr))
+
+      PetscCall(PetscSFDestroy(HeatXferCtx%boundaryToTemperatureSF,ierr))
 
       Nullify(HeatXferCtx%MEF90Ctx)
 
@@ -370,12 +406,12 @@ Contains
       PetscCall(PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'heatxfer_addNullSpace','Add null space to SNES',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferGlobalOptions%initialTemperature,default%initialTemperature,'heatxfer_initialTemp','[K] (T): Initial Temperature' ,ierr))
 
-      PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%boundaryTempScaling,MEF90ScalingList,default%boundaryTempScaling,'boundaryTemp_scaling','Boundary temperature scaling',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%boundaryTemperatureScaling,MEF90ScalingList,default%boundaryTemperatureScaling,'boundaryTemperature_scaling','Boundary temperature scaling',ierr))
 
-      PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%externalTempScaling,MEF90ScalingList,default%externalTempScaling,'externalTemp_scaling','External Temperature scaling',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%externalTemperatureScaling,MEF90ScalingList,default%externalTemperatureScaling,'externalTemperature_scaling','External Temperature scaling',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%fluxScaling,MEF90ScalingList,default%fluxScaling,'flux_scaling','Heat flux scaling',ierr))
-
+      PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%boundaryFluxScaling,MEF90ScalingList,default%boundaryFluxScaling,'boundaryFlux_scaling','Boundary heat flux scaling',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions
 
 #undef __FUNCT__
@@ -401,7 +437,7 @@ Contains
       HeatXferCellSetOptions%advectionVector = default%advectionVector
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemp,default%externalTemp,'externalTemp','Reference temperature T [K]',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemperature,default%externalTemperature,'externalTemperature','Reference temperature T [K]',ierr))
       PetscCall(PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTempemperature','Temperature boundary value',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
@@ -428,7 +464,7 @@ Contains
       PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
 
       PetscCall(PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemp,default%boundaryTemp,'boundaryTemp','Temperature boundary value',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions
 
 #undef __FUNCT__
@@ -442,19 +478,19 @@ Contains
 
    Subroutine MEF90HeatXferCtxSetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
                                               defaultCellSetOptions,defaultVertexSetOptions,ierr)
-      Type(MEF90HeatXferCtx_Type),Intent(OUT)               :: heatXferCtx
+      Type(MEF90HeatXferCtx_Type),Intent(INOUT)             :: heatXferCtx
       Character(len=*),Intent(IN)                           :: prefix
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
-      PetscErrorCode,Intent(OUT)                            :: ierr
+      PetscErrorCode,Intent(INOUT)                          :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type)                :: myDefaultCellSetOptions
       Type(tIS)                                             :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
-      Character(len=MEF90MXSTRLEN)                         :: IOBuffer,setName,setprefix
+      Character(len=MEF90MXSTRLEN)                          :: IOBuffer,setName,setprefix
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(heatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
       !!!
@@ -468,12 +504,10 @@ Contains
 
       !!!
       !!! Registering Cell Set Context
-      !!! We override the default element type with that detected from the exodus file
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-      
       Do set = 1, size(setID)
          Write(setName,"('Cell set ',I4)") setID(set)
          Write(setprefix,"('cs',I4.4,'_')") setID(set)
@@ -486,16 +520,15 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
+      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!!
       !!! Registering Face Set Context
-      !!! We override the default element type with that detected from the exodus file
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-      
       Do set = 1, size(setID)
          Write(setName,"('Face set ',I4)") setID(set)
          Write(setprefix,"('fs',I4.4,'_')") setID(set)
@@ -508,16 +541,15 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
+      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!!
       !!! Registering Vertex Set Context
-      !!! We override the default element type with that detected from the exodus file
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90VertexSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-      
       Do set = 1, size(setID)
          Write(setName,"('Vertex set ',I4)") setID(set)
          Write(setprefix,"('vs',I4.4,'_')") setID(set)
@@ -529,7 +561,7 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
+      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90HeatXferCtxSetFromOptions
-   
 End Module m_MEF90_HeatXferCtx

@@ -18,7 +18,7 @@ Module m_MEF90_HeatXfer
 
    Implicit none
 
-   Private
+   !Private
    Public MEF90HeatXferOperator
    Public MEF90HeatXferBilinearForm
    Public MEF90HeatXferEnergy
@@ -26,7 +26,6 @@ Module m_MEF90_HeatXfer
    Public MEF90HeatXferIFunction
    Public MEF90HeatXferIJacobian
    Public MEF90HeatXferViewEXO
-   !Public MEF90HeatXferFormatEXO
    Public MEF90HeatXferCreateSNES
    Public MEF90HeatXferCreateTS
 Contains
@@ -43,7 +42,7 @@ Contains
 !!!
 
    Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
-      Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
+      Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                             :: step
       PetscReal,Intent(IN)                            :: time
       PetscErrorCode,Intent(OUT)                      :: ierr
@@ -55,8 +54,10 @@ Contains
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
 
+      !!! Missing boundaryFlux and boundaryTemperature
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
          Case (MEF90Scaling_File)
+            !PetscCall(MEF90EXOVecView(v,Viewer,step,ierr))
             !PetscCall(VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
             !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr))
          Case (MEF90Scaling_Linear)
@@ -66,7 +67,7 @@ Contains
             !PetscCall(MEF90HeatXferSetfluxCst(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx,ierr))
       End Select
 
-      Select case (MEF90HeatXferGlobalOptions%externalTempScaling)
+      Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
          Case (MEF90Scaling_File)
             !PetscCall(VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
             !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr))
@@ -77,7 +78,7 @@ Contains
             !PetscCall(MEF90HeatXferSetexternalTemperatureCst(MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx,ierr))
       End Select
 
-      Select case (MEF90HeatXferGlobalOptions%boundaryTempScaling)
+      Select case (MEF90HeatXferGlobalOptions%boundaryTemperatureScaling)
          Case (MEF90Scaling_File)
             !PetscCall(DMGetLocalVector(MEF90HeatXferCtx%megaDMScal,localVec,ierr))
             !PetscCall(VecLoadExodusVertex(MEF90HeatXferCtx%megaDMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
@@ -306,9 +307,9 @@ Contains
       PetscCall(SNESGetKSP(snesTemp,kspTemp,ierr))
       PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
-      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
-      End If
+      ! If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+      !    PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
+      ! End If
       rtol = 1.0D-8
       dtol = 1.0D+10
       PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
@@ -376,9 +377,9 @@ Contains
       PetscCall(SNESGetKSP(snesTemp,kspTemp,ierr))
       PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
-      If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
-      End If
+      ! If (MEF90HeatXferGlobalOptions%addNullSpace) Then
+      !    PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
+      ! End If
       rtol = 1.0D-8
       dtol = 1.0D+10
       PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))

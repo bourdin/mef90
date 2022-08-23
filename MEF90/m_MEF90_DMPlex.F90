@@ -170,6 +170,11 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+
+#ifdef PETSC_USE_DEBUG
+        write(BCOptionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+#endif
     End Subroutine MEF90CreateLocalVector
 
 #undef __FUNCT__
@@ -198,6 +203,7 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
+        Character(len=MEF90MXSTRLEN)            :: optionName
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -237,6 +243,11 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+
+#ifdef PETSC_USE_DEBUG
+        write(optionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,optionName,ierr))
+#endif
     End Subroutine MEF90CreateCellVector
 
 #undef __FUNCT__
@@ -340,6 +351,11 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+
+#ifdef PETSC_USE_DEBUG
+        write(BCOptionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+#endif
     End Subroutine MEF90CreateBoundaryLocalVector
     
 #undef __FUNCT__
@@ -368,6 +384,7 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
+        Character(len=MEF90MXSTRLEN)            :: optionName
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -407,6 +424,11 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+
+#ifdef PETSC_USE_DEBUG
+        write(optionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,optionName,ierr))
+#endif
     End Subroutine MEF90CreateBoundaryCellVector
         
 #undef __FUNCT__
@@ -486,7 +508,7 @@ Contains
             End Do! cell
             PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
         End If ! setPointIS
-    PetscCall(ISDestroy(setPointIS,ierr))
+        PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SectionAllocateDofSet
 
 #undef __FUNCT__
@@ -820,7 +842,6 @@ Contains
         PetscCallA(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
         PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
         PetscCallA(VecSetBlockSize(v,bs,ierr))
-
     End Subroutine MEF90VecCreateIO
 
 #undef __FUNCT__

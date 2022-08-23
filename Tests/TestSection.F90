@@ -32,7 +32,6 @@ Implicit NONE
     Call MEF90Initialize(ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     
-    PetscCallA(PetscPrintf(MEF90Ctx%Comm,MEF90Ctx%geometryfile//'\n',ierr))
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))

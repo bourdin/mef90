@@ -16,6 +16,6 @@ mesh surface 1
 
 set exodus netcdf4 off
 set large exodus file on
-export mesh "SquareFaceSet.gen" dimension 2 overwrite
+export mesh "SquareFaceSetCubit.gen" dimension 2 overwrite
 #exit
 

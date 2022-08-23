@@ -20,3 +20,5 @@ Tests/TestLabels
 Tests/viewDAG
 
 Tests/TestVecSetBCFromOptions
+
+Tests/TestHeatXferCtx
