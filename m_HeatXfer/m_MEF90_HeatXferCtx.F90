@@ -14,7 +14,6 @@ Module m_MEF90_HeatXferCtx_Type
       Type(tDM)                        :: megaDM
 
       Type(tVec)                       :: temperatureLocal
-      Type(tVec)                       :: boundaryTemperatureLocal
       Type(tVec)                       :: externalTemperatureLocal
       Type(tVec)                       :: fluxLocal
       Type(tVec)                       :: boundaryFluxLocal
@@ -22,7 +21,6 @@ Module m_MEF90_HeatXferCtx_Type
       Type(tPetscViewer)               :: viewer
       Type(tPetscSF)                   :: temperatureToIOSF,IOToTemperatureSF
       Type(tPetscSF)                   :: boundaryToTemperatureSF
-      Type(tPetscSF)                   :: boundaryTemperatureToIOSF,IOToboundaryTemperatureSF
       Type(tPetscSF)                   :: externalTemperatureToIOSF,IOToexternalTemperatureSF
       Type(tPetscSF)                   :: fluxToIOSF,IOTofluxSF
       Type(tPetscSF)                   :: boundaryFluxToIOSF,IOToboundaryFluxSF
@@ -270,46 +268,32 @@ Contains
       End Do
       PetscCall(ISDestroy(setIS,ierr))
       
-      !Allocate(HeatXferCtx%temperatureLocal)
       vecName = "Temperature"
-      PetscCall(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%temperatureLocal,ierr))
-
-      !Allocate(HeatXferCtx%externalTemperatureLocal)
-      vecName = "External Temperature"
+      PetscCall(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%temperatureLocal,ierr)) 
+      vecName = "ExternalTemperature"
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
-
-      !Allocate(HeatXferCtx%boundaryTemperatureLocal)
-      vecName = "Boundary Temperature"
-      PetscCall(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%boundaryTemperatureLocal,ierr))
-
-      !Allocate(HeatXferCtx%fluxLocal)
       vecName = "Flux"
       PetscCall(MEF90CreateCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
-
-      !Allocate(HeatXferCtx%boundaryFluxLocal)
-      vecName = "Boundary Flux"
+      vecName = "BoundaryFlux"
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%boundaryFluxLocal,ierr))
 
       !!! Create the  unknowns and parameters superDM
-      Allocate(dmList(5))
-      dmList(1) = dm
+      Allocate(dmList(4))
+      PetscCall(VecGetDM(HeatXferCtx%temperatureLocal,dmList(1),ierr))
       PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(2),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%boundaryTemperatureLocal,dmList(3),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(4),ierr))
-      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(5),ierr))
-      PetscCall(DMCreateSuperDM(dmList,5_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
+      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(3),ierr))
+      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(4),ierr))
+      PetscCall(DMCreateSuperDM(dmList,4_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
       DeAllocate(dmList)
 
-      !!! Create the IO SF for all fields
+      ! !!! Create the IO SF for all fields
       PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%TemperatureLocal,HeatXferCtx%temperatureToIOSF,HeatXferCtx%IOToTemperatureSF,ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%boundaryTemperatureLocal,HeatXferCtx%boundaryTemperatureToIOSF,HeatXferCtx%IOToBoundaryTemperatureSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%externalTemperatureLocal,HeatXferCtx%externalTemperatureToIOSF,HeatXferCtx%IOToExternalTemperatureSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%fluxLocal,HeatXferCtx%fluxToIOSF,HeatXferCtx%IOToFluxSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXferCtx%boundaryFluxLocal,HeatXferCtx%boundaryFluxToIOSF,HeatXferCtx%IOToBoundaryFluxSF,ierr))
 
       !!! Create the SF to exchange boundary values of the temperature. 
-      !!! We never need temperature to boundaryTemperature, so we set sfInv to NULL
-      PetscCall(MEF90ConstraintSFCreate(HeatXferCtx%MEF90Ctx,HeatXferCtx%TemperatureLocal,HeatXferCtx%boundaryTemperatureLocal,HeatXferCtx%boundaryToTemperatureSF,dummySF,ierr))
+      PetscCall(MEF90ConstraintSFCreate(HeatXferCtx%MEF90Ctx,HeatXferCtx%TemperatureLocal,HeatXferCtx%temperatureLocal,HeatXferCtx%boundaryToTemperatureSF,dummySF,ierr))
       PetscCall(PetscSFDestroy(dummySF,ierr))
    End Subroutine MEF90HeatXferCtxCreate
    
@@ -328,32 +312,14 @@ Contains
       
       PetscInt                                        :: set
    
-      !If (Associated(HeatXferCtx%temperatureLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
-      !   Nullify(HeatXferCtx%temperatureLocal)
-      !End If
-      !If (Associated(HeatXferCtx%boundaryTemperatureLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%boundaryTemperatureLocal,ierr))
-      !   Nullify(HeatXferCtx%boundaryTemperatureLocal)
-      !End If
-      !If (Associated(HeatXferCtx%ExternalTemperatureLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
-      !   Nullify(HeatXferCtx%ExternalTemperatureLocal)
-      !End If
-      !If (Associated(HeatXferCtx%fluxLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
-      !   Nullify(HeatXferCtx%fluxLocal)
-      !End If
-      !If (Associated(HeatXferCtx%boundaryFluxLocal)) Then
-         PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
-      !   Nullify(HeatXferCtx%boundaryFluxLocal)
-      !End If
+      PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
+      PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
+      PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
+      PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
 
       !!! Destroy SFs
       PetscCall(PetscSFDestroy(HeatXferCtx%temperatureToIOSF,ierr))
       PetscCall(PetscSFDestroy(HeatXferCtx%IOToTemperatureSF,ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%boundaryTemperatureToIOSF,ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%IOToBoundaryTemperatureSF,ierr))
       PetscCall(PetscSFDestroy(HeatXferCtx%externalTemperatureToIOSF,ierr))
       PetscCall(PetscSFDestroy(HeatXferCtx%IOToExternalTemperatureSF,ierr))
       PetscCall(PetscSFDestroy(HeatXferCtx%fluxToIOSF,ierr))
