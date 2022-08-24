@@ -113,6 +113,7 @@ Contains
       PetscCall(ISRestoreIndicesF90(is,indices,ierr))
       PetscCall(ISDestroy(is,ierr))
       PetscCall(ISAllGather(tmpIS,is,ierr))
+      PetscCall(ISDestroy(tmpIS,ierr))
       PetscCall(ISSortRemoveDups(is,ierr))
       ierr = 0
    End Subroutine MEF90ISAllGatherMerge
