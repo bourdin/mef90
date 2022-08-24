@@ -18,7 +18,7 @@ Implicit NONE
     PetscInt,Dimension(:),pointer                       :: cellID,csID
     PetscInt                                            :: dim,pStart,pEnd,size,bs,cell,c,set
     Type(tPetscSection)                                 :: sectionU, sectionU0, sectionSigma, coordSection
-    Type(tPetscSF)                                      :: naturalPointSF, natSFU, natSFU0, natSFS, lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
+    Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, locVecSigma, ioS, ioVecRead, ioSRead
     Type(tPetscViewer)                                  :: viewer
     PetscScalar,dimension(:),pointer                    :: cval,xyz
@@ -83,14 +83,12 @@ Implicit NONE
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU,ierr))
     PetscCallA(VecGetDM(locVecU,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
-    PetscCallA(DMSetUseNatural(dmU,PETSC_TRUE,ierr))
 
     ! Create nodal local Vec holding constraints
     name = "U0"
     PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
     PetscCallA(VecGetDM(locVecU0,dmU0,ierr))
     PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
-    PetscCallA(DMSetUseNatural(dmU0,PETSC_TRUE,ierr))
 
     ! create cell Vec holding sigma
     name = "Sigma"
@@ -102,23 +100,6 @@ Implicit NONE
     PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
     PetscCallA(PetscSectionViewFromOptions(SectionSigma,PETSC_NULL_OPTIONS,"-sectionSigma_view",ierr))
-
-    ! Create GlobalToNatural SFs
-    if (MEF90Ctx%NumProcs > 1) then
-        PetscCallA(DMPlexGetMigrationSF(dm, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmU0, naturalPointSF, ierr))
-        PetscCallA(DMPlexSetMigrationSF(dmSigma, naturalPointSF, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU, PETSC_NULL_SECTION, naturalPointSF, natSFU, ierr))
-        PetscCallA(DMSetNaturalSF(dmU, natSFU, ierr))
-        PetscCallA(PetscSFDestroy(natSFU, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmU0, PETSC_NULL_SECTION, naturalPointSF, natSFU0, ierr))
-        PetscCallA(DMSetNaturalSF(dmU0, natSFU0, ierr))
-        PetscCallA(PetscSFDestroy(natSFU0, ierr))
-        PetscCallA(DMPlexCreateGlobalToNaturalSF(dmSigma, PETSC_NULL_SECTION, naturalPointSF, natSFS, ierr))
-        PetscCallA(DMSetNaturalSF(dmSigma, natSFS, ierr))
-        PetscCallA(PetscSFDestroy(natSFS, ierr))
-    end if
 
     ! Create SFs for copying from/into IO coordinates Vec
     PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU,lioSF,iolSF,ierr))
@@ -203,7 +184,7 @@ Implicit NONE
     ! Cleanup Vec
     PetscCallA(VecDestroy(locVecU,ierr))
     PetscCallA(VecDestroy(locVecU0,ierr))
-    PetscCallA(DMRestoreLocalVector(dmSigma,locVecSigma,ierr))
+    PetscCallA(VecDestroy(locVecSigma,ierr))
     PetscCallA(VecDestroy(ioVec,ierr))
     PetscCallA(VecDestroy(ioVecRead,ierr))
     PetscCallA(VecDestroy(ioS,ierr))
@@ -219,12 +200,8 @@ Implicit NONE
     PetscCallA(PetscSFDestroy(lioSSF,ierr))
     PetscCallA(PetscSFDestroy(iolSSF,ierr))
 
-    ! Cleanup Sections
-    PetscCallA(PetscSectionDestroy(sectionU,ierr))
-    PetscCallA(PetscSectionDestroy(sectionU0,ierr))
-    PetscCallA(PetscSectionDestroy(sectionSigma,ierr))
-
     ! Cleanup DMs
+    ! Note that I would need to manually destroy these DM no matter what
     PetscCallA(DMDestroy(dmU,ierr))
     PetscCallA(DMDestroy(dmU0,ierr))
     PetscCallA(DMDestroy(dmSigma,ierr))

@@ -311,10 +311,22 @@ Contains
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: set
+      Type(tDM)                                       :: dm
    
+      PetscCall(VecGetDM(HeatXferCtx%temperatureLocal,dm,ierr))
+      PetscCall(DMDestroy(dm,ierr))
       PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
+
+      PetscCall(VecGetDM(HeatXferCtx%ExternalTemperatureLocal,dm,ierr))
+      PetscCall(DMDestroy(dm,ierr))
       PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
+
+      PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dm,ierr))
+      PetscCall(DMDestroy(dm,ierr))
       PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
+
+      PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dm,ierr))
+      PetscCall(DMDestroy(dm,ierr))
       PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
 
       !!! Destroy SFs

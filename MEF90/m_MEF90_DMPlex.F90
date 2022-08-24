@@ -104,6 +104,7 @@ Contains
         PetscInt                                :: numBC
         PetscBool                               :: flg
         Character(len=MEF90MXSTRLEN)            :: BCOptionName
+        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -168,13 +169,27 @@ Contains
         DeAllocate(setConstraints)
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-        PetscCall(DMCreateLocalVector(dmV,V,ierr))
-        PetscCall(PetscObjectSetName(V,name,ierr))
+
+        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
+        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
         PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+        End If
 #endif
+        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
+        !!! there is something fishy here...
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+
+        PetscCall(DMCreateLocalVector(dmV,V,ierr))
+        PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateLocalVector
 
 #undef __FUNCT__
@@ -203,7 +218,8 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
-        Character(len=MEF90MXSTRLEN)            :: optionName
+        Character(len=MEF90MXSTRLEN)            :: BCoptionName
+        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -241,13 +257,27 @@ Contains
         PetscCall(PetscSectionSetup(sectionV,ierr))
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-        PetscCall(DMCreateLocalVector(dmV,V,ierr))
-        PetscCall(PetscObjectSetName(V,name,ierr))
+
+        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
+        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
-        write(optionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,optionName,ierr))
+        write(BCOptionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+        End If
 #endif
+        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
+        !!! there is something fishy here...
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+
+        PetscCall(DMCreateLocalVector(dmV,V,ierr))
+        PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateCellVector
 
 #undef __FUNCT__
@@ -285,6 +315,7 @@ Contains
         PetscInt                                :: numBC
         PetscBool                               :: flg
         Character(len=MEF90MXSTRLEN)            :: BCOptionName
+        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -349,13 +380,27 @@ Contains
         DeAllocate(setConstraints)
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-        PetscCall(DMCreateLocalVector(dmV,V,ierr))
-        PetscCall(PetscObjectSetName(V,name,ierr))
+
+        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
+        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
         PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+        End If
 #endif
+        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
+        !!! there is something fishy here...
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+
+        PetscCall(DMCreateLocalVector(dmV,V,ierr))
+        PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateBoundaryLocalVector
     
 #undef __FUNCT__
@@ -384,7 +429,8 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
-        Character(len=MEF90MXSTRLEN)            :: optionName
+        Character(len=MEF90MXSTRLEN)            :: BCoptionName
+        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -422,13 +468,26 @@ Contains
         PetscCall(PetscSectionSetup(sectionV,ierr))
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-        PetscCall(DMCreateLocalVector(dmV,V,ierr))
-        PetscCall(PetscObjectSetName(V,name,ierr))
+        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
+        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
-        write(optionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,optionName,ierr))
+        write(BCOptionName,'("-",a,"_section_view")') trim(name)
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+        End If
 #endif
+        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
+        !!! there is something fishy here...
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+
+        PetscCall(DMCreateLocalVector(dmV,V,ierr))
+        PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateBoundaryCellVector
         
 #undef __FUNCT__
@@ -1031,11 +1090,11 @@ Contains
             remote(i+1)%index = globalIndex - remoteRange(remoteRank+1)
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
-        PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
+        ! PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
         PetscCall(PetscSFSetFromOptions(sf,ierr))
         PetscCall(PetscSFSetGraph(sf,nroots,nleaves,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
-        PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-naturaltoio_sf_view",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-naturaltoio_sf_view",ierr))
         PetscCall(VecDestroy(vio,ierr))
         PetscCall(VecDestroy(vnat,ierr))
         DeAllocate(remote)
@@ -1080,9 +1139,9 @@ Contains
         PetscCall(PetscSFCreateSectionSFF90(idSF,locSection,remoteOffsets,gSection,sf,ierr))
         PetscCall(PetscIntArray1dDestroyF90(remoteOffsets,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
-        PetscCall(PetscObjectSetName(sf,"Local-To-CGlobal SF",ierr))
+        ! PetscCall(PetscObjectSetName(sf,"Local-To-CGlobal SF",ierr))
         PetscCall(PetscSFSetFromOptions(sf,ierr))
-        PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-localtocglobal_sf_view",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-localtocglobal_sf_view",ierr))
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
         DeAllocate(remote)
@@ -1178,8 +1237,8 @@ Contains
         End If
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
-        PetscCall(PetscObjectSetName(sf,"CGlobal-To-Local SF",ierr))
-        PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
+        ! PetscCall(PetscObjectSetName(sf,"CGlobal-To-Local SF",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
     End subroutine CreateCGlobalToLocalSF_Private                    
 End Module m_MEF90_DMPlex

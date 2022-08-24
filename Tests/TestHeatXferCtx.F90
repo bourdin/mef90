@@ -10,8 +10,9 @@ Program  TestHeatXferCtx
     Type(MEF90CtxGlobalOptions_Type)      :: MEF90GlobalOptions_default
     Type(MEF90HeatXferCtx_Type)           :: MEF90HeatXferCtx
     Type(tDM)                             :: dm
+    Type(tPetscSF)                        :: naturalPointSF
 
-    Type(tVec)                            :: temperatureGlobal
+    !Type(tVec)                            :: temperatureGlobal
 
 
     Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
@@ -60,7 +61,9 @@ Program  TestHeatXferCtx
         Type(tDM),target                    :: dmDist
         PetscInt                            :: ovlp = 0
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
+            PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
+            PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
         End If
@@ -68,6 +71,7 @@ Program  TestHeatXferCtx
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
+    PetscCallA(DMDestroy(dm,ierr))
     PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions,MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr))
 
     
