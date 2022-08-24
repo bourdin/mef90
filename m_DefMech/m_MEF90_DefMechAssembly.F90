@@ -1281,7 +1281,9 @@ Contains
                !!! Get value of each field at each Dof of the local element
                Call SectionRealRestrictClosure(displacementSec,MEF90DefMechCtx%DMVect,cellID(cell),elemDisplacementType%numDof,displacementDof,ierr);CHKERRQ(ierr)
                Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemDamageType%numDof,damageDof,ierr);CHKERRQ(ierr)
-
+               If (Associated(MEF90DefMechCtx%temperature)) Then
+                  Call SectionRealRestrictClosure(temperatureSec,MEF90DefMechCtx%DMScal,cellID(cell),elemDamageType%numDof,temperatureDof,ierr);CHKERRQ(ierr)
+               End If
                If (Associated(MEF90DefMechCtx%plasticStrain)) Then
                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   plasticStrainCell = plasticStrainLoc
