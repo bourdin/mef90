@@ -898,9 +898,10 @@ Contains
         Type(PetscSFNode),Dimension(:),Pointer  :: iremote
         PetscInt,Dimension(:),Pointer           :: ilocal
 
-        PetscCallA(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
-        PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
-        PetscCallA(VecSetBlockSize(v,bs,ierr))
+        PetscCall(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
+        PetscCall(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
+        PetscCall(VecSetBlockSize(v,bs,ierr))
+        DeAllocate(iremote)
     End Subroutine MEF90VecCreateIO
 
 #undef __FUNCT__
@@ -1234,6 +1235,7 @@ Contains
             PetscCall(PetscSFSetUp(sf,ierr))
             DeAllocate(glLocal)
             DeAllocate(glRemote)
+            DeAllocate(lgremote)
         End If
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
