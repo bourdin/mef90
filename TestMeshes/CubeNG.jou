@@ -15,44 +15,38 @@ smooth volume all
 
 block 1 volume 1
 
-block 10 surface 4 
-block 20 surface 6
-nodeset 10 surface 4 
-nodeset 20 surface 6
+sideset 10 surface 4 
+sideset 20 surface 6
+nodeset 100 surface 4 
+nodeset 200 surface 6
 
 block 1 element type tetra4
-block 10 20 element type tri3
 export mesh "CubeNG_X-tetra4.gen" dimension 3 block all overwrite
 
 block 1 element type tetra10
-block 10 20 element type tri6
 export mesh "CubeNG_X-tetra10.gen" dimension 3 block all overwrite
 
-delete block 10 20 nodeset 10 20
-block 10 surface 5
-block 20 surface 3
-nodeset 10 surface 5 
-nodeset 20 surface 3
+delete sideset 10 20 nodeset 100 200
+sideset 10 surface 5
+sideset 20 surface 3
+nodeset 100 surface 5 
+nodeset 200 surface 3
 
 block 1 element type tetra4
-block 10 20 element type tri3
 export mesh "CubeNG_Y-tetra4.gen" dimension 3 block all overwrite
 
 block 1 element type tetra10
-block 10 20 element type tri6
 export mesh "CubeNG_Y-tetra10.gen" dimension 3 block all overwrite
 
-delete block 10 20 nodeset 10 20
-block 10 surface 1
-block 20 surface 2
-nodeset 10 surface 1 
-nodeset 20 surface 2
+delete sideset 10 20 nodeset 100 200
+sideset 10 surface 1
+sideset 20 surface 2
+nodeset 100 surface 1 
+nodeset 200 surface 2
 
 block 1 element type tetra4
-block 10 20 element type tri3
 export mesh "CubeNG_Z-tetra4.gen" dimension 3 block all overwrite
 
 block 1 element type tetra10
-block 10 20 element type tri6
 export mesh "CubeNG_Z-tetra10.gen" dimension 3 block all overwrite
 
