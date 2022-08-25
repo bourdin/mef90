@@ -20,13 +20,13 @@ Implicit NONE
     Type(tPetscSection)                                 :: sectionU, sectionU0, sectionSigma, coordSection
     Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, locVecSigma, ioS, ioVecRead, ioSRead
-    Type(tPetscViewer)                                  :: viewer
-    PetscScalar,dimension(:),pointer                    :: cval,xyz
+    PetscReal,Dimension(:),pointer                      :: cval,xyz
+    PetscReal,Dimension(:),pointer                      :: t
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-    Call MEF90Initialize(ierr)
+    PetscCallA(MEF90Initialize(ierr))
 
-    MEF90GlobalOptions_default%verbose           = 0
+    MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
@@ -34,7 +34,7 @@ Implicit NONE
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
-    Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
     Allocate(nodalVarName(numNodalVar))
@@ -51,9 +51,10 @@ Implicit NONE
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     ! Open exodus file + write geometry + format the file
-    call MEF90CtxOpenEXO(MEF90Ctx,viewer,ierr)
-    call MEF90EXODMView(dm,viewer,MEF90GlobalOptions%elementOrder,ierr)
-    call MEF90EXOFormat(viewer,gVarName,cellVarName,nodalVarName,numStep,ierr)
+    PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,ierr))
+    PetscCallA(MEF90CtxGetTime(MEF90Ctx,t,ierr))
+    PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,numStep,ierr))
 
     DeAllocate(nodalVarName)
     DeAllocate(cellVarName)
@@ -127,7 +128,7 @@ Implicit NONE
     ! Reorder locVecU into ioVec and write ioVec
     PetscCallA(MEF90VecCopySF(locVecU,ioVec,lioSF,ierr))
     PetscCallA(VecViewFromOptions(ioVec,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioVec,viewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioVec,MEF90Ctx%resultViewer,0_Ki,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
@@ -173,12 +174,12 @@ Implicit NONE
     ! Reorder and write ioS
     PetscCallA(MEF90VecCopySF(locVecSigma,ioS,lioSSF,ierr))
     PetscCallA(VecViewFromOptions(ioS,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioS,viewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioS,MEF90Ctx%resultViewer,0_Ki,ierr))
 
     ! Test read ioVecRead and ioSRead
-    PetscCallA(MEF90EXOVecLoad(ioVecRead,viewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioVecRead,MEF90Ctx%resultViewer,0_Ki,ierr))
     PetscCallA(VecViewFromOptions(ioVecRead,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecLoad(ioSRead,viewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioSRead,MEF90Ctx%resultViewer,0_Ki,ierr))
     PetscCallA(VecViewFromOptions(ioSRead,PETSC_NULL_OPTIONS,"-ios_view",ierr))
 
     ! Cleanup Vec
@@ -209,8 +210,8 @@ Implicit NONE
     PetscCallA(DMDestroy(dm,ierr))
 
     ! Exit nicely
-    Call MEF90CtxCloseEXO(viewer,ierr)
-    Call MEF90CtxDestroy(MEF90Ctx,ierr)   
-    Call MEF90Finalize(ierr)
-    Call PetscFinalize(ierr)
+    DeAllocate(t)
+    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
+    PetscCallA(MEF90Finalize(ierr))
+    PetscCallA(PetscFinalize(ierr))
 End Program  TestConstraintIO
