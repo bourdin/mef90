@@ -1236,6 +1236,7 @@ Contains
             DeAllocate(glLocal)
             DeAllocate(glRemote)
             DeAllocate(lgremote)
+            DeAllocate(tempRemote)
         End If
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
