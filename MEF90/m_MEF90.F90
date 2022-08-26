@@ -10,12 +10,9 @@ Module m_MEF90
    Use m_MEF90_EXO  
    Use m_MEF90_Utils
    Use m_MEF90_DMPlex
-   !Use m_MEF90_DiffusionInterface
-   !Use m_MEF90_ElasticityInterface
-   !Use m_MEF90_GradDamageInterface
    Use m_MEF90_Elements 
    Use m_MEF90_MassMatrixInterface
-   !Use m_MEF90_Norm
+   Use m_MEF90_NormsInterface
 
    Implicit NONE
    Public :: MEF90Initialize

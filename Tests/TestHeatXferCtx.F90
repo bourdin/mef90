@@ -78,11 +78,11 @@ Program  TestHeatXferCtx
     !!! Analysis loop:
     PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
     Do step = 1, size(time)
-        Write(IOBuffer,'("Step: ",I4," Analysis time: ",ES12.5)')
-        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,*))
-        VecSet(MEF90HeatXferCtx%temperatureLocal,time(step,ierr))
+        Write(IOBuffer,'("Step: ",I4," Analysis time: ",ES12.5)') step,time(step)
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        PetscCallA(VecSet(MEF90HeatXferCtx%temperatureLocal,time(step),ierr))
         PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
-        PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,tim(step),ierr))
+        PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
     End Do ! step
 
     PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
