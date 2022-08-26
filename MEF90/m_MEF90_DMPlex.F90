@@ -177,10 +177,10 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
         If (naturalSF /= PETSC_NULL_SF) Then
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
         !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
@@ -265,10 +265,10 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
         If (naturalSF /= PETSC_NULL_SF) Then
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
         !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
@@ -388,10 +388,10 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
         If (naturalSF /= PETSC_NULL_SF) Then
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
         !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
@@ -475,10 +475,10 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
         If (naturalSF /= PETSC_NULL_SF) Then
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCallA(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
         !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
@@ -591,7 +591,7 @@ Contains
         PetscInt,dimension(:),pointer      :: closure
         PetscInt                           :: p,depth,dim
 
-        PetscCallA(DMGetDimension(dm,dim,ierr))
+        PetscCall(DMGetDimension(dm,dim,ierr))
         PetscCall(DMGetLabelIdIS(dm,'Cell Sets',setIS,ierr))
         If (setIS /= PETSC_NULL_IS) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
@@ -753,7 +753,7 @@ Contains
         Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,cglSF,tempSF,invTempSF
         Type(tDM)                          :: dm
 
-        PetscCallA(VecGetDM(v,dm,ierr))
+        PetscCall(VecGetDM(v,dm,ierr))
         PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
         PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
@@ -901,7 +901,9 @@ Contains
         PetscCall(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
         PetscCall(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
         PetscCall(VecSetBlockSize(v,bs,ierr))
+        
         DeAllocate(iremote)
+        DeAllocate(ilocal)
     End Subroutine MEF90VecCreateIO
 
 #undef __FUNCT__
@@ -952,10 +954,10 @@ Contains
                         If (pointIS /= PETSC_NULL_IS) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
-                                PetscCallA(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
                                 vArray = scalingFactor * Val
-                                PetscCallA(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
-                                PetscCallA(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
+                                PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
                             End Do ! point
                             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
                         End If ! pointIS
@@ -1025,14 +1027,14 @@ Contains
                         If (pointIS /= PETSC_NULL_IS) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
-                                PetscCallA(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
                                 Do c = 1, bs
                                     If (setBC(c)) Then
                                         vArray(c::bs) = scalingFactor * BCVal(c)
-                                        PetscCallA(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
+                                        PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
                                     End If ! setBC
                                 End Do ! c
-                                PetscCallA(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
                             End Do ! point
                             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
                         End If ! pointIS
@@ -1070,15 +1072,15 @@ Contains
         PetscMPIInt                             :: remoteRank
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
     
-        PetscCallA(DMPlexCreateNaturalVector(dm,vnat,ierr))
-        PetscCallA(VecGetSize(vnat, globalSize, ierr))
-        PetscCallA(VecGetBlockSize(vnat,bs,ierr))
-        PetscCallA(VecCreate(MEF90Ctx%Comm,vio,ierr))
-        PetscCallA(VecSetBlockSize(vio,bs,ierr))
-        PetscCallA(VecSetSizes(vio,PETSC_DETERMINE,globalSize,ierr))
-        PetscCallA(VecSetFromOptions(vio,ierr))
-        PetscCallA(VecGetLayout(vnat, natMap, ierr))
-        PetscCallA(VecGetLayout(vio, ioMap, ierr))
+        PetscCall(DMPlexCreateNaturalVector(dm,vnat,ierr))
+        PetscCall(VecGetSize(vnat, globalSize, ierr))
+        PetscCall(VecGetBlockSize(vnat,bs,ierr))
+        PetscCall(VecCreate(MEF90Ctx%Comm,vio,ierr))
+        PetscCall(VecSetBlockSize(vio,bs,ierr))
+        PetscCall(VecSetSizes(vio,PETSC_DETERMINE,globalSize,ierr))
+        PetscCall(VecSetFromOptions(vio,ierr))
+        PetscCall(VecGetLayout(vnat, natMap, ierr))
+        PetscCall(VecGetLayout(vio, ioMap, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
         PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
