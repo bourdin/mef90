@@ -201,6 +201,7 @@ Implicit NONE
     PetscCallA(PetscSFDestroy(iolSSF,ierr))
 
     ! Cleanup DMs
+    PetscCallA(DMDestroy(dm,ierr))
     ! Note that I would need to manually destroy these DM no matter what
     PetscCallA(DMDestroy(dmU,ierr))
     PetscCallA(DMDestroy(dmU0,ierr))

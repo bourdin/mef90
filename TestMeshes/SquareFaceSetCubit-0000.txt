@@ -1,0 +1,195 @@
+=== SETS ===
+pStart: 0, pEnd: 19
+cStart: 0, cEnd: 4
+vStart: 4, vEnd: 10
+eStart: 10, eEnd: 19
+
+1 Cell sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 1
+0 1
+=== Set 1 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 4
+0 0
+1 1
+2 2
+3 3
+
+2 Face sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 2
+0 21
+1 22
+=== Set 21 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 2
+0 13
+1 18
+=== Set 22 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 2
+0 14
+1 17
+
+1 Vertex sets: 
+IS Object: 1 MPI process
+  type: general
+Number of indices in set 1
+0 10
+=== Set 10 ===
+IS Object: indices 1 MPI process
+  type: general
+Number of indices in set 3
+0 6
+1 7
+2 9
+=== DAG ===
+
+Dimension 2:
+
+vertex range in DAG 4-10:
+   vertex 4: 0.5 0.
+   vertex 5: -0.166667 0.
+   vertex 6: 0. 0.5
+   vertex 7: 0.5 0.5
+   vertex 8: -0.5 0.
+   vertex 9: -0.5 0.5
+
+point 0:
+   Depth: 2 Height: 0
+   Cone: 11,12,10,
+   Support: 
+   TransitiveClosure IN: 0,11,12,10,4,6,5,
+   TransitiveClosure OUT: 0,
+
+point 1:
+   Depth: 2 Height: 0
+   Cone: 13,11,14,
+   Support: 
+   TransitiveClosure IN: 1,13,11,14,7,6,4,
+   TransitiveClosure OUT: 1,
+
+point 2:
+   Depth: 2 Height: 0
+   Cone: 15,16,17,
+   Support: 
+   TransitiveClosure IN: 2,15,16,17,8,5,9,
+   TransitiveClosure OUT: 2,
+
+point 3:
+   Depth: 2 Height: 0
+   Cone: 12,18,16,
+   Support: 
+   TransitiveClosure IN: 3,12,18,16,5,6,9,
+   TransitiveClosure OUT: 3,
+
+point 4:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 10,11,14,
+   TransitiveClosure IN: 4,
+   TransitiveClosure OUT: 4,10,11,14,0,1,
+
+point 5:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 10,12,15,16,
+   TransitiveClosure IN: 5,
+   TransitiveClosure OUT: 5,10,12,15,16,0,3,2,
+
+point 6:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 11,12,13,18,
+   TransitiveClosure IN: 6,
+   TransitiveClosure OUT: 6,11,12,13,18,0,1,3,
+
+point 7:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 13,14,
+   TransitiveClosure IN: 7,
+   TransitiveClosure OUT: 7,13,14,1,
+
+point 8:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 15,17,
+   TransitiveClosure IN: 8,
+   TransitiveClosure OUT: 8,15,17,2,
+
+point 9:
+   Depth: 0 Height: 2
+   Cone: 
+   Support: 16,17,18,
+   TransitiveClosure IN: 9,
+   TransitiveClosure OUT: 9,16,17,18,2,3,
+
+point 10:
+   Depth: 1 Height: 1
+   Cone: 4,5,
+   Support: 0,
+   TransitiveClosure IN: 10,4,5,
+   TransitiveClosure OUT: 10,0,
+
+point 11:
+   Depth: 1 Height: 1
+   Cone: 4,6,
+   Support: 0,1,
+   TransitiveClosure IN: 11,4,6,
+   TransitiveClosure OUT: 11,0,1,
+
+point 12:
+   Depth: 1 Height: 1
+   Cone: 6,5,
+   Support: 0,3,
+   TransitiveClosure IN: 12,6,5,
+   TransitiveClosure OUT: 12,0,3,
+
+point 13:
+   Depth: 1 Height: 1
+   Cone: 7,6,
+   Support: 1,
+   TransitiveClosure IN: 13,7,6,
+   TransitiveClosure OUT: 13,1,
+
+point 14:
+   Depth: 1 Height: 1
+   Cone: 4,7,
+   Support: 1,
+   TransitiveClosure IN: 14,4,7,
+   TransitiveClosure OUT: 14,1,
+
+point 15:
+   Depth: 1 Height: 1
+   Cone: 8,5,
+   Support: 2,
+   TransitiveClosure IN: 15,8,5,
+   TransitiveClosure OUT: 15,2,
+
+point 16:
+   Depth: 1 Height: 1
+   Cone: 5,9,
+   Support: 2,3,
+   TransitiveClosure IN: 16,5,9,
+   TransitiveClosure OUT: 16,2,3,
+
+point 17:
+   Depth: 1 Height: 1
+   Cone: 9,8,
+   Support: 2,
+   TransitiveClosure IN: 17,9,8,
+   TransitiveClosure OUT: 17,2,
+
+point 18:
+   Depth: 1 Height: 1
+   Cone: 6,9,
+   Support: 3,
+   TransitiveClosure IN: 18,6,9,
+   TransitiveClosure OUT: 18,3,
