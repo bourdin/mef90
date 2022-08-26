@@ -12,8 +12,9 @@ Program  TestHeatXferCtx
     Type(tDM)                             :: dm
     Type(tPetscSF)                        :: naturalPointSF
 
-    !Type(tVec)                            :: temperatureGlobal
-
+    PetscInt                              :: step
+    PetscReal,Dimension(:),Pointer        :: time
+    Character(len=MEF90MXSTRLEN)          :: IOBuffer
 
     Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
         MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
@@ -74,7 +75,16 @@ Program  TestHeatXferCtx
     PetscCallA(DMDestroy(dm,ierr))
     PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions,MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr))
 
-    
+    !!! Analysis loop:
+    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
+    Do step = 1, size(time)
+        Write(IOBuffer,'("Step: ",I4," Analysis time: ",ES12.5)')
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,*))
+        VecSet(MEF90HeatXferCtx%temperatureLocal,time(step,ierr))
+        PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+        PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,tim(step),ierr))
+    End Do ! step
+
     PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
     PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
     PetscCallA(MEF90Finalize(ierr))
