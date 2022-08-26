@@ -33,8 +33,8 @@ Contains
       Type(tPetscViewer), Intent(INOUT)               :: Viewer
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
-      PetscCallA(exopts(EXVRBS+EXDEBG,ierr))
-      PetscCallA(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,FILE_MODE_WRITE,Viewer,ierr))
+      PetscCall(exopts(EXVRBS+EXDEBG,ierr))
+      PetscCall(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,FILE_MODE_WRITE,Viewer,ierr))
 
    End Subroutine MEF90CtxOpenEXO
 
@@ -51,7 +51,7 @@ Contains
       Type(tPetscViewer),Intent(INOUT)                :: Viewer
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
-      PetscCallA(PetscViewerDestroy(Viewer,ierr))
+      PetscCall(PetscViewerDestroy(Viewer,ierr))
 
    End Subroutine MEF90CtxCloseEXO
       
@@ -76,33 +76,33 @@ Contains
       Character(len=MXSTLN)                                 :: sJunk
       Logical,Dimension(:,:),Pointer                        :: truthtable
 
-      PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       If (exoid > 0) Then
          !!! Write variable names
          If (size(nameG) > 0) Then
-            PetscCallA(expvp(exoid,"g",size(nameG),ierr))
-            PetscCallA(expvan(exoid,"g",size(nameG),nameG,ierr))
+            PetscCall(expvp(exoid,"g",size(nameG),ierr))
+            PetscCall(expvan(exoid,"g",size(nameG),nameG,ierr))
          End If
          If (size(nameC) > 0) Then
-            PetscCallA(expvp(exoid,"e",size(nameC),ierr))
-            PetscCallA(expvan(exoid,"e",size(nameC),nameC,ierr))
+            PetscCall(expvp(exoid,"e",size(nameC),ierr))
+            PetscCall(expvan(exoid,"e",size(nameC),nameC,ierr))
          End If
          If (size(nameV) > 0) Then
-            PetscCallA(expvp(exoid,"n",size(nameV),ierr))
-            PetscCallA(expvan(exoid,"n",size(nameV),nameV,ierr))
+            PetscCall(expvp(exoid,"n",size(nameV),ierr))
+            PetscCall(expvan(exoid,"n",size(nameV),nameV,ierr))
          End If
 
          !!! Write truth tables
-         PetscCallA(exinq(exoid, EX_INQ_ELEM_BLK,numCS,PETSC_NULL_REAL,sjunk,ierr))
+         PetscCall(exinq(exoid, EX_INQ_ELEM_BLK,numCS,PETSC_NULL_REAL,sjunk,ierr))
          If (size(nameC) > 0) Then
             Allocate(truthtable(numCS,size(nameC)))
             truthtable = .true.
-            PetscCallA(expvtt(exoid, numCS, size(nameC), truthtable, ierr))
+            PetscCall(expvtt(exoid, numCS, size(nameC), truthtable, ierr))
             DeAllocate(truthtable)
          End If
 
          Do step = 1,numstep
-            PetscCallA(exptim(exoid,step,Real(step,kind=Kr),ierr))
+            PetscCall(exptim(exoid,step,Real(step,kind=Kr),ierr))
          End Do
 
       End If
@@ -129,8 +129,8 @@ Contains
           write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') order
           SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
       end if
-      PetscCallA(PetscViewerExodusIISetOrder(Viewer,order,ierr))
-      PetscCallA(DMView(dm,Viewer,ierr))
+      PetscCall(PetscViewerExodusIISetOrder(Viewer,order,ierr))
+      PetscCall(DMView(dm,Viewer,ierr))
 
    End Subroutine MEF90EXODMView
 
@@ -153,15 +153,15 @@ Contains
       PetscInt                                           :: offsetN = -1,offsetZ = -1
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
-      PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
-      PetscCallA(PetscObjectGetName(v, vecname,ierr))
+      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      PetscCall(PetscObjectGetName(v, vecname,ierr))
 
-      PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
-      PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
+      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
+      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
       If (offsetN > 0) Then
-         PetscCallA(MEF90EXOVecViewNodal_Private(v,exoid,step+1,offsetN,ierr))
+         PetscCall(MEF90EXOVecViewNodal_Private(v,exoid,step+1,offsetN,ierr))
       Else If (offsetZ > 0) Then
-         PetscCallA(MEF90EXOVecViewZonal_Private(v,exoid,step+1,offsetZ,ierr))
+         PetscCall(MEF90EXOVecViewZonal_Private(v,exoid,step+1,offsetZ,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
@@ -187,15 +187,15 @@ Contains
       PetscInt                                           :: offsetN = -1,offsetZ = -1
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
-      PetscCallA(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
-      PetscCallA(PetscObjectGetName(v,vecname,ierr))
+      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      PetscCall(PetscObjectGetName(v,vecname,ierr))
 
-      PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
-      PetscCallA(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
+      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
+      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
       If (offsetN > 0) Then
-         PetscCallA(MEF90EXOVecLoadNodal_Private(v,exoid,step+1,offsetN,ierr))
+         PetscCall(MEF90EXOVecLoadNodal_Private(v,exoid,step+1,offsetN,ierr))
       Else If (offsetZ > 0) Then
-         PetscCallA(MEF90EXOVecLoadZonal_Private(v,exoid,step+1,offsetZ,ierr))
+         PetscCall(MEF90EXOVecLoadZonal_Private(v,exoid,step+1,offsetZ,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
@@ -217,9 +217,9 @@ Contains
       suffix(1:5) = ["   ","_X ","_XX","_1 ","_11"]
       
       varIndex = -1
-      PetscCallA(exgvp(exoid,obj_type,num_vars,ierr))
+      PetscCall(exgvp(exoid,obj_type,num_vars,ierr))
       Do i=1,num_vars
-         PetscCallA(exgvnm(exoid,obj_type,i,var_name,ierr))
+         PetscCall(exgvnm(exoid,obj_type,i,var_name,ierr))
          Do j=1,num_suffix
             ext_name = trim(name)//trim(suffix(j))
             If (ext_name .eq. var_name) Then
@@ -290,7 +290,7 @@ Contains
             PetscCall(VecGetArrayReadF90(vComp, varray,ierr))
             PetscCall(exgnnv(exoid,step,offset+c,xs/bs+1,(xe-xs)/bs,varray,ierr))
             PetscCall(VecRestoreArrayReadF90(vComp, varray,ierr))
-            PetscCallA(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
+            PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
             PetscCall(VecRestoreSubVector(v, compIS, vComp,ierr))
          End Do
          PetscCall(ISDestroy(compIS,ierr))
@@ -321,10 +321,10 @@ Contains
       Do set=1,numCS
          PetscCall(exgelb(exoid,csID(set),elemType,csSize(set),PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,ierr))
       End Do
-      PetscCallA(VecGetOwnershipRange(v,xs,xe,ierr))
-      PetscCallA(VecGetBlockSize(v,bs,ierr))
+      PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
+      PetscCall(VecGetBlockSize(v,bs,ierr))
       If (bs > 1) Then
-         PetscCallA(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
+         PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
       End If
       Do set=1,numCS
          !  range of indices for set setID[set]: csxs:csxs + csSize[set]-1
@@ -378,10 +378,10 @@ Contains
       Do set=1,numCS
          PetscCall(exgelb(exoid,csID(set),elemType,csSize(set),PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,ierr))
       End Do
-      PetscCallA(VecGetOwnershipRange(v,xs,xe,ierr))
-      PetscCallA(VecGetBlockSize(v,bs,ierr))
+      PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
+      PetscCall(VecGetBlockSize(v,bs,ierr))
       If (bs > 1) Then
-         PetscCallA(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
+         PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
       End If
       Do set=1,numCS
          !  range of indices for set setID[set]: csxs:csxs + csSize[set]-1
@@ -399,7 +399,7 @@ Contains
                PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
                PetscCall(exgnev(exoid,step,offset+c,csID(set),csSize(set),max(xs/bs-csxs,0)+1,csLocalSize,varray,ierr))
                PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
-               PetscCallA(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
+               PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
             End Do
          End If
