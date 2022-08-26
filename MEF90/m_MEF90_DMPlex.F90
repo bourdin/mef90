@@ -903,7 +903,11 @@ Contains
         PetscCall(VecSetBlockSize(v,bs,ierr))
         
         DeAllocate(iremote)
-        DeAllocate(ilocal)
+        If (associated(iLocal)) Then
+            If (size(iLocal) >0) Then
+                DeAllocate(ilocal)
+            End If
+        End If
     End Subroutine MEF90VecCreateIO
 
 #undef __FUNCT__
