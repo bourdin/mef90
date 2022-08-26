@@ -899,6 +899,7 @@ Contains
         PetscInt,Dimension(:),Pointer           :: ilocal
 
         PetscCallA(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
+        DeAllocate(ilocal)
         PetscCallA(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
         PetscCallA(VecSetBlockSize(v,bs,ierr))
     End Subroutine MEF90VecCreateIO
