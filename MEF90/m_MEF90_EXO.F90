@@ -64,10 +64,10 @@ Contains
 !!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!           2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXOFormat(Viewer,NameG,NameC,NameV,numstep,ierr)
+   Subroutine MEF90EXOFormat(Viewer,NameG,NameC,NameV,time,ierr)
       Type(tPetscViewer),Intent(IN)                         :: Viewer
       Character(len=*),Dimension(:),Pointer,Intent(IN)      :: nameG,nameC,nameV
-      PetscInt,Intent(IN)                                   :: numstep
+      PetscReal,Dimension(:),Pointer                        :: time
       PetscErrorCode,Intent(INOUT)                          :: ierr
       
       PetscInt                                              :: numCS
@@ -101,10 +101,9 @@ Contains
             DeAllocate(truthtable)
          End If
 
-         Do step = 1,numstep
-            Call exptim(exoid,step,Real(step,kind=Kr),ierr)
+         Do step = 1,size(time)
+            Call exptim(exoid,step,time(step),ierr)
          End Do
-
       End If
    End Subroutine MEF90EXOFormat
 
@@ -159,9 +158,9 @@ Contains
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
       If (offsetN > 0) Then
-         PetscCall(MEF90EXOVecViewNodal_Private(v,exoid,step+1,offsetN,ierr))
+         PetscCall(MEF90EXOVecViewNodal_Private(v,exoid,step,offsetN,ierr))
       Else If (offsetZ > 0) Then
-         PetscCall(MEF90EXOVecViewZonal_Private(v,exoid,step+1,offsetZ,ierr))
+         PetscCall(MEF90EXOVecViewZonal_Private(v,exoid,step,offsetZ,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)

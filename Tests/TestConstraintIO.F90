@@ -11,17 +11,17 @@ Implicit NONE
     Type(tDM),target                                    :: dm,dmU,dmU0,dmSigma
     PetscBool                                           :: interpolate = PETSC_TRUE
 
-    PetscInt                                            :: numNodalVar = 2, numCellVar = 3, numGVar = 0, numStep = 3
+    PetscInt                                            :: numNodalVar = 2, numCellVar = 3, numGVar = 0
     Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
     Character(len=MEF90MXSTRLEN)                        :: name
     type(tIS)                                           :: cellIS,csIS
-    PetscInt,Dimension(:),pointer                       :: cellID,csID
+    PetscInt,Dimension(:),Pointer                       :: cellID,csID
     PetscInt                                            :: dim,pStart,pEnd,size,bs,cell,c,set
     Type(tPetscSection)                                 :: sectionU, sectionU0, sectionSigma, coordSection
     Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, locVecSigma, ioS, ioVecRead, ioSRead
-    PetscReal,Dimension(:),pointer                      :: cval,xyz
-    PetscReal,Dimension(:),pointer                      :: t
+    PetscReal,Dimension(:),Pointer                      :: cval,xyz
+    PetscReal,Dimension(:),Pointer                      :: time
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     PetscCallA(MEF90Initialize(ierr))
@@ -36,6 +36,7 @@ Implicit NONE
  
     PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
     Allocate(nodalVarName(numNodalVar))
     Allocate(cellVarName(numCellVar))
@@ -49,12 +50,11 @@ Implicit NONE
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
-
+    
     ! Open exodus file + write geometry + format the file
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,ierr))
-    PetscCallA(MEF90CtxGetTime(MEF90Ctx,t,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,numStep,ierr))
+    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
 
     DeAllocate(nodalVarName)
     DeAllocate(cellVarName)
@@ -128,7 +128,7 @@ Implicit NONE
     ! Reorder locVecU into ioVec and write ioVec
     PetscCallA(MEF90VecCopySF(locVecU,ioVec,lioSF,ierr))
     PetscCallA(VecViewFromOptions(ioVec,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioVec,MEF90Ctx%resultViewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioVec,MEF90Ctx%resultViewer,1_Ki,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
@@ -174,12 +174,12 @@ Implicit NONE
     ! Reorder and write ioS
     PetscCallA(MEF90VecCopySF(locVecSigma,ioS,lioSSF,ierr))
     PetscCallA(VecViewFromOptions(ioS,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioS,MEF90Ctx%resultViewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioS,MEF90Ctx%resultViewer,1_Ki,ierr))
 
     ! Test read ioVecRead and ioSRead
-    PetscCallA(MEF90EXOVecLoad(ioVecRead,MEF90Ctx%resultViewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioVecRead,MEF90Ctx%resultViewer,1_Ki,ierr))
     PetscCallA(VecViewFromOptions(ioVecRead,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecLoad(ioSRead,MEF90Ctx%resultViewer,0_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioSRead,MEF90Ctx%resultViewer,1_Ki,ierr))
     PetscCallA(VecViewFromOptions(ioSRead,PETSC_NULL_OPTIONS,"-ios_view",ierr))
 
     ! Cleanup Vec
@@ -210,7 +210,6 @@ Implicit NONE
     PetscCallA(DMDestroy(dm,ierr))
 
     ! Exit nicely
-    DeAllocate(t)
     PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
     PetscCallA(MEF90Finalize(ierr))
     PetscCallA(PetscFinalize(ierr))
