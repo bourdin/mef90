@@ -243,6 +243,7 @@ Contains
    
       PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
       PetscCall(VecGetBlockSize(v,bs,ierr))
+
       If (bs == 1) Then
          PetscCall(VecGetArrayReadF90(v,varray,ierr))
          Call expnvs(exoid,step,offset,xs+1,xe-xs,varray,ierr)
@@ -251,14 +252,14 @@ Contains
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
-            PetscCall(VecGetSubVector(v, compIS, vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp, varray,ierr))
+            PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
+            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
             Call expnvs(exoid,step,offset+c,xs/bs+1,(xe-xs)/bs,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp, varray,ierr))
-            PetscCall(VecRestoreSubVector(v, compIS, vComp,ierr))
-         End Do
+            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
+         End Do ! c
          PetscCall(ISDestroy(compIS,ierr))
-      End If
+      End If ! bs
    End Subroutine MEF90EXOVecViewNodal_Private
 
 #undef __FUNCT__
@@ -284,12 +285,12 @@ Contains
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
-            PetscCall(VecGetSubVector(v, compIS, vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp, varray,ierr))
+            PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
+            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
             Call exgnnv(exoid,step,offset+c,xs/bs+1,(xe-xs)/bs,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp, varray,ierr))
+            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
             PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
-            PetscCall(VecRestoreSubVector(v, compIS, vComp,ierr))
+            PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do
          PetscCall(ISDestroy(compIS,ierr))
       End If
