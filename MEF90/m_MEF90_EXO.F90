@@ -177,7 +177,7 @@ Contains
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
    Subroutine MEF90EXOVecLoad(v,Viewer,step,ierr)
-      Type(tVec),Intent(IN)                              :: v
+      Type(tVec),Intent(INOUT)                           :: v
       Type(tPetscViewer),Intent(IN)                      :: Viewer
       PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -192,9 +192,9 @@ Contains
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
       If (offsetN > 0) Then
-         PetscCall(MEF90EXOVecLoadNodal_Private(v,exoid,step+1,offsetN,ierr))
+         PetscCall(MEF90EXOVecLoadNodal_Private(v,exoid,step,offsetN,ierr))
       Else If (offsetZ > 0) Then
-         PetscCall(MEF90EXOVecLoadZonal_Private(v,exoid,step+1,offsetZ,ierr))
+         PetscCall(MEF90EXOVecLoadZonal_Private(v,exoid,step,offsetZ,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
@@ -267,7 +267,7 @@ Contains
    Subroutine MEF90EXOVecLoadNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
       PetscInt,Intent(IN)              :: step, offset
-      Type(tVec),Intent(IN)            :: v
+      Type(tVec),Intent(INOUT)         :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
       PetscInt                         :: xs,xe,bs,c
@@ -358,7 +358,7 @@ Contains
    Subroutine MEF90EXOVecLoadZonal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
       PetscInt,Intent(IN)              :: step, offset
-      Type(tVec),Intent(IN)            :: v
+      Type(tVec),Intent(INOUT)         :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
       PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
@@ -388,16 +388,17 @@ Contains
          !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
          csLocalSize = max(0, min(xe/bs, csxs+csSize(set)) - max(xs/bs, csxs))
          If (bs == 1) Then
-            PetscCall(VecGetArrayReadF90(v,varray,ierr))
+            PetscCall(VecGetArrayF90(v,varray,ierr))
             Call exgnev(exoid,step,offset,csID(set),csSize(set),max(xs-csxs,0)+1,csLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+            PetscCall(VecRestoreArrayF90(v,varray,ierr))
          Else
             Do c = 0,bs-1
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-               PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
-               Call exgnev(exoid,step,offset+c,csID(set),csSize(set),max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
-               PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+               PetscCall(VecGetArrayF90(vComp,varray,ierr))
+               Call exgnev(exoid,step,offset+c,csID(set),0,max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
+               ! the 5th argument of exgnev is unused
+               PetscCall(VecRestoreArrayF90(vComp,varray,ierr))
                PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
             End Do

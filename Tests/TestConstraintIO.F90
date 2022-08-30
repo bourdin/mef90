@@ -22,6 +22,7 @@ Implicit NONE
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, ioVec, locVecSigma, ioS, ioVecRead, ioSRead
     PetscReal,Dimension(:),Pointer                      :: cval,xyz
     PetscReal,Dimension(:),Pointer                      :: time
+    PetscInt                                            :: step = 1_Ki
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     PetscCallA(MEF90Initialize(ierr))
@@ -130,7 +131,7 @@ Implicit NONE
     ! Reorder locVecU into ioVec and write ioVec
     PetscCallA(MEF90VecCopySF(locVecU,ioVec,lioSF,ierr))
     PetscCallA(VecViewFromOptions(ioVec,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioVec,MEF90Ctx%resultViewer,1_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioVec,MEF90Ctx%resultViewer,step,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
@@ -176,12 +177,12 @@ Implicit NONE
     ! Reorder and write ioS
     PetscCallA(MEF90VecCopySF(locVecSigma,ioS,lioSSF,ierr))
     PetscCallA(VecViewFromOptions(ioS,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(ioS,MEF90Ctx%resultViewer,1_Ki,ierr))
+    PetscCallA(MEF90EXOVecView(ioS,MEF90Ctx%resultViewer,step,ierr))
 
     ! Test read ioVecRead and ioSRead
-    PetscCallA(MEF90EXOVecLoad(ioVecRead,MEF90Ctx%resultViewer,1_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioVecRead,MEF90Ctx%resultViewer,step,ierr))
     PetscCallA(VecViewFromOptions(ioVecRead,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecLoad(ioSRead,MEF90Ctx%resultViewer,1_Ki,ierr))
+    PetscCallA(MEF90EXOVecLoad(ioSRead,MEF90Ctx%resultViewer,step,ierr))
     PetscCallA(VecViewFromOptions(ioSRead,PETSC_NULL_OPTIONS,"-ios_view",ierr))
 
     ! Cleanup Vec
