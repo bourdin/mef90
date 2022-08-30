@@ -168,7 +168,7 @@ Contains
    End Subroutine MEF90EXOVecView
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90EXOVecView"
+#define __FUNCT__ "MEF90EXOVecLoad"
 !!!
 !!!  
 !!!  MEF90EXOVecLoad:
@@ -339,7 +339,7 @@ Contains
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
                PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
-               Call expevs(exoid,step,offset+c,csID(set),max(xs/bs-csxs,0)+1,csLocalSize,varray,ierr)
+               Call expevs(exoid,step,offset+c,csID(set),max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
                PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
             End Do
@@ -396,7 +396,7 @@ Contains
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
                PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
-               Call exgnev(exoid,step,offset+c,csID(set),csSize(set),max(xs/bs-csxs,0)+1,csLocalSize,varray,ierr)
+               Call exgnev(exoid,step,offset+c,csID(set),csSize(set),max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
                PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
                PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
