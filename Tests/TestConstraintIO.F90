@@ -31,6 +31,8 @@ Implicit NONE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
+    MEF90GlobalOptions_default%timeSkip          = 0
+    MEF90GlobalOptions_default%timeNumCycle      = 1
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
