@@ -50,6 +50,7 @@ m_MEF90_Elements.o: ${MEF90_DIR}/MEF90/m_MEF90_Elements.F90 \
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF90_EXO.o: ${MEF90_DIR}/MEF90/m_MEF90_EXO.F90 m_MEF90_Ctx.o \
+        m_MEF90_DMPlex.o \
         m_MEF90_Elements.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o
