@@ -234,17 +234,20 @@ Implicit NONE
     PetscInt                            :: projectType
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-    Call MEF90Initialize(ierr)
+    PetscCallA(MEF90Initialize(ierr))
 
+    MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
     MEF90GlobalOptions_default%timeMin           = 0.0_Kr
     MEF90GlobalOptions_default%timeMax           = 1.0_Kr
     MEF90GlobalOptions_default%timeNumStep       = 11
+    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
+    MEF90GlobalOptions_default%timeSkip          = 0
+    MEF90GlobalOptions_default%timeNumCycle      = 1
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
- 
 
-    Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
+    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
     
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
