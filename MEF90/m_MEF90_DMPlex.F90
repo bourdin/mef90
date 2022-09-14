@@ -66,7 +66,8 @@ Module m_MEF90_DMPlex
               MEF90CreateCellVector,                                                 &
               MEF90CreateBoundaryCellVector,                                         &
               MEF90VecSetBCValuesFromOptions,                                        &
-              MEF90VecSetValuesFromOptions
+              MEF90VecSetValuesFromOptions,                                          &
+              MEF90VecGetClosureSize
 Contains
 
 #undef __FUNCT__
@@ -490,6 +491,41 @@ Contains
         PetscCall(PetscObjectSetName(V,name,ierr))
     End Subroutine MEF90CreateBoundaryCellVector
         
+#undef __FUNCT__
+#define __FUNCT__ "MEF90VecGetClosureSize"
+!!!
+!!!  
+!!!  MEF90VecGetClosureSize: Associates dof to a section
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+    Subroutine MEF90VecGetClosureSize(v,p,clSize,ierr)
+        Type(tVec),Intent(IN)              :: v
+        PetscInt,Intent(IN)                :: p
+        PetscInt,Intent(OUT)               :: clSize
+        PetscErrorCode,Intent(INOUT)       :: ierr
+
+        Type(tDM)                          :: dm
+        Type(tPetscSection)                :: section
+        PetscInt,Dimension(:),Pointer      :: closure
+        PetscInt                           :: point,numDof
+
+        clSize = 0
+        PetscCall(VecGetDM(v,dm,ierr))
+        PetscCall(DMGetSection(dm,section,ierr))
+
+        PetscCall(DMPlexGetTransitiveClosure(dm,p,PETSC_TRUE,closure,ierr))
+        If (size(closure) > 0) Then
+            Do point = 1, size(closure), 2
+                PetscCall(PetscSectionGetDof(section,closure(point),numDof,ierr))
+                clSize = clSize + numDof
+            End Do
+        End If
+        PetscCall(DMPlexRestoreTransitiveClosure(dm,p,PETSC_TRUE,closure,ierr))
+    End Subroutine MEF90VecGetClosureSize
+
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SectionAllocateDof"
 !!!
