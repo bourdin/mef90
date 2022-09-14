@@ -967,7 +967,7 @@ Contains
         PetscInt,Dimension(:),Pointer           :: setID,pointID
         Character(len=MEF90MXSTRLEN)            :: ValueKey,name
         PetscBool                               :: flg
-        PetscInt                                :: dim,numOpt,bs
+        PetscInt                                :: dim,numOpt,bs,numDofClosure
         PetscReal,Dimension(:),pointer          :: Val,vArray
         Type(tPetscSection)                     :: section
 
@@ -994,10 +994,13 @@ Contains
                         If (pointIS /= PETSC_NULL_IS) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
-                                PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
-                                vArray = scalingFactor * Val
-                                PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
-                                PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
+                                If (numDofClosure > 0) Then
+                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    vArray = scalingFactor * Val
+                                    PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
+                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                End If ! numDofClosure
                             End Do ! point
                             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
                         End If ! pointIS
@@ -1033,7 +1036,7 @@ Contains
         Character(len=MEF90MXSTRLEN)            :: BCOptionKey,BCValueKey,name
         PetscBool,Dimension(:),Pointer          :: setBC
         PetscBool                               :: flg
-        PetscInt                                :: dim,numBC,bs
+        PetscInt                                :: dim,numBC,bs,numDofClosure
         PetscReal,Dimension(:),pointer          :: BCVal,vArray
         Type(tPetscSection)                     :: section
 

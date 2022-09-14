@@ -116,6 +116,7 @@ Implicit NONE
         PetscCall(MEF90VecGetClosureSize(v,p,numDofClosure,ierr))
     End Do
     PetscCallA(MyVecView(v,ierr))
+
     PetscCallA(PetscSectionDestroy(section,ierr))
     PetscCallA(DMRestoreLocalVector(dm,v,ierr))
     PetscCallA(DMDestroy(dm,ierr))

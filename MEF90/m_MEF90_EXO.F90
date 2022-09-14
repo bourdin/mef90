@@ -52,8 +52,8 @@ Contains
 !!!  
 !!!  MEF90CtxCloseEXO:
 !!!  
-!!! 
-!!!      2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2022      Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    Subroutine MEF90CtxCloseEXO(Viewer,ierr)
       Type(tPetscViewer),Intent(INOUT)                :: Viewer

@@ -22,3 +22,5 @@ Tests/viewDAG
 Tests/TestVecSetBCFromOptions
 
 Tests/TestHeatXferCtx
+
+Tests/TestDMPlexVecGetClosure

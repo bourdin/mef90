@@ -57,7 +57,7 @@ Contains
       Select case (MEF90HeatXferGlobalOptions%boundaryTemperatureScaling)
       Case (MEF90Scaling_File)
          !!! Create a "Big Global Vector (BGV)" (global vector with space for constrained values) in natural ordering 
-         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
+         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,ioVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
          !!! Name it "Temperature" so that the proper field is obtained when calling MEF90EXOVecLoad
          PetscCall(PetscObjectSetName(ioVec,"Temperature",ierr))
          !!! Create a temporary vector since we only want to overwrite constrained values of the temperature
@@ -79,11 +79,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%externalTemperatureToIOSF,ierr))
-         PetscCall(PetscObjectSetName(ioVec,"ExternalTemperature",ierr))
-         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
-         PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%ExternalTemperatureLocal,MEF90HeatXferCtx%IOToExternalTemperatureSF,ierr))
-         PetscCall(VecDestroy(IOVec,ierr))
+         ! We don't know how to save boundary zonal vectors yet
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -92,10 +88,10 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
          Case (MEF90Scaling_File)
-            PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%fluxToIOSF,ierr))
+            PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,ioVec,1_Ki,MEF90HeatXferCtx%fluxToIOSF,ierr))
             PetscCall(PetscObjectSetName(ioVec,"Flux",ierr))
             PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
-            PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%IOToFluxSF,ierr))
+            PetscCall(MEF90VecCopySF(ioVec,tmpVec,MEF90HeatXferCtx%IOToFluxSF,ierr))
             PetscCall(VecDestroy(IOVec,ierr))
             Case (MEF90Scaling_Linear)
             PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,time,ierr))
@@ -105,11 +101,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%boundaryFluxToIOSF,ierr))
-         PetscCall(PetscObjectSetName(ioVec,"BoundaryFlux",ierr))
-         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
-         PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%boundaryFluxLocal,MEF90HeatXferCtx%IOToBoundaryFluxSF,ierr))
-         PetscCall(VecDestroy(IOVec,ierr))
+         ! Right now we don;t know how to load boundary zonal Vecs
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -318,16 +310,17 @@ Contains
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal,dm,ierr))
       PetscCall(DMCreateMatrix(dm,matTemp,iErr))
       PetscCall(MatSetOptionsPrefix(matTemp,"Temperature_",ierr))
+      !!! The matrix is not symmetric if teh advection vector is /= 0
       PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         !PetscCall(MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_MAT,nspTemp,ierr))
+         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0,PETSC_NULL_VEC,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
 
-      PetscCall(SNESCreate(PETSC_COMM_WORLD,snesTemp,ierr))
+      PetscCall(SNESCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,snesTemp,ierr))
       PetscCall(SNESSetApplicationContext(snesTemp,MEF90HeatXferCtx,ierr))
       PetscCall(SNESSetDM(snesTemp,dm,ierr))
       PetscCall(SNESSetType(snesTemp,SNESKSPONLY,ierr))
@@ -342,9 +335,6 @@ Contains
       PetscCall(SNESGetKSP(snesTemp,kspTemp,ierr))
       PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
-      ! If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-      !    PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
-      ! End If
       rtol = 1.0D-8
       dtol = 1.0D+10
       PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
@@ -385,12 +375,12 @@ Contains
       PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         !PetscCall(MatNullSpaceCreate(PETSC_COMM_WORLD,PETSC_TRUE,0,PETSC_NULL_MAT,nspTemp,ierr))
+         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0,PETSC_NULL_VEC,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
 
-      PetscCall(TSCreate(PETSC_COMM_WORLD,tsTemp,ierr))
+      PetscCall(TSCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,tsTemp,ierr))
       PetscCall(TSSetDM(tsTemp,dm,ierr))
       PetscCall(TSSetOptionsPrefix(tsTemp,'Temperature_',ierr))
       PetscCall(TSGetSNES(tsTemp,snesTemp,ierr))
@@ -412,9 +402,6 @@ Contains
       PetscCall(SNESGetKSP(snesTemp,kspTemp,ierr))
       PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
-      ! If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-      !    PetscCall(KSPSetNullSpace(kspTemp,nspTemp,ierr))
-      ! End If
       rtol = 1.0D-8
       dtol = 1.0D+10
       PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
