@@ -292,6 +292,7 @@ Contains
       Integer                                         :: exoUnit
       Type(MEF90CtxGlobalOptions_Type),pointer        :: GlobalOptions
       Integer                                         :: j,CycleLength 
+      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       i = 0 ! silence gfortran silly warning
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,GlobalOptions,ierr))
@@ -336,14 +337,17 @@ Contains
             Allocate(t(GlobalOptions%timeNumStep))
             Call EXGATM(exoUnit,t,exoErr)
          Else
-            PetscCall(PetscPrintf(PETSC_COMM_SELF,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n",ierr))
-            SETERRQ(PETSC_COMM_SELF,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
+            Write(IOBuffer,"(A,'EXO input file must be open prior to calling MEF90Ctx_GetTime\n')") __FUNCT__
+            SETERRQ(MEF90Ctx%Comm,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
          End If
+      Case Default
+         Write(IOBuffer,"(A,'Unimplemented time interpolation: ',I0,'\n')") __FUNCT__,GlobalOptions%timeInterpolation
+         SETERRQ(MEF90Ctx%Comm,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
       End Select
       If ((GlobalOptions%verbose > 0) .AND. (MEF90Ctx%rank == 0)) Then
-         PetscCall(PetscPrintf(PETSC_COMM_SELF,"Time values array:\n",ierr))
+         PetscCall(PetscPrintf(MEF90Ctx%Comm,"Time values array:\n",ierr))
          PetscCall(PetscRealView(GlobalOptions%timeNumStep,t,PETSC_VIEWER_STDOUT_SELF,ierr))
-         PetscCall(PetscPrintf(PETSC_COMM_SELF,"===\n",ierr))
+         PetscCall(PetscPrintf(MEF90Ctx%Comm,"===\n",ierr))
       End If
    End Subroutine MEF90CtxGetTime
 End Module m_MEF90_Ctx

@@ -27,15 +27,23 @@ Contains
 !!!  MEF90CtxOpenEXO:
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2022 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
-   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Viewer,ierr)
+   Subroutine MEF90CtxOpenEXO(MEF90Ctx,Viewer,mode,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(tPetscViewer), Intent(INOUT)               :: Viewer
+      PetscEnum,Intent(IN)                            :: mode
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
-      Call exopts(EXVRBS+EXDEBG,ierr)
-      PetscCall(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,FILE_MODE_WRITE,Viewer,ierr))
+      Integer                                         :: opts
 
+#ifdef PETSC_USE_DEBUG
+      opts = EXVRBS + EXDEBG
+#else
+      opts = 0
+#endif
+      Call exopts(opts,ierr)
+      PetscCall(PetscViewerExodusIIOpen(MEF90Ctx%Comm,MEF90Ctx%resultFile,mode,Viewer,ierr))
    End Subroutine MEF90CtxOpenEXO
 
 #undef __FUNCT__
@@ -52,7 +60,6 @@ Contains
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscCall(PetscViewerDestroy(Viewer,ierr))
-
    End Subroutine MEF90CtxCloseEXO
       
 #undef __FUNCT__
@@ -130,7 +137,6 @@ Contains
       end if
       PetscCall(PetscViewerExodusIISetOrder(Viewer,order,ierr))
       PetscCall(DMView(dm,Viewer,ierr))
-
    End Subroutine MEF90EXODMView
 
 #undef __FUNCT__
@@ -162,7 +168,7 @@ Contains
       Else If (offsetZ > 0) Then
          PetscCall(MEF90EXOVecViewZonal_Private(v,exoid,step,offsetZ,ierr))
       Else
-         write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
+         write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
       End If
    End Subroutine MEF90EXOVecView
@@ -196,7 +202,7 @@ Contains
       Else If (offsetZ > 0) Then
          PetscCall(MEF90EXOVecLoadZonal_Private(v,exoid,step,offsetZ,ierr))
       Else
-         write(IOBuffer,'("Could not find nodal or zonal variable ", A5, " in exodus file. ")') vecname
+         write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
       End If
    End Subroutine MEF90EXOVecLoad

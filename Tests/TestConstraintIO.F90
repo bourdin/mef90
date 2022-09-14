@@ -34,6 +34,7 @@ Implicit NONE
     MEF90GlobalOptions_default%timeNumStep       = 11
     MEF90GlobalOptions_default%timeSkip          = 0
     MEF90GlobalOptions_default%timeNumCycle      = 1
+    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
  
@@ -55,7 +56,7 @@ Implicit NONE
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
     
     ! Open exodus file + write geometry + format the file
-    PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,ierr))
+    PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
     PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
 
@@ -157,7 +158,7 @@ Implicit NONE
                 End Do
                 cval(3) = cval(3) * dim / size(xyz)
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-                PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_VALUES, ierr))
+                PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_ALL_VALUES, ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
@@ -206,6 +207,7 @@ Implicit NONE
 
     ! Cleanup DMs
     PetscCallA(DMDestroy(dm,ierr))
+    DeAllocate(time)
     ! Note that I would need to manually destroy these DM no matter what
     PetscCallA(DMDestroy(dmU,ierr))
     PetscCallA(DMDestroy(dmU0,ierr))

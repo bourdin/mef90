@@ -16,8 +16,7 @@ Program  TestHeatXferCtx
     PetscInt                                           :: step
     PetscReal,Dimension(:),Pointer                     :: time
     Character(len=MEF90MXSTRLEN)                       :: IOBuffer
-    PetscInt                                           :: numNodalVar = 1, numCellVar = 3, numGVar = 0
-    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer  :: nodalVarName, cellVarName, gVarName
+    PetscBool                                          :: flg
 
     Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
         MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
@@ -52,19 +51,42 @@ Program  TestHeatXferCtx
     MEF90GlobalOptions_default%timeNumStep       = 11
     MEF90GlobalOptions_default%timeSkip          = 0
     MEF90GlobalOptions_default%timeNumCycle      = 1
+    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
     
     PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
-    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
+    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
-    PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,ierr))
-    PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
 
+    Inquire(file=MEF90Ctx%resultFile,exist=flg)
+    If (flg) Then
+        ! we assume that the output file exists and is formatted
+        PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
+    Else
+        ! we need to create the output file
+        EXOFormat: block
+            PetscInt                                            :: numNodalVar = 1, numCellVar = 3, numGVar = 0
+            Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
+
+            Allocate(nodalVarName(numNodalVar))
+            Allocate(cellVarName(numCellVar))
+            Allocate(gVarName(numGVar))
+            nodalVarName = ["Temperature        "]
+            cellVarName  = ["ExternalTemperature","Flux               ","BoundaryFlux       "]
+            PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
+            PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+            PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
+            DeAllocate(nodalVarName)
+            DeAllocate(cellVarName)
+            DeAllocate(gVarName)
+            end block EXOFormat
+    End If
     distribute: Block 
         Type(tDM),target                    :: dmDist
         PetscInt                            :: ovlp = 0
@@ -81,16 +103,6 @@ Program  TestHeatXferCtx
 
     PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
     PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions,MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr))
-
-    Allocate(nodalVarName(numNodalVar))
-    Allocate(cellVarName(numCellVar))
-    Allocate(gVarName(numGVar))
-    nodalVarName = ["Temperature        "]
-    cellVarName  = ["ExternalTemperature","Flux               ","BoundaryFlux       "]
-    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
-    DeAllocate(nodalVarName)
-    DeAllocate(cellVarName)
-    DeAllocate(gVarName)
     PetscCallA(DMDestroy(dm,ierr))
 
     !!! Analysis loop:

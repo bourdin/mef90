@@ -1035,9 +1035,9 @@ Contains
                                 Do c = 1, bs
                                     If (setBC(c)) Then
                                         vArray(c::bs) = scalingFactor * BCVal(c)
-                                        PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
                                     End If ! setBC
                                 End Do ! c
+                                PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
                                 PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
                             End Do ! point
                             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))

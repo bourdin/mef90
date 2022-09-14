@@ -79,8 +79,11 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       Case (MEF90Scaling_File)
-         !PetscCall(VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%externalTemperature,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-         !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%externalTempOffset,ierr))
+         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%externalTemperatureToIOSF,ierr))
+         PetscCall(PetscObjectSetName(ioVec,"ExternalTemperature",ierr))
+         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%ExternalTemperatureLocal,MEF90HeatXferCtx%IOToExternalTemperatureSF,ierr))
+         PetscCall(VecDestroy(IOVec,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -89,10 +92,12 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
          Case (MEF90Scaling_File)
-            !PetscCall(MEF90EXOVecView(v,Viewer,step,ierr))
-            !PetscCall(VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%flux,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-            !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%fluxOffset,ierr))
-         Case (MEF90Scaling_Linear)
+            PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%fluxToIOSF,ierr))
+            PetscCall(PetscObjectSetName(ioVec,"Flux",ierr))
+            PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+            PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%IOToFluxSF,ierr))
+            PetscCall(VecDestroy(IOVec,ierr))
+            Case (MEF90Scaling_Linear)
             PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,time,ierr))
          Case (MEF90Scaling_CST)
             PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,1.0_Kr,ierr))
@@ -100,9 +105,11 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
       Case (MEF90Scaling_File)
-         !PetscCall(MEF90EXOVecView(v,Viewer,step,ierr))
-         !PetscCall(VecLoadExodusCell(MEF90HeatXferCtx%cellDMScal,MEF90HeatXferCtx%boundaryFlux,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-         !                       MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,step,MEF90HeatXferGlobalOptions%boundaryFluxOffset,ierr))
+         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%boundaryFluxToIOSF,ierr))
+         PetscCall(PetscObjectSetName(ioVec,"BoundaryFlux",ierr))
+         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90VecCopySF(ioVec,MEF90HeatXferCtx%boundaryFluxLocal,MEF90HeatXferCtx%IOToBoundaryFluxSF,ierr))
+         PetscCall(VecDestroy(IOVec,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
