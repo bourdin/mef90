@@ -22,14 +22,14 @@ test3D:
 
 testTransient2D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE} ORDER=1;\
+	make -s testHeatXfer PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE} ORDER=2;\
 	done
 
 testTransient3D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=Beam1x10-tet OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=Beam1x10-tet OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -46,13 +46,17 @@ ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer: HeatXfer.o
 	-@echo "      $@"
 	-@${FLINKER} -o $@ HeatXfer.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
 
-HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
+HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS} m_HeatXferDefault.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
+m_HeatXferDefault.o: ${BASE_DIR}/m_HeatXferDefault.F90 ${MEF90_HEATXFER_OBJS}
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
 testHeatXfer:
-	@echo ;echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
-	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
+	@echo ;echo "Testing HeatXfer with $${GEOMETRY} $${OPTIONSFILE}"
+	@ARGS="-geometry $${GEOMETRY} -result $${RESULT} -options_file_yaml data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi

@@ -1070,14 +1070,17 @@ Contains
                         If (pointIS /= PETSC_NULL_IS) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
-                                PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
-                                Do c = 1, bs
-                                    If (setBC(c)) Then
-                                        vArray(c::bs) = scalingFactor * BCVal(c)
-                                    End If ! setBC
-                                End Do ! c
-                                PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
-                                PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
+                                If (numDofClosure > 0) Then
+                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    Do c = 1, bs
+                                        If (setBC(c)) Then
+                                            vArray(c::bs) = scalingFactor * BCVal(c)
+                                        End If ! setBC
+                                    End Do ! c
+                                    PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
+                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                End If
                             End Do ! point
                             PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
                         End If ! pointIS

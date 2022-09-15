@@ -529,7 +529,7 @@ Contains
 !!!
 !!!  MEF90MatPropBagSetFromOptionsierr:
 !!!  MEF90MatPropBagSetFromOptions2D
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012      Blaise Bourdin bourdin@lsu.edu
 !!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 

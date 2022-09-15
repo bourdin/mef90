@@ -7,6 +7,7 @@ Module m_MEF90_HeatXferCtx_Type
    Public :: MEF90HeatXferCtx_Type
    Public :: MEF90HeatXferGlobalOptions_Type
    Public :: MEF90HeatXferCellSetOptions_Type
+   Public :: MEF90HeatXferFaceSetOptions_Type
    Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
@@ -45,12 +46,18 @@ Module m_MEF90_HeatXferCtx_Type
 
    Type MEF90HeatXferCellSetOptions_Type
       PetscReal                        :: flux
-      PetscReal                        :: surfaceThermalConductivity
-      PetscReal                        :: externalTemperature
       PetscBool                        :: Has_BC
       PetscReal                        :: boundaryTemperature
       PetscReal,dimension(3)           :: advectionVector
    End Type MEF90HeatXferCellSetOptions_Type
+
+   Type MEF90HeatXferFaceSetOptions_Type
+      PetscReal                        :: boundaryFlux
+      PetscReal                        :: surfaceThermalConductivity
+      PetscReal                        :: externalTemperature
+      PetscBool                        :: Has_BC
+      PetscReal                        :: boundaryTemperature
+   End Type MEF90HeatXferFaceSetOptions_Type
 
    Type MEF90HeatXferVertexSetOptions_Type
       PetscBool                        :: Has_BC
@@ -126,6 +133,39 @@ Contains
    End Subroutine PetscBagGetDataMEF90HeatXferCtxCellSetOptions
 End Module m_MEF90HeatXferCellSetOptions_Private
 
+Module m_MEF90HeatXferFaceSetOptions_Private
+#include "petsc/finclude/petsc.h"
+   Use m_MEF90
+   Use m_MEF90_HeatXferCtx_Type
+   Implicit None
+
+   Private
+   Public :: PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
+   
+   Interface PetscBagGetData
+      Subroutine PetscBagGetData(bag,data,ierr)
+         Use m_MEF90_HeatXferCtx_Type
+         PetscBag                                           :: bag
+         Type(MEF90HeatXferFaceSetOptions_Type),pointer     :: data
+         PetscErrorCode                                     :: ierr
+      End subroutine PetscBagGetData
+   End interface
+Contains
+
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagGetDataMEF90HeatXferCtxFaceSetOptions"
+!!!
+!!!  PetscBagGetDataMEF90HeatXferCtxFaceSetOptions - Custom interface to PetscGetData
+!!!
+
+   Subroutine PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(bag,data,ierr)
+      PetscBag                                        :: bag
+      Type(MEF90HeatXferFaceSetOptions_Type),pointer  :: data
+      PetscErrorCode                                  :: ierr
+      
+      PetscCall(PetscBagGetData(bag,data,ierr))
+   End Subroutine PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
+End Module m_MEF90HeatXferFaceSetOptions_Private
 Module m_MEF90HeatXferVertexSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
@@ -166,11 +206,13 @@ Module m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXferCtx_Type
    Use m_MEF90HeatXferGlobalOptions_Private
    Use m_MEF90HeatXferCellSetOptions_Private
+   Use m_MEF90HeatXferFaceSetOptions_Private
    Use m_MEF90HeatXferVertexSetOptions_Private
    Implicit none
 
    PetscSizeT,protected   :: sizeofMEF90HeatXferGlobalOptions
    PetscSizeT,protected   :: sizeofMEF90HeatXferCellSetOptions
+   PetscSizeT,protected   :: sizeofMEF90HeatXferFaceSetOptions
    PetscSizeT,protected   :: sizeofMEF90HeatXferVertexSetOptions
    
    Enum,bind(c)
@@ -195,6 +237,7 @@ Contains
    
       Type(MEF90HeatXferGlobalOptions_Type)           :: HeatXferGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type)          :: HeatXferCellSetOptions
+      Type(MEF90HeatXferFaceSetOptions_Type)          :: HeatXferFaceSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type)        :: HeatXferVertexSetOptions
       Character(len=1),pointer                        :: dummychar(:)
       PetscSizeT                                      :: sizeofchar
@@ -202,6 +245,7 @@ Contains
       PetscCall(PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr))
       sizeofMEF90HeatXferGlobalOptions = size(transfer(HeatXferGlobalOptions,dummychar))*sizeofchar
       sizeofMEF90HeatXferCellSetOptions = size(transfer(HeatXferCellSetOptions,dummychar))*sizeofchar
+      sizeofMEF90HeatXferFaceSetOptions = size(transfer(HeatXferFaceSetOptions,dummychar))*sizeofchar
       sizeofMEF90HeatXferVertexSetOptions = size(transfer(HeatXferVertexSetOptions,dummychar))*sizeofchar
 
       MEF90HeatXFer_timeSteppingTypeList(1) = 'null'
@@ -382,7 +426,7 @@ Contains
 
       PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%timeSteppingType,MEF90HeatXFer_timeSteppingTypeList,default%timeSteppingType,'heatxfer_timeStepping_type','Type of heat transfer computation',ierr))
       PetscCall(PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'heatxfer_addNullSpace','Add null space to SNES',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferGlobalOptions%initialTemperature,default%initialTemperature,'heatxfer_initialTemp','[K] (T): Initial Temperature' ,ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferGlobalOptions%initialTemperature,default%initialTemperature,'heatxfer_initialTemperature','[K] (T): Initial Temperature' ,ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%boundaryTemperatureScaling,MEF90ScalingList,default%boundaryTemperatureScaling,'boundaryTemperature_scaling','Boundary temperature scaling',ierr))
 
@@ -413,14 +457,38 @@ Contains
       PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
 
       HeatXferCellSetOptions%advectionVector = default%advectionVector
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%externalTemperature,default%externalTemperature,'externalTemperature','Reference temperature T [K]',ierr))
-      PetscCall(PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTempemperature','Temperature boundary value',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
 
+#undef __FUNCT__
+#define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxFaceSetOptions"
+!!!
+!!!  
+!!!  PetscBagRegisterMEF90HeatXferCtxFaceSetOptions:
+!!!  
+!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   Subroutine PetscBagRegisterMEF90HeatXferCtxFaceSetOptions(bag,name,prefix,default,ierr)
+      PetscBag                                           :: bag
+      Character(len=*),Intent(IN)                        :: prefix,name
+      Type(MEF90HeatXferFaceSetOptions_Type),Intent(IN)  :: default
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Type(MEF90HeatXferFaceSetOptions_Type),pointer      :: HeatXferFaceSetOptions
+      PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(bag,HeatXferFaceSetOptions,ierr))
+      PetscCall(PetscBagSetName(bag,trim(name),"HeatXferFaceSetOptions MEF90 Heat transfer Face Set options",ierr))
+      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
+
+      PetscCall(PetscBagRegisterReal(bag,HeatXferFaceSetOptions%boundaryFlux,default%boundaryFlux,'boundaryFlux','[J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferFaceSetOptions%SurfaceThermalConductivity,default%SurfaceThermalConductivity,'SurfaceThermalConductivity','[J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferFaceSetOptions%externalTemperature,default%externalTemperature,'externalTemperature','Reference temperature T [K]',ierr))
+      PetscCall(PetscBagRegisterBool(bag,HeatXferFaceSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterReal(bag,HeatXferFaceSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
+   End Subroutine PetscBagRegisterMEF90HeatXferCtxFaceSetOptions
+   
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagRegisterMEF90HeatXferCtxVertexSetOptions"
 !!!
@@ -455,16 +523,17 @@ Contains
 !!!
 
    Subroutine MEF90HeatXferCtxSetFromOptions(heatXferCtx,prefix,defaultGlobalOptions, &
-                                              defaultCellSetOptions,defaultVertexSetOptions,ierr)
+                                              defaultCellSetOptions,defaultFaceSetOptions,defaultVertexSetOptions,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)             :: heatXferCtx
       Character(len=*),Intent(IN)                           :: prefix
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)      :: defaultGlobalOptions
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)     :: defaultCellSetOptions
+      Type(MEF90HeatXferFaceSetOptions_Type),Intent(IN)     :: defaultFaceSetOptions
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: defaultVertexSetOptions
       PetscErrorCode,Intent(INOUT)                          :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
-      Type(MEF90HeatXferCellSetOptions_Type)                :: myDefaultCellSetOptions
+      !Type(MEF90HeatXferCellSetOptions_Type)                :: myDefaultCellSetOptions
       Type(tIS)                                             :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set
@@ -489,8 +558,7 @@ Contains
       Do set = 1, size(setID)
          Write(setName,"('Cell set ',I4)") setID(set)
          Write(setprefix,"('cs',I4.4,'_')") setID(set)
-         mydefaultCellSetOptions = defaultCellSetOptions
-         PetscCall(PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr))
+         PetscCall(PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%CellSetOptionsBag(set),setName,setPrefix,defaultCellSetOptions,ierr))
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,"('\nRegistering cell set ',I4,' prefix: ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr))
@@ -510,8 +578,7 @@ Contains
       Do set = 1, size(setID)
          Write(setName,"('Face set ',I4)") setID(set)
          Write(setprefix,"('fs',I4.4,'_')") setID(set)
-         mydefaultCellSetOptions = defaultCellSetOptions
-         PetscCall(PetscBagRegisterMEF90HeatXferCtxCellSetOptions(heatXferCtx%FaceSetOptionsBag(set),setName,setPrefix,mydefaultCellSetOptions,ierr))
+         PetscCall(PetscBagRegisterMEF90HeatXferCtxFaceSetOptions(heatXferCtx%FaceSetOptionsBag(set),setName,setPrefix,defaultFaceSetOptions,ierr))
          If (MEF90CtxGlobalOptions%verbose > 0) Then
             Write(IOBuffer,"('\nRegistering face set ',I4,' prefix: ',A,'\n')") setID(set),trim(setprefix)
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,IOBuffer,ierr))

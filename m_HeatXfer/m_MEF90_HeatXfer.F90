@@ -310,7 +310,7 @@ Contains
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal,dm,ierr))
       PetscCall(DMCreateMatrix(dm,matTemp,iErr))
       PetscCall(MatSetOptionsPrefix(matTemp,"Temperature_",ierr))
-      !!! The matrix is not symmetric if teh advection vector is /= 0
+      !!! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
