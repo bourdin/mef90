@@ -1,23 +1,23 @@
 heatxfer:
   timestepping:
     type: transient 
-  initialtemp: 1.
+  initialTemperature: 1.
 verbose: 1
 time:
   min: 0
   max: 20
   numstep: 21
   interpolation: quadratic
-boundaryTemp:
+boundaryTemperature:
   scaling: constant
 cs0001:
   flux: 0.
   specificHeat: 1.
-cs0010:
-  flux: 0.
-  tempBC: yes
-  boundaryTemp: 0.
-cs0020:
-  flux: 0.
-  tempBC: yes
-  boundaryTemp: 1.
+fs0020:
+  boundaryFlux: 0.
+  TemperatureBC: yes
+  boundaryTemperature: 0.
+fs0030:
+  boundaryFlux: 0.
+  TemperatureBC: yes
+  boundaryTemperature: 1.

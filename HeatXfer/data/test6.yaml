@@ -1,7 +1,7 @@
 heatxfer:
   timestepping:
     type: transient 
-  initialtemp: 1.
+  initialTemperature: 1.
 verbose: 1
 time:
   min: 0
@@ -13,9 +13,9 @@ flux:
 cs0001:
   flux: 0.
   specificHeat: 1.
-cs0010:
-  flux: -1
-  tempBC: no
-cs0020:
-  flux: 1
-  tempBC: no
+fs0020:
+  boundaryFlux: -1
+  TemperatureBC: no
+fs0030:
+  boundaryFlux: 1
+  TemperatureBC: no
