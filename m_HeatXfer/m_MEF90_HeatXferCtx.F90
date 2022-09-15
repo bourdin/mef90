@@ -443,6 +443,7 @@ Contains
 !!!  PetscBagRegisterMEF90HeatXferCtxCellSetOptions:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions(bag,name,prefix,default,ierr)
@@ -459,7 +460,7 @@ Contains
       HeatXferCellSetOptions%advectionVector = default%advectionVector
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3_Ki,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
 
 #undef __FUNCT__

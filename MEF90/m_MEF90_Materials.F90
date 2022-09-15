@@ -389,18 +389,18 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3_Ki,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3_Ki,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3_Ki,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr))
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6_Ki,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr))
          Case(MEF90HookesLawTypeIsotropic)
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
@@ -469,18 +469,18 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6_Ki,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6_Ki,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6_Ki,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
             matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr))
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21_Ki,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr))
          Case(MEF90HookesLawTypeIsotropic)
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
