@@ -15,7 +15,7 @@ Program HeatXfer
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
                                                          
-   Type(tDM)                                          :: dm
+   Type(tDM)                                          :: dm,temperatureDM
    Type(tIS)                                          :: setIS,cellIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: numset,set
@@ -105,9 +105,9 @@ Program HeatXfer
    End If   
 
    !!! Create GLOBAL vectors for the unknown (temperature), residuals, etc
-   PetscCallA(VecGetDM(MEF90HeatXferCtx%temperatureLocal,dm,ierr)) 
+   PetscCallA(VecGetDM(MEF90HeatXferCtx%temperatureLocal,temperatureDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
-   PetscCallA(DMCreateGlobalVector(dm,temperature,ierr))
+   PetscCallA(DMCreateGlobalVector(temperatureDM,temperature,ierr))
    PetscCallA(PetscObjectSetName(temperature,"Temperature",ierr))
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
    PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
@@ -117,15 +117,15 @@ Program HeatXfer
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
-   ! If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
-   !    PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
-   ! Else
-   !    temperatureTSInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
-   !    temperatureTSInitialStep = time(1)
-   !    PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialStep,ierr))
-   !    !PetscCallA(TSGetAdapt(temperatureTS,temperatureTSAdapt,ierr))
-   !    !PetscCallA(TSAdaptSetFromOptions(temperatureTSAdapt,ierr))
-   ! End If
+   If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
+      PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
+   Else
+      temperatureTSInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
+      temperatureTSInitialStep = time(1)
+      PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialStep,ierr))
+      !PetscCallA(TSGetAdapt(temperatureTS,temperatureTSAdapt,ierr))
+      !PetscCallA(TSAdaptSetFromOptions(temperatureTSAdapt,ierr))
+   End If
    
    !!! 
    !!! Allocate array of works and energies
@@ -155,8 +155,7 @@ Program HeatXfer
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          !!! Update fields
          PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
-         !PetscCallA(VecView(MEF90HeatXferCtx%temperatureLocal,PETSC_VIEWER_STDOUT_WORLD,ierr))
-         PetscCallA(DMLocalToGlobal(MEF90HeatXferCtx%megaDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+         PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
          !PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr))
       ! Case (MEF90HeatXFer_timeSteppingTypeTransient)
@@ -214,17 +213,16 @@ Program HeatXfer
    PetscCallA(PetscViewerDestroy(logViewer,ierr))
 
    !!! Clean up and exit nicely
-   ! PetscCallA(SNESView(temperatureSNES,PETSC_VIEWER_STDOUT_WORLD,ierr))
-   ! If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
-   !    PetscCallA(SNESDestroy(temperatureSNES,ierr))
-   ! Else
-   !    PetscCallA(TSDestroy(temperatureTS,ierr))
-   ! End If
+   If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
+      PetscCallA(SNESDestroy(temperatureSNES,ierr))
+   Else
+      PetscCallA(TSDestroy(temperatureTS,ierr))
+   End If
 
    PetscCallA(VecDestroy(temperatureResidual,ierr))
-   !PetscCallA(VecDestroy(temperature,ierr))
+   PetscCallA(VecDestroy(temperature,ierr))
+   PetscCallA(DMDestroy(temperatureDM,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
-
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))
