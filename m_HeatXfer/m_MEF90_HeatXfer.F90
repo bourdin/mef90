@@ -339,6 +339,7 @@ Contains
       dtol = 1.0D+10
       PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
       PetscCall(KSPSetFromOptions(kspTemp,ierr))
+      PetscCall(MatDestroy(matTemp,ierr))
    End Subroutine MEF90HeatXferCreateSNES
 
 #undef __FUNCT__

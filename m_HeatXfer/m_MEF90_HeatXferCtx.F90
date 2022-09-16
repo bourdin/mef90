@@ -396,10 +396,16 @@ Contains
          PetscCall(PetscBagDestroy(HeatXferCtx%FaceSetOptionsBag(set),ierr))
       End Do
       DeAllocate(HeatXferCtx%FaceSetOptionsBag)
+
       Do set = 1, size(HeatXferCtx%VertexSetOptionsBag)
          PetscCall(PetscBagDestroy(HeatXferCtx%VertexSetOptionsBag(set),ierr))
       End Do
       DeAllocate(HeatXferCtx%VertexSetOptionsBag)
+
+      Do set = 1, size(HeatXferCtx%MaterialPropertiesBag)
+         PetscCall(PetscBagDestroy(HeatXferCtx%MaterialPropertiesBag(set),ierr))
+      End Do
+      DeAllocate(HeatXferCtx%MaterialPropertiesBag)
 
       PetscCall(DMDestroy(HeatXferCtx%megaDM,ierr))
    End Subroutine MEF90HeatXferCtxDestroy
