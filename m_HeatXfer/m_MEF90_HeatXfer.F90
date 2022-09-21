@@ -176,20 +176,18 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
-      Type(tVec),Intent(IN)                              :: temperatureVec
-      PetscReal,Intent(IN)                               :: t
+   Subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
-      PetscReal,Dimension(:),Pointer                     :: energy,work
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscReal,Dimension(:),Pointer                     :: energy,bodyWork,surfaceWork
+      PetscErrorCode,Intent(INOUT)                       :: ierr
    
       PetscInt                                           :: dim      
 
       PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         !PetscCall(MEF90HeatXFerEnergy2D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr))
+         PetscCall(MEF90HeatXFerEnergy2D(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
       Else If (dim == 3) Then
-         !PetscCall(MEF90HeatXFerEnergy3D(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr))
+         PetscCall(MEF90HeatXFerEnergy3D(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
       End If      
    End Subroutine MEF90HeatXFerEnergy
 

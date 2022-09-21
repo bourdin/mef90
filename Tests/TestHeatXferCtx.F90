@@ -13,10 +13,13 @@ Program  TestHeatXferCtx
    Type(tDM)                                          :: dm
    Type(tPetscSF)                                     :: naturalPointSF
 
-   PetscInt                                           :: step,dim
+   Type(tIS)                                          :: cellSetIS,faceSetIS
+   PetscInt,Dimension(:),Pointer                      :: cellSetID,faceSetID
+   PetscInt                                           :: step,dim,set,numCellSet,numFaceSet
    PetscReal,Dimension(:),Pointer                     :: time
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    PetscBool                                          :: flg
+   PetscReal,dimension(:),Pointer                     :: energy,bodyWork,surfaceWork
 
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
       MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
@@ -118,14 +121,42 @@ Program  TestHeatXferCtx
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%megaDM,MEF90Mathium3D,MEF90Ctx,ierr))
    End If   
 
+   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM,MEF90CellSetLabelName,cellSetIS,ierr))
+   PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,cellSetIS,ierr))
+   PetscCallA(IsGetSize(cellSetIS,numCellSet,ierr))
+   PetscCallA(ISGetIndicesF90(cellSetIS,cellSetID,ierr))
+
+   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM,MEF90FaceSetLabelName,faceSetIS,ierr))
+   PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,faceSetIS,ierr))
+   PetscCallA(IsGetSize(faceSetIS,numFaceSet,ierr))
+   PetscCallA(ISGetIndicesF90(faceSetIS,faceSetID,ierr))
+
+   Allocate(energy(numCellSet))
+   Allocate(bodyWork(numCellSet))
+   Allocate(surfaceWork(numFaceSet))
+
    !!! Analysis loop:
    Do step = 1, size(time)
       Write(IOBuffer,'("Step: ",I4," Analysis time: ",ES12.5,"\n")') step,time(step)
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
       PetscCallA(VecSet(MEF90HeatXferCtx%temperatureLocal,time(step),ierr))
       PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+      PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
+      Do set = 1, numCellSet
+         Write(*,'("   Cell set ",I4," energy:       ",ES12.5," body work: ",ES12.5)') cellSetID(set),energy(set),bodyWork(set)
+      End Do
+      Do set = 1, numFaceSet
+         Write(*,'("   Face set ",I4," surface work: ",ES12.5)') faceSetID(set),surfaceWork(set)
+      End Do
       PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
    End Do ! step
+   DeAllocate(energy)
+   DeAllocate(bodyWork)
+   DeAllocate(surfaceWork)
+   PetscCallA(ISGetIndicesF90(faceSetIS,faceSetID,ierr))
+   PetscCallA(ISDestroy(faceSetIS,ierr))
+   PetscCallA(ISGetIndicesF90(cellSetIS,cellSetID,ierr))
+   PetscCallA(ISDestroy(cellSetIS,ierr))
 
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))

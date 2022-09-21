@@ -300,74 +300,141 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXFerEnergy(temperatureVec,t,MEF90HeatXferCtx,energy,work,ierr)
-      Type(tVec),Intent(IN)                           :: temperatureVec
-      PetscReal,Intent(IN)                            :: t
+   Subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
-      PetscReal,Dimension(:),Pointer                  :: energy,work
+      PetscReal,Dimension(:),Pointer                  :: energy,bodyWork,surfaceWork
       PetscErrorCode,Intent(INOUT)                    :: ierr
    
-      ! Type(SectionReal)                               :: temperatureSec,fluxSec,externalTemperatureSec
-      ! Type(IS)                                        :: CellSetGlobalIS,setIS,setISdof
-      ! PetscInt,dimension(:),Pointer                   :: setID,SetIdx
-      ! PetscInt                                        :: set,QuadratureOrder,numCell
-      ! Type(MEF90HeatXferCellSetOptions_Type),pointer  :: cellSetOptions
-      ! Type(MEF90_MATPROP),pointer                     :: matpropSet
-      ! Type(VecScatter)                                :: ScatterSecToVec,ScatterSecToVecCell
-      ! Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
-      ! Type(MEF90ElementType)                         :: elemType
-      ! Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90CtxGlobalOptions
-      ! Type(MEF90HeatXferGlobalOptions_Type),pointer   :: MEF90HeatXferGlobalOptions
-      ! PetscReal                                       :: myEnergy,myWork
+      Type(tDM)                                       :: dmTemperature
+      Type(tIS)                                       :: setIS,setPointIS
+      PetscInt,dimension(:),Pointer                   :: setID,setPointID
+      PetscInt                                        :: set,QuadratureOrder
+      PetscInt                                        :: cell, iDof,iGauss
+      Type(MEF90HeatXferCellSetOptions_Type),pointer  :: cellSetOptions
+      Type(MEF90HeatXferFaceSetOptions_Type),pointer  :: faceSetOptions
+      Type(MEF90_MATPROP),pointer                     :: matpropSet
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer   :: elem
+      Type(MEF90ElementType)                          :: elementType
+      DMPolytopeType                                  :: cellType
+      Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90CtxGlobalOptions
+      Type(MEF90HeatXferGlobalOptions_Type),pointer   :: MEF90HeatXferGlobalOptions
+      PetscReal,Dimension(:),Pointer                  :: TemperatureDof
+      Type(MEF90_VECT)                                :: gradTemperatureCell
+      PetscReal                                       :: TemperatureCell
+      PetscReal                                       :: myEnergy,myBodyWork,mySurfaceWork
       
       
-      ! energy = 0.0_Kr
-      ! work   = 0.0_Kr
-      ! Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr);CHKERRQ(ierr)
-      ! Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
-   
-      ! !!! Create dof-based sections
-      ! Call SectionRealDuplicate(MEF90HeatXferCtx%DMScalSec,temperatureSec,ierr);CHKERRQ(ierr)
-      ! Call SectionRealToVec(temperatureSec,MEF90HeatXferCtx%DMScalScatter,SCATTER_REVERSE,temperatureVec,ierr);CHKERRQ(ierr) 
+      energy      = 0.0_Kr
+      bodyWork    = 0.0_Kr
+      surfaceWork = 0.0_Kr
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
+      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+      PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal,dmTemperature,ierr))
+         
+      !!! cell-based energies
+      PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      If (setIS /= PETSC_NULL_IS) Then
+         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         Do set = 1,size(setID)
+            PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
+            If (setPointIS /= PETSC_NULL_IS) Then
+               Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
+               Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
+         
+               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
+               QuadratureOrder = elementType%order * 2
+               PetscCall(MEF90ElementCreate(dmTemperature,setPointIS,elem,QuadratureOrder,elementType,ierr))
 
-      ! !!! Create cell based sections, and allocate required pointers
-      ! Call SectionRealDuplicate(MEF90HeatXferCtx%cellDMScalSec,fluxSec,ierr);CHKERRQ(ierr)
-      ! Call SectionRealToVec(fluxSec,MEF90HeatXferCtx%cellDMScalScatter,SCATTER_REVERSE,MEF90HeatXferCtx%flux,ierr);CHKERRQ(ierr) 
+               myEnergy      = 0.0_Kr
+               Do cell = 1, size(setPointID)
+                  !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+                  !!! If this happens, we will need to protect this loop
+                  PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                  Do iGauss = 1,size(elem(cell)%Gauss_C)
+                     gradTemperatureCell = 0.0_Kr
+                     Do iDof = 1, size(elem(cell)%BF(:,1))
+                        gradTemperatureCell = gradTemperatureCell + temperatureDof(iDof) * elem(cell)%Grad_BF(iDof,iGauss)
+                     End Do ! iDof
+                     myEnergy = myEnergy + ((matpropSet%ThermalConductivity * gradTemperatureCell) .dotP. gradTemperatureCell) * elem(cell)%Gauss_C(iGauss)
+                  End Do ! iGauss
+                  PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+               End Do ! cell
 
-      ! Call SectionRealDuplicate(MEF90HeatXferCtx%cellDMScalSec,externalTemperatureSec,ierr);CHKERRQ(ierr)
-      ! Call SectionRealToVec(externalTemperatureSec,MEF90HeatXferCtx%cellDMScalScatter,SCATTER_REVERSE,MEF90HeatXferCtx%externalTemperature,ierr);CHKERRQ(ierr) 
-      
-      ! Call DMMeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      ! Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      ! Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      ! Do set = 1,size(setID)
-      !    myenergy = 0.0_Kr
-      !    mywork = 0.0_Kr
-      !    Call DMMeshGetStratumIS(MEF90HeatXferCtx%DMScal,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-      !    Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
-      !    Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+               myBodyWork    = 0.0_Kr
+               If (cellSetOptions%flux /= 0.0_Kr) Then
+                  Do cell = 1, size(setPointID)
+                     !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+                     !!! If this happens, we will need to protect this loop
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                     Do iGauss = 1,size(elem(cell)%Gauss_C)
+                        temperatureCell = 0.0_Kr
+                        Do iDof = 1, size(elem(cell)%BF(:,1))
+                           temperatureCell = temperatureCell + temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
+                        End Do ! iDof
+                        myBodyWork = myBodyWork + temperatureCell *  cellSetOptions%flux * elem(cell)%Gauss_C(iGauss)
+                     End Do ! iGauss
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                  End Do ! cell
+               End If ! cellSetOptions%flux
+
+               PetscCall(MEF90ElementDestroy(elem,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            End If ! pointIS
+            PetscCall(ISDestroy(setPointIS,ierr))
+            PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
+            PetscCallMPI(MPI_AllReduce(myBodyWork,bodyWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
+         End Do ! set
+         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      End If ! setIS
+      PetscCall(ISDestroy(setIS,ierr))
+
+      !!! face-based energies
+      PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      If (setIS /= PETSC_NULL_IS) Then
+         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         Do set = 1,size(setID)
+            PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
+            If (setPointIS /= PETSC_NULL_IS) Then
+               Call PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr);CHKERRQ(ierr)         
          
-      !    elemType = MEF90knownElements(cellSetOptions%ElemTypeShortID)
-      !    QuadratureOrder = elemType%order * 2
-      !    Call MEF90ElementCreate(MEF90HeatXferCtx%DMScal,setIS,elem,QuadratureOrder,CellSetOptions%ElemTypeShortID,ierr);CHKERRQ(ierr)   
-         
-      !    Call MEF90DiffusionEnergySet(myenergy,temperatureSec,externalTemperatureSec,MEF90HeatXferCtx%DMScal,matpropSet%ThermalConductivity,cellSetOptions%SurfaceThermalConductivity,setIS,elem,elemType,ierr);CHKERRQ(ierr)
-      !    Call MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-         
-      !    If (MEF90HeatXferGlobalOptions%fluxScaling /= MEF90Scaling_Null) Then
-      !       Call MEF90DiffusionWorkSetCell(mywork,temperatureSec,MEF90HeatXferCtx%DMScal,fluxSec,setIS,elem,elemType,ierr);CHKERRQ(ierr)
-      !       Call MPI_AllReduce(myWork,work(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr);CHKERRQ(ierr)
-      !    End If
-      !    Call MEF90ElementDestroy(elem,ierr)
-      !    Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
-      ! End Do
-      ! Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      ! Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      
-      ! Call SectionRealDestroy(externalTemperatureSec,ierr);CHKERRQ(ierr)
-      ! Call SectionRealDestroy(fluxSec,ierr);CHKERRQ(ierr)
-      ! Call SectionRealDestroy(temperatureSec,ierr);CHKERRQ(ierr)
+               mySurfaceWork    = 0.0_Kr
+               If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
+                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
+                  PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
+                  QuadratureOrder = elementType%order * 2
+                  PetscCall(MEF90ElementCreate(dmTemperature,setPointIS,elem,QuadratureOrder,elementType,ierr))
+
+                  Do cell = 1, size(setPointID)
+                     !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+                     !!! If this happens, we will need to protect this loop
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                     Do iGauss = 1,size(elem(cell)%Gauss_C)
+                        temperatureCell = 0.0_Kr
+                        Do iDof = 1, size(elem(cell)%BF(:,1))
+                           temperatureCell = temperatureCell + temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
+                        End Do ! iDof
+                        mySurfaceWork = mySurfaceWork + temperatureCell *  faceSetOptions%boundaryFlux * elem(cell)%Gauss_C(iGauss)
+                     End Do ! iGauss
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                  End Do ! cell
+
+                  PetscCall(MEF90ElementDestroy(elem,ierr))
+                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               End If ! faceSetOptions%boundaryFlux
+            End If ! pointIS
+            PetscCall(ISDestroy(setPointIS,ierr))
+            PetscCallMPI(MPI_AllReduce(mySurfaceWork,surfaceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
+         End Do ! set
+         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      End If ! setIS
+      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90HeatXFerEnergy
+
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerIFunction"

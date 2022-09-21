@@ -184,9 +184,11 @@ Program  TestMassMatrix
                 If (dim == 2) Then
                     PetscCallA(MEF90ElementCreate(dm,setPointIS,elem2D,QuadratureOrder,cellSetElementType,ierr))
                     PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem2D,cellSetElementType,ierr))
+                    PetscCallA(MEF90ElementDestroy(elem2D,ierr))
                 Else
                     PetscCallA(MEF90ElementCreate(dm,setPointIS,elem3D,QuadratureOrder,cellSetElementType,ierr))
                     PetscCallA(MEF90_MassMatrixAssembleSet(M,dm,setType,setID(set),elem3D,cellSetElementType,ierr))
+                    PetscCallA(MEF90ElementDestroy(elem3D,ierr))
                 End If
                 PetscCallA(ISDestroy(setPointIS,ierr))
             End Do
