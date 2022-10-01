@@ -358,7 +358,7 @@ Contains
       Type(tDM)                                       :: dm
    
       PetscCall(VecGetDM(HeatXferCtx%temperatureLocal,dm,ierr))
-      PetscCall(DMDestroy(dm,ierr))
+      !PetscCall(DMDestroy(dm,ierr))
       PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
 
       PetscCall(VecGetDM(HeatXferCtx%ExternalTemperatureLocal,dm,ierr))

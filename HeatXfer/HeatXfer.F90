@@ -16,22 +16,21 @@ Program HeatXfer
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
                                                          
    Type(tDM)                                          :: dm,temperatureDM
-   Type(tIS)                                          :: setIS,cellIS,CellSetGlobalIS
+   Type(tIS)                                          :: setIS
    PetscInt,Dimension(:),Pointer                      :: setID
-   PetscInt                                           :: numset,set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,work
+   PetscInt                                           :: set
+   PetscReal,Dimension(:),Pointer                     :: time,energy,cellWork,faceWork
 
    PetscBool                                          :: flg
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
-   Integer                                            :: numfield
    
    Type(tSNES)                                        :: temperatureSNES
    Type(tTS)                                          :: temperatureTS
-   Type(tTSAdapt)                                     :: temperatureTSAdapt
+   !Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
 
-   PetscReal                                          :: temperatureTSInitialStep,temperatureTSInitialTime
+   PetscReal                                          :: temperatureTSInitialStep
    !PetscInt                                           :: tsTempmaxIter
    !PetscReal                                          :: t
    
@@ -58,19 +57,22 @@ Program HeatXfer
    Else
       ! we need to create the output file
       EXOFormat: block
-         PetscInt                                            :: numNodalVar = 1, numCellVar = 3, numGVar = 0
-         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
+         PetscInt                                            :: numNodalVar = 1, numCellVar = 1, numFaceVar = 2, numGVar = 0
+         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: faceVarName, nodalVarName, cellVarName, gVarName
 
          Allocate(nodalVarName(numNodalVar))
          Allocate(cellVarName(numCellVar))
+         Allocate(faceVarName(numFaceVar))
          Allocate(gVarName(numGVar))
          nodalVarName = ["Temperature        "]
-         cellVarName  = ["ExternalTemperature","Flux               ","BoundaryFlux       "]
+         cellVarName  = ["Flux               "]
+         faceVarName  = ["boundaryFlux       ","externalTemperature"]
          PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
          PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
+         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,faceVarName,time,ierr))
          DeAllocate(nodalVarName)
          DeAllocate(cellVarName)
+         DeAllocate(faceVarName)
          DeAllocate(gVarName)
       End block EXOFormat
    End If
@@ -131,7 +133,8 @@ Program HeatXfer
    !!! Allocate array of works and energies
    !!!
    Allocate(energy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
-   Allocate(work(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(cellWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(faceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
 
    !!!
    !!! Actual computations / time stepping
@@ -158,9 +161,9 @@ Program HeatXfer
          PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
          !PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr))
-      ! Case (MEF90HeatXFer_timeSteppingTypeTransient)
-      !    Write(IOBuffer,200) step,time(step)
-      !    PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
+      Case (MEF90HeatXFer_timeSteppingTypeTransient)
+         Write(IOBuffer,200) step,time(step)
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
       !    If (step > 1) Then
       !       !!! Update fields
       !       PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
@@ -184,29 +187,42 @@ Program HeatXfer
       End Select
 
       !!! Compute energies
-      ! PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,energy,work,ierr))
-      ! PetscCallA(DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr))
-      ! PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr)) 
-      ! PetscCallA(ISGetIndicesF90(CellSetGlobalIS,setID,ierr))
-      ! Do set = 1, size(setID)
-      !    Write(IOBuffer,101) setID(set),energy(set),work(set),energy(set)-work(set)
-      !    PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-      ! End Do
-      ! PetscCallA(ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr))
-      ! PetscCallA(ISDestroy(CellSetGlobalIS,ierr))
-      ! Write(IOBuffer,102) sum(energy),sum(work),sum(energy)-sum(work)
-      ! PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,cellWork,faceWork,ierr))
+      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      Do set = 1, size(setID)
+         Write(IOBuffer,101) setID(set),energy(set),cellWork(set),energy(set)-cellWork(set)
+         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      End Do
+      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISDestroy(setIS,ierr))
+
+      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      Do set = 1, size(setID)
+         Write(IOBuffer,103) setID(set),faceWork(set)
+         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      End Do
+      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISDestroy(setIS,ierr))
+
+      Write(IOBuffer,102) sum(energy),sum(cellWork)+sum(faceWork),sum(energy)-sum(cellWork)-sum(faceWork)
+      PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
       !!! Save results
       !PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("Solving transient step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
-102 Format("======= Total thermal energy: ",ES12.5," fluxes work: ",ES12.5," total: ",ES12.5,"\n")
+101 Format("cell set ",I4," thermal energy: ",ES12.5," flux work: ",ES12.5," total: ",ES12.5,"\n")
+103 Format("face set ",I4,"                              flux work: ",ES12.5,"\n")
+102 Format("======= Total thermal energy: ",ES12.5," flux work: ",ES12.5," total: ",ES12.5,"\n")
    
    DeAllocate(time)
    DeAllocate(energy)
-   DeAllocate(work)
+   DeAllocate(cellWork)
+   DeAllocate(faceWork)
    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
    PetscCallA(PetscLogView(logViewer,ierr))
    PetscCallA(PetscViewerFlush(logViewer,ierr))

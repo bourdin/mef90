@@ -57,13 +57,13 @@ Contains
       Select case (MEF90HeatXferGlobalOptions%boundaryTemperatureScaling)
       Case (MEF90Scaling_File)
          !!! Create a "Big Global Vector (BGV)" (global vector with space for constrained values) in natural ordering 
-         PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,ioVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
+         PetscCall(MEF90VecCreateIO(ioVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
          !!! Name it "Temperature" so that the proper field is obtained when calling MEF90EXOVecLoad
          PetscCall(PetscObjectSetName(ioVec,"Temperature",ierr))
          !!! Create a temporary vector since we only want to overwrite constrained values of the temperature
          PetscCall(VecDuplicate(MEF90HeatXferCtx%temperatureLocal,tmpVec,ierr))
          !!! Read from EXO file into the BGV in natural ordering
-         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
          !!! Copy all values from BGV into a local vector in PETSc ordering
          PetscCall(MEF90VecCopySF(ioVec,tmpVec,MEF90HeatXferCtx%IOToTemperatureSF,ierr))
          !!! Extract boundaryValues from tmpVec and copy them to MEF90HeatXferCtx%temperature
@@ -79,7 +79,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       Case (MEF90Scaling_File)
-         ! We don't know how to save boundary zonal vectors yet
+         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -88,9 +88,9 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
          Case (MEF90Scaling_File)
-            PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,ioVec,1_Ki,MEF90HeatXferCtx%fluxToIOSF,ierr))
+            PetscCall(MEF90VecCreateIO(ioVec,1_Ki,MEF90HeatXferCtx%fluxToIOSF,ierr))
             PetscCall(PetscObjectSetName(ioVec,"Flux",ierr))
-            PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+            PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%FluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
             PetscCall(MEF90VecCopySF(ioVec,tmpVec,MEF90HeatXferCtx%IOToFluxSF,ierr))
             PetscCall(VecDestroy(IOVec,ierr))
             Case (MEF90Scaling_Linear)
@@ -101,7 +101,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
       Case (MEF90Scaling_File)
-         ! Right now we don;t know how to load boundary zonal Vecs
+         PetscCall(MEF90EXOVecLoad(ioVec,MEF90HeatXferCtx%boundaryFluxToIOSF,MEF90HeatXferCtx%IOToBoundaryFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -270,13 +270,13 @@ Contains
       Type(tVec)                                         :: IOVec
 
       !!! Create a "big global Vector (BGV)" (global vector with space for constrained values) in natural ordering 
-      PetscCall(MEF90VecCreateIO(MEF90HeatXferCtx%MEF90Ctx,IOVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
+      PetscCall(MEF90VecCreateIO(IOVec,1_Ki,MEF90HeatXferCtx%temperatureToIOSF,ierr))
       !!! Name it "Temperature" so that the proper field is obtained when calling MEF90EXOVecView
       PetscCall(PetscObjectSetName(ioVec,"Temperature",ierr))
       !!! Copy all values into the BGV in natural ordering
       PetscCall(MEF90VecCopySF(MEF90HeatXferCtx%temperatureLocal,ioVec,MEF90HeatXferCtx%temperatureToIOSF,ierr))
       !!! Write the BGV
-      PetscCall(MEF90EXOVecView(ioVec,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+      PetscCall(MEF90EXOVecView(ioVec,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
       !!! Clean up temporary vector
       PetscCall(VecDestroy(IOVec,ierr))
    End Subroutine MEF90HeatXferViewEXO
