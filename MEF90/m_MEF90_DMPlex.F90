@@ -58,7 +58,7 @@ Module m_MEF90_DMPlex
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
               MEF90CellSectionCreate,                                                &
-              MEF90VecCopySF,MEF90IOSFCreate,                                        &
+              MEF90VecCopySF,MEF90IOSFCreate,MEF90BoundaryIOSFCreate,                &
               MEF90ConstraintSFCreate,MEF90VecGlobalToLocalConstraint,               &
               MEF90VecCreateIO,                                                      &
               MEF90CreateLocalVector,                                                &
@@ -788,10 +788,12 @@ Contains
 
         Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,cglSF,tempSF,invTempSF
         Type(tDM)                          :: dm
+        Character(len=PETSC_MAX_PATH_LEN)  :: vecname
 
         PetscCall(VecGetDM(v,dm,ierr))
         PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
         PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
+        PetscCall(PetscObjectGetName(v,vecname,ierr))
         If (MEF90Ctx%NumProcs > 1) Then
             PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
             PetscCall(DMGetNaturalSF(dm,naturalSF,ierr))
@@ -813,6 +815,61 @@ Contains
             iolsf = cglSF
         End If
     End subroutine MEF90IOSFCreate
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90BoundaryIOSFCreate"
+!!!
+!!!  
+!!!  MEF90BoundaryIOSFCreate: sf mapping between local and IO ordering and distribution for 
+!!!                           Vec defined on Face Sets
+!!!  
+!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+    Subroutine MEF90BoundaryIOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
+        Type(tVec),intent(IN)              :: v
+        Type(tPetscSF),intent(OUT)         :: liosf,iolsf
+        Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
+        PetscErrorCode,intent(INOUT)       :: ierr
+
+        Type(tPetscSF)                     :: naturalSF,ioSF,lcgSF,cglSF,tempSF,temp2SF,invTempSF,iosideSF,sideioSF
+        Type(tDM)                          :: dm
+        Character(len=PETSC_MAX_PATH_LEN)  :: vecname
+
+        PetscCall(VecGetDM(v,dm,ierr))
+        PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx,dm,lcgSF,ierr))
+        PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx,dm,cglSF,ierr))
+        PetscCall(CreateSideSF_Private(MEF90Ctx,dm,iosideSF,sideioSF,ierr))
+        PetscCall(PetscObjectGetName(v,vecname,ierr))
+        If (MEF90Ctx%NumProcs > 1) Then
+            PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx,dm,ioSF,ierr))
+            PetscCall(DMGetNaturalSF(dm,naturalSF,ierr))
+            PetscCall(PetscSFCompose(lcgSF,naturalSF,tempSF,ierr))
+            PetscCall(PetscSFCompose(tempSF,iosideSF,temp2SF,ierr))
+            PetscCall(PetscSFCompose(temp2SF,ioSF,liosf,ierr))
+            PetscCall(PetscSFDestroy(temp2SF,ierr))
+            PetscCall(PetscSFSetUp(liosf,ierr))
+            PetscCall(PetscSFDestroy(tempSF,ierr))
+            PetscCall(PetscSFCompose(naturalSF,iosideSF,temp2SF,ierr))
+            PetscCall(PetscSFCompose(temp2SF,ioSF,tempSF,ierr))
+            PetscCall(PetscSFDestroy(temp2SF,ierr))
+            PetscCall(PetscSFCreateInverseSF(tempSF,invTempSF,ierr))
+            PetscCall(PetscSFCompose(invTempSF,cglSF,iolsf,ierr))
+            PetscCall(PetscSFSetUp(iolsf,ierr))
+            PetscCall(PetscSFDestroy(ioSF,ierr))
+            PetscCall(PetscSFDestroy(cglSF,ierr))
+            PetscCall(PetscSFDestroy(lcgSF,ierr))
+            PetscCall(PetscSFDestroy(tempSF,ierr))
+            PetscCall(PetscSFDestroy(invTempSF,ierr))
+        Else
+            PetscCall(PetscSFCompose(lcgSF,iosideSF,liosf,ierr))
+            PetscCall(PetscSFCompose(sideioSF,cglSF,iolsf,ierr))
+            PetscCall(PetscSFDestroy(lcgSF,ierr))
+            PetscCall(PetscSFDestroy(cglSF,ierr))
+        End If
+        PetscCall(PetscSFDestroy(iosideSF,ierr))
+        PetscCall(PetscSFDestroy(sideioSF,ierr))
+    End subroutine MEF90BoundaryIOSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ConstraintSFCreate"
@@ -923,19 +980,20 @@ Contains
 !!!  (c) 2022      Alexis Marboeuf  marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90VecCreateIO(MEF90Ctx,v,bs,sf,ierr)
+    Subroutine MEF90VecCreateIO(v,bs,sf,ierr)
         Type(tPetscSF),Intent(IN)               :: sf
         Type(tVec),Intent(INOUT)                :: v
         PetscInt,Intent(IN)                     :: bs
-        Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         PetscErrorCode,Intent(INOUT)            :: ierr
 
+        MPI_Comm                                :: comm
         PetscInt                                :: nroots, nleaves
         Type(PetscSFNode),Dimension(:),Pointer  :: iremote
         PetscInt,Dimension(:),Pointer           :: ilocal
 
         PetscCall(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
-        PetscCall(VecCreateMPI(MEF90Ctx%Comm,nleaves,PETSC_DETERMINE,v,ierr))
+        PetscCall(PetscObjectGetComm(sf,comm,ierr))
+        PetscCall(VecCreateMPI(comm,nleaves,PETSC_DETERMINE,v,ierr))
         PetscCall(VecSetBlockSize(v,bs,ierr))
         
         DeAllocate(iremote)
@@ -1112,10 +1170,9 @@ Contains
         PetscErrorCode,intent(INOUT)            :: ierr
     
         Type(tVec)                              :: vnat,vio
-        Type(PetscLayout)                       :: natMap,ioMap
+        Type(PetscLayout)                       :: ioMap,natMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
-        PetscInt,dimension(:),Pointer           :: ioRange, remoteRange
-        PetscMPIInt                             :: remoteRank
+        PetscInt,dimension(:),Pointer           :: ioRange
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
     
         PetscCall(DMPlexCreateNaturalVector(dm,vnat,ierr))
@@ -1125,18 +1182,16 @@ Contains
         PetscCall(VecSetBlockSize(vio,bs,ierr))
         PetscCall(VecSetSizes(vio,PETSC_DETERMINE,globalSize,ierr))
         PetscCall(VecSetFromOptions(vio,ierr))
-        PetscCall(VecGetLayout(vnat, natMap, ierr))
         PetscCall(VecGetLayout(vio, ioMap, ierr))
+        PetscCall(VecGetLayout(vnat, natMap, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
         PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
-        PetscCall(PetscLayoutGetRangesF90(natMap, remoteRange, ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
             globalIndex = ioRange(MEF90Ctx%rank+1) + i
-            PetscCall(PetscLayoutFindOwner(natMap,globalIndex,remoteRank,ierr))
-            remote(i+1)%rank  = remoteRank
-            remote(i+1)%index = globalIndex - remoteRange(remoteRank+1)
+            remote(i+1)%rank  = 0
+            remote(i+1)%index = globalIndex
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
         ! PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
@@ -1291,5 +1346,144 @@ Contains
         ! PetscCall(PetscObjectSetName(sf,"CGlobal-To-Local SF",ierr))
         ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
-    End subroutine CreateCGlobalToLocalSF_Private                    
+    End subroutine CreateCGlobalToLocalSF_Private
+    
+#undef __FUNCT__
+#define __FUNCT__ "CreateSideSF_Private"
+!!!
+!!!  
+!!!  CreateSideSF_Private: 
+!!!  
+!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+        
+    Subroutine CreateSideSF_Private(MEF90Ctx,dm,sf,invSF,ierr)
+        Type(tDM),intent(IN)                    :: dm
+        Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
+        Type(tPetscSF),intent(OUT)              :: sf,invSF
+        PetscErrorCode,intent(INOUT)            :: ierr
+
+        Type(tIS)                               :: ssIS,gssIS,faceIS,facesIS
+        PetscInt,dimension(:),Pointer           :: ssID,faceID
+        Type(tPetscSF)                          :: migrationSF,tempSF
+        Type(tVec)                              :: localVec
+        PetscInt                                :: set,face,nroots,nleaves=0,i=1,totalleaves=0,numComponent,j=1,numSS,key
+        Type(PetscSFNode),dimension(:),Pointer  :: iremote
+        Type(tIS),dimension(:),Pointer          :: locfacesIS
+        PetscInt,dimension(:),Pointer           :: ilocal,permIndices,emptyInd,facesID,procSSID
+
+        PetscCall(DMGetLabelIdIS(dm, "Face Sets", gssIS,ierr))
+        PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,gssIS,ierr))
+        PetscCallA(ISGetSize(gssIS,numSS,ierr))
+        PetscCall(DMGetLabelIdIS(dm, "Face Sets", ssIS,ierr))
+        PetscCallA(DMPlexGetMigrationSF(dm,migrationSF,ierr))
+        PetscCallA(ISGetIndicesF90(ssIS, ssID,ierr))
+        Allocate(locfacesIS(numSS))
+        Allocate(procSSID(numSS))
+        Do set=1,numSS
+            procSSID(set) = -1
+        End Do
+        Do set=1,size(ssID)
+            PetscCall(ISLocate(gssIS,ssID(set),key,ierr))
+            If (key >= 0) Then
+                procSSID(key+1) = ssID(set)
+            End If
+        End Do
+        Do set = 1, numSS
+            PetscCallA(DMGetStratumIS(dm, "Face Sets", procSSID(set), faceIS,ierr))
+            If (faceIS /= PETSC_NULL_IS) Then
+                PetscCallA(ISGetIndicesF90(faceIS, faceID,ierr))
+            Else
+                Allocate(faceID(0))
+            End If
+            Allocate(ilocal(size(faceID)))
+            Allocate(iremote(size(faceID)))
+            Do face = 1,size(faceID)
+                iremote(face)%rank = MEF90Ctx%Rank
+                iremote(face)%index = face - 1
+                ilocal(face) = faceID(face)
+            End Do
+            PetscCall(PetscSFCreate(MEF90Ctx%Comm,tempSF,ierr))
+            PetscCall(PetscSFSetFromOptions(tempSF,ierr))
+            PetscCall(PetscSFSetGraph(tempSF,size(faceID),size(faceID),ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
+            PetscCall(PetscSFSetUp(tempSF,ierr))
+            If (MEF90Ctx%NumProcs > 1) Then
+                PetscCallA(PetscSFComposeInverse(migrationSF,tempSF,sf,ierr))
+                PetscCall(PetscSFDestroy(tempSF,ierr))
+            Else
+                PetscCallA(PetscSFCreateInverseSF(tempSF,sf,ierr))
+                PetscCall(PetscSFDestroy(tempSF,ierr))
+            End If
+            PetscCall(PetscSFSetUp(sf,ierr))
+            DeAllocate(ilocal)
+            DeAllocate(iremote)
+            If (faceIS /= PETSC_NULL_IS) Then
+                PetscCallA(ISRestoreIndicesF90(faceIS,faceID,ierr))
+            Else
+                DeAllocate(faceID)
+            End If
+            PetscCall(PetscSFGetGraph(sf,nroots,nleaves,emptyInd,iremote,ierr))
+            Allocate(ilocal(nleaves))
+            Do i=1,nleaves
+                ilocal(i) = iremote(i)%index
+            End Do
+            PetscCallA(ISCreateGeneral(MEF90Ctx%comm,nleaves,ilocal,PETSC_COPY_VALUES,locfacesIS(set),ierr))
+            PetscCallA(ISDestroy(faceIS,ierr))
+            PetscCall(PetscSFDestroy(sf,ierr))
+            DeAllocate(ilocal)
+            If (associated(emptyInd)) Then
+                If (size(emptyInd) >0) Then
+                    DeAllocate(emptyInd)
+                End If
+            End If
+            DeAllocate(iremote)
+        End Do
+        Do set = 1, numSS
+            PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,locfacesIS(set),ierr))
+        End Do
+        PetscCallA(ISConcatenate(MEF90Ctx%comm,numSS,locfacesIS,facesIS,ierr))
+        PetscCallA(ISGetIndicesF90(facesIS, faceID,ierr))
+        If (MEF90Ctx%rank == 0) Then
+            totalleaves = size(faceID)
+        End If
+        Allocate(facesID(totalleaves))
+        Allocate(permIndices(totalleaves))
+        Do i=1,totalleaves
+            permIndices(i) = i-1
+            facesID(i) = faceID(i)
+        End Do
+        PetscCallA(ISRestoreIndicesF90(facesIS, faceID,ierr))
+        PetscCallA(ISRestoreIndicesF90(ssIS, ssID,ierr))
+        PetscCall(PetscSortIntWithPermutation(totalleaves,facesID,permIndices,ierr))
+        PetscCallA(DMGetLocalVector(dm,localVec,ierr))
+        PetscCallA(VecGetBlockSize(localVec,numComponent,ierr))
+        PetscCallA(DMRestoreLocalVector(dm,localVec,ierr))
+        Allocate(iremote(numComponent*totalleaves))
+        Allocate(ilocal(numComponent*totalleaves))
+        Do i=1,totalleaves
+            Do j=1,numComponent
+                ilocal((i-1)*numComponent+j) = (i-1)*numComponent+j-1
+                iremote((i-1)*numComponent+j)%rank = MEF90Ctx%rank
+                iremote((i-1)*numComponent+j)%index = numComponent*permIndices(i) + j - 1
+            End Do
+        End Do
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,invSF,ierr))
+        PetscCall(PetscSFSetFromOptions(invSF,ierr))
+        PetscCall(PetscSFSetGraph(invSF,numComponent*totalleaves,numComponent*totalleaves,ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetUp(invSF,ierr))
+        PetscCallA(PetscSFCreateInverseSF(invSF,sf,ierr))
+        PetscCall(PetscSFSetUp(sf,ierr))
+        Do set=1,numSS
+            PetscCall(ISDestroy(locfacesIS(set),ierr))
+        End Do
+        DeAllocate(locfacesIS)
+        DeAllocate(permIndices)
+        DeAllocate(procSSID)
+        DeAllocate(facesID)
+        DeAllocate(ilocal)
+        DeAllocate(iremote)
+        PetscCallA(ISDestroy(gssIS,ierr))
+        PetscCallA(ISDestroy(ssIS,ierr))
+        PetscCallA(ISDestroy(facesIS,ierr))
+    End Subroutine CreateSideSF_Private
 End Module m_MEF90_DMPlex

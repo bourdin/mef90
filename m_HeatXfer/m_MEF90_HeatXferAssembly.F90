@@ -333,14 +333,14 @@ Contains
          
       !!! cell-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
-      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (setIS /= PETSC_NULL_IS) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (setPointIS /= PETSC_NULL_IS) Then
-               Call PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
-               Call PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)         
+               PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
+               PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
@@ -393,14 +393,13 @@ Contains
 
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
-      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (setIS /= PETSC_NULL_IS) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (setPointIS /= PETSC_NULL_IS) Then
-               Call PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr);CHKERRQ(ierr)         
-         
+              PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
                mySurfaceWork    = 0.0_Kr
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
                   PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
