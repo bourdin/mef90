@@ -141,8 +141,8 @@ Program vDef
    DeAllocate(MEF90DefMechCtx%temperature)
    
    !!!cumulatedDissipatedPlasticEnergy Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
    !Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
    
@@ -409,7 +409,7 @@ Program vDef
 
                Call VecCopy(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-               Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+               Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticDissipation,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
                ! Check for BT if necessary
                BTCheck: If ((MEF90DefMechGlobalOptions%BTInterval > 0) .AND. &
@@ -475,7 +475,7 @@ Program vDef
                End If
             End Do AltMin
 
-            Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
             EndStep: If (.NOT. BTActive) Then
                !!! Compute energies

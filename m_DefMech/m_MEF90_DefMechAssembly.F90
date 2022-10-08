@@ -939,7 +939,7 @@ Contains
          Call SectionRealToVec(plasticStrainSec,MEF90DefMechCtx%CellDMMatSScatter,SCATTER_REVERSE,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
          
          Call SectionRealDuplicate(MEF90DefMechCtx%CellDMScalSec,cumulatedDissipatedPlasticEnergySec,ierr);CHKERRQ(ierr)
-         Call SectionRealToVec(cumulatedDissipatedPlasticEnergySec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
+         Call SectionRealToVec(cumulatedDissipatedPlasticEnergySec,MEF90DefMechCtx%CellDMScalScatter,SCATTER_REVERSE,MEF90DefMechCtx%cumulatedPlasticDissipation,ierr);CHKERRQ(ierr)
       Else
          PlasticStrainSec%v = 0
          cumulatedDissipatedPlasticEnergySec%v = 0

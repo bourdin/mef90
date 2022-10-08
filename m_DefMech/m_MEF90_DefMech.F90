@@ -1142,8 +1142,8 @@ End Subroutine MEF90DefMechUpdateboundaryDamage
 
 
       If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
-         If (Associated(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy)) Then
-            Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
+         If (Associated(MEF90DefMechCtx%cumulatedPlasticDissipation)) Then
+            Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedPlasticDissipation,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                    MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
          Else
             Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedDissipatedPlasticEnergy field not associated, not saving. Use -cumulatedPlasticDissipationOffset 0 \n",ierr);CHKERRQ(ierr)
