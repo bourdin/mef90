@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1exp
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
@@ -16,7 +16,7 @@ module m_MEF90_DefMechAT1exp
 !!! a is convex if b > 1 and
 !!! a_b'(0) = -b / (1-e^{-b}) < -2 if b < 1.5
 !!!
-   Type, extends(MEF90_DefMechAT_Type)                 :: MEF90_DefMechAT1exp_Type
+   Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1exp_Type
       PetscReal                                        :: b
    Contains
       Procedure, pass(self)                            :: a   => aAT1exp
@@ -28,27 +28,27 @@ module m_MEF90_DefMechAT1exp
       Procedure, pass(self)                            :: D2w => D2wAT1exp
    end Type
 
-   interface MEF90_DefMechAT1exp_Type
-      module procedure MEF90_DefMechAT1exp_Constructor
+   interface MEF90DefMechAT1exp_Type
+      module procedure MEF90DefMechAT1exp_Constructor
    end interface
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DefMechAT1exp_Constructor"
+#define __FUNCT__ "MEF90DefMechAT1exp_Constructor"
 !!!
 !!!  
-!!!  MEF90_DefMechAT1exp_Constructor: the default constructor for a MEF90_DefMechAT1exp_Type
+!!!  MEF90DefMechAT1exp_Constructor: the default constructor for a MEF90_DefMechAT1exp_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DefMechAT1exp_Type) Function MEF90_DefMechAT1exp_Constructor(b)
+   Type(MEF90DefMechAT1exp_Type) Function MEF90DefMechAT1exp_Constructor(b)
       PetscReal,Intent(IN)                             :: b
       
-      MEF90_DefMechAT1exp_Constructor%b                 = b
-      MEF90_DefMechAT1exp_Constructor%cw                = 2.0_Kr / 3.0_Kr
-      MEF90_DefMechAT1exp_Constructor%aorder            = 2
-      MEF90_DefMechAT1exp_Constructor%worder            = 1
-      MEF90_DefMechAT1exp_Constructor%type              = 'MEF90_DefMechAT1exp'
-   End Function MEF90_DefMechAT1exp_Constructor
+      MEF90DefMechAT1exp_Constructor%b                 = b
+      MEF90DefMechAT1exp_Constructor%cw                = 2.0_Kr / 3.0_Kr
+      MEF90DefMechAT1exp_Constructor%aorder            = 2
+      MEF90DefMechAT1exp_Constructor%worder            = 1
+      MEF90DefMechAT1exp_Constructor%type              = 'MEF90_DefMechAT1exp'
+   End Function MEF90DefMechAT1exp_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1exp"
@@ -58,7 +58,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -82,7 +82,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -106,7 +106,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -129,7 +129,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
       wAT1exp = alpha
@@ -143,7 +143,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
       DwAT1exp = 1.0_Kr
@@ -157,7 +157,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wAT1exp(self,alpha)
-      Class(MEF90_DefMechAT1exp_Type),Intent(IN)       :: self
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
       D2wAT1exp = 0.0_Kr

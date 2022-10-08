@@ -10,9 +10,9 @@ Program TestATClass
    integer                 :: i
    PetscReal, dimension(N) :: alpha = [( (i-1.0_Kr)/(N-1.0_Kr), i=1,N)]
 
-   class(MEF90_DefMechAT_Type), allocatable :: AT
+   class(MEF90DefMechAT_Type), allocatable :: AT
 
-   AT = MEF90_DefMechAT1_Type()
+   AT = MEF90DefMechAT1_Type()
    write(*,*) 'AT1:'
    write(*,*) '       cw: ',AT%cw
    write(*,*) '   aorder: ',AT%aorder
@@ -22,7 +22,7 @@ Program TestATClass
       write(*,'(13x,7(ES12.5,2x))')alpha(i),AT%a(alpha(i)),AT%Da(alpha(i)),AT%D2a(alpha(i)),AT%w(alpha(i)),AT%Dw(alpha(i)),AT%D2w(alpha(i))
    End Do
 
-   AT = MEF90_DefMechAT2_Type()
+   AT = MEF90DefMechAT2_Type()
    write(*,*) 'AT2:'
    write(*,*) '       cw: ',AT%cw
    write(*,*) '   aorder: ',AT%aorder

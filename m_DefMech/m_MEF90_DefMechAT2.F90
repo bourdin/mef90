@@ -1,12 +1,12 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT2
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
 
-   Type, extends(MEF90_DefMechAT_Type)                 :: MEF90_DefMechAT2_Type
+   Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT2_Type
    Contains
       Procedure, pass(self)                            :: a   => aAT2
       Procedure, pass(self)                            :: Da  => DaAT2
@@ -17,24 +17,24 @@ module m_MEF90_DefMechAT2
       Procedure, pass(self)                            :: D2w => D2wAT2
    end Type
 
-   interface MEF90_DefMechAT2_Type
-      module procedure MEF90_DefMechAT2_Constructor
+   interface MEF90DefMechAT2_Type
+      module procedure MEF90DefMechAT2_Constructor
    end interface
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DefMechAT2_Constructor"
+#define __FUNCT__ "MEF90DefMechAT2_Constructor"
 !!!
 !!!  
-!!!  MEF90_DefMechAT2_Constructor: the default constructor for a MEF90_DefMechAT2_Type
+!!!  MEF90DefMechAT2_Constructor: the default constructor for a MEF90_DefMechAT2_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DefMechAT2_Type) Function MEF90_DefMechAT2_Constructor()
-      MEF90_DefMechAT2_Constructor%cw                = 0.5_Kr
-      MEF90_DefMechAT2_Constructor%aorder            = 2
-      MEF90_DefMechAT2_Constructor%worder            = 2
-      MEF90_DefMechAT2_Constructor%type              = 'MEF90_DefMechAT2'
-   End Function MEF90_DefMechAT2_Constructor
+   Type(MEF90DefMechAT2_Type) Function MEF90DefMechAT2_Constructor()
+      MEF90DefMechAT2_Constructor%cw                = 0.5_Kr
+      MEF90DefMechAT2_Constructor%aorder            = 2
+      MEF90DefMechAT2_Constructor%worder            = 2
+      MEF90DefMechAT2_Constructor%type              = 'MEF90DefMechAT2'
+   End Function MEF90DefMechAT2_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT2"
@@ -44,7 +44,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -63,7 +63,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -82,7 +82,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       D2aAT2 = 2.0_Kr
@@ -96,7 +96,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -115,7 +115,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -134,7 +134,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wAT2(self,alpha)
-      Class(MEF90_DefMechAT2_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT2_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       D2wAT2 = 2.0_Kr

@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechATLinSoft
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
@@ -13,7 +13,7 @@ module m_MEF90_DefMechATLinSoft
 !!! a_k(s) = (1-s)**2/(k+(1-k)(1-s)**2)
 !!! w(s)   = 1-(1-s)^2
 !!! cw = pi/4
-   Type, extends(MEF90_DefMechAT_Type)                 :: MEF90_DefMechATLinSoft_Type
+   Type, extends(MEF90DefMechAT_Type)                 :: MEF90DefMechATLinSoft_Type
       PetscReal                                        :: k
    Contains
       Procedure, pass(self)                            :: a   => aLinSoft
@@ -25,27 +25,27 @@ module m_MEF90_DefMechATLinSoft
       Procedure, pass(self)                            :: D2w => D2wLinSoft
    end Type
 
-   interface MEF90_DefMechATLinSoft_Type
-      module procedure MEF90_DefMechATLinSoft_Constructor
+   interface MEF90DefMechATLinSoft_Type
+      module procedure MEF90DefMechATLinSoft_Constructor
    end interface
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DefMechATLinSoft_Constructor"
+#define __FUNCT__ "MEF90DefMechATLinSoft_Constructor"
 !!!
 !!!  
-!!!  MEF90_DefMechATLinSoft_Constructor: the default constructor for a MEF90_DefMechATLinSoft_Type
+!!!  MEF90DefMechATLinSoft_Constructor: the default constructor for a MEF90_DefMechATLinSoft_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DefMechATLinSoft_Type) Function MEF90_DefMechATLinSoft_Constructor(k)
+   Type(MEF90DefMechATLinSoft_Type) Function MEF90DefMechATLinSoft_Constructor(k)
       PetscReal,Intent(IN)                                :: k
       
-      MEF90_DefMechATLinSoft_Constructor%k                 = k
-      MEF90_DefMechATLinSoft_Constructor%cw                = PETSC_PI/4.0_Kr
-      MEF90_DefMechATLinSoft_Constructor%aorder            = 2
-      MEF90_DefMechATLinSoft_Constructor%worder            = 2
-      MEF90_DefMechATLinSoft_Constructor%type              = 'MEF90_DefMechATLinSoft'
-   End Function MEF90_DefMechATLinSoft_Constructor
+      MEF90DefMechATLinSoft_Constructor%k                 = k
+      MEF90DefMechATLinSoft_Constructor%cw                = PETSC_PI/4.0_Kr
+      MEF90DefMechATLinSoft_Constructor%aorder            = 2
+      MEF90DefMechATLinSoft_Constructor%worder            = 2
+      MEF90DefMechATLinSoft_Constructor%type              = 'MEF90DefMechATLinSoft'
+   End Function MEF90DefMechATLinSoft_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aLinSoft"
@@ -55,7 +55,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -74,7 +74,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -94,7 +94,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -115,7 +115,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -135,7 +135,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -155,7 +155,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wLinSoft(self,alpha)
-      Class(MEF90_DefMechATLinSoft_Type),Intent(IN)    :: self
+      Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
       D2wLinSoft = -2.0_Kr

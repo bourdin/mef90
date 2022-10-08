@@ -8,12 +8,12 @@
 !!! Phase-field model of mode III dynamic fracture. Phys. Rev. Lett., 87(4):045501.
 
 module m_MEF90_DefMechATKKL
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
 
-   Type, extends(MEF90_DefMechAT_Type)                 :: MEF90_DefMechATKKL_Type
+   Type, extends(MEF90DefMechAT_Type)                 :: MEF90DefMechATKKL_Type
    Contains
       Procedure, pass(self)                            :: a   => aKKL
       Procedure, pass(self)                            :: Da  => DaKKL
@@ -24,23 +24,23 @@ module m_MEF90_DefMechATKKL
       Procedure, pass(self)                            :: D2w => D2wKKL
    end Type
 
-   interface MEF90_DefMechATKKL_Type
-      module procedure MEF90_DefMechATKKL_Constructor
+   interface MEF90DefMechATKKL_Type
+      module procedure MEF90DefMechATKKL_Constructor
    end interface
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DefMechATKKL_Constructor"
+#define __FUNCT__ "MEF90DefMechATKKL_Constructor"
 !!!
-!!!  MEF90_DefMechATKKL_Constructor: the default constructor for a MEF90_DefMechATKKL_Type
+!!!  MEF90DefMechATKKL_Constructor: the default constructor for a MEF90_DefMechATKKL_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DefMechATKKL_Type) Function MEF90_DefMechATKKL_Constructor()
-      MEF90_DefMechATKKL_Constructor%cw                = 0.7165753016381484_Kr
-      MEF90_DefMechATKKL_Constructor%aorder            = 3
-      MEF90_DefMechATKKL_Constructor%worder            = 1
-      MEF90_DefMechATKKL_Constructor%type              = 'MEF90_DefMechKKL'
-   End Function MEF90_DefMechATKKL_Constructor
+   Type(MEF90DefMechATKKL_Type) Function MEF90DefMechATKKL_Constructor()
+      MEF90DefMechATKKL_Constructor%cw                = 0.7165753016381484_Kr
+      MEF90DefMechATKKL_Constructor%aorder            = 3
+      MEF90DefMechATKKL_Constructor%worder            = 1
+      MEF90DefMechATKKL_Constructor%type              = 'MEF90DefMechKKL'
+   End Function MEF90DefMechATKKL_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aKKL"
@@ -49,7 +49,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -67,7 +67,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -85,13 +85,14 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
       PetscLogDouble                                   :: flops
       PetscErrorCode                                   :: ierr
 
       D2aKKL = 24.0_Kr * (1.0_Kr - alpha) - 36.0_Kr * (1.0_Kr - alpha)**2
       flops = 6.0
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function D2aKKL
 
 #undef __FUNCT__
@@ -102,7 +103,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
       PetscLogDouble                                   :: flops
       PetscErrorCode                                   :: ierr
@@ -120,7 +121,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
       PetscLogDouble                                   :: flops
       PetscErrorCode                                   :: ierr
@@ -138,7 +139,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wKKL(self,alpha)
-      Class(MEF90_DefMechATKKL_Type),Intent(IN)        :: self
+      Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
       PetscLogDouble                                   :: flops
       PetscErrorCode                                   :: ierr

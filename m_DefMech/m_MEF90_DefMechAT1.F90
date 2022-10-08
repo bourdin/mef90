@@ -1,12 +1,12 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
 
-   Type, extends(MEF90_DefMechAT_Type)                 :: MEF90_DefMechAT1_Type
+   Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1_Type
    Contains
       Procedure, pass(self)                            :: a   => aAT1
       Procedure, pass(self)                            :: Da  => DaAT1
@@ -17,24 +17,24 @@ module m_MEF90_DefMechAT1
       Procedure, pass(self)                            :: D2w => D2wAT1
    end Type
 
-   interface MEF90_DefMechAT1_Type
-      module procedure MEF90_DefMechAT1_Constructor
+   interface MEF90DefMechAT1_Type
+      module procedure MEF90DefMechAT1_Constructor
    end interface
 
 Contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DefMechAT1_Constructor"
+#define __FUNCT__ "MEF90DefMechAT1_Constructor"
 !!!
 !!!  
 !!!  MEF90_DefMechAT1_Constructor: the default constructor for a MEF90_DefMechAT1_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90_DefMechAT1_Type) Function MEF90_DefMechAT1_Constructor()
-      MEF90_DefMechAT1_Constructor%cw                = 2.0_Kr / 3.0_Kr
-      MEF90_DefMechAT1_Constructor%aorder            = 2
-      MEF90_DefMechAT1_Constructor%worder            = 1
-      MEF90_DefMechAT1_Constructor%type              = 'MEF90_DefMechAT1'
-   End Function MEF90_DefMechAT1_Constructor
+   Type(MEF90DefMechAT1_Type) Function MEF90DefMechAT1_Constructor()
+      MEF90DefMechAT1_Constructor%cw                = 2.0_Kr / 3.0_Kr
+      MEF90DefMechAT1_Constructor%aorder            = 2
+      MEF90DefMechAT1_Constructor%worder            = 1
+      MEF90DefMechAT1_Constructor%type              = 'MEF90DefMechAT1'
+   End Function MEF90DefMechAT1_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1"
@@ -44,7 +44,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -63,7 +63,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       PetscLogDouble                                   :: flops
@@ -82,7 +82,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       D2aAT1 = 2.0_Kr
@@ -96,7 +96,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       wAT1 = alpha
@@ -110,7 +110,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       DwAT1 = 1.0_Kr
@@ -124,7 +124,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wAT1(self,alpha)
-      Class(MEF90_DefMechAT1_Type),Intent(IN)          :: self
+      Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
       D2wAT1 = 0.0_Kr

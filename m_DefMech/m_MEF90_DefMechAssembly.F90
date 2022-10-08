@@ -75,7 +75,7 @@ Contains
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic,cellHasForce
       Type(MEF90_MATS)                                   :: inelasticStrainGauss,stressGaussPlus,stressGaussMinus,stressGauss
@@ -516,7 +516,7 @@ Contains
       Type(Vec)                                          :: damageOld
       PetscReal                                          :: damageMin,damageMax,damageMaxChange,cohesiveStiffness
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic
       PetscReal                                          :: cellDampingCoefficient
@@ -1013,7 +1013,7 @@ Contains
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(OUT)                         :: ierr
    
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: isElastic
       Type(SectionReal)                                  :: xSec
@@ -1204,7 +1204,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic,cellHasForce
       Type(MEF90_MATS)                                   :: inelasticStrainGauss,stressGaussPlus,stressGaussMinus,stressGauss,stressCell
@@ -1542,7 +1542,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: nullPtr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       !Class(MEF90_DefMechDrivingForce_Type), Allocatable :: drivingForce
       PetscBool                                          :: cellIsElastic
@@ -1907,7 +1907,7 @@ Contains
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemDamage
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: globalOptions
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       !Class(MEF90_DefMechDrivingForce_Type), Allocatable :: drivingForce
       PetscBool                                          :: cellIsElastic
@@ -2174,7 +2174,7 @@ Contains
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(OUT)                         :: ierr
    
-      Class(MEF90_DefMechAT_Type),Allocatable            :: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable            :: ATModel
       PetscBool                                          :: isElastic
       Type(IS)                                           :: CellSetGlobalIS,cellIS
       PetscInt,dimension(:),Pointer                      :: setID

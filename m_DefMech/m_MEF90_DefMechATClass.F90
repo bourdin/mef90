@@ -1,6 +1,6 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMechAT_class
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 
    Use m_MEF90
    Implicit none
@@ -12,11 +12,11 @@ Module m_MEF90_DefMechAT_class
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Type, abstract :: MEF90_DefMechAT_Type
+   Type, abstract :: MEF90DefMechAT_Type
       PetscReal                                        :: cw
       PetscInt                                         :: aOrder
       PetscInt                                         :: wOrder  
-      Character(len=MEF90MXSTRLEN)                    :: type
+      Character(len=MEF90MXSTRLEN)                     :: type
    Contains
       Procedure(ATInterface), pass(self), deferred     :: a
       Procedure(ATInterface), pass(self), deferred     :: Da
@@ -28,8 +28,8 @@ Module m_MEF90_DefMechAT_class
 
    Abstract Interface
       PetscReal function ATInterface(self,alpha)
-         import :: MEF90_DefMechAT_Type
-         Class(MEF90_DefMechAT_Type),Intent(IN)        :: self
+         import :: MEF90DefMechAT_Type
+         Class(MEF90DefMechAT_Type),Intent(IN)         :: self
          PetscReal                                     :: alpha
       End function ATInterface
    End Interface

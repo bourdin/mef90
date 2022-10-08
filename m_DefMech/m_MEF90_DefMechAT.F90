@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use m_MEF90_DefMechAT1
    use m_MEF90_DefMechAT1exp
    use m_MEF90_DefMechAT2
@@ -20,21 +20,21 @@ Contains
 !!!
    Subroutine MEF90DefMechGetATModel(cellSetOptions,ATModel,isElastic)
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      Class(MEF90_DefMechAT_Type),Allocatable,Intent(OUT):: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable,Intent(OUT):: ATModel
       PetscBool,Intent(OUT)                              :: isElastic
 
       isElastic = .FALSE.
       Select Case (cellSetOptions%damageType)
       Case (MEF90DefMech_damageTypeAT1,MEF90DefMech_damageTypeAT1Elastic)
-         ATModel = MEF90_DefMechAT1_Type()
+         ATModel = MEF90DefMechAT1_Type()
       Case (MEF90DefMech_damageTypeAT1exp,MEF90DefMech_damageTypeAT1expElastic)
-         ATModel = MEF90_DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
+         ATModel = MEF90DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
       Case (MEF90DefMech_damageTypeAT2,MEF90DefMech_damageTypeAT2Elastic)
-         ATModel = MEF90_DefMechAT2_Type()
+         ATModel = MEF90DefMechAT2_Type()
       Case (MEF90DefMech_damageTypeKKL,MEF90DefMech_damageTypeKKLElastic)
-         ATModel = MEF90_DefMechATKKL_Type()
+         ATModel = MEF90DefMechATKKL_Type()
       Case (MEF90DefMech_damageTypeLinSoft,MEF90DefMech_damageTypeLinSoftElastic)
-         ATModel = MEF90_DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
+         ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
       Case default
          Print*,__FUNCT__,': Unimplemented damage Type',cellSetOptions%damageType
          STOP  
