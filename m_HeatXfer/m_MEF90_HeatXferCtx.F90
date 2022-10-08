@@ -540,7 +540,6 @@ Contains
       PetscErrorCode,Intent(INOUT)                          :: ierr
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
-      !Type(MEF90HeatXferCellSetOptions_Type)                :: myDefaultCellSetOptions
       Type(tIS)                                             :: setIS
       PetscInt,Dimension(:),Pointer                         :: setID
       PetscInt                                              :: set

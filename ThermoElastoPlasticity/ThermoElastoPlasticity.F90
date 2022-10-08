@@ -249,9 +249,9 @@ Program ThermoElastoPlasticity
    Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
    Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
       !!!cumulatedDissipatedPlasticEnergy Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
 
@@ -406,7 +406,7 @@ Program ThermoElastoPlasticity
                Call VecAxPy(plasticStrainPrevious,-1.0_Kr,MEF90DefMechCtx%plasticStrain,ierr);CHKERRQ(ierr)
                !!! Calculate the Infinity norm in error on PlasticStrain
                Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
-               Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+               Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticDissipation,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
                !!! Sum The PlasticStrainPrevious with PlasticStrain
                !Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                !Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
@@ -461,7 +461,7 @@ Program ThermoElastoPlasticity
 
             !!! Update plasticstrainold & cumulatedDissipatedPlasticEnergy
             Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-            Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
 
          End Select

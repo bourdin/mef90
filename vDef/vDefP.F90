@@ -154,9 +154,9 @@ Program CoupledPlasticityDamage
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
 
    !!!cumulatedDissipatedPlasticEnergy Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
       
    Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
@@ -263,9 +263,9 @@ Program CoupledPlasticityDamage
             Call DMGetLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
             Call VecLoadExodusCell(MEF90DefMechCtx%cellDMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
                                          MEF90DefMechCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
-            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
-            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,ierr);CHKERRQ(ierr)
-            Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalBegin(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedPlasticDissipation,ierr);CHKERRQ(ierr)
+            Call DMLocalToGlobalEnd(MEF90DefMechCtx%cellDMScal,localVec,INSERT_VALUES,MEF90DefMechCtx%cumulatedPlasticDissipation,ierr);CHKERRQ(ierr)
+            Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
             Call DMRestoreLocalVector(MEF90DefMechCtx%cellDMScal,localVec,ierr);CHKERRQ(ierr)
          End IF
 
@@ -502,7 +502,7 @@ Program CoupledPlasticityDamage
                   Call VecNorm(plasticStrainPrevious,NORM_INFINITY,PlasticStrainMaxChange,ierr);CHKERRQ(ierr)
                   Call VecNorm(MEF90DefMechCtx%plasticStrain,NORM_INFINITY,RelativeAbsoluteplasticStrainATol,ierr);CHKERRQ(ierr)
                   RelativeAbsoluteplasticStrainATol=(1.0_Kr+RelativeAbsoluteplasticStrainATol)*MEF90DefMechGlobalOptions%plasticStrainATol
-                  Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+                  Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticDissipation,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
                   If (( PlasticStrainMaxChange <=  RelativeAbsoluteplasticStrainATol ) .and. ( ErrorEstimationWorkControlled <= 1E-4 )) Then
                      If ( ErrorEstimationWorkControlled /= 0 ) Write(IOBuffer,301) AltProjIter,ErrorEstimationWorkControlled
@@ -608,7 +608,7 @@ Program CoupledPlasticityDamage
 
          !!! Update plasticstrainold & cumulatedDissipatedPlasticEnergy
          Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-         Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+         Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
 
          Call MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
 

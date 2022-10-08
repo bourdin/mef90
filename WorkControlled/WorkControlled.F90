@@ -273,9 +273,9 @@ Program WorkControlled
    Call PetscObjectSetName(residualDamage,"residualDamage",ierr);CHKERRQ(ierr)
    Call MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residualDamage,ierr)
          !!!cumulatedDissipatedPlasticEnergy Vectors
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-   Call VecDuplicate(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
-   Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+   Call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+   Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    DeAllocate(MEF90DefMechCtx%temperature)
 
 
@@ -504,7 +504,7 @@ Program WorkControlled
 
                   Call VecDuplicate(MEF90DefMechCtx%PlasticStrain,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                   Call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,MEF90DefMechCtx%PlasticStrain,MEF90DefMechCtx%displacement,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
-                  Call VecWAXPY(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
+                  Call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticDissipation,1.0_Kr,cumulatedDissipatedPlasticEnergyOld,cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
 
                   !!! Evaluation of W and compare with the W_target
                   forceWorkSet      = 0.0_Kr
@@ -521,7 +521,7 @@ Program WorkControlled
 
                !!! Update plasticstrainold & cumulatedDissipatedPlasticEnergy
                Call VecCopy(MEF90DefMechCtx%plasticStrain,plasticStrainOld,ierr);CHKERRQ(ierr)
-               Call VecCopy(MEF90DefMechCtx%cumulatedDissipatedPlasticEnergy,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
+               Call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation,cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
                Call VecDestroy(pressureForce_1,ierr);CHKERRQ(ierr)
 
                !!! Compute energies

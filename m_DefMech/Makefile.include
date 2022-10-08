@@ -1,27 +1,27 @@
-MEF90_DEFMECH_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechCtx.o                \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly2D.o         \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly3D.o         \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity2D.o       \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity3D.o       \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass2D.o       \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass3D.o       \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitNone2D.o        \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitNone3D.o        \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitMasonry2D.o     \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitMasonry3D.o     \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHD2D.o          \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHD3D.o          \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitDeviatoric2D.o  \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitDeviatoric3D.o  \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHydrostatic2D.o \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHydrostatic3D.o \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplit2D.o            \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplit3D.o            \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATClass.o            \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT1.o                \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT1Exp.o             \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT2.o                \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATKKL.o              \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATLinSoft.o          \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT.o                 \
-                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMech.o
+MEF90_DEFMECH_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechCtx.o #               \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly2D.o         \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly3D.o         \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity2D.o       \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity3D.o       \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass2D.o       \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass3D.o       \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitNone2D.o        \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitNone3D.o        \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitMasonry2D.o     \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitMasonry3D.o     \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHD2D.o          \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHD3D.o          \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitDeviatoric2D.o  \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitDeviatoric3D.o  \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHydrostatic2D.o \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitHydrostatic3D.o \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplit2D.o            \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplit3D.o            \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATClass.o            \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT1.o                \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT1Exp.o             \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT2.o                \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATKKL.o              \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechATLinSoft.o          \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAT.o                 \
+                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMech.o
