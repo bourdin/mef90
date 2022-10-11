@@ -160,7 +160,7 @@ Program HeatXfer
          PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
          PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
-         !PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr))
+         PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
       Case (MEF90HeatXFer_timeSteppingTypeTransient)
          Write(IOBuffer,200) step,time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
@@ -211,7 +211,7 @@ Program HeatXfer
       Write(IOBuffer,102) sum(energy),sum(cellWork)+sum(faceWork),sum(energy)-sum(cellWork)-sum(faceWork)
       PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
       !!! Save results
-      !PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
+      PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("Solving transient step ",I4,", t=",ES12.5,"\n")

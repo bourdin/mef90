@@ -130,9 +130,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         !PetscCall(MEF90HeatXferOperator2D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferOperator2D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
       Else If (dim == 3) Then
-         !PetscCall(MEF90HeatXferOperator3D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferOperator3D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferOperator
    
@@ -147,11 +147,10 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferBilinearForm(snesTemp,x,A,M,MEF90HeatXferCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesTemp
       Type(tVec),Intent(IN)                              :: x
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
 
@@ -159,9 +158,9 @@ Contains
 
       PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         !PetscCall(MEF90HeatXferBilinearForm2D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferBilinearForm2D(snesTemp,x,A,M,MEF90HeatXferCtx,ierr))
       Else If (dim == 3) Then
-         !PetscCall(MEF90HeatXferBilinearForm3D(snesTemp,x,A,M,flg,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferBilinearForm3D(snesTemp,x,A,M,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferBilinearForm
 
