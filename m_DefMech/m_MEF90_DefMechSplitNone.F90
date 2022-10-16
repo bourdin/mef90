@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 #define MEF90_DEFMECHSPLITNONE_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitNone_Constructor,MEF90_DIM)D
@@ -88,12 +88,6 @@ Contains
       Type(MEF90_HOOKESLAW),Intent(IN)                   :: HookesLaw
       Type(MEF90_HOOKESLAW),Intent(OUT)                  :: D2EEDPlus,D2EEDMinus
 
-      Type(MEF90_TENS4OS)                                :: A
-      Type(MEF90_MATS)                                   :: D
-      Type(MEF90_MAT)                                    :: Pinv
-      PetscReal                                          :: E, nu,alpha
-      PetscErrorCode                                     :: ierr
-
       D2EEDPlus = HookesLaw
 
       D2EEDMinus%type = MEF90HookesLawTypeIsotropic
@@ -104,6 +98,7 @@ Contains
       D2EEDMinus%PoissonRatio  = 0.0_Kr
       D2EEDMinus%lambda        = 0.0_Kr 
       D2EEDMinus%mu            = 0.0_Kr
+      D2EEDMinus%BulkModulus   = 0.0_Kr
    End Subroutine D2EEDNone
 
 End Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D

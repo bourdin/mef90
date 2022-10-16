@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechDrivingForceDruckerPrager
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechDrivingForceDruckerPrager_class
    implicit none

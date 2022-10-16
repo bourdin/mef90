@@ -2,18 +2,20 @@ Module m_MEF90_Materials_Types
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
    Use m_MEF90_Ctx
+   Use m_MEF90_DMPlex
    Use petsc
    IMPLICIT NONE
 
    Type MEF90HookesLaw2D
       Type(Tens4OS2D)    :: fullTensor
+      Type(Tens4OS3D)    :: fullTensorLocal,fullTensor3D
       PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
       PetscBool          :: isPlaneStress
    End Type MEF90HookesLaw2D
 
    Type MEF90HookesLaw3D
-      Type(Tens4OS3D)    :: fullTensor
+      Type(Tens4OS3D)    :: fullTensor,fullTensorLocal
       PetscReal          :: lambda,mu,YoungsModulus,PoissonRatio,BulkModulus
       PetscEnum          :: type
 #if (PETSC_SIZEOF_INT == 4)
@@ -24,6 +26,17 @@ Module m_MEF90_Materials_Types
       PetscBool          :: padding = PETSC_FALSE
 #endif
    End Type MEF90HookesLaw3D
+
+   Type MEF90RotationMatrix3D
+      ! The Bunge (passive) convention is used. The rotation matrix transforms a vector from the global frame to the local frame.
+      ! - rotation of a vector:              [V_local]_i    = [R]_ij . [V_global]_j
+      ! - rotation of a 2nd order tensor:    [M_local]_ij   = [R]_ik . [M_global]_kl . [R^T]_lj
+      ! - rotation of a fourth order tensor: [C_local]_ijkl = [R]_ip . [R]_jq . [R]_kr . [R]_ls . [C_global]_pqrs 
+      Type(MAT3D)        :: fullTensor
+      PetscReal          :: phi1,Phi,phi2
+      Type(Vect3D)       :: V1,V2,V3
+      PetscBool          :: fromEuler
+   End Type MEF90RotationMatrix3D
 
    Type MEF90MatProp2D_Type
       PetscReal                     :: Density                                          ! rho
@@ -62,7 +75,13 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
-      Character(len=MEF90MXSTRLEN) :: Name
+      Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
+      PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
+      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
+      PetscReal                     :: ViscosityN                                       ! viscosity exponent
+      PetscReal                     :: Viscositydt                                      ! time step size
+      PetscReal                     :: m                                                ! equivalent stress exponent for rate-independent crystal plasticity
+      Character(len=MEF90MXSTRLEN)  :: Name
    End Type MEF90MatProp2D_Type
 
    Type MEF90MatProp3D_Type
@@ -102,7 +121,13 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
-      Character(len=MEF90MXSTRLEN) :: Name
+      Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
+      PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
+      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
+      PetscReal                     :: ViscosityN                                       ! viscosity exponent
+      PetscReal                     :: Viscositydt                                      ! time step size
+      PetscReal                     :: m                                                ! equivalent stress exponent for rate-independent crystal plasticity
+      Character(len=MEF90MXSTRLEN)  :: Name
    End Type MEF90MatProp3D_Type
 
    Enum,bind(c)
@@ -123,6 +148,18 @@ Module m_MEF90_Materials_Types
          Tens4OS2D(1.09890_Kr,0.32967_Kr,0.00000_Kr,                                   & ! HookesLaw XXXX,XXYY,XXXY
                               1.09890_Kr,0.00000_Kr,                                   & !                YYYY,YYXY
                                          0.38462_Kr),                                  & !                     XYXY
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! HookesLaw Local XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                           ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                                YXYX,YZXZ,YZXY
+                                                               0.38462_Kr,0.00000_Kr,  & !                                     XZXZ,XZXY
+                                                                          0.38462_Kr), & !        
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! HookesLaw 3D    XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                           ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                                YXYX,YZXZ,YZXY
+                                                               0.38462_Kr,0.00000_Kr,  & !                                     XZXZ,XZXY
+                                                                          0.38462_Kr), & ! 
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,0.0_Kr,                                            & ! lambda, mu, E, nu, kappa (lambda, mu, kappa will be recomputed)
          MEF90HookesLawTypeIsotropic,                                                  & ! type
          .FALSE.),                                                                     & ! isPlaneStress
@@ -155,6 +192,14 @@ Module m_MEF90_Materials_Types
       0.0_Kr,                                                                          & ! drivingForceGamma
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
+      MEF90RotationMatrix3D(MEF90Mat3DIdentity,0.0_Kr,0.0_Kr,0.0_Kr,                   & ! RotationMatrix, phi1, Phi, phi2,
+      Vect3D(1.0_Kr,0.0_Kr,0.0_Kr),Vect3D(0.0_Kr,1.0_Kr,0.0_Kr),                       & ! V1, V2,
+      Vect3D(0.0_Kr,0.0_Kr,1.0_Kr),.False.),                                           & ! V3, fromEuler
+      .FALSE.,                                                                         & ! isViscousPlasticity
+      1.0_Kr,                                                                          & ! ViscosityGamma0
+      1.0_Kr,                                                                          & ! ViscosityN
+      1.0_Kr,                                                                          & ! Viscositydt
+      1.0_Kr,                                                                          & ! m
       "MEF90Mathium2D")
 
    Type(MEF90MatProp3D_Type),Parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type(    &
@@ -165,12 +210,18 @@ Module m_MEF90_Materials_Types
       MEF90MatS3DIdentity,                                                             & ! ThermalConductivity
       MEF90MatS3DIdentity,                                                             & ! LinearThermalExpansion
       MEF90HookesLaw3D(                                                                &
-         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
-                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !      YYYY,YYZZ,YYYZ,YYXZ,YYXY
-                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !           ZZZZ ZZYZ,ZZXZ,ZZXY
-                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                YXYX,YZXZ,YZXY
-                                                               0.38462_Kr,0.00000_Kr,  & !                     XZXZ,XZXY
-                                                                          0.38462_Kr), & !                          XYXY
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! HookesLaw XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                     ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                          YXYX,YZXZ,YZXY
+                                                               0.38462_Kr,0.00000_Kr,  & !                               XZXZ,XZXY
+                                                                          0.38462_Kr), & !                                    XYXY
+         Tens4OS3D(1.34615_Kr,0.57692_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & ! HookesLaw Local XXXX,XXYY,XXZZ,XXYZ,XXXZ,XXXY
+                              1.34615_Kr,0.57692_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                      YYYY,YYZZ,YYYZ,YYXZ,YYXY
+                                         1.34615_Kr,0.00000_Kr,0.00000_Kr,0.00000_Kr,  & !                           ZZZZ ZZYZ,ZZXZ,ZZXY
+                                                    0.38462_Kr,0.00000_Kr,0.00000_Kr,  & !                                YXYX,YZXZ,YZXY
+                                                               0.38462_Kr,0.00000_Kr,  & !                                     XZXZ,XZXY
+                                                                          0.38462_Kr), & ! 
          0.0_Kr,0.0_Kr,1.0_Kr,.3_Kr,0.0_Kr,                                            & ! lambda, mu, E, nu, kappa (lambda, mu, kappa will be recomputed)
          MEF90HookesLawTypeIsotropic,                                                  & ! type
 #if (PETSC_SIZEOF_INT == 4)
@@ -206,12 +257,19 @@ Module m_MEF90_Materials_Types
       2,                                                                               & ! drivingForcep
       .FALSE.,                                                                         & ! isLinearIsotropicHardening
       .FALSE.,                                                                         & ! isNoPlCoupling
+      MEF90RotationMatrix3D(MEF90Mat3DIdentity,0.0_Kr,0.0_Kr,0.0_Kr,                   & ! RotationMatrix, phi1, Phi, phi2,
+      Vect3D(1.0_Kr,0.0_Kr,0.0_Kr),Vect3D(0.0_Kr,1.0_Kr,0.0_Kr),                       & ! V1, V2,
+      Vect3D(0.0_Kr,0.0_Kr,1.0_Kr),.False.),                                           & ! V3, fromEuler
+      .FALSE.,                                                                         & ! isViscousPlasticity
+      1.0_Kr,                                                                          & ! ViscosityGamma0
+      1.0_Kr,                                                                          & ! ViscosityN
+      1.0_Kr,                                                                          & ! Viscositydt
+      1.0_Kr,                                                                          & ! m
       "MEF90Mathium3D")
 End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
 #include "petsc/finclude/petsc.h"
-#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -233,8 +291,10 @@ Contains
       PetscBag                                :: bag
       type(MEF90MatProp2D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
+      PetscReal                               :: normV1,normV2,normV3
+      Type(Tens4OS3D)                         :: HookesLaw3D
 
-      Call PetscBagGetData(bag,data,ierr)
+      PetscCall(PetscBagGetData(bag,data,ierr))
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
@@ -249,12 +309,43 @@ Contains
                data%HookesLaw%BulkModulus = data%HookesLaw%lambda + data%HookesLaw%mu
             End If
       End Select
+      If (data%RotationMatrix%fromEuler) Then
+         data%RotationMatrix%fullTensor%XX =  cos(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)-sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%XY =  sin(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)+cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YX = -cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)-sin(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YY = -sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)+cos(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%XZ =  sin(data%RotationMatrix%phi2)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YZ =  cos(data%RotationMatrix%phi2)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZX =  sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZY = -cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZZ =  cos(data%RotationMatrix%Phi)
+      Else
+         normV1 = SQRT(data%RotationMatrix%V1%X*data%RotationMatrix%V1%X + data%RotationMatrix%V1%Y*data%RotationMatrix%V1%Y + data%RotationMatrix%V1%Z*data%RotationMatrix%V1%Z)
+         normV2 = SQRT(data%RotationMatrix%V2%X*data%RotationMatrix%V2%X + data%RotationMatrix%V2%Y*data%RotationMatrix%V2%Y + data%RotationMatrix%V2%Z*data%RotationMatrix%V2%Z)
+         normV3 = SQRT(data%RotationMatrix%V3%X*data%RotationMatrix%V3%X + data%RotationMatrix%V3%Y*data%RotationMatrix%V3%Y + data%RotationMatrix%V3%Z*data%RotationMatrix%V3%Z)
+         data%RotationMatrix%fullTensor%XX = data%RotationMatrix%V1%X / normV1
+         data%RotationMatrix%fullTensor%YX = data%RotationMatrix%V1%Y / normV1
+         data%RotationMatrix%fullTensor%ZX = data%RotationMatrix%V1%Z / normV1
+         data%RotationMatrix%fullTensor%XY = data%RotationMatrix%V2%X / normV2
+         data%RotationMatrix%fullTensor%YY = data%RotationMatrix%V2%Y / normV2
+         data%RotationMatrix%fullTensor%ZY = data%RotationMatrix%V2%Z / normV2
+         data%RotationMatrix%fullTensor%XZ = data%RotationMatrix%V3%X / normV3
+         data%RotationMatrix%fullTensor%YZ = data%RotationMatrix%V3%Y / normV3
+         data%RotationMatrix%fullTensor%ZZ = data%RotationMatrix%V3%Z / normV3
+      End If
+      HookesLaw3D = Tens4OSTransform(data%HookesLaw%fullTensorLocal,transpose(data%RotationMatrix%fullTensor))
+      data%HookesLaw%fullTensor3D = HookesLaw3D
+      data%HookesLaw%fullTensor%XXXX = HookesLaw3D%XXXX
+      data%HookesLaw%fullTensor%XXYY = HookesLaw3D%XXYY
+      data%HookesLaw%fullTensor%XXXY = HookesLaw3D%XXXY
+      data%HookesLaw%fullTensor%YYYY = HookesLaw3D%YYYY
+      data%HookesLaw%fullTensor%YYXY = HookesLaw3D%YYXY
+      data%HookesLaw%fullTensor%XYXY = HookesLaw3D%XYXY
    End Subroutine PetscBagGetDataMEF90MatProp2D
 End Module m_MEF90_Materials_Interface2D
 
 Module m_MEF90_Materials_Interface3D
 #include "petsc/finclude/petsc.h"
-#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
@@ -276,8 +367,9 @@ Contains
       PetscBag                                :: bag
       type(MEF90MatProp3D_Type),pointer       :: data
       PetscErrorCode                          :: ierr
+      PetscReal                               :: normV1,normV2,normV3
 
-      Call PetscBagGetData(bag,data,ierr)
+      PetscCall(PetscBagGetData(bag,data,ierr))
       Select case(data%HookesLaw%type)
          Case(MEF90HookesLawTypeFull)
             Continue
@@ -286,12 +378,36 @@ Contains
             data%HookesLaw%mu           = data%HookesLaw%YoungsModulus / (1.0_Kr + data%HookesLaw%PoissonRatio) * .5_Kr
             data%HookesLaw%BulkModulus  = data%HookesLaw%lambda + 2.0_Kr * data%HookesLaw%mu / 3.0_Kr
       End Select
+      If (data%RotationMatrix%fromEuler) Then
+         data%RotationMatrix%fullTensor%XX =  cos(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)-sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%XY =  sin(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)+cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YX = -cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)-sin(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YY = -sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%phi2)+cos(data%RotationMatrix%phi1)*cos(data%RotationMatrix%phi2)*cos(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%XZ =  sin(data%RotationMatrix%phi2)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%YZ =  cos(data%RotationMatrix%phi2)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZX =  sin(data%RotationMatrix%phi1)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZY = -cos(data%RotationMatrix%phi1)*sin(data%RotationMatrix%Phi)
+         data%RotationMatrix%fullTensor%ZZ =  cos(data%RotationMatrix%Phi)
+      Else
+         normV1 = SQRT(data%RotationMatrix%V1%X*data%RotationMatrix%V1%X + data%RotationMatrix%V1%Y*data%RotationMatrix%V1%Y + data%RotationMatrix%V1%Z*data%RotationMatrix%V1%Z)
+         normV2 = SQRT(data%RotationMatrix%V2%X*data%RotationMatrix%V2%X + data%RotationMatrix%V2%Y*data%RotationMatrix%V2%Y + data%RotationMatrix%V2%Z*data%RotationMatrix%V2%Z)
+         normV3 = SQRT(data%RotationMatrix%V3%X*data%RotationMatrix%V3%X + data%RotationMatrix%V3%Y*data%RotationMatrix%V3%Y + data%RotationMatrix%V3%Z*data%RotationMatrix%V3%Z)
+         data%RotationMatrix%fullTensor%XX = data%RotationMatrix%V1%X / normV1
+         data%RotationMatrix%fullTensor%YX = data%RotationMatrix%V1%Y / normV1
+         data%RotationMatrix%fullTensor%ZX = data%RotationMatrix%V1%Z / normV1
+         data%RotationMatrix%fullTensor%XY = data%RotationMatrix%V2%X / normV2
+         data%RotationMatrix%fullTensor%YY = data%RotationMatrix%V2%Y / normV2
+         data%RotationMatrix%fullTensor%ZY = data%RotationMatrix%V2%Z / normV2
+         data%RotationMatrix%fullTensor%XZ = data%RotationMatrix%V3%X / normV3
+         data%RotationMatrix%fullTensor%YZ = data%RotationMatrix%V3%Y / normV3
+         data%RotationMatrix%fullTensor%ZZ = data%RotationMatrix%V3%Z / normV3
+      End If
+      data%HookesLaw%fullTensor = Tens4OSTransform(data%HookesLaw%fullTensorLocal,transpose(data%RotationMatrix%fullTensor))
    End Subroutine PetscBagGetDataMEF90MatProp3D
 End Module m_MEF90_Materials_Interface3D
 
 Module m_MEF90_Materials
 #include "petsc/finclude/petsc.h"
-#include "petsc/finclude/petscbag.h"
    Use petsc
    Use m_MEF90_Materials_Types
    Use m_MEF90_Materials_Interface2D
@@ -328,7 +444,7 @@ Module m_MEF90_Materials
    PetscSizeT,protected   :: sizeofMEF90HookesLaw2D
    PetscSizeT,protected   :: sizeofMEF90HookesLaw3D
 
-   Character(len = MEF90MXSTRLEN),Dimension(5),protected :: MEF90HookesLawTypeList
+   Character(len =  MEF90MXSTRLEN) ,Dimension(5),protected   :: MEF90HookesLawTypeList
 
 Contains
 #undef __FUNCT__
@@ -339,7 +455,6 @@ Contains
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
-
    Subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode,intent(OUT)          :: ierr
 
@@ -350,7 +465,7 @@ Contains
       character(len=1),pointer            :: dummychar(:)
       PetscSizeT                          :: sizeofchar
 
-      Call PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr)
+      PetscCall(PetscDataTypeGetSize(PETSC_CHAR,sizeofchar,ierr))
       sizeofMEF90MatProp2D = size(transfer(matProp2D,dummychar))*sizeofchar
       sizeofMEF90MatProp3D = size(transfer(matProp3D,dummychar))*sizeofchar
       sizeofMEF90HookesLaw2D = size(transfer(HookesLaw2D,dummychar))*sizeofchar
@@ -370,9 +485,7 @@ Contains
 !!!  PetscBagRegisterMEF90MatProp2D:
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-
    Subroutine PetscBagRegisterMEF90MatProp2D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -389,23 +502,24 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-2)] (rho) Density',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3_Ki,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,3,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3_Ki,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,3,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3_Ki,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,3,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
-            matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,6_Ki,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law',ierr))
+            matprop%HookesLaw%fullTensorLocal = default%HookesLaw%fullTensorLocal
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensorLocal,21,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law in the local frame',ierr))
          Case(MEF90HookesLawTypeIsotropic)
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
             PetscCall(PetscBagRegisterBool(bag,matprop%HookesLaw%isPlaneStress,default%HookesLaw%isPlaneStress,'hookeslaw_planeStress','Use plane stress elasticity',ierr))
             matprop%HookesLaw%fulltensor = -1.D+30
+            matprop%HookesLaw%fulltensorLocal = -1.D+30
       End Select
 
       PetscCall(PetscBagRegisterReal(bag,matprop%internalLength,default%internalLength,'internalLength','[m] (l) Internal Length',ierr))
@@ -441,7 +555,22 @@ Contains
 
       PetscCall(PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr))
       PetscCall(PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr))
-      !Call PetscBagSetFromOptions(bag,ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%phi1,default%RotationMatrix%phi1,'RotationMatrix_phi1','[radians] (phi1) First Bunge-Euler angle',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%Phi,default%RotationMatrix%Phi,'RotationMatrix_Phi','[radians] (Phi) Second Bunge-Euler angle',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%phi2,default%RotationMatrix%phi2,'RotationMatrix_phi2','[radians] (phi2) Third Bunge-Euler angle',ierr))
+      matprop%RotationMatrix%V1 = default%RotationMatrix%V1
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V1,3,'RotationMatrix_V1','[] (V1) First column of the rotation matrix',ierr))
+      matprop%RotationMatrix%V2 = default%RotationMatrix%V2
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V2,3,'RotationMatrix_V2','[] (V2) Second column of the rotation matrix',ierr))
+      matprop%RotationMatrix%V3 = default%RotationMatrix%V3
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr))    
+      PetscCall(PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr))
+      PetscCall(PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr))
+
+      PetscCall(PetscBagRegisterReal(bag,matprop%m,default%m,'m','[unit-less] Equivalent stress exponent for rate-independent crystal plasticity',ierr))
    End Subroutine PetscBagRegisterMEF90MatProp2D
 
 #undef __FUNCT__
@@ -451,9 +580,7 @@ Contains
 !!!  PetscBagRegisterMEF90MatProp3D:
 !!!
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-
    Subroutine PetscBagRegisterMEF90MatProp3D(bag,name,prefix,default,ierr)
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
@@ -463,24 +590,24 @@ Contains
       Type(MEF90MatProp3D_Type),pointer      :: matprop
       PetscCall(PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr))
       PetscCall(PetscBagSetName(bag,trim(name),"MatProp3D object: material properties",ierr))
-      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix), ierr))
+      PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
 
       PetscCall(PetscBagRegisterString(bag,matprop%name,trim(default%name),'Name','',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%density,default%density,'Density','[kg.m^(-3)] (rho) Density',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%FractureToughness,default%FractureToughness,'FractureToughness','[N.m^(-1)] (G_c) Fracture toughness',ierr))
       matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6_Ki,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%toughnessAnisotropyMatrix,6,'toughnessAnisotropyMatrix','[] toughness Anisotropy Matrix',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%SpecificHeat,default%SpecificHeat,'SpecificHeat','[J.kg^(-1).K^(-1)] (Cp) Specific heat',ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6_Ki,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%ThermalConductivity,6,'ThermalConductivity','[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity',ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6_Ki,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%LinearThermalExpansion,6,'LinearThermalExpansion','[K^(-1)] (alpha) Linear thermal expansion matrix',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,matprop%HookesLaw%type,MEF90HookesLawTypeList,default%HookesLaw%type,'hookeslaw_type','Type of Hooke''s law',ierr))
       Select case(matprop%HookesLaw%type)
          Case (MEF90HookesLawTypeFull)
-            matprop%HookesLaw%fullTensor = default%HookesLaw%fullTensor
-            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensor,21_Ki,'HookesLaw','[N.m^(-2)] (A) Hooke''s law',ierr))
+            matprop%HookesLaw%fullTensorLocal = default%HookesLaw%fullTensorLocal
+            PetscCall(PetscBagRegisterRealArray(bag,matprop%HookesLaw%fullTensorLocal,21,'HookesLaw_tensor','[N.m^(-2)] (A) Hooke''s law in the local frame',ierr))
          Case(MEF90HookesLawTypeIsotropic)
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%YoungsModulus,default%HookesLaw%YoungsModulus,'hookeslaw_YoungsModulus','[N.m^(-2)] (E) Young''s Modulus',ierr))
             PetscCall(PetscBagRegisterReal(bag,matprop%HookesLaw%PoissonRatio,default%HookesLaw%PoissonRatio,'hookeslaw_PoissonRatio','[] (nu) Poisson Modulus',ierr))
@@ -491,11 +618,11 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,matprop%yieldStress,default%yieldStress,'yieldStress','[N.m^(-2)] (sigma_y) stress threshold for plasticity',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%residualYieldStress,default%residualYieldStress,'residualyieldStress','[unit-less] percentage of the yield stress',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%DuctileCouplingPower,default%DuctileCouplingPower,'DuctileCouplingPower','[] power of the coupling between the damage and the plasticity',ierr))
-      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
-      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
-      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
-      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
-      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel0,default%CoefficientCapModel0,'CoefficientCapModel0','C0 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel1,default%CoefficientCapModel1,'CoefficientCapModel1','C1 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModel2,default%CoefficientCapModel2,'CoefficientCapModel2','C2 in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientCapModelD,default%CoefficientCapModelD,'CoefficientCapModelD','CD in the Yield function: CD || dev(stress) || + C2 tr(stress)^2 + C1 tr(stress) - C0 <= 0',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%CoefficientDruckerPrager,default%CoefficientDruckerPrager,'CoefficientDruckerPrager','k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%CoeffF,default%CoeffF,'CoeffF','[unit-less] (F) coefficient F in the Hill yield criterion',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%CoeffG,default%CoeffG,'CoeffG','[unit-less] (G) coefficient G in the Hill yield criterion',ierr))
       PetscCall(PetscBagRegisterReal(bag,matprop%CoeffH,default%CoeffH,'CoeffH','[unit-less] (H) coefficient H in the Hill yield criterion',ierr))
@@ -519,7 +646,22 @@ Contains
 
       PetscCall(PetscBagRegisterBool(bag,matprop%isLinearIsotropicHardening,default%isLinearIsotropicHardening,'isLinearIsotropicHardening','[bool] Plasticity with Linear Isotropic Hardening',ierr))
       PetscCall(PetscBagRegisterBool(bag,matprop%isNoPlCoupling,default%isNoPlCoupling,'isNoPlCoupling','[bool] Coupling between damage and plastic dissipation',ierr))
-      !Call PetscBagSetFromOptions(bag,ierr)
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%phi1,default%RotationMatrix%phi1,'RotationMatrix_phi1','[radians] (phi1) First Bunge-Euler angle',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%Phi,default%RotationMatrix%Phi,'RotationMatrix_Phi','[radians] (Phi) Second Bunge-Euler angle',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%RotationMatrix%phi2,default%RotationMatrix%phi2,'RotationMatrix_phi2','[radians] (phi2) Third Bunge-Euler angle',ierr))
+      matprop%RotationMatrix%V1 = default%RotationMatrix%V1
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V1,3,'RotationMatrix_V1','[] (V1) First column of the rotation matrix',ierr))
+      matprop%RotationMatrix%V2 = default%RotationMatrix%V2
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V2,3,'RotationMatrix_V2','[] (V2) Second column of the rotation matrix',ierr))
+      matprop%RotationMatrix%V3 = default%RotationMatrix%V3
+      PetscCall(PetscBagRegisterRealArray(bag,matprop%RotationMatrix%V3,3,'RotationMatrix_V3','[] (V3) Third column of the rotation matrix',ierr))    
+      PetscCall(PetscBagRegisterBool(bag,matprop%RotationMatrix%fromEuler,default%RotationMatrix%fromEuler,'RotationMatrix_fromEuler','Define rotation matrix from Bunge-Euler angles',ierr))
+      PetscCall(PetscBagRegisterBool(bag,matprop%isViscousPlasticity,default%isViscousPlasticity,'isViscousPlasticity','[bool] Viscous plastic potential',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%ViscosityGamma0,default%ViscosityGamma0,'ViscosityGamma0','[s^(-1)] Reference plastic deformation rate',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%ViscosityN,default%ViscosityN,'ViscosityN','[unit-less] Viscosity exponent',ierr))
+      PetscCall(PetscBagRegisterReal(bag,matprop%Viscositydt,default%Viscositydt,'Viscositydt','[s] Viscosity time step size',ierr))
+
+      PetscCall(PetscBagRegisterReal(bag,matprop%m,default%m,'m','[unit-less] Equivalent stress exponent for rate-independent crystal plasticity',ierr))
    End Subroutine PetscBagRegisterMEF90MatProp3D
 
 
@@ -529,34 +671,32 @@ Contains
 !!!
 !!!  MEF90MatPropBagSetFromOptionsierr:
 !!!  MEF90MatPropBagSetFromOptions2D
-!!!  (c) 2012      Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
+!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
-
-   Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+   Subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag,dm,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(tDM),Intent(IN)                            :: Mesh
+      Type(tDM),Intent(IN)                            :: dm
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      
+
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
-      Character(len=MEF90MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Character(len=MEF90MXSTRLEN)                    :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
-      PetscCall(DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr))
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr) 
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
-         Write(setName,"('Cell set ',I4)") setID(set)
-         Write(setprefix,"('cs',I4.4,'_')") setID(set)
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
-            Write(IOBuffer,"('Registering materials properties for cell set ', I4,': ',A,'\n')") setID(set),trim(setprefix)
+            Write(IOBuffer,102) setID(set),trim(setprefix)
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
          PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp2D,MEF90MatPropBag(set),ierr))
@@ -568,6 +708,9 @@ Contains
       End Do
       PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
    End Subroutine MEF90MatPropBagSetFromOptions2D
 
 #undef __FUNCT__
@@ -577,33 +720,31 @@ Contains
 !!!  MEF90MatPropBagSetFromOptions3D:
 !!!
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-
-   Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,Mesh,defaultMaterial,MEF90Ctx,ierr)
+   Subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag,dm,defaultMaterial,MEF90Ctx,ierr)
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
-      Type(tDM),Intent(IN)                            :: Mesh
+      Type(tDM),Intent(IN)                            :: dm
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
       PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
-      
+
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
       PetscInt                                        :: numSet,set
-      Character(len=MEF90MXSTRLEN)                   :: setName,setprefix,IOBuffer
+      Character(len=MEF90MXSTRLEN)                    :: setName,setprefix,IOBuffer
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
-      PetscCall(DMGetLabelIdIS(Mesh,'Cell Sets',setIS,ierr))
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr) 
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
-         Write(setName,"('Cell set ',I4)") setID(set)
-         Write(setprefix,"('cs',I4.4,'_')") setID(set)
+         Write(setName,100) setID(set)
+         Write(setprefix,101) setID(set)
          If (MEF90GlobalOptions%verbose > 0) Then
-            Write(IOBuffer,"('Registering materials properties for cell set ', I4,': ',A,'\n')") setID(set),trim(setprefix)
+            Write(IOBuffer,102) setID(set),trim(setprefix)
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
          End If
          PetscCall(PetscBagCreate(PETSC_COMM_WORLD,sizeofMEF90MatProp3D,MEF90MatPropBag(set),ierr))
@@ -615,6 +756,9 @@ Contains
       End Do
       PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+102 Format('Registering materials properties for cell set ', I4,': ',A,'\n')
    End Subroutine MEF90MatPropBagSetFromOptions3D
 
 
@@ -725,14 +869,13 @@ Contains
 !!!  MEF90HookesLaw2DSum:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DSum(A,B)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DSum
 
-      Character(len=MEF90MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                 :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -774,14 +917,13 @@ Contains
 !!!  MEF90HookesLaw3DSum:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DSum(A,B)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DSum
 
-      Character(len=MEF90MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                 :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -809,14 +951,13 @@ Contains
 !!!  MEF90HookesLaw2DDiff:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DDiff(A,B)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw2D)                       :: MEF90HookesLaw2DDiff
 
-      Character(len=MEF90MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                 :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -858,14 +999,13 @@ Contains
 !!!  MEF90HookesLaw3DDiff:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DDiff(A,B)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A,B
       Type(MEF90HookesLaw3D)                       :: MEF90HookesLaw3DDiff
 
-      Character(len=MEF90MXSTRLEN)                :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                 :: IOBuffer
       PetscErrorCode                               :: ierr
 
       If ((A%type == MEF90HookesLawTypeIsotropic) .AND. (B%type == MEF90HookesLawTypeIsotropic)) Then
@@ -932,7 +1072,6 @@ Contains
 !!!  ScalarXMEF90HookesLaw3D:
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function ScalarXMEF90HookesLaw3D(t,A)
@@ -963,7 +1102,6 @@ Contains
 !!!  MEF90HookesLaw2DXMatS2D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw2DXMatS2D(A,X)
@@ -995,7 +1133,6 @@ Contains
 !!!  MEF90HookesLaw2DXMatS3D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Function MEF90HookesLaw3DXMatS3D(A,X)
@@ -1031,9 +1168,7 @@ Contains
 !!!  MEF90HookesLaw2DXMat2D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-
    Function MEF90HookesLaw2DXMat2D(A,X)
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(Mat2D), Intent(IN)                      :: X
@@ -1050,7 +1185,7 @@ Contains
             MEF90HookesLaw2DXMat2D%XY = C2 * X%XY
             MEF90HookesLaw2DXMat2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMat2D%YX = C2 * X%YX
-            PetscCall(PetscLogFlops(12._pflop,ierr))
+            PetscCall(PetscLogFlops(11._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMat2D = A%fullTensor * X
             ! flops are counted in m_MEF90_LinAlg
@@ -1064,9 +1199,7 @@ Contains
 !!!  MEF90HookesLaw2DXMat3D:
 !!!
 !!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
-
    Function MEF90HookesLaw3DXMat3D(A,X)
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(Mat3D), Intent(IN)                      :: X
@@ -1096,4 +1229,5 @@ Contains
             ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw3DXMat3D
+
 End Module m_MEF90_Materials

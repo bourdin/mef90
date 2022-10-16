@@ -1,6 +1,6 @@
 Program TestATClass
 #include "../MEF90/mef90.inc"
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechAT
 

@@ -1,6 +1,6 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMechPlasticity_Type_mod
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use m_MEF90
    Use m_MEF90_DefMechCtx
    implicit NONE

@@ -1,5 +1,5 @@
 Program YAMLValidator
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use petsc
    IMPLICIT NONE
 

@@ -1,5 +1,5 @@
 module TestVonMises2D_mod
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use m_MEF90
    implicit NONE
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
@@ -84,7 +84,7 @@ contains
 end module TestVonMises2D_mod
 
 program testVonMises2D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use,intrinsic :: iso_c_binding
    use TestVonMises2D_mod
    use m_MEF90

@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 #define MEF90_DEFMECHSPLITMASONBY_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitMasonry_Constructor,MEF90_DIM)D
@@ -54,12 +54,12 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: nu,alpha
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
       Call Diagonalize(Strain,Pinv,D)
       !!! D is the strain tensor in the principal basis
@@ -113,12 +113,12 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: alpha,E,nu
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
 
       Call Diagonalize(Strain,Pinv,D)
@@ -143,7 +143,7 @@ Contains
          StrainPlus%XX = 0.0_Kr
          StrainPlus%YY = alpha / (1.0_Kr + alpha) * D%XX + D%YY
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
-         DEEDPlus  = MatRaRt(HookesLaw * StrainPlus,Pinv)
+         DEEDPlus  = MEF90MatRaRt(HookesLaw * StrainPlus,Pinv)
          DEEDMinus = HookesLaw * Strain - DEEDPlus
       Else
          DEEDPlus  = 0.0_Kr
@@ -157,12 +157,12 @@ Contains
          StrainPlus%YY = nu * D%XX + D%YY
          StrainPlus%ZZ = nu * D%XX + D%ZZ
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
-         DEEDPlus  = MatRaRt(HookesLaw * StrainPlus,Pinv)
+         DEEDPlus  = MEF90MatRaRt(HookesLaw * StrainPlus,Pinv)
          DEEDMinus = HookesLaw * Strain - DEEDPlus
       Else If (nu * (D%XX + D%YY) + (1.0_Kr - nu) * D%ZZ >= 0.0_Kr ) Then
          StrainPlus%ZZ = nu / (1.0_Kr - nu) * (D%XX + D%YY) + D%ZZ
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
-         DEEDPlus  = MatRaRt(HookesLaw * StrainPlus,Pinv)
+         DEEDPlus  = MEF90MatRaRt(HookesLaw * StrainPlus,Pinv)
          DEEDMinus = HookesLaw * Strain - DEEDPlus
       Else 
          DEEDPlus  = 0.0_Kr
@@ -199,12 +199,12 @@ Contains
       Type(MEF90_MAT)                                    :: Pinv
       PetscReal                                          :: E, nu,alpha
       PetscErrorCode                                     :: ierr
-      Character(len=MEF90MXSTRLEN)                      :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
 
       Call Diagonalize(Strain,Pinv,D)

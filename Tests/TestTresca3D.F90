@@ -1,5 +1,5 @@
 module TestTresca_mod
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use m_MEF90
    implicit NONE
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
@@ -108,7 +108,7 @@ contains
 end module TestTresca_mod
 
 program testTresca
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    use,intrinsic :: iso_c_binding
    use TestTresca_mod
    use m_MEF90

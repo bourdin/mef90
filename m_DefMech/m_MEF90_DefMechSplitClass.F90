@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 #define EEDINTERFACE   MEF90_APPEND(EED,MEF90_DIM)D
 #define DEEDINTERFACE  MEF90_APPEND(DEED,MEF90_DIM)D
 #define D2EEDINTERFACE MEF90_APPEND(D2EED,MEF90_DIM)D
@@ -80,13 +80,13 @@ Contains
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_SmoothPositiveSquare = 0.0_Kr
-         Call PetscLogFlops(2._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_SmoothPositiveSquare = (x+gammaOver2)**3 / 3.0_Kr / gamma
-         Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(6._pflop,ierr))
       Else
          MEF90_DefMechSplit_SmoothPositiveSquare = x**2 + gammaOver2**2/3.0_Kr
-         Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(6._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_SmoothPositiveSquare
 
@@ -110,13 +110,13 @@ Contains
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_DSmoothPositiveSquare = 0.0_Kr
-         Call PetscLogFlops(2._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_DSmoothPositiveSquare = (x+gammaOver2)**2 / gamma
-         Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(6._pflop,ierr))
       Else
          MEF90_DefMechSplit_DSmoothPositiveSquare = 2.0_Kr * x
-         Call PetscLogFlops(3._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(3._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_DSmoothPositiveSquare
 
@@ -140,13 +140,13 @@ Contains
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 0.0_Kr
-         Call PetscLogFlops(2._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 1.0_Kr + x / gammaOver2
-         Call PetscLogFlops(4._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(4._pflop,ierr))
       Else
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 2.0_Kr 
-         Call PetscLogFlops(2._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(2._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_D2SmoothPositiveSquare
 

@@ -1,7 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "../m_DefMech/mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 #include "finclude/petscbagdef.h"
 #define MEF90_HDRegularization 0.01_Kr
 

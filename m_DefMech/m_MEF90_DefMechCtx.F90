@@ -546,11 +546,11 @@ Contains
       PetscCall(MEF90CreateBoundaryCellVector(dm,dim,vecName,DefMechCtx%boundaryForce,ierr))
       vecName = "pressureForce"
       Allocate(DefMechCtx%pressureForce,stat=ierr)
-      PetscCall(MEF90CreateBoundaryCellVector(dm,1,vecName,DefMechCtx%pressureForce,ierr))
+      PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,DefMechCtx%pressureForce,ierr))
 
       vecName = "plasticStrain"
       Allocate(DefMechCtx%plasticStrain,stat=ierr)
-      PetscCall(MEF90CreateCellVector(dm,(dim*(dim+1))/2,vecName,DefMechCtx%plasticStrain,ierr))
+      PetscCall(MEF90CreateCellVector(dm,(dim*(dim+1_Ki))/2_Ki,vecName,DefMechCtx%plasticStrain,ierr))
       Allocate(DefMechCtx%cumulatedPlasticDissipation,stat=ierr)
       PetscCall(VecDuplicate(DefMechCtx%plasticStrain,DefMechCtx%cumulatedPlasticDissipation,ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%cumulatedPlasticDissipation,"cumulatedPlasticDissipation",ierr))
@@ -564,7 +564,6 @@ Contains
       PetscCall(VecGetDM(DefMechCtx%boundaryForce,dmList(4),ierr))
       PetscCall(VecGetDM(DefMechCtx%pressureForce,dmList(5),ierr))
       PetscCall(VecGetDM(DefMechCtx%plasticStrain,dmList(6),ierr))
-      !PetscCall(VecGetDM(DefMechCtx%cumulatedPlasticDissipation,dmList(7),ierr))
       PetscCall(DMCreateSuperDM(dmList,6_kI,PETSC_NULL_IS,DefMechCtx%megaDM,ierr))
       DeAllocate(dmList)
 

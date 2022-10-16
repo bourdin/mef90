@@ -214,11 +214,11 @@ Module m_MEF90_LinAlg
       Module Procedure HydrostaticPart2D,HydrostaticPart2DS,HydrostaticPart3D,HydrostaticPart3DS
    End Interface
 
-   Interface MatRaRt
+   Interface MEF90MatRaRt
       Module Procedure RaRtMat2D,RaRtMatS2D,RaRtMat3D,RaRtMatS3D
    End Interface
 
-   Interface MatRtaR
+   Interface MEF90MatRtaR
       Module Procedure RtaRMat2D,RtaRMatS2D,RtaRMat3D,RtaRMatS3D
    End Interface
 

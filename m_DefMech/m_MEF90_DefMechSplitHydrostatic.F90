@@ -2,7 +2,7 @@
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
 #define MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic_Constructor,MEF90_DIM)D
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
@@ -54,12 +54,12 @@ Contains
       PetscReal, Intent(OUT)                           :: EEDPlus,EEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
 
       EEDPlus   = MEF90_DefMechSplit_SmoothPositiveSquare(trace(Strain),self%gamma) * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr
@@ -83,17 +83,17 @@ Contains
       Type(MEF90_MATS),Intent(OUT)                     :: DEEDPlus,DEEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
 
       DEEDPlus  = MEF90_DefMechSplit_DSmoothPositiveSquare(trace(Strain),self%gamma) * ((HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr) * MEF90_MATS_IDENTITY
       DEEDMinus =  (HookesLaw * Strain) - DEEDPlus
-      Call PetscLogFlops(6._pflop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(6._pflop,ierr))
    End Subroutine
 
 #undef __FUNCT__
@@ -112,12 +112,12 @@ Contains
       Type(MEF90_HOOKESLAW),Intent(OUT)                :: D2EEDPlus,D2EEDMinus
 
       PetscErrorCode                                   :: ierr
-      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
+      Character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
       If (HookesLaw%type /= MEF90HookesLawTypeIsotropic) Then
          Write(IOBuffer,*) "Hydrostatic projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
-         Call PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr)
-         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer,ierr)
+         PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,IOBuffer)
       End If
 
       D2EEDMinus%fullTensor = 0.0_Kr
@@ -132,16 +132,16 @@ Contains
       D2EEDPlus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
       If (HookesLaw%isPlaneStress) Then
          D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + D2EEDPlus%mu) * 0.5_Kr
-         Call PetscLogFlops(14._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else
          D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + 2.0_Kr * D2EEDPlus%mu) * 0.5_Kr
-         Call PetscLogFlops(17._pflop,ierr);CHKERRQ(ierr)
+         PetscCall(PetscLogFlops(17._pflop,ierr))
       End If
 #else
       D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + D2EEDPlus%mu) * 0.5_Kr
       D2EEDPlus%YoungsModulus = D2EEDPlus%mu * (3.0_Kr * D2EEDPlus%lambda + 2.0_Kr * D2EEDPlus%mu) / (D2EEDPlus%lambda + D2EEDPlus%mu)
       D2EEDPlus%BulkModulus   = D2EEDPlus%lambda + D2EEDPlus%mu * 2.0_Kr / 3.0_Kr
-      Call PetscLogFlops(19._pflop,ierr);CHKERRQ(ierr)
+      PetscCall(PetscLogFlops(19._pflop,ierr))
 #endif
       D2EEDMinus = HookesLaw - D2EEDPlus
    End Subroutine

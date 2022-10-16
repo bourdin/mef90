@@ -1,5 +1,5 @@
 Program HookeLaw
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    IMPLICIT NONE
 

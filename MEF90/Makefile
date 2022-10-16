@@ -149,6 +149,7 @@ m_MEF90_NormsInterface.o: ${MEF90_DIR}/MEF90/m_MEF90_NormsInterface.F90 m_MEF90_
 
 m_MEF90_Materials.o: ${MEF90_DIR}/MEF90/m_MEF90_Materials.F90 \
         m_MEF90_Ctx.o \
+        m_MEF90_DMPlex.o \
         m_MEF90_LinAlg.o \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o

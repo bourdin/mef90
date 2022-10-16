@@ -1,6 +1,6 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMechDrivingForce_class
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
 
    Use m_MEF90
    Implicit none

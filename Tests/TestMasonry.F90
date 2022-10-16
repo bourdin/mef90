@@ -1,7 +1,7 @@
 Program TestSplit
 #include "../MEF90/mef90.inc"
 #include "../m_DefMech/mef90DefMech.inc"
-#include "finclude/petscdef.h"
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 
