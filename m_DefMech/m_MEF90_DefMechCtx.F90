@@ -48,19 +48,19 @@ Module m_MEF90_DefMechCtx_Type
    End Type MEF90DefMechCtx_Type
    
    Type MEF90DefMechGlobalOptions_Type
-      PetscInt                               :: timeSteppingType
-      PetscInt                               :: solverType
+      PetscEnum                              :: timeSteppingType
+      PetscEnum                              :: solverType
       PetscBool                              :: addDisplacementNullSpace
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
-      PetscInt                               :: boundaryDisplacementScaling
-      PetscInt                               :: displacementLowerBoundScaling
-      PetscInt                               :: displacementUpperBoundScaling
-      PetscInt                               :: boundaryDamageScaling
-      PetscInt                               :: bodyForceScaling
-      PetscInt                               :: boundaryForceScaling
-      PetscInt                               :: pressureForceScaling
-      PetscInt                               :: CrackPressureScaling
+      PetscEnum                              :: boundaryDisplacementScaling
+      PetscEnum                              :: displacementLowerBoundScaling
+      PetscEnum                              :: displacementUpperBoundScaling
+      PetscEnum                              :: boundaryDamageScaling
+      PetscEnum                              :: bodyForceScaling
+      PetscEnum                              :: boundaryForceScaling
+      PetscEnum                              :: pressureForceScaling
+      PetscEnum                              :: CrackPressureScaling
 
       PetscReal                              :: damageATol
       PetscInt                               :: maxit
@@ -87,7 +87,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscBool                              :: unilateralContactHybrid
       PetscReal                              :: DamageATLinSoftk
       PetscReal                              :: DamageAT1expb
-      PetscInt                               :: drivingForceType
+      PetscEnum                              :: drivingForceType
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
       PetscReal,Dimension(3)                 :: displacementLowerBound
