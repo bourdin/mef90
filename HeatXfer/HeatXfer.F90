@@ -47,8 +47,11 @@ Program HeatXfer
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
    Inquire(file=MEF90Ctx%resultFile,exist=flg)
    If (flg) Then
@@ -114,8 +117,6 @@ Program HeatXfer
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
    PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
 
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
@@ -161,6 +162,7 @@ Program HeatXfer
          PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
          PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+         PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
       Case (MEF90HeatXFer_timeSteppingTypeTransient)
          Write(IOBuffer,200) step,time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
@@ -237,7 +239,6 @@ Program HeatXfer
 
    PetscCallA(VecDestroy(temperatureResidual,ierr))
    PetscCallA(VecDestroy(temperature,ierr))
-   PetscCallA(DMDestroy(temperatureDM,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
