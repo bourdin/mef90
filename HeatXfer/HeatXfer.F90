@@ -166,26 +166,25 @@ Program HeatXfer
       Case (MEF90HeatXFer_timeSteppingTypeTransient)
          Write(IOBuffer,200) step,time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
-      !    If (step > 1) Then
-      !       !!! Update fields
-      !       PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-      !       PetscCallA(MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr))
-      !       !!! Make sure TS does not overstep
-      !       PetscCallA(TSGetTime(temperatureTS,t,ierr))
-      !       If (t < time(step)) Then
-      !          !PetscCallA(TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr))
-      !          !!! Something is up here. 
-      !          !!! replacing the constant 10000 with a variable leads to divergence of TSAdapt
-      !          !!! when using gcc
-      !          PetscCallA(TSSetDuration(temperatureTS,10000,time(step),ierr))
-      !          PetscCallA(TSSolve(temperatureTS,MEF90HeatXferCtx%temperature,time(step),ierr))
-      !          PetscCallA(TSGetTime(temperatureTS,t,ierr))
-      !          time(step) = t
-      !       Else
-      !          Write(IOBuffer,*) 'TS exceeded analysis time. Skipping step\n'
-      !          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-      !       End If
-      !    End If
+         If (step > 1) Then
+            !!! Update fields
+            PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+            !PetscCallA(MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr))
+            !!! Make sure TS does not overstep
+            !PetscCallA(TSGetTime(temperatureTS,t,ierr))
+            !If (t < time(step)) Then
+            !PetscCallA(TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr))
+            PetscCallA(TSSetMaxTime(temperatureTS,time(step),ierr))
+            PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+            PetscCallA(TSSolve(temperatureTS,temperature,ierr))
+            PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
+            !PetscCallA(TSGetTime(temperatureTS,t,ierr))
+            !time(step) = t
+            ! Else
+            !    Write(IOBuffer,*) 'TS exceeded analysis time. Skipping step\n'
+            !    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+            ! End If
+         End If
       End Select
 
       !!! Compute energies

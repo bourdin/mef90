@@ -202,9 +202,9 @@ Contains
 
       PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         !PetscCall(MEF90HeatXFerIFunction2D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXFerIFunction2D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
       Else If (dim == 3) Then
-         !PetscCall(MEF90HeatXFerIFunction3D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXFerIFunction3D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXFerIFunction
    
@@ -219,13 +219,12 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr)
+   Subroutine MEF90HeatXferIJacobian(tempTS,t,x,xdot,shift,A,M,MEF90HeatXferCtx,ierr)
       Type(tTS),Intent(IN)                               :: tempTS
       PetscReal,Intent(IN)                               :: t
       Type(tVec),Intent(IN)                              :: x,xdot
       PetscReal,Intent(IN)                               :: shift
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
       
@@ -233,9 +232,9 @@ Contains
 
       PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         !PetscCall(MEF90HeatXferIJacobian2D(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferIJacobian2D(tempTS,t,x,xdot,shift,A,M,MEF90HeatXferCtx,ierr))
       Else If (dim == 3) Then
-         !PetscCall(MEF90HeatXferIJacobian3D(tempTS,t,x,xdot,shift,A,M,flg,MEF90HeatXferCtx,ierr))
+         PetscCall(MEF90HeatXferIJacobian3D(tempTS,t,x,xdot,shift,A,M,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferIJacobian
    
@@ -370,7 +369,7 @@ Contains
       PetscCall(VecSet(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferGlobalOptions%initialTemperature,ierr))
       PetscCall(TSSetSolution(tsTemp,MEF90HeatXferCtx%temperatureLocal,ierr))
       PetscCall(TSSetInitialTimeStep(tsTemp,initialTime,initialStep,ierr))
-      !PetscCall(TSSetExactFinalTime(tsTemp,PETSC_TRUE,ierr))
+      PetscCall(TSSetExactFinalTime(tsTemp,TS_EXACTFINALTIME_MATCHSTEP,ierr))
       PetscCall(TSSetFromOptions(tsTemp,ierr))
       !!! 
       !!! Set some KSP options
