@@ -210,8 +210,8 @@ Contains
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
-      PetscCall(DMLocalToGlobalBegin(dmTemperature,locResidual,INSERT_VALUES,residual,ierr))
-      PetscCall(DMLocalToGlobalEnd(dmTemperature,locResidual,INSERT_VALUES,residual,ierr))
+      PetscCall(DMLocalToGlobalBegin(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
+      PetscCall(DMLocalToGlobalEnd(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locResidual,ierr))
    End Subroutine MEF90HeatXferOperator
@@ -559,6 +559,7 @@ Contains
       PetscCall(DMGetLocalVector(dmTemperature,locTemperatureDot,ierr))
       PetscCall(DMGetLocalVector(dmTemperature,locF,ierr))
       PetscCall(MEF90VecGlobalToLocalConstraint(x,MEF90HeatXferCtx%temperatureLocal,locTemperature,ierr))
+      PetscCall(VecSet(locTemperatureDot,0.0_Kr,ierr))
       PetscCall(DMGlobalToLocalBegin(dmTemperature,xdot,INSERT_VALUES,locTemperatureDot,ierr))
       PetscCall(DMGlobalToLocalEnd(dmTemperature,xdot,INSERT_VALUES,locTemperatureDot,ierr))
 
@@ -731,8 +732,8 @@ Contains
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
-      PetscCall(DMLocalToGlobalBegin(dmTemperature,locF,INSERT_VALUES,F,ierr))
-      PetscCall(DMLocalToGlobalEnd(dmTemperature,locF,INSERT_VALUES,F,ierr))
+      PetscCall(DMLocalToGlobalBegin(dmTemperature,locF,ADD_VALUES,F,ierr))
+      PetscCall(DMLocalToGlobalEnd(dmTemperature,locF,ADD_VALUES,F,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locTemperatureDot,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locF,ierr))

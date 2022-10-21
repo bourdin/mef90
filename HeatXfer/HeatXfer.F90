@@ -30,7 +30,7 @@ Program HeatXfer
    !Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
 
-   PetscReal                                          :: temperatureTSInitialStep
+   PetscReal                                          :: temperatureTSInitialStep,temperatureTSInitialTimeStep
    !PetscInt                                           :: tsTempmaxIter
    !PetscReal                                          :: t
    
@@ -123,9 +123,9 @@ Program HeatXfer
    If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
       PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
    Else
-      temperatureTSInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
+      temperatureTSInitialTimeStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
       temperatureTSInitialStep = time(1)
-      PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialStep,ierr))
+      PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialTimeStep,ierr))
       !PetscCallA(TSGetAdapt(temperatureTS,temperatureTSAdapt,ierr))
       !PetscCallA(TSAdaptSetFromOptions(temperatureTSAdapt,ierr))
    End If
