@@ -31,5 +31,4 @@ Program TestATClass
    Do i = 1, N
       write(*,'(13x,7(ES12.5,2x))')alpha(i),AT%a(alpha(i)),AT%Da(alpha(i)),AT%D2a(alpha(i)),AT%w(alpha(i)),AT%Dw(alpha(i)),AT%D2w(alpha(i))
    End Do
-
 End Program TestATClass

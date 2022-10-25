@@ -1,0 +1,118 @@
+ # MEF90: git changeset 0.2.0-186-gb80190d9-dirty 
+ # Copyright (c) 1998-2022 B. Bourdin <bourdin@mcmaster.ca> and co-authors 
+ # See CONTRIBUTORS.txt for a list of contributors 
+ # PETSC_ARCH=ventura-gcc12.2-arm64-basic-g 
+ # PETSC_DIR=/opt/HPC/petsc-main 
+ 
+ # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+ # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR 
+ # ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+ # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+ # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ 
+ # This software is released under the 2-clause BSD license (aka "Simplified BSD"  
+ # or "FreeBSD") license. See the LICENSE file in the root of the software distribution 
+ 
+ # Task      0/     2 running on processor bblaptop.math.mcmaster.ca 
+ # Task      1/     2 running on processor bblaptop.math.mcmaster.ca 
+ MEF90 Global Context:  
+  geometry file:       ../TestMeshes/SquareFaceSetCubit2CS.gen 
+  result file:         runTestConstraints.exo 
+  log file:            runTestConstraints.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 
+PetscSection Object: Section for boundary values of U 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 1 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0 constrained 0
+  (   5) dim  2 offset   2
+  (   6) dim  2 offset   4 constrained 1
+  (   7) dim  2 offset   6 constrained 0 1
+  (   8) dim  2 offset   8 constrained 0
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0 constrained 0
+  (   5) dim  2 offset   2 constrained 1
+  (   6) dim  2 offset   4 constrained 0
+  (   7) dim  2 offset   6
+  (   8) dim  2 offset   8 constrained 0 1
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10
+PetscSection Object: 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 1 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0 constrained 0
+  (   5) dim  2 offset   2
+  (   6) dim  2 offset   4 constrained 1
+  (   7) dim  2 offset   6 constrained 0 1
+  (   8) dim  2 offset   8 constrained 0
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0 constrained 0
+  (   5) dim  2 offset   2 constrained 1
+  (   6) dim  2 offset   4 constrained 0
+  (   7) dim  2 offset   6
+  (   8) dim  2 offset   8 constrained 0 1
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10

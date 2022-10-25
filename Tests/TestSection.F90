@@ -38,7 +38,7 @@ Implicit NONE
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
     distribute: Block 
         Type(tDM),target                    :: dmDist
-        PetscInt                            :: ovlp = 0
+        PetscInt                            :: ovlp = 2
         If (MEF90Ctx%NumProcs > 1) Then
             PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
             PetscCallA(DMDestroy(dm,ierr))
@@ -63,29 +63,22 @@ Implicit NONE
     PetscCallA(DMGetLocalSection(dmU,section,ierr))
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
     PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-U_view",ierr))
-    PetscCallA(PetscSectionDestroy(section,ierr))
-    PetscCallA(DMDestroy(dmU,ierr))
 
     PetscCallA(VecGetDM(U0,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,section,ierr))
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
     PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-U0_view",ierr))
-    PetscCallA(PetscSectionDestroy(section,ierr))
-    PetscCallA(DMDestroy(dmU,ierr))
+    ! dmU and section were obtained by a "Get" without a matching "Restore" so they do not need to be destroyed
 
     PetscCallA(VecGetDM(V,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,section,ierr))
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-sectionV_view",ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
-    PetscCallA(PetscSectionDestroy(section,ierr))
-    PetscCallA(DMDestroy(dmU,ierr))
 
     PetscCallA(VecGetDM(V0,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,section,ierr))
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OPTIONS,"-sectionV0_view",ierr))
     PetscCallA(VecViewFromOptions(V0,PETSC_NULL_OPTIONS,"-V0_view",ierr))
-    PetscCallA(PetscSectionDestroy(section,ierr))
-    PetscCallA(DMDestroy(dmU,ierr))
 
     PetscCallA(VecDestroy(U,ierr))
     PetscCallA(VecDestroy(U0,ierr))
@@ -99,3 +92,4 @@ Implicit NONE
 End Program  TestSection
  
        
+! mpirun -np 3 ./TestSection -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90dm_view -log_view

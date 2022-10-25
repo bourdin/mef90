@@ -248,10 +248,6 @@ Implicit NONE
     ! Cleanup DMs
     DeAllocate(time)
     ! Note that I would need to manually destroy these DM no matter what
-    PetscCallA(DMDestroy(dmU,ierr))
-    PetscCallA(DMDestroy(dmU0,ierr))
-    PetscCallA(DMDestroy(dmSigma,ierr))
-    PetscCallA(DMDestroy(dmSigma0,ierr))
     PetscCallA(DMDestroy(dm,ierr))
 
     ! Exit nicely
