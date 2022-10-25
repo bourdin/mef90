@@ -296,6 +296,14 @@ ExodusBuild: ExodusBuild.o  chkopts
 ### TESTS
 ###
 
+runTestHeatXferCtx: TestHeatXferCtx
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -verbose 1';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
 runTestMEF90Ctx: TestMEF90Ctx
 	@echo "         Running " $@
 	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -verbose 1';\
