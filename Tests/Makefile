@@ -296,10 +296,18 @@ ExodusBuild: ExodusBuild.o  chkopts
 ### TESTS
 ###
 
+runTestMEF90Ctx: TestMEF90Ctx
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -verbose 1';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
 runTestSection: TestSection
 	@echo "         Running " $@
 	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -mef90dm_view -sectionU_view -sectionU0_view -sectionV_view -sectionV0_view';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out $@.exo
@@ -307,7 +315,7 @@ runTestSection: TestSection
 runTestConstraints: TestConstraints
 	@echo "         Running " $@
 	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -mef90section_view';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out $@.exo
@@ -315,7 +323,7 @@ runTestConstraints: TestConstraints
 runTestConstraintIO: TestConstraintIO
 	@echo "         Running " $@
 	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -sectionU_view -sectionU0_view -sectionSigma_view -sectionSigma0_view';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out $@.exo
@@ -324,19 +332,10 @@ runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
 	-@ARGS='';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
-
-runTestMEF90Ctx: TestMEF90Ctx
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix ${MEF90_DIR}/TestMeshes/SquareNG-tri3';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
@@ -362,3 +361,4 @@ debug::
 	@echo PETSC_LIB           ${PETSC_LIB}
 	@echo MEF90_HEATXFER_OBJS ${MEF90_HEATXFER_OBJS}
 	@echo MEF90_INCLUDE       ${MEF90_INCLUDE}
+	@echo DIFF                ${DIFF}

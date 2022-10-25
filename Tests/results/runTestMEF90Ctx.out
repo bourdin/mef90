@@ -1,21 +1,21 @@
- MEF90 Global Context:  
-  prefix:       /Users/blaise/Development/mef90/mef90-sieve/TestMeshes/SquareNG-tri3 
-  log file:     /Users/blaise/Development/mef90/mef90-sieve/TestMeshes/SquareNG-tri3.log 
-PetscBag Object:  MEF90Ctx MEF90 Global options object
-  verbose = 1 ; Verbosity: level
-  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
-  time_min = 0 ; Time: min
-  time_max = 1 ; Time: max
-  time_numstep = 11 ; Time: number of time steps
-  file_format = EXOSingle; (MEF90FileFormat) I/O: file format.
  
-Mesh in 2 dimensions:
-  0-cells: 58 57
-  2-cells: 95 95
-Time values array: 
- 0:   0.0000e+00   1.0000e-01   2.0000e-01   3.0000e-01   4.0000e-01
- 5:   5.0000e-01   6.0000e-01   7.0000e-01   8.0000e-01   9.0000e-01
-10:   1.0000e+00
-=== 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       ../TestMeshes/SquareFaceSetCubit2CS.gen 
+  result file:         runTestMEF90Ctx.exo 
+  log file:            runTestMEF90Ctx.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 
  verbose is set 
  time_min is NOT set 
