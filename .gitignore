@@ -24,3 +24,5 @@ Tests/TestVecSetBCFromOptions
 Tests/TestHeatXferCtx
 
 Tests/TestDMPlexVecGetClosure
+
+Tests/HookeLaws
