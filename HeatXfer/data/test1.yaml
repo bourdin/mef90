@@ -11,7 +11,7 @@ Temperature:
       type: ksponly
     ksp:
       converged_reason:
-      monitor:
+      #monitor:
 cs0001:
   flux: 0.
   TemperatureBC: no

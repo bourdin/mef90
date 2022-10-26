@@ -32,7 +32,7 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(IN)          :: MEF90HeatXferCtx
       PetscErrorCode,Intent(INOUT)                    :: ierr
    
-      Type(tDM)                                       :: dmTemperature
+      Type(tDM)                                       :: dmTemperature,dmFlux,dmBoundaryFlux
       Type(tVec)                                      :: locTemperature,locResidual
       Type(tIS)                                       :: setIS,setPointIS
       PetscInt,dimension(:),Pointer                   :: setID,setPointID
@@ -141,6 +141,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based contributions
+      PetscCall(VecGetDM(MEF90HeatXferCtx%boundaryFluxLocal,dmBoundaryFlux,ierr))
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (setIS /= PETSC_NULL_IS) Then
@@ -161,13 +162,15 @@ Contains
                      residualDof = 0.0_Kr
                      !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                      !!! If this happens, we will need to protect this loop
-                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%boundaryFluxLocal,setPointID(cell),boundaryFluxDof,ierr))
+                     PetscCall(DMPlexVecGetClosure(dmBoundaryFlux,PETSC_NULL_SECTION,MEF90HeatXFerCtx%boundaryFluxLocal,setPointID(cell),boundaryFluxDof,ierr))
+!!! There is probably a better way using offset so that we don't need to do so many mallocs
+!!! We can factor out boundaryFluxDof(1) if we flip the iDof and iGauss loops                      
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           residualDof(iDof) = residualDof(iDof) - boundaryFluxDof(iDof)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(iDof) = residualDof(iDof) - boundaryFluxDof(1)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! iDof
                      End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%boundaryFluxLocal,setPointID(cell),boundaryFluxDof,ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmBoundaryFlux,PETSC_NULL_SECTION,MEF90HeatXFerCtx%boundaryFluxLocal,setPointID(cell),boundaryFluxDof,ierr))
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
                   End Do ! cell
                   DeAllocate(residualDof)
@@ -175,35 +178,35 @@ Contains
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%boundaryFlux
 
-               If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
-                  PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
-                  PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
-                  QuadratureOrder = elementType%order * 2
-                  PetscCall(MEF90ElementCreate(dmTemperature,setPointIS,elem,QuadratureOrder,elementType,ierr))
-                  Allocate(residualDof(size(elem(1)%BF(:,1))))
-                  Do cell = 1, size(setPointID)
-                     residualDof = 0.0_Kr
-                     !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
-                     !!! If this happens, we will need to protect this loop
-                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
-                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%externalTemperatureLocal,setPointID(cell),externalTemperatureDof,ierr))
-                     Do iGauss = 1,size(elem(cell)%Gauss_C)
-                        Do jDof = 1, size(elem(cell)%BF(:,1))
-                           Do iDof = 1, size(elem(cell)%BF(:,1))
-                              residualDof(jDof) = residualDof(jDof) + faceSetOptions%surfaceThermalConductivity*temperatureDof(iDof)*elem(cell)%BF(iDof,iGauss)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
-                           End Do ! iDof
-                           residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureDof(jDof)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
-                        End Do ! jDof
-                     End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%externalTemperatureLocal,setPointID(cell),externalTemperatureDof,ierr))
-                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
-                     PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
-                  End Do ! cell
-                  DeAllocate(residualDof)
-                  PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
-               End If ! faceSetOptions%surfaceThermalConductivity
+               ! If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
+               !    PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               !    PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
+               !    PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
+               !    QuadratureOrder = elementType%order * 2
+               !    PetscCall(MEF90ElementCreate(dmTemperature,setPointIS,elem,QuadratureOrder,elementType,ierr))
+               !    Allocate(residualDof(size(elem(1)%BF(:,1))))
+               !    Do cell = 1, size(setPointID)
+               !       residualDof = 0.0_Kr
+               !       !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+               !       !!! If this happens, we will need to protect this loop
+               !       PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+               !       PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%externalTemperatureLocal,setPointID(cell),externalTemperatureDof,ierr))
+               !       Do iGauss = 1,size(elem(cell)%Gauss_C)
+               !          Do jDof = 1, size(elem(cell)%BF(:,1))
+               !             Do iDof = 1, size(elem(cell)%BF(:,1))
+               !                residualDof(jDof) = residualDof(jDof) + faceSetOptions%surfaceThermalConductivity*temperatureDof(iDof)*elem(cell)%BF(iDof,iGauss)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+               !             End Do ! iDof
+               !             residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureDof(jDof)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+               !          End Do ! jDof
+               !       End Do ! iGauss
+               !       PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXFerCtx%externalTemperatureLocal,setPointID(cell),externalTemperatureDof,ierr))
+               !       PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+               !       PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
+               !    End Do ! cell
+               !    DeAllocate(residualDof)
+               !    PetscCall(MEF90ElementDestroy(elem,ierr))
+               !    PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               ! End If ! faceSetOptions%surfaceThermalConductivity
             End If ! pointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
