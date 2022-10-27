@@ -1,3 +1,0 @@
-#define ex_open     EXOPEN
-#define ex_get_init EXGINI
-#define ex_close    EXCLOS

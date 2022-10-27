@@ -30,7 +30,7 @@ Program HeatXfer
    !Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
 
-   PetscReal                                          :: temperatureTSInitialStep
+   PetscReal                                          :: temperatureTSInitialStep,temperatureTSInitialTimeStep
    !PetscInt                                           :: tsTempmaxIter
    !PetscReal                                          :: t
    
@@ -47,8 +47,11 @@ Program HeatXfer
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
    Inquire(file=MEF90Ctx%resultFile,exist=flg)
    If (flg) Then
@@ -114,17 +117,15 @@ Program HeatXfer
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
    PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
 
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
    If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then
       PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
    Else
-      temperatureTSInitialStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
+      temperatureTSInitialTimeStep = (time(size(time))-time(1)) / (size(time) - 1.0_Kr) / 10.0_Kr
       temperatureTSInitialStep = time(1)
-      PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialStep,ierr))
+      PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureTSInitialStep,temperatureTSInitialTimeStep,ierr))
       !PetscCallA(TSGetAdapt(temperatureTS,temperatureTSAdapt,ierr))
       !PetscCallA(TSAdaptSetFromOptions(temperatureTSAdapt,ierr))
    End If
@@ -160,30 +161,30 @@ Program HeatXfer
          PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
          PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
-         !PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_OBJECT,MEF90HeatXferCtx%temperature,ierr))
+         PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+         PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
       Case (MEF90HeatXFer_timeSteppingTypeTransient)
          Write(IOBuffer,200) step,time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
-      !    If (step > 1) Then
-      !       !!! Update fields
-      !       PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-      !       PetscCallA(MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr))
-      !       !!! Make sure TS does not overstep
-      !       PetscCallA(TSGetTime(temperatureTS,t,ierr))
-      !       If (t < time(step)) Then
-      !          !PetscCallA(TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr))
-      !          !!! Something is up here. 
-      !          !!! replacing the constant 10000 with a variable leads to divergence of TSAdapt
-      !          !!! when using gcc
-      !          PetscCallA(TSSetDuration(temperatureTS,10000,time(step),ierr))
-      !          PetscCallA(TSSolve(temperatureTS,MEF90HeatXferCtx%temperature,time(step),ierr))
-      !          PetscCallA(TSGetTime(temperatureTS,t,ierr))
-      !          time(step) = t
-      !       Else
-      !          Write(IOBuffer,*) 'TS exceeded analysis time. Skipping step\n'
-      !          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-      !       End If
-      !    End If
+         If (step > 1) Then
+            !!! Update fields
+            PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+            !PetscCallA(MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr))
+            !!! Make sure TS does not overstep
+            !PetscCallA(TSGetTime(temperatureTS,t,ierr))
+            !If (t < time(step)) Then
+            !PetscCallA(TSAdaptSetStepLimits(tsAdaptTemp,PETSC_DECIDE,(time(step)-time)/2.0_Kr,ierr))
+            PetscCallA(TSSetMaxTime(temperatureTS,time(step),ierr))
+            PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+            PetscCallA(TSSolve(temperatureTS,temperature,ierr))
+            PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
+            !PetscCallA(TSGetTime(temperatureTS,t,ierr))
+            !time(step) = t
+            ! Else
+            !    Write(IOBuffer,*) 'TS exceeded analysis time. Skipping step\n'
+            !    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+            ! End If
+         End If
       End Select
 
       !!! Compute energies
@@ -211,7 +212,7 @@ Program HeatXfer
       Write(IOBuffer,102) sum(energy),sum(cellWork)+sum(faceWork),sum(energy)-sum(cellWork)-sum(faceWork)
       PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
       !!! Save results
-      !PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
+      PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("Solving transient step ",I4,", t=",ES12.5,"\n")
@@ -237,7 +238,6 @@ Program HeatXfer
 
    PetscCallA(VecDestroy(temperatureResidual,ierr))
    PetscCallA(VecDestroy(temperature,ierr))
-   PetscCallA(DMDestroy(temperatureDM,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))

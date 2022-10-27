@@ -6,7 +6,7 @@ include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${MEF90_DIR}/Makefile.include
 include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
-#include ${MEF90_DIR}/m_DefMech/Makefile.include
+include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 TestHeatXferCtx.o: ${MEF90_DIR}/Tests/TestHeatXferCtx.F90 MEF90 m_HeatXfer
 	-@echo "      $<"
@@ -17,13 +17,13 @@ TestHeatXferCtx: TestHeatXferCtx.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-TestDMPlexVecGetClosure.o: ${MEF90_DIR}/Tests/TestDMPlexVecGetClosure.F90 MEF90 m_HeatXfer
+TestDMPlexVecGetClosure.o: ${MEF90_DIR}/Tests/TestDMPlexVecGetClosure.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestDMPlexVecGetClosure: TestDMPlexVecGetClosure.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 
@@ -216,7 +216,7 @@ TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-TestATClass.o: ${MEF90_DIR}/Tests/TestATClass.F90 MEF90
+TestATClass.o: ${MEF90_DIR}/Tests/TestATClass.F90 MEF90 m_DefMech
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestATClass: TestATClass.o
@@ -292,29 +292,65 @@ ExodusBuild: ExodusBuild.o  chkopts
 	${CLINKER} -o ExodusBuild ExodusBuild.o ${PETSC_LIB}
 	${RM} ExodusBuild.o
 
+###
+### TESTS
+###
+
+runTestHeatXferCtx: TestHeatXferCtx
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -verbose 1';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
+runTestMEF90Ctx: TestMEF90Ctx
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -verbose 1';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
+runTestSection: TestSection
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -mef90dm_view -sectionU_view -sectionU0_view -sectionV_view -sectionV0_view';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
+runTestConstraints: TestConstraints
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -mef90section_view';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
+
+runTestConstraintIO: TestConstraintIO
+	@echo "         Running " $@
+	-@ARGS='-geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result $@.exo -sectionU_view -sectionU0_view -sectionSigma_view -sectionSigma0_view';\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
+	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
+	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
+	${RM} -f $@.out $@.exo
 
 runTestMaterials: TestMaterials
 	@echo "         Running " $@
 	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
 	-@ARGS='';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
+	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
 	${RM} -f $@.out
-
-runTestMEF90Ctx: TestMEF90Ctx
-	@echo "         Running " $@
-	-@cp ${MEF90_DIR}/TestMeshes/SquareNG-tri3.gen .
-	-@ARGS='-verbose 1 -prefix ${MEF90_DIR}/TestMeshes/SquareNG-tri3';\
-	${MPIEXEC} -n 2 ./$< $${ARGS} > $@.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
-	else echo ${PWD} ; echo "Possible problem with with $<, diffs above \n========================================="; fi;\
-	${RM} -f $@.out SquareNG-tri3*
 
 MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:
 	make -C ${MEF90_DIR} m_HeatXfer
+m_DefMech:
+	make -C ${MEF90_DIR} m_DefMech
 
 clean::
 	-@rm -f TestMaterials TestMEF90Ctx testHeatXfer testLeak
@@ -333,3 +369,4 @@ debug::
 	@echo PETSC_LIB           ${PETSC_LIB}
 	@echo MEF90_HEATXFER_OBJS ${MEF90_HEATXFER_OBJS}
 	@echo MEF90_INCLUDE       ${MEF90_INCLUDE}
+	@echo DIFF                ${DIFF}

@@ -184,13 +184,11 @@ Contains
             PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
-        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
-        !!! there is something fishy here...
-        PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
-
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateLocalVector
 
 #undef __FUNCT__
@@ -272,13 +270,11 @@ Contains
             PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
-        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
-        !!! there is something fishy here...
-        PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
-
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+        PetscCall(DMDestroy(dmV,ierr))
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
     End Subroutine MEF90CreateCellVector
 
 #undef __FUNCT__
@@ -395,13 +391,11 @@ Contains
             PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
-        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
-        !!! there is something fishy here...
-        PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
-
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryLocalVector
     
 #undef __FUNCT__
@@ -482,13 +476,11 @@ Contains
             PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
 #endif
-        !!! Not entirely sure why I need to destroy the section but I should not destroy the DM
-        !!! there is something fishy here...
-        PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
-
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
+        PetscCall(PetscSectionDestroy(sectionV,ierr))
+        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryCellVector
         
 #undef __FUNCT__

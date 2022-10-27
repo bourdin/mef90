@@ -79,21 +79,24 @@ Program  TestHeatXferCtx
    Else
       ! we need to create the output file
       EXOFormat: block
-         PetscInt                                            :: numNodalVar = 1, numCellVar = 3, numGVar = 0
-         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
+         PetscInt                                            :: numNodalVar = 1, numCellVar = 1, numFaceVar = 2, numGVar = 0
+         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: faceVarName, nodalVarName, cellVarName, gVarName
 
          Allocate(nodalVarName(numNodalVar))
          Allocate(cellVarName(numCellVar))
+         Allocate(faceVarName(numFaceVar))
          Allocate(gVarName(numGVar))
          nodalVarName = ["Temperature        "]
-         cellVarName  = ["ExternalTemperature","Flux               ","BoundaryFlux       "]
+         cellVarName  = ["Flux               "]
+         faceVarName  = ["boundaryFlux       ","externalTemperature"]
          PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
          PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
+         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,faceVarName,time,ierr))
          DeAllocate(nodalVarName)
          DeAllocate(cellVarName)
+         DeAllocate(faceVarName)
          DeAllocate(gVarName)
-         end block EXOFormat
+      End block EXOFormat
    End If
    distribute: Block 
       Type(tDM),target                    :: dmDist

@@ -1,3 +1,5 @@
+### Pure Dirichlet pb
+
 heatxfer:
   timestepping:
     type: steadystate 
@@ -6,16 +8,17 @@ time:
   numstep: 3
 Temperature:
     snes: 
-      monitor:
       type: ksponly
     ksp:
       converged_reason:
+      #monitor:
 cs0001:
   flux: 0.
   TemperatureBC: no
 fs0010:
   boundaryFlux: 0.
-  TemperatureBC: no
+  TemperatureBC: yes
+  boundaryTemperature: 0.
 fs0020:
   boundaryFlux: 0.
   TemperatureBC: yes
@@ -23,8 +26,3 @@ fs0020:
 fs0030:
   boundaryFlux: 0.
   TemperatureBC: no
-vs0010:
-  TemperatureBC: yes
-  boundaryTemperature: 0.
-
-### Pure Dirichlet pb

@@ -1,0 +1,182 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       ../TestMeshes/SquareFaceSetCubit2CS.gen 
+  result file:         runTestConstraintIO.exo 
+  log file:            runTestConstraintIO.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 1 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 
+Time values array: 
+ 0:   1.0000e+00
+=== 
+PetscSection Object: Migrated Section 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 2 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0
+  (   5) dim  2 offset   2
+  (   6) dim  2 offset   4
+  (   7) dim  2 offset   6
+  (   8) dim  2 offset   8
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0
+  (   5) dim  2 offset   2
+  (   6) dim  2 offset   4
+  (   7) dim  2 offset   6
+  (   8) dim  2 offset   8
+  (   9) dim  0 offset  10
+  (  10) dim  0 offset  10
+  (  11) dim  0 offset  10
+  (  12) dim  0 offset  10
+  (  13) dim  0 offset  10
+  (  14) dim  0 offset  10
+  (  15) dim  0 offset  10
+  (  16) dim  0 offset  10
+PetscSection Object: Migrated Section 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 2 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0
+  (   5) dim  0 offset   2
+  (   6) dim  2 offset   2
+  (   7) dim  2 offset   4
+  (   8) dim  2 offset   6
+  (   9) dim  0 offset   8
+  (  10) dim  0 offset   8
+  (  11) dim  0 offset   8
+  (  12) dim  0 offset   8
+  (  13) dim  0 offset   8
+  (  14) dim  0 offset   8
+  (  15) dim  0 offset   8
+  (  16) dim  0 offset   8
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  2 offset   0
+  (   5) dim  2 offset   2
+  (   6) dim  2 offset   4
+  (   7) dim  0 offset   6
+  (   8) dim  2 offset   6
+  (   9) dim  0 offset   8
+  (  10) dim  0 offset   8
+  (  11) dim  0 offset   8
+  (  12) dim  0 offset   8
+  (  13) dim  0 offset   8
+  (  14) dim  0 offset   8
+  (  15) dim  0 offset   8
+  (  16) dim  0 offset   8
+PetscSection Object: Migrated Section 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 3 components
+Process 0:
+  (   0) dim  3 offset   0
+  (   1) dim  3 offset   3
+  (   2) dim  3 offset   6
+  (   3) dim  3 offset   9
+  (   4) dim  0 offset  12
+  (   5) dim  0 offset  12
+  (   6) dim  0 offset  12
+  (   7) dim  0 offset  12
+  (   8) dim  0 offset  12
+  (   9) dim  0 offset  12
+  (  10) dim  0 offset  12
+  (  11) dim  0 offset  12
+  (  12) dim  0 offset  12
+  (  13) dim  0 offset  12
+  (  14) dim  0 offset  12
+  (  15) dim  0 offset  12
+  (  16) dim  0 offset  12
+Process 1:
+  (   0) dim  3 offset   0
+  (   1) dim  3 offset   3
+  (   2) dim  3 offset   6
+  (   3) dim  3 offset   9
+  (   4) dim  0 offset  12
+  (   5) dim  0 offset  12
+  (   6) dim  0 offset  12
+  (   7) dim  0 offset  12
+  (   8) dim  0 offset  12
+  (   9) dim  0 offset  12
+  (  10) dim  0 offset  12
+  (  11) dim  0 offset  12
+  (  12) dim  0 offset  12
+  (  13) dim  0 offset  12
+  (  14) dim  0 offset  12
+  (  15) dim  0 offset  12
+  (  16) dim  0 offset  12
+PetscSection Object: Migrated Section 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 3 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  0 offset   0
+  (   5) dim  0 offset   0
+  (   6) dim  0 offset   0
+  (   7) dim  0 offset   0
+  (   8) dim  0 offset   0
+  (   9) dim  0 offset   0
+  (  10) dim  0 offset   0
+  (  11) dim  0 offset   0
+  (  12) dim  0 offset   0
+  (  13) dim  3 offset   0
+  (  14) dim  0 offset   3
+  (  15) dim  3 offset   3
+  (  16) dim  3 offset   6
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  0 offset   0
+  (   5) dim  0 offset   0
+  (   6) dim  0 offset   0
+  (   7) dim  0 offset   0
+  (   8) dim  0 offset   0
+  (   9) dim  0 offset   0
+  (  10) dim  0 offset   0
+  (  11) dim  0 offset   0
+  (  12) dim  3 offset   0
+  (  13) dim  3 offset   3
+  (  14) dim  0 offset   6
+  (  15) dim  0 offset   6
+  (  16) dim  3 offset   6

@@ -223,10 +223,9 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
       PetscCallMPI(MPI_Get_processor_name(procName,procNameLength,ierr))
-      write(*,"(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
-      ! Write(IOBuffer,200) MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
-      ! Call PetscSynchronizedPrintf(MEF90Ctx%comm,IOBuffer,ierr);CHKERRQ(ierr)
-      ! Call PetscSynchronizedFlush(MEF90Ctx%comm,ierr);CHKERRQ(ierr)
+      write(IOBuffer,"(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx%rank,MEF90Ctx%numProcs,trim(procName)
+      PetscCall(PetscSynchronizedPrintf(MEF90Ctx%comm,IOBuffer,ierr))
+      PetscCall(PetscSynchronizedFlush(MEF90Ctx%comm,PETSC_STDOUT,ierr))
 #endif
 
       If (GlobalOptions%verbose > 0) Then

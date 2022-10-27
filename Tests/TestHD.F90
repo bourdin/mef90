@@ -29,20 +29,20 @@ Program TestSplit
 
    Class(MEF90_DEFMECHSPLIT),Allocatable :: Split
 
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
-   Call PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr);CHKERRQ(ierr)
-   Call PetscRandomSetFromOptions(RdmCtx,ierr);CHKERRQ(ierr)
-   Call PetscRandomSetInterval(RdmCtx,-1.0_Kr,1.0_Kr,ierr);CHKERRQ(ierr)
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr))
+   PetscCallA(PetscRandomSetFromOptions(RdmCtx,ierr))
+   PetscCallA(PetscRandomSetInterval(RdmCtx,-1.0_Kr,1.0_Kr,ierr))
    Call date_and_time(VALUES=iSeed)
-   Call PetscRandomSetSeed(RdmCtx,iSeed(8) * 1000 * iseed(7),ierr);CHKERRQ(ierr)
-   Call PetscRandomSeed(RdmCtx,ierr);CHKERRQ(ierr)
+   PetscCallA(PetscRandomSetSeed(RdmCtx,iSeed(8) * 1000 * iseed(7),ierr))
+   PetscCallA(PetscRandomSeed(RdmCtx,ierr))
 
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-n',n,flg,ierr);CHKERRQ(ierr)
+   PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-n',n,flg,ierr))
    E = 1.0_Kr
-   Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,'-E',E,flg,ierr);CHKERRQ(ierr);
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-E',E,flg,ierr))
    nu = .3_Kr
-   Call PetscOptionsGetReal(PETSC_NULL_CHARACTER,'-nu',nu,flg,ierr);CHKERRQ(ierr);
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-nu',nu,flg,ierr))
 
 
    gamma = 1.0e-10
@@ -84,15 +84,15 @@ Program TestSplit
    Write(*,*) 'mu    ', A%mu,     ASph%mu,     ADev%mu
 
    Do i = 0, n-1
-      Call PetscRandomGetValue(RdmCtx,M%XX,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M%YY,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M%XY,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%XX,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%YY,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%XY,ierr))
 #if MEF90_DIM == 3
-      Call PetscRandomGetValue(RdmCtx,M%ZZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M%YZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M%XZ,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%ZZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%YZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M%XZ,ierr))
 #endif
-      Write(*,'(A,<sizeOfMatS>(E12.5,2x))') 'M: ', M
+      Write(*,'(A,6(E12.5,2x))') 'M: ', M
 
 
       MSph   = HydrostaticPart(M)
@@ -134,10 +134,10 @@ Program TestSplit
       Write(*,'(A,2(E12.5,2x))') 'A^+ lambda, mu                ', APlus%lambda,APlus%mu
       Write(*,'(A,2(E12.5,2x))') 'A^- lambda, mu                ', AMinus%lambda,AMinus%mu
 
-      Write(*,'(A,<sizeOfMatS>(E12.5,2x))') ' Direct: A^+ M: ', (APlus  * M)
-      Write(*,'(A,<sizeOfMatS>(E12.5,2x))') '   DEED: A^+ M: ', DEEDPlus
-      Write(*,'(A,<sizeOfMatS>(E12.5,2x))') ' Direct: A^- M: ', (AMinus  * M)
-      Write(*,'(A,<sizeOfMatS>(E12.5,2x))') '   DEED: A^- M: ', DEEDMinus
+      Write(*,'(A,6(E12.5,2x))') ' Direct: A^+ M: ', (APlus  * M)
+      Write(*,'(A,6(E12.5,2x))') '   DEED: A^+ M: ', DEEDPlus
+      Write(*,'(A,6(E12.5,2x))') ' Direct: A^- M: ', (AMinus  * M)
+      Write(*,'(A,6(E12.5,2x))') '   DEED: A^- M: ', DEEDMinus
       Write(*,*) 
       !Write(*,*) A%fullTensor - ADev%FullTensor - ASph%fullTensor
 
@@ -146,7 +146,7 @@ Program TestSplit
       Write(*,*)
    End Do
 
-   Call PetscRandomDestroy(RdmCtx,ierr);CHKERRQ(ierr)
-   Call MEF90Finalize(ierr)
-   Call PetscFinalize()
+   PetscCallA(PetscRandomDestroy(RdmCtx,ierr))
+   PetscCallA(MEF90Finalize(ierr))
+   PetscCallA(PetscFinalize(ierr))
 End Program TestSplit

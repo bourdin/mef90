@@ -1,0 +1,321 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       ../TestMeshes/SquareFaceSetCubit2CS.gen 
+  result file:         runTestHeatXferCtx.exo 
+  log file:            runTestHeatXferCtx.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 
+Time values array: 
+ 0:   0.0000e+00   1.0000e-01   2.0000e-01   3.0000e-01   4.0000e-01
+ 5:   5.0000e-01   6.0000e-01   7.0000e-01   8.0000e-01   9.0000e-01
+10:   1.0000e+00
+=== 
+Time values array: 
+ 0:   0.0000e+00   1.0000e-01   2.0000e-01   3.0000e-01   4.0000e-01
+ 5:   5.0000e-01   6.0000e-01   7.0000e-01   8.0000e-01   9.0000e-01
+10:   1.0000e+00
+=== 
+PetscBag Object:  MEF90HeatXfer Global Ctx () HeatXferGlobalOptions MEF90 Heat transfer global options
+  heatxfer_timeStepping_type = SteadyState; (MEF90_HeatXFer_timeSteppingType) Type of heat transfer computation
+  heatxfer_addNullSpace =  FALSE; Add null space to SNES
+  heatxfer_initialTemperature = 0. ; [K] (T): Initial Temperature
+  boundaryTemperature_scaling = linear; (MEF90scaling) Boundary temperature scaling
+  externalTemperature_scaling = linear; (MEF90scaling) External Temperature scaling
+  flux_scaling = linear; (MEF90scaling) Heat flux scaling
+  boundaryFlux_scaling = linear; (MEF90scaling) Boundary heat flux scaling
+ 
+Registering cell set    2 prefix: cs0002_ 
+PetscBag Object:  Cell set    2 (cs0002_) HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  Flux = 0. ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  boundaryTemperature = 0. ; Temperature boundary value
+  advectionVector = 0. 0. 0. ; [m.s^(-1)] (V): advection vector
+ 
+ 
+Registering cell set    3 prefix: cs0003_ 
+PetscBag Object:  Cell set    3 (cs0003_) HeatXferCellSetOptions MEF90 Heat transfer Cell Set options
+  Flux = 0. ; [J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux
+  boundaryTemperature = 0. ; Temperature boundary value
+  advectionVector = 0. 0. 0. ; [m.s^(-1)] (V): advection vector
+ 
+ 
+Registering face set   20 prefix: fs0020_ 
+PetscBag Object:  Face set   20 (fs0020_) HeatXferFaceSetOptions MEF90 Heat transfer Face Set options
+  boundaryFlux = 0. ; [J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0. ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
+  externalTemperature = 0. ; Reference temperature T [K]
+  TemperatureBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemperature = 0. ; Temperature boundary value
+ 
+ 
+Registering face set   21 prefix: fs0021_ 
+PetscBag Object:  Face set   21 (fs0021_) HeatXferFaceSetOptions MEF90 Heat transfer Face Set options
+  boundaryFlux = 0. ; [J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0. ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
+  externalTemperature = 0. ; Reference temperature T [K]
+  TemperatureBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemperature = 0. ; Temperature boundary value
+ 
+ 
+Registering face set   22 prefix: fs0022_ 
+PetscBag Object:  Face set   22 (fs0022_) HeatXferFaceSetOptions MEF90 Heat transfer Face Set options
+  boundaryFlux = 0. ; [J.s^(-1).m^(-2) / J.s^(-1).m^(-1)] (f): Internal / applied heat flux
+  SurfaceThermalConductivity = 0. ; [J.s^(-1).m^(-2).K^(-1) / J.s^(-1).m^(-1).K^(-1) ] (H) Surface Thermal Conductivity
+  externalTemperature = 0. ; Reference temperature T [K]
+  TemperatureBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemperature = 0. ; Temperature boundary value
+ 
+ 
+Registering vertex set   10 prefix: vs0010_ 
+PetscBag Object:  Vertex set   10 (vs0010_) HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemperature = 0. ; Temperature boundary value
+ 
+ 
+Registering vertex set   20 prefix: vs0020_ 
+PetscBag Object:  Vertex set   20 (vs0020_) HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options
+  TempBC =  FALSE; Temperature has Dirichlet boundary Condition (Y/N)
+  boundaryTemperature = 0. ; Temperature boundary value
+ 
+Registering materials properties for cell set    2: cs0002_ 
+PetscBag Object:  Cell set    2 (cs0002_) MatProp2D object: material properties
+  Name = MEF90Mathium2D; 
+  Density = 1. ; [kg.m^(-2)] (rho) Density
+  FractureToughness = 1. ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1. 1. 0. ; [] toughness Anisotropy Matrix
+  SpecificHeat = 1. ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1. 1. 0. ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1. 1. 0. ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+  hookeslaw_YoungsModulus = 1. ; [N.m^(-2)] (E) Young's Modulus
+  hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+  hookeslaw_planeStress =  FALSE; Use plane stress elasticity
+  internalLength = 1. ; [m] (l) Internal Length
+  yieldStress = 1. ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+  residualyieldStress = 0. ; [unit-less] (eta) residual yield stress
+  DuctileCouplingPower = 2. ; [] power of the coupling between the damage and the plasticity
+  CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModel2 = 1. ; C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModelD = 1. ; CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  CoeffF = 0.3 ; [unit-less] (F) coefficient F in the Hill yield criterion
+  CoeffG = 0.3 ; [unit-less] (G) coefficient G in the Hill yield criterion
+  CoeffH = 0.3 ; [unit-less] (H) coefficient H in the Hill yield criterion
+  CoeffM = 1. ; [unit-less] (M) coefficient M in the Hill yield criterion
+  CoeffN = 1. ; [unit-less] (N) coefficient N in the Hill yield criterion
+  CoeffL = 1. ; [unit-less] (L) coefficient L in the Hill yield criterion
+  YieldTau0 = 1. ; [N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion
+  residualYieldTau0 = 0. ; [unit-less] residual stress threshold in the Hill yield criterion
+  phi1 = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  phi2 = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  Phi = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
+  cohesiveStiffness = 0. ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
+  residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0. ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0. ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0. ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0. ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
+  isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
+  isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
+  RotationMatrix_phi1 = 0. ; [radians] (phi1) First Bunge-Euler angle
+  RotationMatrix_Phi = 0. ; [radians] (Phi) Second Bunge-Euler angle
+  RotationMatrix_phi2 = 0. ; [radians] (phi2) Third Bunge-Euler angle
+  RotationMatrix_V1 = 1. 0. 0. ; [] (V1) First column of the rotation matrix
+  RotationMatrix_V2 = 0. 1. 0. ; [] (V2) Second column of the rotation matrix
+  RotationMatrix_V3 = 0. 0. 1. ; [] (V3) Third column of the rotation matrix
+  RotationMatrix_fromEuler =  FALSE; Define rotation matrix from Bunge-Euler angles
+  isViscousPlasticity =  FALSE; [bool] Viscous plastic potential
+  ViscosityGamma0 = 1. ; [s^(-1)] Reference plastic deformation rate
+  ViscosityN = 1. ; [unit-less] Viscosity exponent
+  Viscositydt = 1. ; [s] Viscosity time step size
+  m = 1. ; [unit-less] Equivalent stress exponent for rate-independent crystal plasticity
+ 
+Registering materials properties for cell set    3: cs0003_ 
+PetscBag Object:  Cell set    3 (cs0003_) MatProp2D object: material properties
+  Name = MEF90Mathium2D; 
+  Density = 1. ; [kg.m^(-2)] (rho) Density
+  FractureToughness = 1. ; [N.m^(-1)] (G_c) Fracture toughness
+  toughnessAnisotropyMatrix = 1. 1. 0. ; [] toughness Anisotropy Matrix
+  SpecificHeat = 1. ; [J.kg^(-1).K^(-1)] (Cp) Specific heat
+  ThermalConductivity = 1. 1. 0. ; [J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity
+  LinearThermalExpansion = 1. 1. 0. ; [K^(-1)] (alpha) Linear thermal expansion matrix
+  hookeslaw_type = Isotropic; (MEF90HookesLawTypeList) Type of Hooke's law
+  hookeslaw_YoungsModulus = 1. ; [N.m^(-2)] (E) Young's Modulus
+  hookeslaw_PoissonRatio = 0.3 ; [] (nu) Poisson Modulus
+  hookeslaw_planeStress =  FALSE; Use plane stress elasticity
+  internalLength = 1. ; [m] (l) Internal Length
+  yieldStress = 1. ; [N.m^(-2)] (sigma_y) stress threshold for plasticity
+  residualyieldStress = 0. ; [unit-less] (eta) residual yield stress
+  DuctileCouplingPower = 2. ; [] power of the coupling between the damage and the plasticity
+  CoefficientCapModel0 = -0.3 ; C0 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModel1 = 0.4 ; C1 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModel2 = 1. ; C2 in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientCapModelD = 1. ; CD in the Yield function: CD || dev(stress) || - C2 tr(stress)^2 - C1 tr(stress) - C0 <= 0
+  CoefficientDruckerPrager = -0.5 ; k in the Yield function: || dev(stress) || - k tr(stress) - yieldStress <= 0
+  CoeffF = 0.3 ; [unit-less] (F) coefficient F in the Hill yield criterion
+  CoeffG = 0.3 ; [unit-less] (G) coefficient G in the Hill yield criterion
+  CoeffH = 0.3 ; [unit-less] (H) coefficient H in the Hill yield criterion
+  CoeffM = 1. ; [unit-less] (M) coefficient M in the Hill yield criterion
+  CoeffN = 1. ; [unit-less] (N) coefficient N in the Hill yield criterion
+  CoeffL = 1. ; [unit-less] (L) coefficient L in the Hill yield criterion
+  YieldTau0 = 1. ; [N.m^(-2)] (tau_0) stress threshold in the Hill yield criterion
+  residualYieldTau0 = 0. ; [unit-less] residual stress threshold in the Hill yield criterion
+  phi1 = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  phi2 = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  Phi = 0. ; [radians] Bunge-Euler angle in the Hill yield criterion
+  delta = 0.0001 ; [unit-less] residual in the definition of the porosity, Gurson and Green criteria
+  cohesiveStiffness = 0. ; [N.m^(-4)] (k) cohesive stiffness in Winkler-type models
+  residualStiffness = 1e-09 ; [unit-less] (eta) residual stiffness
+  drivingForce_tensileStrength = 0. ; [N.m^(-2)] (\sigma_{ts}) tensile strength in Drucker-Prager driving Force
+  drivingForce_CompressiveStrength = 0. ; [N.m^(-2)] (\sigma_{cs}) compressive strength in Drucker-Prager driving Force
+  drivingForce_Delta = 0. ; [unit-less] (\delta) delta parameter in Drucker-Prager driving Force
+  drivingForce_Gamma = 0. ; [m^3.N^(-2)] (\gamma) gamma parameter in Drucker-Prager driving Force
+  isLinearIsotropicHardening =  FALSE; [bool] Plasticity with Linear Isotropic Hardening
+  isNoPlCoupling =  FALSE; [bool] Coupling between damage and plastic dissipation
+  RotationMatrix_phi1 = 0. ; [radians] (phi1) First Bunge-Euler angle
+  RotationMatrix_Phi = 0. ; [radians] (Phi) Second Bunge-Euler angle
+  RotationMatrix_phi2 = 0. ; [radians] (phi2) Third Bunge-Euler angle
+  RotationMatrix_V1 = 1. 0. 0. ; [] (V1) First column of the rotation matrix
+  RotationMatrix_V2 = 0. 1. 0. ; [] (V2) Second column of the rotation matrix
+  RotationMatrix_V3 = 0. 0. 1. ; [] (V3) Third column of the rotation matrix
+  RotationMatrix_fromEuler =  FALSE; Define rotation matrix from Bunge-Euler angles
+  isViscousPlasticity =  FALSE; [bool] Viscous plastic potential
+  ViscosityGamma0 = 1. ; [s^(-1)] Reference plastic deformation rate
+  ViscosityN = 1. ; [unit-less] Viscosity exponent
+  Viscositydt = 1. ; [s] Viscosity time step size
+  m = 1. ; [unit-less] Equivalent stress exponent for rate-independent crystal plasticity
+ 
+Step:    1 Analysis time:  0.00000E+00 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    2 Analysis time:  1.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    3 Analysis time:  2.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    4 Analysis time:  3.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    5 Analysis time:  4.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    6 Analysis time:  5.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    7 Analysis time:  6.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    8 Analysis time:  7.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:    9 Analysis time:  8.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:   10 Analysis time:  9.00000E-01 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+Step:   11 Analysis time:  1.00000E+00 
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00
+   Cell set    2 energy:        6.01347-154 body work:  6.01347-154
+   Cell set    3 energy:        0.00000E+00 body work:  0.00000E+00
+   Face set   20 surface work:  0.00000E+00
+   Face set   21 surface work:  0.00000E+00
+   Face set   22 surface work:  0.00000E+00

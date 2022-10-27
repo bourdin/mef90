@@ -438,4 +438,5 @@ Implicit NONE
     Call PetscFinalize(ierr)
 End Program  TestConstraints
  
+! mpirun -np 3 ./TestConstraints -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90section_view -uloc_view -u0_view -uloc2_view
        
