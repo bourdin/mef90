@@ -30,3 +30,5 @@ Tests/HookeLaws
 Tests/TestMaterials
 
 Tests/TestMEF90Ctx
+
+Tests/TestMassMatrix
