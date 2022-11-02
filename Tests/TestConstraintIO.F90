@@ -1,7 +1,61 @@
+Module localFunctions
+#include <petsc/finclude/petsc.h>
+use petsc
+use m_MEF90
+implicit none
+    
+contains
+
+#undef __FUNCT__
+#define __FUNCT__ "project"
+
+    subroutine project(v,s,ierr)
+        Type(tVec),intent(IN)              :: v
+        Type(tPetscSection),intent(IN)     :: s
+        PetscErrorCode,intent(INOUT)       :: ierr
+
+        PetscInt                           :: pStart,pEnd,p,numDof,i
+        Type(tDM)                          :: dm
+        Type(tPetscSection)                :: coordSection
+        Type(tVec)                         :: coordVec
+        PetscScalar,dimension(:),Pointer   :: coordArray,vArray
+        PetscScalar,dimension(3)           :: xyz
+        PetscInt                           :: dim,pOffset
+
+        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+        PetscCallA(VecGetDM(v,dm,ierr))
+        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+        PetscCallA(DMGetDimension(dm,dim,ierr))
+        PetscCallA(VecGetArrayF90(v,vArray,ierr))
+
+        Do p = pStart,pEnd-1
+            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
+            If (numDof > 0) Then
+                !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                Do i = 1,dim
+                    xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+                End Do
+                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+
+                PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
+                Do i = 1,numDof
+                    vArray(pOffset+i) = xyz(i)
+                End Do
+            End If
+        End Do
+        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+        !!! Of course, this does not use informations from the section, so it does over-write constrained values
+    End subroutine project
+
+End Module localFunctions
+
 Program  TestConstraintIO
 #include <petsc/finclude/petsc.h>
 Use m_MEF90
 Use petsc
+Use localFunctions
 Implicit NONE   
     
     PetscErrorCode                                      :: ierr
@@ -133,7 +187,8 @@ Implicit NONE
     PetscCallA(VecSet(locVecU0,10.0_kr,ierr))
     ! locCoord is obtained from dmSigma but all DMs have the same coordinates
     PetscCallA(DMGetCoordinatesLocal(dmSigma,locCoord,ierr))
-    PetscCallA(VecCopy(locCoord,locVecU,ierr))
+    ! Fill locVecU with coordinates
+    PetscCall(project(locVecU,sectionU,ierr))
     PetscCallA(MEF90VecCopySF(locVecU0,locVecU,clSF,ierr))
 
     ! Reorder locVecU into ioVec and write ioVec
