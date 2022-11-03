@@ -667,7 +667,6 @@ Contains
       
       Type(Vect2D),Dimension(:),Pointer     :: Xi ! The quadrature points coordinates in the reference element
 
-
       Select Case (dQuadratureOrder)
       Case(0,1)
          Nb_Gauss = 1
@@ -809,25 +808,25 @@ Contains
          Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP
       End Select
-      
+
       Select Case (dPolynomialOrder)
       Case(1)
          Num_DoF = 3
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y
-         PhiHat(2,:) = Xi(:)%X
-         PhiHat(3,:) = Xi(:)%Y
-         
-         GradPhiHat(1,:)%X = -1.0_Kr;GradPhiHat(1,:)%Y = -1.0_Kr 
-         GradPhiHat(2,:)%X =  1.0_Kr;GradPhiHat(2,:)%Y =  0.0_Kr 
+         PhiHat(2,:) = Xi%X
+         PhiHat(3,:) = Xi%Y
+
+         GradPhiHat(1,:)%X = -1.0_Kr;GradPhiHat(1,:)%Y = -1.0_Kr
+         GradPhiHat(2,:)%X =  1.0_Kr;GradPhiHat(2,:)%Y =  0.0_Kr
          GradPhiHat(3,:)%X =  0.0_Kr;GradPhiHat(3,:)%Y =  1.0_Kr
           
       Case(2)
          Num_DoF = 6
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
+         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
          PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
          PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
          PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
