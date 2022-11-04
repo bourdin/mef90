@@ -30,7 +30,7 @@ Contains
       PetscEnum,Intent(IN)                            :: setType
       PetscInt                                        :: setID
       Type(MEF90_ELEMENTTYPE), Dimension(:), Pointer  :: elem
-      Type(MEF90ElementType),Intent(IN)              :: elemType
+      Type(MEF90ElementType),Intent(IN)               :: elemType
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       Type(tIS)                                       :: setPointIS
@@ -40,7 +40,7 @@ Contains
       PetscInt                                        :: iDoF1,iDoF2,numDof
       PetscInt                                        :: iGauss,numGauss
       PetscLogDouble                                  :: flops
-     
+
       flops = 0.0_pflop
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -53,7 +53,7 @@ Contains
          Allocate(MatElem(numDof**2))
          Do point = 1,size(setPointID)   
             MatElem = 0.0_Kr
-            Do iGauss = 1,size(elem(point)%Gauss_C)
+            Do iGauss = 1,numGauss
                Do iDoF1 = 1,numDof
                   Do iDoF2 = 1,numDof
                      MatElem((iDoF1-1)*numDof+iDof2) = MatElem((iDoF1-1)*numDof+iDof2) &

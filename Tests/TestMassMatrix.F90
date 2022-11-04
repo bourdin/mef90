@@ -59,14 +59,6 @@ Program  TestMassMatrix
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
     
-    BoundingBlock: Block
-        PetscReal,dimension(3)         :: bbmin,bbmax
-
-        PetscCallA(DMGetBoundingBox(dm,bbmin,bbmax,ierr))
-        Write(IOBUffer,'("DM Bonding box ",(*(ES12.3,"  ")))') bbmin(1:dim),bbmax(1:dim)
-        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,trim(IOBuffer)//'\n',ierr))
-    End Block BoundingBlock
-        
     name = "U"
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,name,U,ierr))
     PetscCallA(VecSet(U,1.0_Kr,ierr))
@@ -91,7 +83,7 @@ Program  TestMassMatrix
             PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
             PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
             PetscCallA(DMPlexGetCellType(dmU,setPointID(1),cellType,ierr))
-            PetscCallA(MEF90ElementGetType(MEF90GlobalOptions_default%elementFamily,MEF90GlobalOptions_default%elementOrder,cellType,elementType,ierr))
+            PetscCallA(MEF90ElementGetType(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,cellType,elementType,ierr))
             quadratureOrder = elementType%order * 2
             If (dim == 2) Then
                 PetscCallA(MEF90ElementCreate(dmU,setPointIS,elem2D,QuadratureOrder,elementType,ierr))
@@ -110,10 +102,7 @@ Program  TestMassMatrix
             PetscCallA(ISDestroy(setPointIS,ierr))
             Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
             L2Norm = L2Norm + L2NormSet
-            Write(IOBuffer,'("set ",I4," my L2 norm ", ES12.5,"\n")') setID(set), myL2NormSet
-            PetscCallA(PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-            PetscCallA(PetscSynchronizedFlush(PETSC_COMM_WORLD,PETSC_STDOUT,ierr))
-            Write(IOBuffer,'("set ",I4," L2 norm ", ES12.5,"\n")') setID(set), L2NormSet
+            Write(IOBuffer,'("set ",I4," L2 norm    ", ES12.5,"\n")') setID(set), L2NormSet
             PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         End Do
         PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -121,37 +110,47 @@ Program  TestMassMatrix
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
-    Write(IOBuffer,'(" L2 norm ", ES12.5,"\n")') L2NormSet
+    Write(IOBuffer,'("L2 norm       ", ES12.5,"\n")') L2Norm
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mef90matM_view",ierr))
 
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
+    L2Norm    = 0.0_Kr
     If (setIS /= PETSC_NULL_IS) Then
         PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
         QuadratureOrder = elementType%order * 2
         Do set = 1,size(setID)
+            myL2NormSet = 0.0_Kr
             PetscCallA(DMGetStratumIS(dmU0,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
             PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
             PetscCall(DMPlexGetCellType(dmU0,setPointID(1),faceType,ierr))
-            PetscCall(MEF90ElementGetTypeBoundary(MEF90GlobalOptions_default%elementFamily,MEF90GlobalOptions_default%elementOrder,faceType,elementType,ierr))
+            PetscCall(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,faceType,elementType,ierr))
                 If (dim == 2) Then
                 PetscCallA(MEF90ElementCreate(dmU0,setPointIS,elem2D,QuadratureOrder,elementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M0,dmU0,setType,setID(set),elem2D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem2D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem2D,ierr))
             Else
                 PetscCallA(MEF90ElementCreate(dmU0,setPointIS,elem3D,QuadratureOrder,elementType,ierr))
-                PetscCallA(MEF90_MassMatrixAssembleSet(M,dmU0,setType,setID(set),elem3D,elementType,ierr))
+                PetscCallA(MEF90_MassMatrixAssembleSet(M0,dmU0,setType,setID(set),elem3D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
             PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
+            Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
+            L2Norm = L2Norm + L2NormSet
+            Write(IOBuffer,'("set ",I4," L2 norm    ", ES12.5,"\n")') setID(set), L2NormSet
+            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         End Do
         PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M0,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M0,MAT_FINAL_ASSEMBLY,ierr))
+    Write(IOBuffer,'("L2 norm       ", ES12.5,"\n")') L2Norm
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     PetscCallA(MatViewFromOptions(M0,PETSC_NULL_OPTIONS,"-mef90matM0_view",ierr))
 
 
@@ -164,7 +163,7 @@ Program  TestMassMatrix
         PetscCallA(VecSet(UGlob,1.0_Kr,ierr))
         PetscCallA(MatMult(M,Uglob,MUglob,ierr))
         PetscCallA(VecDot(UGlob,MUGlob,mass,ierr))
-        Write(IOBuffer,'("Total mass", ES12.5," \n")') mass
+        Write(IOBuffer,'("Total mass    ", ES12.5," \n")') mass
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer, ierr))
         PetscCallA(VecViewFromOptions(Uglob,PETSC_NULL_OPTIONS,"-mef90VecU_view",ierr))
         PetscCallA(VecViewFromOptions(MUglob,PETSC_NULL_OPTIONS,"-mef90VecMU_view",ierr))
@@ -175,8 +174,11 @@ Program  TestMassMatrix
         PetscCallA(VecDuplicate(Uglob,MUglob,ierr))
         PetscCallA(VecSet(UGlob,1.0_Kr,ierr))
         PetscCallA(MatMult(M0,Uglob,MUglob,ierr))
+        PetscCallA(VecViewFromOptions(Uglob,PETSC_NULL_OPTIONS,"-mef90VecU0_view",ierr))
+        PetscCallA(VecViewFromOptions(MUglob,PETSC_NULL_OPTIONS,"-mef90VecMU0_view",ierr))
+
         PetscCallA(VecDot(UGlob,MUGlob,mass,ierr))
-        Write(IOBuffer,'("Boundary mass", ES12.5," \n")') mass
+        Write(IOBuffer,'("Boundary mass ", ES12.5," \n")') mass
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer, ierr))
         PetscCallA(VecDestroy(Uglob,ierr))
         PetscCallA(VecDestroy(MUglob,ierr))
