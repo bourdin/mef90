@@ -26,7 +26,7 @@ Program  TestMassMatrix
     PetscInt,Dimension(:),Pointer                  :: setPointID
     Type(MEF90ElementType)                         :: elementType
     DMPolytopeType                                 :: cellType,faceType
-    PetscReal                                      :: L2NormSet,L2Norm
+    PetscReal                                      :: myL2NormSet,L2NormSet,L2Norm
 
     MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
@@ -40,7 +40,6 @@ Program  TestMassMatrix
     MEF90GlobalOptions_default%elementOrder      = 1
  
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-    
     Call MEF90Initialize(ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))    
@@ -66,9 +65,8 @@ Program  TestMassMatrix
         PetscCallA(DMGetBoundingBox(dm,bbmin,bbmax,ierr))
         Write(IOBUffer,'("DM Bonding box ",(*(ES12.3,"  ")))') bbmin(1:dim),bbmax(1:dim)
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,trim(IOBuffer)//'\n',ierr))
-        End Block BoundingBlock
-
-
+    End Block BoundingBlock
+        
     name = "U"
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,name,U,ierr))
     PetscCallA(VecSet(U,1.0_Kr,ierr))
@@ -84,11 +82,12 @@ Program  TestMassMatrix
 
     setType = MEF90CellSetType
     PetscCallA(DMGetLabelIdIS(dmU,MEF90SetLabelName(setType),setIS,ierr))
+    PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%Comm,setIS,ierr))
     L2Norm    = 0.0_Kr
     If (setIS /= PETSC_NULL_IS) Then
         PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
         Do set = 1,size(setID)
-            L2NormSet = 0.0_Kr
+            myL2NormSet = 0.0_Kr
             PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
             PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
             PetscCallA(DMPlexGetCellType(dmU,setPointID(1),cellType,ierr))
@@ -97,28 +96,34 @@ Program  TestMassMatrix
             If (dim == 2) Then
                 PetscCallA(MEF90ElementCreate(dmU,setPointIS,elem2D,QuadratureOrder,elementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dmU,setType,setID(set),elem2D,elementType,ierr))
-                !PetscCallA(MEF90L2DotProductSet(L2NormSet,U,U,setType,setID(set),elem2D,elementType,ierr))
-                PetscCallA(MEF90L2NormSet(L2NormSet,U,setType,setID(set),elem2D,elementType,ierr))
+                !PetscCallA(MEF90L2DotProductSet(myL2NormSet,U,U,setType,setID(set),elem2D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem2D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem2D,ierr))
             Else
                 PetscCallA(MEF90ElementCreate(dmU,setPointIS,elem3D,QuadratureOrder,elementType,ierr))
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dmU,setType,setID(set),elem3D,elementType,ierr))
-                !PetscCallA(MEF90L2DotProductSet(L2NormSet,U,U,setType,setID(set),elem3D,elementType,ierr))
-                PetscCallA(MEF90L2NormSet(L2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
+                !PetscCallA(MEF90L2DotProductSet(myL2NormSet,U,U,setType,setID(set),elem3D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
             PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
+            Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
             L2Norm = L2Norm + L2NormSet
-            Write(*,*) setID(set),'L2NormSet: ', L2NormSet
+            Write(IOBuffer,'("set ",I4," my L2 norm ", ES12.5,"\n")') setID(set), myL2NormSet
+            PetscCallA(PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+            PetscCallA(PetscSynchronizedFlush(PETSC_COMM_WORLD,PETSC_STDOUT,ierr))
+            Write(IOBuffer,'("set ",I4," L2 norm ", ES12.5,"\n")') setID(set), L2NormSet
+            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         End Do
         PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
+    Write(IOBuffer,'(" L2 norm ", ES12.5,"\n")') L2NormSet
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mef90matM_view",ierr))
-    Write(*,*) 'L2Norm: ', L2Norm
 
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
@@ -161,6 +166,8 @@ Program  TestMassMatrix
         PetscCallA(VecDot(UGlob,MUGlob,mass,ierr))
         Write(IOBuffer,'("Total mass", ES12.5," \n")') mass
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer, ierr))
+        PetscCallA(VecViewFromOptions(Uglob,PETSC_NULL_OPTIONS,"-mef90VecU_view",ierr))
+        PetscCallA(VecViewFromOptions(MUglob,PETSC_NULL_OPTIONS,"-mef90VecMU_view",ierr))
         PetscCallA(VecDestroy(Uglob,ierr))
         PetscCallA(VecDestroy(MUglob,ierr))
 

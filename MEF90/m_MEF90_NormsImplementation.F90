@@ -62,9 +62,11 @@ Contains
          numDof = size(elem(1)%BF(:,1))
          numGauss = size(elem(1)%Gauss_C)
          Allocate(Uloc(numDof),source = 0.0_Kr)
+         Allocate(Vloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+
             Do iGauss = 1,size(elem(point)%Gauss_C)
                UGauss = 0.0_Kr
                VGauss = 0.0_Kr
@@ -74,12 +76,13 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (UGauss * VGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
          !flops = 3 * numDof**2 * numGauss * size(setPointID)
          !PetscCall(PetscLogFlops(flops,ierr))
          ! Flop computation is different for scalar and Vec
+         DeAllocate(Vloc,stat=ierr)
          DeAllocate(Uloc,stat=ierr)
       End If 
       PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
@@ -131,8 +134,8 @@ Contains
          numGauss = size(elem(1)%Gauss_C)
          Allocate(Uloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
             Do iGauss = 1,size(elem(point)%Gauss_C)
                GradUGauss = 0.0_Kr
                GradVGauss = 0.0_Kr
@@ -142,8 +145,8 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (GradUGauss .DotP. GradVGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
          !flops = 3 * numDof**2 * numGauss * size(setPointID)
          !PetscCall(PetscLogFlops(flops,ierr))
@@ -196,8 +199,8 @@ Contains
          numGauss = size(elem(1)%Gauss_C)
          Allocate(Uloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
             Do iGauss = 1,size(elem(point)%Gauss_C)
                GradSUGauss = 0.0_Kr
                GradSVGauss = 0.0_Kr
@@ -207,8 +210,8 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (GradSUGauss .DotP. GradSVGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,point,Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
          !flops = 3 * numDof**2 * numGauss * size(setPointID)
          !PetscCall(PetscLogFlops(flops,ierr))
@@ -264,7 +267,7 @@ Contains
             numGauss = size(elem(1)%Gauss_C)
             Allocate(Uloc(numDof),source = 0.0_Kr)
             Do point = 1,size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
+               PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
                Do iGauss = 1,size(elem(point)%Gauss_C)
                   UGauss = 0.0_Kr
                   Do iDoF1 = 1,numDof
@@ -272,7 +275,7 @@ Contains
                   End Do ! iDoF1
                   myNormSet = myNormSet + (UGauss*UGauss) * elem(point)%Gauss_C(iGauss)
                End Do ! iGauss
-               PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,point,Uloc,ierr))
+               PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
             End Do ! point
             !flops = 3 * numDof**2 * numGauss * size(setPointID)
             !PetscCall(PetscLogFlops(flops,ierr))
