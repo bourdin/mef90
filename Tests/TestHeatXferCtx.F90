@@ -1,17 +1,17 @@
 Program  TestHeatXferCtx
-#include <petsc/finclude/petsc.h>
+#include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXfer
+   Use m_MEF90_HeatXferDefault
    Use petsc
    Implicit NONE   
    
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
-   Type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions_default
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
+   Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
    Type(tDM)                                          :: dm
-   Type(tPetscSF)                                     :: naturalPointSF
 
    Type(tIS)                                          :: cellSetIS,faceSetIS
    PetscInt,Dimension(:),Pointer                      :: cellSetID,faceSetID
@@ -21,56 +21,22 @@ Program  TestHeatXferCtx
    PetscBool                                          :: flg
    PetscReal,dimension(:),Pointer                     :: energy,bodyWork,surfaceWork
 
-   Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-      MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
-      PETSC_FALSE,         & ! addNullSpace
-      0.,                  & ! initialTemperature
-      MEF90Scaling_Linear, & ! boundaryTemperatureScaling
-      MEF90Scaling_Linear, & ! externalTemperatureScaling
-      MEF90Scaling_Linear, & ! fluxScaling
-      MEF90Scaling_Linear)   ! boundaryFluxScaling
 
-   Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-      0.0_Kr,        & ! flux
-      PETSC_FALSE,   & ! Has BC
-      0.0_Kr,        & ! boundaryTemperature
-      [0.0_Kr,0.0_Kr,0.0_Kr]) ! AdvectionVector
-      
-      Type(MEF90HeatXferFaceSetOptions_Type),Parameter   :: MEF90HeatXferDefaultFaceSetOptions = MEF90HeatXferFaceSetOptions_Type( &
-      0.0_Kr,        & ! boundaryflux
-      0.0_Kr,        & ! surfaceThermalConductivity
-      0.0_Kr,        & ! externalTemperature
-      PETSC_FALSE,   & ! Has BC
-      0.0_Kr)         ! boundaryTemperature
-      
-   Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-      PETSC_FALSE,   & ! Has BC
-      0.0_Kr)          ! boundaryTemperature
-
-
+   !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
    PetscCallA(MEF90Initialize(ierr))
 
-   MEF90GlobalOptions_default%verbose           = 1
-   MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
-   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90GlobalOptions_default%timeMin           = 0.0_Kr
-   MEF90GlobalOptions_default%timeMax           = 1.0_Kr
-   MEF90GlobalOptions_default%timeNumStep       = 11
-   MEF90GlobalOptions_default%timeSkip          = 0
-   MEF90GlobalOptions_default%timeNumCycle      = 1
-   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
-   MEF90GlobalOptions_default%elementOrder      = 1
-   
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
+   !!! Get all MEF90-wide options
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
    Inquire(file=MEF90Ctx%resultFile,exist=flg)
    If (flg) Then
@@ -99,22 +65,26 @@ Program  TestHeatXferCtx
       End block EXOFormat
    End If
    distribute: Block 
-      Type(tDM),target                    :: dmDist
-      PetscInt                            :: ovlp = 0
-      If (MEF90Ctx%NumProcs > 1) Then
-         PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
-         PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
-         PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
-         PetscCallA(DMDestroy(dm,ierr))
-         dm = dmDist
-      End If
-   End Block distribute
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
+       Type(tDM),target                    :: dmDist
+       PetscInt                            :: ovlp = 0
+       Type(tPetscSF)                      :: naturalPointSF
 
+       If (MEF90Ctx%NumProcs > 1) Then
+           PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
+           PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
+           PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
+           PetscCallA(DMDestroy(dm,ierr))
+           dm = dmDist
+       End If
+   End Block distribute
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+
+   !!! Create HeatXfer context, get all HeatXfer options
    PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
    PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions,MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultFaceSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr))
+   !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx
    PetscCallA(DMDestroy(dm,ierr))
+   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
 
    !!! Get parse all materials data from the command line
    PetscCallA(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))

@@ -263,12 +263,15 @@ Contains
         PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
-        write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
-            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
-        End If
+        debugBlock: block
+            Character(len=MEF90MXSTRLEN)            :: BCoptionName
+            write(BCOptionName,'("-",a,"_section_view")') trim(name)
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            If (naturalSF /= PETSC_NULL_SF) Then
+                write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            End If
+        end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
@@ -384,12 +387,15 @@ Contains
         PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
-        write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
-            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
-        End If
+        debugBlock: block
+            Character(len=MEF90MXSTRLEN)            :: BCoptionName
+            write(BCOptionName,'("-",a,"_section_view")') trim(name)
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            If (naturalSF /= PETSC_NULL_SF) Then
+                write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            End If
+        end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
@@ -424,8 +430,7 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
-        Character(len=MEF90MXSTRLEN)            :: BCoptionName
-        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
+        Type(tPetscSF)                          :: naturalPointSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -469,12 +474,15 @@ Contains
         PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
 
 #ifdef PETSC_USE_DEBUG
-        write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
-            write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
-        End If
+        debugBlock: block
+            Character(len=MEF90MXSTRLEN)            :: BCoptionName
+            write(BCOptionName,'("-",a,"_section_view")') trim(name)
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            If (naturalSF /= PETSC_NULL_SF) Then
+                write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
+                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            End If
+        end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))

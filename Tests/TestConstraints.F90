@@ -75,7 +75,7 @@ contains
                 !!! In the current state of DMPlexVecSetClosure / DMPlexVecRestoreClosure
                 !!! in fortran, it also forces 1 alloc and 1 free 
                 PetscCallA(DMPlexVecSetClosure(dm,s,v,p,vArray,INSERT_ALL_VALUES,ierr))
-                !!! VecSetCLosure will silently drop constrained DOF, so the write does not
+                !!! VecSetClosure will silently drop constrained DOF, so the write does not
                 !!! set the value at any constrained DOF
                 PetscCallA(DMPlexVecRestoreClosure(dm,s,v,p,vArray,ierr))
             End If
@@ -205,7 +205,7 @@ contains
     End Subroutine MyVecView
 End Module localFunctions
 
-Program  TestConstraints
+Program  TestDofOrdering
 #include <petsc/finclude/petsc.h>
 Use m_MEF90
 Use petsc
@@ -436,7 +436,7 @@ Implicit NONE
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)
-End Program  TestConstraints
+End Program  TestDofOrdering
  
 ! mpirun -np 3 ./TestConstraints -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90section_view -uloc_view -u0_view -uloc2_view
        

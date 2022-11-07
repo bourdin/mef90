@@ -1,7 +1,10 @@
+#{L = 1}
+#{h = 1}
 reset
 journal off
-create brick x 1
-surface all size .125 scheme tridelaunay
+create brick x {L}
+move 1 volume x {L/2} y {L/2} z {L/2}
+surface all size {h} scheme tridelaunay
 volume 1 scheme tetmesh
 Tridelaunay point placement gq
 
@@ -19,34 +22,21 @@ sideset 10 surface 4
 sideset 20 surface 6
 nodeset 100 surface 4 
 nodeset 200 surface 6
+export mesh "CubeCubit_X.gen" dimension 3 block all overwrite
 
-block 1 element type tetra4
-export mesh "CubeNG_X-tetra4.gen" dimension 3 block all overwrite
-
-block 1 element type tetra10
-export mesh "CubeNG_X-tetra10.gen" dimension 3 block all overwrite
-
-delete sideset 10 20 nodeset 100 200
+delete sideset 10 20
 sideset 10 surface 5
 sideset 20 surface 3
 nodeset 100 surface 5 
 nodeset 200 surface 3
+export mesh "CubeCubit_Y.gen" dimension 3 block all overwrite
 
-block 1 element type tetra4
-export mesh "CubeNG_Y-tetra4.gen" dimension 3 block all overwrite
 
-block 1 element type tetra10
-export mesh "CubeNG_Y-tetra10.gen" dimension 3 block all overwrite
-
-delete sideset 10 20 nodeset 100 200
+delete sideset 10 20
 sideset 10 surface 1
 sideset 20 surface 2
 nodeset 100 surface 1 
 nodeset 200 surface 2
+export mesh "CubeCubit_Z.gen" dimension 3 block all overwrite
 
-block 1 element type tetra4
-export mesh "CubeNG_Z-tetra4.gen" dimension 3 block all overwrite
-
-block 1 element type tetra10
-export mesh "CubeNG_Z-tetra10.gen" dimension 3 block all overwrite
 

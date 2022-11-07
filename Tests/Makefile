@@ -8,6 +8,15 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+TestDofOrdering.o: ${MEF90_DIR}/Tests/TestDofOrdering.F90 MEF90 m_HeatXfer
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestDofOrdering: TestDofOrdering.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${RM} $<
+
 TestHeatXferCtx.o: ${MEF90_DIR}/Tests/TestHeatXferCtx.F90 MEF90 m_HeatXfer
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<

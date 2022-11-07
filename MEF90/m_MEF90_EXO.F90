@@ -438,7 +438,7 @@ End Subroutine MEF90EXOFormat
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
                PetscCall(VecGetArrayF90(vComp,varray,ierr))
-               Call exgnev(exoid,step,offset+c,csID(set),0,max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
+               Call exgnev(exoid,step,offset+c,csID(set),0_Ki,max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
                ! the 5th argument of exgnev is unused
                PetscCall(VecRestoreArrayF90(vComp,varray,ierr))
                PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))

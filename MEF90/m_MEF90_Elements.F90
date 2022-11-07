@@ -826,19 +826,33 @@ Contains
          Num_DoF = 6
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
-         PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
-         PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         PhiHat(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
+         !!! See Dof local Ordering.md for the unusual dof ordering
+         PhiHat(5,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
+         PhiHat(6,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(4,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(2,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(3,:) = 4.0_Kr * Xi%X * Xi%Y
+         PhiHat(1,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
          
-         GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
-         GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(2,:)%Y = 0.0_Kr
-         GradPhiHat(3,:)%X = 0.0_Kr;                                    GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(4,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(4,:)%Y = -4.0_Kr * Xi%X
-         GradPhiHat(5,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X
-         GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
+         GradPhiHat(5,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
+         GradPhiHat(6,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(6,:)%Y = 0.0_Kr
+         GradPhiHat(4,:)%X = 0.0_Kr;                                    GradPhiHat(4,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(2,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(2,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(3,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(3,:)%Y = 4.0_Kr * Xi%X
+         GradPhiHat(1,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(1,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
+         ! PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
+         ! PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         ! PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         ! PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         ! PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
+         ! PhiHat(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
+         
+         ! GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
+         ! GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(2,:)%Y = 0.0_Kr
+         ! GradPhiHat(3,:)%X = 0.0_Kr;                                    GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         ! GradPhiHat(4,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(4,:)%Y = -4.0_Kr * Xi%X
+         ! GradPhiHat(5,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X
+         ! GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
@@ -939,9 +953,10 @@ Contains
          Case (2)
             Num_DoF  = 3
             Allocate(dElem%BF(Num_DoF,Num_Gauss),stat=ierr)
-            dElem%BF(1,:) = Xi * (Xi - 1.0_Kr) * .5_Kr
-            dElem%BF(2,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
-            dElem%BF(3,:) = 1.0_Kr - dElem%BF(1,:)  - dElem%BF(2,:) !(1.0_Kr - Xi) * (1.0_Kr + Xi)
+         !!! See Dof local Ordering.md for the unusual dof ordering
+            dElem%BF(2,:) = Xi * (Xi - 1.0_Kr) * .5_Kr
+            dElem%BF(3,:) = Xi * (Xi + 1.0_Kr) * .5_Kr
+            dElem%BF(1,:) = (1.0_Kr - Xi) * (1.0_Kr + Xi)
          Case Default
             Write(*,*) '[ERROR]: Polynomial order ',dPolynomialOrder,' not implemented in ',__FUNCT__
       End Select
@@ -1508,12 +1523,12 @@ Contains
       Case(2)
          Num_DoF = 6
          Allocate(dElem%BF(Num_DoF,Nb_Gauss),stat=ierr) 
-         dElem%BF(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
-         dElem%BF(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         dElem%BF(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         dElem%BF(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
-         dElem%BF(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         dElem%BF(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
+         dElem%BF(5,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)      
+         dElem%BF(6,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         dElem%BF(4,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         dElem%BF(2,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         dElem%BF(3,:) = 4.0_Kr * Xi%X * Xi%Y
+         dElem%BF(1,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
       Case Default
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
          ierr = PETSC_ERR_SUP

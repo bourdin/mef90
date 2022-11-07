@@ -3,7 +3,6 @@ Program HeatXfer
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXfer
-   Use m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXferDefault
    Use petsc
    Implicit NONE   

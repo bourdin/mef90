@@ -131,14 +131,13 @@ Implicit NONE
             PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
+            PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
         End If
     End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
-
-    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
 
     ! Create nodal local Vec holding coordinates
     name = "U"
