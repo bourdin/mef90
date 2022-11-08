@@ -217,8 +217,7 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
-        Character(len=MEF90MXSTRLEN)            :: BCoptionName
-        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
+        Type(tPetscSF)                          :: naturalPointSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))

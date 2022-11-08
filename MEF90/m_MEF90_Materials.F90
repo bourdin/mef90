@@ -669,7 +669,7 @@ Contains
 #define __FUNCT__ "MEF90MatPropBagSetFromOptions2D"
 !!!
 !!!
-!!!  MEF90MatPropBagSetFromOptionsierr:
+!!!  MEF90MatPropBagSetFromOptions:
 !!!  MEF90MatPropBagSetFromOptions2D
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!

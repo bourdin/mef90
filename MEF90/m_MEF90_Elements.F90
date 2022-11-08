@@ -840,19 +840,6 @@ Contains
          GradPhiHat(2,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(2,:)%Y = -4.0_Kr * Xi%X
          GradPhiHat(3,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(3,:)%Y = 4.0_Kr * Xi%X
          GradPhiHat(1,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(1,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
-         ! PhiHat(1,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
-         ! PhiHat(2,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         ! PhiHat(3,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         ! PhiHat(4,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
-         ! PhiHat(5,:) = 4.0_Kr * Xi%X * Xi%Y
-         ! PhiHat(6,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
-         
-         ! GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
-         ! GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(2,:)%Y = 0.0_Kr
-         ! GradPhiHat(3,:)%X = 0.0_Kr;                                    GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         ! GradPhiHat(4,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(4,:)%Y = -4.0_Kr * Xi%X
-         ! GradPhiHat(5,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X
-         ! GradPhiHat(6,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(6,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
@@ -1291,69 +1278,128 @@ Contains
          Num_DoF = 4
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
+         ! PhiHat(2,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
+         ! PhiHat(1,:) = Xi(:)%X
+         ! PhiHat(3,:) = Xi(:)%Y
+         ! PhiHat(4,:) = Xi(:)%Z
+         
+         ! GradPhiHat(2,:)%X = -1.0_Kr;GradPhiHat(2,:)%Y = -1.0_Kr;GradPhiHat(2,:)%Z = -1.0_Kr;
+         ! GradPhiHat(1,:)%X =  1.0_Kr;GradPhiHat(1,:)%Y =  0.0_Kr;GradPhiHat(1,:)%Z =  0.0_Kr;
+         ! GradPhiHat(3,:)%X =  0.0_Kr;GradPhiHat(3,:)%Y =  1.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
+         ! GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
-         PhiHat(2,:) = Xi(:)%X
-         PhiHat(3,:) = Xi(:)%Y
+         PhiHat(3,:) = Xi(:)%X
+         PhiHat(2,:) = Xi(:)%Y
          PhiHat(4,:) = Xi(:)%Z
          
          GradPhiHat(1,:)%X = -1.0_Kr;GradPhiHat(1,:)%Y = -1.0_Kr;GradPhiHat(1,:)%Z = -1.0_Kr;
-         GradPhiHat(2,:)%X =  1.0_Kr;GradPhiHat(2,:)%Y =  0.0_Kr;GradPhiHat(2,:)%Z =  0.0_Kr;
-         GradPhiHat(3,:)%X =  0.0_Kr;GradPhiHat(3,:)%Y =  1.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
+         GradPhiHat(3,:)%X =  1.0_Kr;GradPhiHat(3,:)%Y =  0.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
+         GradPhiHat(2,:)%X =  0.0_Kr;GradPhiHat(2,:)%Y =  1.0_Kr;GradPhiHat(2,:)%Z =  0.0_Kr;
          GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
       Case(2)
          Num_Dof = 10
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(1,:)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
-         PhiHat(2,:)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(3,:)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(4,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
-         PhiHat(5,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
-         PhiHat(6,:)  = 4.0_Kr *  Xi%X * Xi%Y
-         PhiHat(7,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
-         PhiHat(8,:)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
-         PhiHat(9,:)  = 4.0_Kr * Xi%X * Xi%Z
-         PhiHat(10,:) = 4.0_Kr * Xi%Y * Xi%Z
+         ! PhiHat(8, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         ! PhiHat(7, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         ! PhiHat(9, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         ! PhiHat(10,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
+         ! PhiHat(1, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
+         ! PhiHat(3, :)  = 4.0_Kr *  Xi%X * Xi%Y
+         ! PhiHat(2, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
+         ! PhiHat(5, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         ! PhiHat(4, :)  = 4.0_Kr * Xi%X * Xi%Z
+         ! PhiHat(6, :)  = 4.0_Kr * Xi%Y * Xi%Z
          
-         GradPhiHat(1,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(1,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(1,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         ! GradPhiHat(8,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         ! GradPhiHat(8,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         ! GradPhiHat(8,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
 
-         GradPhiHat(2,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
-         GradPhiHat(2,:)%Y = 0.0_Kr
-         GradPhiHat(2,:)%Z = 0.0_Kr
+         ! GradPhiHat(7,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
+         ! GradPhiHat(7,:)%Y = 0.0_Kr
+         ! GradPhiHat(7,:)%Z = 0.0_Kr
          
-         GradPhiHat(3,:)%X = 0.0_Kr
-         GradPhiHat(3,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(3,:)%Z = 0.0_Kr
+         ! GradPhiHat(9,:)%X = 0.0_Kr
+         ! GradPhiHat(9,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         ! GradPhiHat(9,:)%Z = 0.0_Kr
          
-         GradPhiHat(4,:)%X = 0.0_Kr
-         GradPhiHat(4,:)%Y = 0.0_Kr
-         GradPhiHat(4,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
+         ! GradPhiHat(10,:)%X = 0.0_Kr
+         ! GradPhiHat(10,:)%Y = 0.0_Kr
+         ! GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
          
-         GradPhiHat(5,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
-         GradPhiHat(5,:)%Y = -4.0_Kr * Xi%X
-         GradPhiHat(5,:)%Z = -4.0_Kr * Xi%X
+         ! GradPhiHat(1,:)%X =  4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
+         ! GradPhiHat(1,:)%Y = -4.0_Kr * Xi%X
+         ! GradPhiHat(1,:)%Z = -4.0_Kr * Xi%X
 
-         GradPhiHat(6,:)%X = 4.0_Kr * Xi%Y
-         GradPhiHat(6,:)%Y = 4.0_Kr * Xi%X
-         GradPhiHat(6,:)%Z = 0.0_Kr
+         ! GradPhiHat(3,:)%X = 4.0_Kr * Xi%Y
+         ! GradPhiHat(3,:)%Y = 4.0_Kr * Xi%X
+         ! GradPhiHat(3,:)%Z = 0.0_Kr
 
-         GradPhiHat(7,:)%X = -4.0_Kr * Xi%Y
-         GradPhiHat(7,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
-         GradPhiHat(7,:)%Z = -4.0_Kr * Xi%Y
+         ! GradPhiHat(2,:)%X = -4.0_Kr * Xi%Y
+         ! GradPhiHat(2,:)%Y =  4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
+         ! GradPhiHat(2,:)%Z = -4.0_Kr * Xi%Y
 
-         GradPhiHat(8,:)%X = -4.0_Kr * Xi%Z
-         GradPhiHat(8,:)%Y = -4.0_Kr * Xi%Z
-         GradPhiHat(8,:)%Z = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y -2.0_Kr * Xi%Z)
+         ! GradPhiHat(5,:)%X = -4.0_Kr * Xi%Z
+         ! GradPhiHat(5,:)%Y = -4.0_Kr * Xi%Z
+         ! GradPhiHat(5,:)%Z =  4.0_Kr * (1.0_Kr - Xi%X - Xi%Y -2.0_Kr * Xi%Z)
 
-         GradPhiHat(9,:)%X = 4.0_Kr * Xi%Z
-         GradPhiHat(9,:)%Y = 0.0_Kr
-         GradPhiHat(9,:)%Z = 4.0_Kr * Xi%X
+         ! GradPhiHat(4,:)%X = 4.0_Kr * Xi%Z
+         ! GradPhiHat(4,:)%Y = 0.0_Kr
+         ! GradPhiHat(4,:)%Z = 4.0_Kr * Xi%X
           
+         ! GradPhiHat(6,:)%X = 0.0_Kr
+         ! GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Z
+         ! GradPhiHat(6,:)%Z = 4.0_Kr * Xi%Y
+         PhiHat(7, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         PhiHat(9, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(8, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(10,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
+         PhiHat(1, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
+         PhiHat(3, :)  = 4.0_Kr *  Xi%X * Xi%Y
+         PhiHat(2, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
+         PhiHat(5, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
+         PhiHat(4, :)  = 4.0_Kr * Xi%X * Xi%Z
+         PhiHat(6, :)  = 4.0_Kr * Xi%Y * Xi%Z
+         
+         GradPhiHat(7,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(7,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(7,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+
+         GradPhiHat(9,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
+         GradPhiHat(9,:)%Y = 0.0_Kr
+         GradPhiHat(9,:)%Z = 0.0_Kr
+         
+         GradPhiHat(8,:)%X = 0.0_Kr
+         GradPhiHat(8,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(8,:)%Z = 0.0_Kr
+         
          GradPhiHat(10,:)%X = 0.0_Kr
-         GradPhiHat(10,:)%Y = 4.0_Kr * Xi%Z
-         GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Y
+         GradPhiHat(10,:)%Y = 0.0_Kr
+         GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
+         
+         GradPhiHat(1,:)%X =  4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
+         GradPhiHat(1,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(1,:)%Z = -4.0_Kr * Xi%X
+
+         GradPhiHat(3,:)%X = 4.0_Kr * Xi%Y
+         GradPhiHat(3,:)%Y = 4.0_Kr * Xi%X
+         GradPhiHat(3,:)%Z = 0.0_Kr
+
+         GradPhiHat(2,:)%X = -4.0_Kr * Xi%Y
+         GradPhiHat(2,:)%Y =  4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
+         GradPhiHat(2,:)%Z = -4.0_Kr * Xi%Y
+
+         GradPhiHat(5,:)%X = -4.0_Kr * Xi%Z
+         GradPhiHat(5,:)%Y = -4.0_Kr * Xi%Z
+         GradPhiHat(5,:)%Z =  4.0_Kr * (1.0_Kr - Xi%X - Xi%Y -2.0_Kr * Xi%Z)
+
+         GradPhiHat(4,:)%X = 4.0_Kr * Xi%Z
+         GradPhiHat(4,:)%Y = 0.0_Kr
+         GradPhiHat(4,:)%Z = 4.0_Kr * Xi%X
+          
+         GradPhiHat(6,:)%X = 0.0_Kr
+         GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Z
+         GradPhiHat(6,:)%Z = 4.0_Kr * Xi%Y
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
@@ -1368,6 +1414,7 @@ Contains
             dElem%Grad_BF(iDoF,iG) = Bt * GradPhiHat(iDoF,iG) 
          End Do
       End Do
+      Write(*,*) 'Bt ', Bt
      
       DeAllocate(Xi,stat=ierr)
       DeAllocate(PhiHat,stat=ierr)

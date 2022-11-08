@@ -1,0 +1,24 @@
+reset
+journal off
+
+#{L = 1}
+#{h = .25}
+create brick x {L} Y {2*L} Z {3*L}
+move volume 1 x {L/2} y {2*L/2} z {3*L/2}
+surface all size {h} scheme tridelaunay
+volume 1 scheme tetmesh
+Tridelaunay point placement gq
+
+mesh surface all
+smooth surface all
+smooth surface all
+
+mesh volume all
+smooth volume all
+smooth volume all
+
+block 1 volume 1
+export mesh "Cube123.gen" dimension 3 block all overwrite
+
+
+

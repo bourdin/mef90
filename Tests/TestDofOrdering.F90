@@ -13,7 +13,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)                   :: name
     Type(MEF90CtxGlobalOptions_Type),pointer       :: MEF90GlobalOptions
 
-    PetscInt                                       :: nVal,i,p,pStart,pEnd
+    PetscInt                                       :: nVal,i,p,pStart,pEnd,dim
     Type(tVec)                                     :: U
     PetscReal,Dimension(:),Pointer                 :: UArray
 
@@ -38,6 +38,7 @@ Implicit NONE
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMGetDimension(dm,dim,ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -57,12 +58,11 @@ Implicit NONE
     PetscCallA(VecGetDM(U,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
     PetscCallA(PetscSectionViewFromOptions(sectionU,PETSC_NULL_OPTIONS,"-mef90sectionU_view",ierr))
+    PetscCallA(VecSet(U,0.0_Kr,ierr))
 
-    if (MEF90GlobalOptions%elementOrder == 1) then
-        nVal = 3
-    else
-        nVal = 6
-    end if
+    PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
+    nVal = size(UArray)
+    PetscCallA(DMPlexVecRestoreClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
     Allocate(UArray(nVal))
     UArray = [(i, i = 1,nVal)]
     PetscCallA(DMPlexVecSetClosure(dmU,sectionU,U,0_Ki,UArray,INSERT_ALL_VALUES,ierr))
