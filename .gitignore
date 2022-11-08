@@ -1,8 +1,8 @@
 *~
-*o
-*mod
-*pyc
-*log
+*.o
+*.mod
+*.pyc
+*.log
 *.ener*
 *_out.gen
 _minted*
