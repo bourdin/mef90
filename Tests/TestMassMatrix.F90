@@ -5,8 +5,8 @@ use m_MEF90
 implicit none
 
     abstract interface
-        function f_interface(x,y)
-            PetscReal,intent(in) :: x,y
+        function f_interface(x,y,z)
+            PetscReal,intent(in) :: x,y,z
             PetscReal            :: f_interface
         end function f_interface
     end interface
@@ -15,25 +15,27 @@ Contains
 #undef __FUNCT__
 #define __FUNCT__ "f1"
 
-    function f1(x,y)
-        PetscReal,intent(in)   :: x,y
+    function f1(x,y,z)
+        PetscReal,intent(in)   :: x,y,z
         PetscReal              :: f1
 
-        PetscInt               :: i,j
+        PetscInt               :: i,j,k
         PetscBool              :: flg
         PetscErrorCode         :: ierr
 
         i = 0_Ki
         j = 0_Ki
+        k = 0_Ki
         PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-i',i,flg,ierr))
         PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-j',j,flg,ierr))
-        f1 = x**i*y**j
+        PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-k',k,flg,ierr))
+        f1 = x**i * y**j * z**k
     end function f1
 #undef __FUNCT__
 #define __FUNCT__ "project"
 
     subroutine project(v,s,f,ierr)
-        Type(tVec),intent(IN)              :: v
+        Type(tVec),intent(IN)               :: v
         Type(tPetscSection),intent(IN)     :: s
         procedure(f_interface)             :: f
 
@@ -67,7 +69,7 @@ Contains
                 !!! outside of this loop 
                 Allocate(vArray(numDof))
                 Do i = 1,numDof
-                    vArray(i) = f(xyz(1),xyz(2)) * 10**(i-1)
+                    vArray(i) = f(xyz(1),xyz(2),xyz(3)) * 10**(i-1)
                 End Do
                 PetscCallA(VecSetValuesSectionF90(v,s,p,vArray,INSERT_ALL_VALUES,ierr))
                 !!! This call drops the constrained values if the mode is INSERT_VALUES
