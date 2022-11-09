@@ -16,12 +16,14 @@ Module m_MEF90_DefMechCtx_Type
       Type(tVec),pointer                      :: boundaryForce
       Type(tVec),pointer                      :: pressureForce
       !Type(tVec),pointer                      :: crackPressure
+      Type(tVec),pointer                      :: cohesiveDisplacement
       Type(tVec),Pointer                      :: plasticStrain
       Type(tVec),Pointer                      :: cumulatedPlasticDissipation
       Type(tVec),Pointer                      :: stress
 
       Type(tPetscViewer)                      :: viewer
       Type(tPetscSF)                          :: displacementToIOSF,IOToDisplacementSF
+      Type(tPetscSF)                          :: cohesiveDisplacementToIOSF,IOToCohesiveDisplacementSF
       Type(tPetscSF)                          :: boundaryToDisplacementSF
       Type(tPetscSF)                          :: damageToIOSF,IOToDamageSF
       Type(tPetscSF)                          :: boundaryToDamageSF
@@ -54,6 +56,7 @@ Module m_MEF90_DefMechCtx_Type
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscEnum                              :: boundaryDisplacementScaling
+      PetscEnum                              :: cohesiveDisplacementScaling
       PetscEnum                              :: displacementLowerBoundScaling
       PetscEnum                              :: displacementUpperBoundScaling
       PetscEnum                              :: boundaryDamageScaling
@@ -88,6 +91,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: DamageATLinSoftk
       PetscReal                              :: DamageAT1expb
       PetscEnum                              :: drivingForceType
+      PetscReal,Dimension(3)                 :: cohesiveDisplacement
       PetscBool,Dimension(3)                 :: Has_displacementBC
       PetscReal,Dimension(3)                 :: boundaryDisplacement
       PetscReal,Dimension(3)                 :: displacementLowerBound
@@ -538,6 +542,9 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       PetscCall(VecDuplicate(DefMechCtx%damageLocal,DefMechCtx%TemperatureLocal,ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%TemperatureLocal,"Temperature",ierr))
 
+      vecName = "cohesiveDisplacement"
+      Allocate(DefMechCtx%cohesiveDisplacement,stat=ierr)
+      PetscCall(MEF90CreateLocalVector(dm,MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,dim,vecName,DefMechCtx%cohesiveDisplacement,ierr)) 
       vecName = "bodyForce"
       Allocate(DefMechCtx%bodyForce,stat=ierr)
       PetscCall(MEF90CreateCellVector(dm,dim,vecName,DefMechCtx%bodyForce,ierr))
@@ -573,6 +580,8 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       !!! Create the IO SF for all fields
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%displacementLocal,DefMechCtx%displacementToIOSF,DefMechCtx%IOTodisplacementSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%damageLocal,DefMechCtx%damageToIOSF,DefMechCtx%IOTodamageSF,ierr))
+
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%cohesiveDisplacement,DefMechCtx%cohesiveDisplacementToIOSF,DefMechCtx%IOToCohesiveDisplacementSF,ierr))
 
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%temperatureLocal,DefMechCtx%temperatureToIOSF,DefMechCtx%IOTotemperatureSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%bodyForce,DefMechCtx%bodyForceToIOSF,DefMechCtx%IOTobodyForceSF,ierr))
@@ -665,6 +674,12 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
          Nullify(DefMechCtx%temperatureLocal) 
       End If
 
+      If (Associated(DefMechCtx%cohesiveDisplacement)) Then
+         PetscCall(VecDestroy(DefMechCtx%cohesiveDisplacement,ierr))
+         DeAllocate(DefMechCtx%cohesiveDisplacement)
+         Nullify(DefMechCtx%cohesiveDisplacement) 
+      End If
+
       If (Associated(DefMechCtx%bodyForce)) Then
          PetscCall(VecDestroy(DefMechCtx%bodyForce,ierr))
          DeAllocate(DefMechCtx%bodyForce)
@@ -700,6 +715,8 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       !!! Destroy all PetscSF
       PetscCall(PetscSFDestroy(DefMechCtx%displacementToIOSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%IOTodisplacementSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%cohesiveDisplacementToIOSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%IOToCohesiveDisplacementSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%damageToIOSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%IOTodamageSF,ierr))
 
@@ -714,10 +731,11 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       PetscCall(PetscSFDestroy(DefMechCtx%plasticStrainToIOSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%IOToplasticStrainSF,ierr))
 
-      !!! Create the SF to exchange boundary values of the displacement and damage. 
+      !!! Destroy the SF to exchange boundary values of the displacement and damage. 
       PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDisplacementSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDamageSF,ierr))
 
+      !!! Destroy the megaDM
       PetscCall(DMDestroy(DefMechCtx%megaDM,ierr))
    End Subroutine MEF90DefMechCtxDestroy
    
@@ -752,6 +770,7 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementLowerBoundScaling,MEF90ScalingList,default%displacementLowerBoundScaling,'displacementlowerbound_scaling','Displacement lower bound scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementUpperBoundScaling,MEF90ScalingList,default%displacementUpperBoundScaling,'displacementupperbound_scaling','Displacement upper bound scaling',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%cohesiveDisplacementScaling,MEF90ScalingList,default%cohesiveDisplacementScaling,'cohesiveDisplacement_scaling','Cohesive displacement scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDamageScaling,MEF90ScalingList,default%boundaryDamageScaling,'boundaryDamage_scaling','Boundary damage scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%bodyForceScaling,MEF90ScalingList,default%bodyForceScaling,'bodyforce_scaling','Body force scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryForceScaling,MEF90ScalingList,default%boundaryForceScaling,'boundaryforce_scaling','Boundary force scaling',ierr))
@@ -814,6 +833,7 @@ Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma,default%unilateralContactHydrostaticDeviatoricGamma,'unilateralContact_hydrostaticDeviatoric_gamma','[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechCellSetOptions%unilateralContactHybrid,default%unilateralContactHybrid,'unilateralContact_hybrid','Use hybrid unilateral contact formulation (Y/N)',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechCellSetOptions%drivingForceType,MEF90DefMech_drivingForceTypeList,default%drivingForceType,'drivingForce_type','Type of nucleation driving force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%cohesiveDisplacement,3_Ki,'cohesiveDisplacement','[m] (U): Cohesive displacement value',ierr))
       PetscCall(PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementLowerBound,3_Ki,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))

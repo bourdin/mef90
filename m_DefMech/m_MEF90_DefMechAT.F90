@@ -18,10 +18,11 @@ Contains
 !!!  
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechGetATModel(cellSetOptions,ATModel,isElastic)
+   Subroutine MEF90DefMechGetATModel(cellSetOptions,ATModel,isElastic,ierr)
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      Class(MEF90DefMechAT_Type),Allocatable,Intent(OUT):: ATModel
+      Class(MEF90DefMechAT_Type),Allocatable,Intent(OUT) :: ATModel
       PetscBool,Intent(OUT)                              :: isElastic
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       isElastic = .FALSE.
       Select Case (cellSetOptions%damageType)

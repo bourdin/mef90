@@ -1,6 +1,7 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
 module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
+#include "petsc/finclude/petsc.h"
    use MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
    !use MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
@@ -17,9 +18,10 @@ Contains
 !!!  
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechGetSplit(cellSetOptions,Split)
+   Subroutine MEF90DefMechGetSplit(cellSetOptions,Split,ierr)
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Class(MEF90_DEFMECHSPLIT),Allocatable,intent(OUT)  :: Split
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Select Case(cellSetOptions%unilateralContactType)
       Case(MEF90DefMech_unilateralContactTypeNone)
