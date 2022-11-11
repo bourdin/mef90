@@ -1,7 +1,10 @@
 reset
 journal off
-create brick x 1
-surface 1 size .1 scheme tridelaunay
+#{L=1}
+#{h=.1}
+create brick x {L}
+move volume 1 X {L/2} Y {L/2} Z {L/2}
+surface 1 size {h} scheme tridelaunay
 Tridelaunay point placement gq
 mesh surface 1
 

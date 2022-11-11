@@ -413,6 +413,13 @@ Contains
                Allocate(BBinv(4))
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
+! Write(*,*) 'BBinv:'
+! Write(*,*) BBinv(1:2)
+! Write(*,*) BBinv(3:4)
+! Write(*,*) 'BB:'
+! Write(*,*) BB(1:2)
+! Write(*,*) BB(3:4)
+! Write(*,*) 'V0:',v0                  
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
@@ -548,6 +555,26 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
+! Write(*,*) 'BBinv:'
+! Write(*,*) BBinv(1:3)
+! Write(*,*) BBinv(4:6)
+! Write(*,*) BBinv(7:9)
+! Write(*,*) 'BB:'
+! Write(*,*) BB(1:3)
+! Write(*,*) BB(4:6)
+! Write(*,*) BB(7:9)
+! Write(*,*) 'V0:',v0
+! check: Block
+!    Type(Mat3D) :: J
+!    J%XX = BBinv(1); J%XY = BBinv(2); J%XZ = BBinv(3)
+!    J%YX = BBinv(4); J%YY = BBinv(5); J%YZ = BBinv(6)
+!    J%ZX = BBinv(7); J%ZY = BBinv(8); J%ZZ = BBinv(9)
+!    Write(*,*) 'O  :',J*Vect3D(0.0_Kr,0.0_Kr,0.0_Kr)
+!    Write(*,*) 'e1 :',J*Vect3D(1.0_Kr,0.0_Kr,0.0_Kr)
+!    Write(*,*) 'e2 :',J*Vect3D(0.0_Kr,1.0_Kr,0.0_Kr)
+!    Write(*,*) 'e3 :',J*Vect3D(0.0_Kr,0.0_Kr,1.0_Kr)
+! end block check
+
                   detBBinv = 8.0_Kr * detBBinv
                   Call ElementPLagrange3DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
@@ -682,7 +709,8 @@ Contains
          Xi(1) = [ 1.0_Kr / 6.0_Kr,1.0_Kr / 6.0_Kr ]
          Xi(2) = [ 2.0_Kr / 3.0_Kr,1.0_Kr / 6.0_Kr ]
          Xi(3) = [ 1.0_Kr / 6.0_Kr,2.0_Kr / 3.0_Kr ]
-         dElem%Gauss_C = detBinv / 6.0_Kr
+         dElem%Gauss_C(1:Nb_Gauss) = detBinv / 6.0_Kr
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(3)
          Nb_Gauss = 4
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -693,6 +721,7 @@ Contains
          Xi(4) = [ 1.0_Kr / 5.0_Kr,1.0_Kr / 5.0_Kr ]
          dElem%Gauss_C(1)   = -detBinv * 9.0_Kr / 32.0_Kr
          dElem%Gauss_C(2:4) =  detBinv * 25.0_Kr / 96.0_Kr
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(4)
          Nb_Gauss = 6
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -705,6 +734,7 @@ Contains
          Xi(6) = [ 0.445948490915965_Kr,  0.445948490915965_Kr ]
          dElem%Gauss_C(1:3) = 0.109951743655322 / 2.0_Kr * detBinv
          dElem%Gauss_C(4:6) = 0.223381589678011 / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(5)
          Nb_Gauss = 7
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -719,6 +749,7 @@ Contains
          dElem%Gauss_C(1) = .225_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(2:4) = 0.13239415278850616 / 2.0_Kr * detBinv
          dElem%Gauss_C(5:7) = 0.12593918054482717 / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(-6)
          !!! It seems to me that this is really a quadrature rule of order 5...
          Nb_Gauss = 9
@@ -735,6 +766,7 @@ Contains
          Xi(9) = [ 0.037477420750088_Kr,  0.165409927389841_Kr ]
          dElem%Gauss_C(1:3) = 0.205950504760887_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(4:9) = 0.063691414286223_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(6)
          Nb_Gauss = 12
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -754,6 +786,7 @@ Contains
          dElem%Gauss_C(1:3)  = 0.050844906370207_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(4:6)  = 0.116786275726379_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(7:12) = 0.082851075618374_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(7)
          Nb_Gauss = 13
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -775,6 +808,7 @@ Contains
          dElem%Gauss_C(2:4)  =  0.175615257433204_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(5:7)  =  0.053347235608839_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(8:13) =  0.077113760890257_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case(8,9)
          Nb_Gauss = 19
          Allocate(Xi(Nb_Gauss),stat=ierr)
@@ -804,6 +838,7 @@ Contains
          dElem%Gauss_C(8:10)  = 0.07964773892720910_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(11:13) = 0.02557767565869810_Kr / 2.0_Kr * detBinv
          dElem%Gauss_C(14:19) = 0.04328353937728940_Kr / 2.0_Kr * detBinv
+         dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_Kr - sum(dElem%Gauss_C(1:Nb_Gauss-1))
       Case Default
          Write(*,*) __FUNCT__,': Unimplemented quadrature order',dQuadratureOrder
          STOP
@@ -827,19 +862,19 @@ Contains
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          !!! See Dof local Ordering.md for the unusual dof ordering
-         PhiHat(5,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
-         PhiHat(6,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(4,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(2,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
-         PhiHat(3,:) = 4.0_Kr * Xi%X * Xi%Y
-         PhiHat(1,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(4,:) = (1.0_Kr - Xi%X - Xi%Y) * (1.0_Kr - 2.0_Kr * Xi%X - 2.0_Kr * Xi%Y)        
+         PhiHat(5,:) = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(6,:) = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(1,:) = 4.0_Kr * Xi%X * (1.0_Kr - Xi%X - Xi%Y)
+         PhiHat(2,:) = 4.0_Kr * Xi%X * Xi%Y
+         PhiHat(3,:) = 4.0_Kr * Xi%Y * (1.0_Kr - Xi%X - Xi%Y)
          
-         GradPhiHat(5,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(5,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
-         GradPhiHat(6,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(6,:)%Y = 0.0_Kr
-         GradPhiHat(4,:)%X = 0.0_Kr;                                    GradPhiHat(4,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(2,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(2,:)%Y = -4.0_Kr * Xi%X
-         GradPhiHat(3,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(3,:)%Y = 4.0_Kr * Xi%X
-         GradPhiHat(1,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(1,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
+         GradPhiHat(4,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr;     GradPhiHat(4,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%y -3.0_Kr
+         GradPhiHat(5,:)%X = 4.0_Kr * Xi%X - 1.0_Kr;                    GradPhiHat(5,:)%Y = 0.0_Kr
+         GradPhiHat(6,:)%X = 0.0_Kr;                                    GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(1,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(1,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(2,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(2,:)%Y = 4.0_Kr * Xi%X
+         GradPhiHat(3,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(3,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
@@ -1350,9 +1385,9 @@ Contains
          ! GradPhiHat(6,:)%X = 0.0_Kr
          ! GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Z
          ! GradPhiHat(6,:)%Z = 4.0_Kr * Xi%Y
-         PhiHat(7, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
-         PhiHat(9, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(8, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(8, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         PhiHat(7, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(9, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
          PhiHat(10,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
          PhiHat(1, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
          PhiHat(3, :)  = 4.0_Kr *  Xi%X * Xi%Y
@@ -1361,17 +1396,17 @@ Contains
          PhiHat(4, :)  = 4.0_Kr * Xi%X * Xi%Z
          PhiHat(6, :)  = 4.0_Kr * Xi%Y * Xi%Z
          
-         GradPhiHat(7,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(7,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(7,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(8,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(8,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(8,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
 
-         GradPhiHat(9,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
-         GradPhiHat(9,:)%Y = 0.0_Kr
-         GradPhiHat(9,:)%Z = 0.0_Kr
+         GradPhiHat(7,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
+         GradPhiHat(7,:)%Y = 0.0_Kr
+         GradPhiHat(7,:)%Z = 0.0_Kr
          
-         GradPhiHat(8,:)%X = 0.0_Kr
-         GradPhiHat(8,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(8,:)%Z = 0.0_Kr
+         GradPhiHat(9,:)%X = 0.0_Kr
+         GradPhiHat(9,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(9,:)%Z = 0.0_Kr
          
          GradPhiHat(10,:)%X = 0.0_Kr
          GradPhiHat(10,:)%Y = 0.0_Kr
@@ -1414,7 +1449,6 @@ Contains
             dElem%Grad_BF(iDoF,iG) = Bt * GradPhiHat(iDoF,iG) 
          End Do
       End Do
-      Write(*,*) 'Bt ', Bt
      
       DeAllocate(Xi,stat=ierr)
       DeAllocate(PhiHat,stat=ierr)

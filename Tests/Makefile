@@ -84,6 +84,14 @@ viewDAG: viewDAG.o
 	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
 	${RM} -f viewDAG.o
 
+TestDMPlexComputeCellGeometryAffineFEM: TestDMPlexComputeCellGeometryAffineFEM.o
+	-@${CLINKER} -o TestDMPlexComputeCellGeometryAffineFEM TestDMPlexComputeCellGeometryAffineFEM.o ${PETSC_LIB}
+	${RM} -f TestDMPlexComputeCellGeometryAffineFEM.o
+
+TestDMPlexComputeCellGeometryAffineFEMF90: TestDMPlexComputeCellGeometryAffineFEMF90.o
+	-@${FLINKER} -o TestDMPlexComputeCellGeometryAffineFEMF90 TestDMPlexComputeCellGeometryAffineFEMF90.o ${PETSC_LIB} ${PETSC_FORTRAN_LIB}
+	${RM} -f TestDMPlexComputeCellGeometryAffineFEMF90.o
+
 TestEXOReadPart.o: ${MEF90_DIR}/Tests/TestEXOReadPart.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

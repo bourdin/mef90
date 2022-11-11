@@ -462,6 +462,7 @@ Contains
                   End Do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
                End Do ! cell
+               myEnergy = myEnergy * 0.5_Kr
 
                myBodyWork    = 0.0_Kr
                Allocate(fluxDof(1_Ki))

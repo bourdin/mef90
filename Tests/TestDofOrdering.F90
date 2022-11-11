@@ -13,7 +13,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)                   :: name
     Type(MEF90CtxGlobalOptions_Type),pointer       :: MEF90GlobalOptions
 
-    PetscInt                                       :: nVal,i,p,pStart,pEnd,dim
+    PetscInt                                       :: nVal,i,dim
     Type(tVec)                                     :: U
     PetscReal,Dimension(:),Pointer                 :: UArray
 
@@ -60,39 +60,17 @@ Implicit NONE
     PetscCallA(PetscSectionViewFromOptions(sectionU,PETSC_NULL_OPTIONS,"-mef90sectionU_view",ierr))
     PetscCallA(VecSet(U,0.0_Kr,ierr))
 
-    PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
-    nVal = size(UArray)
-    PetscCallA(DMPlexVecRestoreClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
-    Allocate(UArray(nVal))
-    UArray = [(i, i = 1,nVal)]
-    PetscCallA(DMPlexVecSetClosure(dmU,sectionU,U,0_Ki,UArray,INSERT_ALL_VALUES,ierr))
-    PetscCallA(VecView(U,PETSC_VIEWER_STDOUT_WORLD,ierr))
-    DeAllocate(UArray)
-
-
-    PetscCallA(VecGetArrayF90(U,UArray,ierr))
-    nVal = size(UArray)
-    UArray = [(i-1, i = 1,nVal)]
-    PetscCallA(VecRestoreArrayF90(U,UArray,ierr))
-    PetscCallA(VecView(U,PETSC_VIEWER_STDOUT_WORLD,ierr))
-
-    PetscCallA(DMPlexGetHeightStratum(dmU,0_Ki,pStart,pEnd,ierr))
-    Write(*,*) pStart,pEnd
-    Do p = pStart,pEnd-1
-        PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,p,UArray,ierr))
-        Write(*,*) p, UArray
+    PetscCallA(VecGetLocalSize(U,nVal,ierr))
+    Do i = 1, nVal
+        PetscCallA(VecGetArrayF90(U,UArray,ierr))
+        UArray    = 0.0_Kr
+        UArray(i) = 1.0_Kr
+        PetscCallA(VecRestoreArrayF90(U,UArray,ierr))
+        PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
+        Write(*,*) i, UArray
         PetscCallA(DMPlexVecRestoreClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
     End Do
 
-    if (MEF90GlobalOptions%elementOrder == 2) then
-        PetscCallA(DMPlexGetHeightStratum(dmU,1_Ki,pStart,pEnd,ierr))
-        Write(*,*) pStart,pEnd
-        Do p = pStart,pEnd-1
-            PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,p,UArray,ierr))
-            Write(*,*) p, UArray
-            PetscCallA(DMPlexVecRestoreClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
-        End Do
-    end if
     PetscCallA(VecDestroy(U,ierr))
     PetscCallA(DMDestroy(dm,ierr))
 
