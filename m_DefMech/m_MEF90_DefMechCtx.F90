@@ -452,7 +452,7 @@ Contains
       Type(tDM),DImension(:),Pointer                           :: dmList
       Type(tPetscSF)                                           :: dummySF
 
-      PetscCall(MEF90DefMechCtxInitialize)
+      PetscCall(MEF90DefMechCtxInitialize_Private(ierr))
       DefMechCtx%MEF90Ctx => MEF90Ctx
       
       PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr))
