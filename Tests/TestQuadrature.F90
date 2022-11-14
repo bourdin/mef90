@@ -1,326 +1,264 @@
+#include "../MEF90/mef90.inc"
 Program TestQuadrature
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
-   Use m_MEF90_DefMechCtx
-   Use m_MEF90_DefMech
    Use petsc
    Implicit NONE   
 
    PetscErrorCode                      :: ierr
-   Type(DM),target                     :: Mesh
-   Character(len=MEF90MXSTRLEN)       :: IOBuffer
+   Type(tDM),target                    :: dm,dmU
+   Type(tPetscSection),target          :: sectionU
+   Character(len=MEF90MXSTRLEN)        :: IOBuffer
    PetscInt                            :: dim
-   Type(Vec)                           :: xVec
-   PetscReal,Dimension(:,:),Pointer    :: coordPtr
-   PetscReal,Dimension(:),Pointer      :: xPtr
    PetscBool                           :: flg
-   Integer                             :: i,j,k,v
+   PetscInt                            :: i,j,k
 
-   PetscReal                           :: scal,sol
+   PetscReal                           :: scal,sol,xr=1.0_Kr,xl=0.0_Kr,yr=1.0_Kr,yl=0.0_Kr,zr=1.0_Kr,zl=0.0_Kr
+   Character(len=MEF90MXSTRLEN)        :: name
+   Type(tVec)                          :: locVecU
    Type(Vect2D)                        :: v2D
    Type(Vect3D)                        :: v3D
-   Type(MatS2D)                        :: M2D
-   Type(MatS3D)                        :: M3D
-
-   Integer                             :: numVertex
-   Integer                             :: QuadOrderMax,QuadOrder
-   PetscInt                            :: localSize,globalSize
-   Type(SectionReal)                   :: defaultSection
+   PetscInt                            :: QuadOrderMax,QuadOrder
 
 
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,                             & ! verbose
-                                                         PETSC_FALSE,                   & ! validate
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,                        & ! timeMin
-                                                         1.0_Kr,                        & ! timeMax
-                                                         11,                            & ! timeNumStep
-                                                         MEF90FileFormat_EXOSingle,     & ! fileFormat
-                                                         1.0_Kr)                         ! frequency
-
-   Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-
-   Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,              & ! disp_addNullSpace
-                                                         3,                       & ! DisplacementOffset
-                                                         2,                       & ! DamageOffset
-                                                         3,                       & ! boundaryDisplacementOffset
-                                                         0,                       & ! boundaryDamageOffset
-                                                         1,                       & ! temperatureOffset
-                                                         4,                       & ! ForceOffset
-                                                         3,                       & ! pressureForceOffset
-                                                         6,                       & ! plasticStrainOffset
-                                                         6,                       & ! StressOffset
-                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear,     & ! ForceScaling
-                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
-                                                         1e-4,                    & ! damage_atol
-                                                         1000,                    & ! maxit
-                                                         10,                      & ! PCLag
-                                                         0.,                      & ! irrevThres 
-                                                         MEF90DefMech_BTTypeNULL, & ! BTType
-                                                         -1,                      & ! BTInt
-                                                         -1,                      & ! BTScope
-                                                         1.0e-2,                  & ! BTTol
-                                                         1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
-
-   Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_ModeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,              & ! disp_addNullSpace
-                                                         3,                       & ! DisplacementOffset
-                                                         2,                       & ! DamageOffset
-                                                         3,                       & ! boundaryDisplacementOffset
-                                                         0,                       & ! boundaryDamageOffset
-                                                         1,                       & ! temperatureOffset
-                                                         4,                       & ! ForceOffset
-                                                         3,                       & ! pressureForceOffset
-                                                         0,                       & ! plasticStrainOffset
-                                                         7,                       & ! StressOffset
-                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
-                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear,     & ! ForceScaling
-                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
-                                                         1e-4,                    & ! damage_atol
-                                                         1000,                    & ! maxit
-                                                         10,                      & ! PCLag
-                                                         0.,                      & ! irrevThres 
-                                                         MEF90DefMech_BTTypeNULL, & ! BTType
-                                                         -1,                      & ! BTInt
-                                                         -1,                      & ! BTScope
-                                                         1.0e-2,                  & ! BTTol
-                                                         1.0e-4,                  & ! plasticStrainAtol
-                                                         0,                       & ! bloacknumberworkcontrolled
-                                                         1)                         ! cumulatedDissipatedPlasticEnergyOffset
-
-
-
-   Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                      & ! elemTypeShortIDDispl will be overriden
-                                                         -1,                                      & ! elemTypeShortIDDamage will be overriden
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
-                                                         0.0_Kr,                                  & ! pressureForce
-                                                         MEF90DefMech_damageTypeAT1,              & ! damageType
-                                                         MEF90DefMech_plasticityTypeNone,         & ! plasticityType
-                                                         MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         0._Kr)                                     ! Boundary Damage
-   Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr)                                    ! boundary Damage
+   Type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions_default
 
    !!! Initialize MEF90
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
-   
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(ierr))
+
+   MEF90GlobalOptions_default%verbose           = 1
+   MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
+   MEF90GlobalOptions_default%timeMin           = 0.0_Kr
+   MEF90GlobalOptions_default%timeMax           = 1.0_Kr
+   MEF90GlobalOptions_default%timeNumStep       = 1
+   MEF90GlobalOptions_default%timeSkip          = 0
+   MEF90GlobalOptions_default%timeNumCycle      = 1
+   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
+   MEF90GlobalOptions_default%elementOrder      = 1
 
    !!! Get all MEF90-wide options
-   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr);CHKERRQ(ierr)
-   Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
+   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
-   !!! Get DM from mesh
-   Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
-   Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
-   Call DMMeshSetMaxDof(Mesh,dim,ierr);CHKERRQ(ierr) 
-   Call DMSetBlockSize(Mesh,dim,ierr);CHKERRQ(ierr)
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
+   PetscCallA(DMSetFromOptions(dm,ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCall(DMGetDimension(dm,dim,ierr))
 
-   !!! Create DefMech context, get all DefMech options
-   Call MEF90DefMechCtxCreate(MEF90DefMechCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
-   If (dim == 2) Then
-      Call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,MEF90DefMechDefaultGlobalOptions2D, &
-                                         MEF90DefMechDefaultCellSetOptions,MEF90DefMechDefaultVertexSetOptions,ierr)
-   Else
-      Call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,MEF90DefMechDefaultGlobalOptions3D, &
-                                         MEF90DefMechDefaultCellSetOptions,MEF90DefMechDefaultVertexSetOptions,ierr)
-   End If
-   Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-
-   !!! Create sections, vectors, and solvers for DefMech Context
-   Call MEF90DefMechCtxSetSections(MEF90DefMechCtx,ierr)
-   Call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx,ierr)
-
-   Call DMMeshGetStratumSize(mesh,"depth",0,numVertex,ierr);CHKERRQ(ierr)
    QuadOrderMax = 4
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-order',QuadOrderMax,flg,ierr);CHKERRQ(ierr);
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-i',i,flg,ierr);CHKERRQ(ierr);
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-j',j,flg,ierr);CHKERRQ(ierr);
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-k',k,flg,ierr);CHKERRQ(ierr);
+   PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-order",QuadOrderMax,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-xl",xl,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-xr",xr,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-yl",yl,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-yr",yr,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-zl",zl,flg,ierr))
+   PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,"-zr",zr,flg,ierr))
+
+   ! Create nodal local Vec holding coordinates
+   name = "U"
+   PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU,ierr))
+   PetscCallA(VecGetDM(locVecU,dmU,ierr))
+   PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
+   PetscCall(project(locVecU,sectionU,ierr))
+
    Do QuadOrder = QuadOrderMax, QuadOrderMax
       Do k = 0, (dim-2) * QuadOrderMax
-         Do j = 1, QuadOrderMax
-            Do i = 1, QuadOrderMax
+         Do j = 0, QuadOrderMax
+            Do i = 0, QuadOrderMax
                !!! Initialize a field
                If (i+j+k <= QuadOrder) Then
-                  sol = 1.0_Kr / (1.0_kr + i) / (1.0_Kr + j) / (1.0_Kr + k)
-                  sol = 1.0_Kr / (1.0_kr + i)  + 1.0_Kr / (1.0_Kr + j)
                   !!! Integrate
                   If (dim ==2) Then
-                     Call Integrate2D_Scal(MEF90DefMechCtx,i,j,QuadOrder,Scal,v2d,ierr)
+                     sol = ((xr**(1.0_kr + i) - xl**(1.0_kr + i)) / (1.0_kr + i)) * ((yr**(1.0_kr + j) - yl**(1.0_kr + j)) / (1.0_kr + j))
+                     PetscCallA(Integrate2D_Scal(MEF90Ctx,locVecU,i,j,QuadOrder,Scal,v2d,ierr))
                   Else
-                     Call Integrate3D_Scal(MEF90DefMechCtx,i,j,k,QuadOrder,Scal,v3d,ierr)
+                     sol = ((xr**(1.0_kr + i) - xl**(1.0_kr + i)) / (1.0_kr + i)) * ((yr**(1.0_kr + j) - yl**(1.0_kr + j)) / (1.0_kr + j)) * ((zr**(1.0_kr + k) - zl**(1.0_kr + k)) / (1.0_kr + k))
+                     PetscCallA(Integrate3D_Scal(MEF90Ctx,locVecU,i,j,k,QuadOrder,Scal,v3d,ierr))
                   End If
-                  Write(IOBuffer,100) i,j,k,QuadOrder,Scal, sol, abs(Scal - sol)/sol
-                  Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr) 
+                  Write(IOBuffer,100) i,j,k,QuadOrder,Scal, sol, abs(Scal - sol),  abs(Scal - sol)/sol
+                  PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
                End If
             End Do
          End Do
       End Do
    End Do
-!   Do QuadOrder = 0, QuadOrderMax
-!      If (dim ==2) Then
-!         Call Integrate2D_Scal(MEF90DefMechCtx,i,j,QuadOrder,Scal,v2d,ierr)
-!      Else
-!         Call Integrate3D_Scal(MEF90DefMechCtx,i,j,k,QuadOrder,Scal,v3d,ierr)
-!      End If
-!      Write(IOBuffer,200) i,j,k,QuadOrder,Scal
-!      Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)   
-!   End Do
    
-   100 Format('Integrating x^',I1,' * Y^',I1,' * Z^', I1,' at order ',I4,' : ',2ES12.5,': relative error ',ES12.5,"\n")
-   200 Format('Integrating x^',I1,' * Y^',I1,' * Z^', I1,' at order ',I4,' : ',ES12.5,'\n')
-
+   100 Format('Integrating X^',I1,' * Y^',I1,' * Z^', I1,' at order ',I4,' : ',2ES12.5,': absolute error ',ES12.5,': relative error ',ES12.5,"\n")
    
-   Call MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-   Call MEF90CtxDestroy(MEF90Ctx,ierr);CHKERRQ(ierr)   
-   Call MEF90Finalize(ierr)
-   Call PetscFinalize()
+   PetscCallA(VecDestroy(locVecU,ierr))
+   PetscCall(DMDestroy(dm,ierr))
+   PetscCall(MEF90CtxDestroy(MEF90Ctx,ierr))
+   PetscCall(MEF90Finalize(ierr))
+   PetscCall(PetscFinalize(ierr))
    
 Contains
-   Subroutine Integrate3D_Scal(MEF90DefMechCtx,i,j,k,QuadratureOrder,i1,i2,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscInt                                           :: i,j,k,QuadratureOrder
+   Subroutine project(v,s,ierr)
+      Type(tVec),intent(IN)              :: v
+      Type(tPetscSection),intent(IN)     :: s
+      PetscErrorCode,intent(INOUT)       :: ierr
+
+      PetscInt                           :: pStart,pEnd,p,numDof,i
+      Type(tDM)                          :: dm
+      Type(tPetscSection)                :: coordSection
+      Type(tVec)                         :: coordVec
+      PetscScalar,dimension(:),Pointer   :: coordArray,vArray
+      PetscScalar,dimension(3)           :: xyz
+      PetscInt                           :: dim,pOffset
+
+      PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+      PetscCallA(VecGetDM(v,dm,ierr))
+      PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+      PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+      PetscCallA(DMGetDimension(dm,dim,ierr))
+      PetscCallA(VecGetArrayF90(v,vArray,ierr))
+
+      Do p = pStart,pEnd-1
+         PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
+         If (numDof > 0) Then
+            !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+            PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            Do i = 1,dim
+                  xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+            End Do
+            PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+
+            PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
+            Do i = 1,numDof
+                  vArray(pOffset+i) = xyz(i)
+            End Do
+         End If
+      End Do
+      PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+      !!! Of course, this does not use informations from the section, so it does over-write constrained values
+   End Subroutine project
+
+   Subroutine Integrate3D_Scal(MEF90Ctx,v,i,j,k,QuadratureOrder,i1,i2,ierr)
+      Type(MEF90Ctx_Type),Intent(IN)                     :: MEF90Ctx
+      Type(tVec),Intent(IN)                              :: v
+      PetscInt,Intent(IN)                                :: QuadratureOrder,i,j,k
       PetscReal,Intent(OUT)                              :: i1
       Type(Vect3D),Intent(OUT)                           :: i2
       PetscErrorCode,Intent(OUT)                         :: ierr      
                      
-      Integer                                            :: iDof,numDof
-      Integer                                            :: iGauss,numGauss
-      Type(SectionReal)                                  :: coordSec
-      PetscReal,Dimension(:),Pointer                     :: coordDof
+      Type(tDM)                                          :: dm
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
+      Type(tIS)                                          :: setIS,setPointIS
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
+      Type(MEF90ElementType)                             :: elementType
+      DMPolytopeType                                     :: cellType
+      PetscInt                                           :: iDof,iGauss,cell,set,dim
+      PetscInt,Dimension(:),Pointer                      :: setID,setPointID
       PetscReal                                          :: X,Y,Z
-      
-      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      Type(IS)                                           :: CellSetGlobalIS,setIS
-      PetscInt,Dimension(:),Pointer                      :: setID,cellID
-      PetscInt                                           :: set,cell
-      Type(MEF90ElementType)                            :: ElemType
-      Type(MEF90Element3DScal),Dimension(:),Pointer     :: Elem
+      PetscReal,Dimension(:),Pointer                     :: coordDof
 
       i1 = 0.0_Kr
       i2 = 0.0_Kr
       
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   
-      Call DMMeshGetSectionReal(mesh,'coordinates',coordSec,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
+      PetscCall(VecGetDM(v,dm,ierr))
+      PetscCall(DMGetDimension(dm,dim,ierr))
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
+      If (setIS /= PETSC_NULL_IS) Then
+         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         Do set = 1,size(setID)
+            PetscCall(DMGetStratumIS(dm,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
+            If (setPointIS /= PETSC_NULL_IS) Then
 
-         ElemType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-         Call MEF90ElementCreate(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-         !!! Integrate
-         numDof   = ElemType%numDof
-         numGauss = size(Elem(1)%BF,2)
-         Allocate(coordDof(numDof*3))
-         Do cell = 1,size(cellID)
-            !!! Get value of each field at each Dof of the local element
-            Call SectionRealRestrictClosure(coordSec,MEF90DefMechCtx%DMVect,cellID(cell),numDof*3,coordDof,ierr);CHKERRQ(ierr)
-            Do iGauss = 1, numGauss
-               X = 0.0_Kr
-               Y = 0.0_Kr
-               Z = 0.0_Kr
-               Do iDof = 1, numDof
-                  X = X + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+1)
-                  Y = Y + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+2)
-                  Z = Z + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+3)
-               End Do
-               i1 = i1 + Elem(cell)%Gauss_C(iGauss) * X**i * Y**j * Z**k
-            End Do
-         End Do
-         Call MEF90ElementDestroy(elem,ierr)
-         DeAllocate(coordDof)
-         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      End Do
-      Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(DMPlexGetCellType(dm,setPointID(1),cellType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
+               PetscCall(MEF90ElementCreate(dm,setPointIS,elem,QuadratureOrder,elementType,ierr))
 
-      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
+               Do cell = 1, size(setPointID)
+                  PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,setPointID(cell),coordDof,ierr))
+                  Do iGauss = 1,size(elem(cell)%Gauss_C)
+                     X = 0.0_Kr
+                     Y = 0.0_Kr
+                     Z = 0.0_Kr
+                     Do iDof = 1, size(elem(cell)%BF(:,1))
+                        X = X + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+1)
+                        Y = Y + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+2)
+                        Z = Z + Elem(cell)%BF(iDoF,iGauss) * coordDof(3*(iDof-1)+3)
+                     End Do
+                     i1 = i1 + X**i * Y**j * Z**k * elem(cell)%Gauss_C(iGauss)
+                  End Do ! iGauss
+                  PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,setPointID(cell),coordDof,ierr))
+               End Do ! cell
+
+               PetscCall(MEF90ElementDestroy(elem,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            End If ! pointIS
+            PetscCall(ISDestroy(setPointIS,ierr))
+         End Do ! set
+         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      End If ! setIS
+      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine Integrate3D_Scal
 
-   Subroutine Integrate2D_Scal(MEF90DefMechCtx,i,j,QuadratureOrder,i1,i2,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscInt                                           :: i,j,QuadratureOrder
+   Subroutine Integrate2D_Scal(MEF90Ctx,v,i,j,QuadratureOrder,i1,i2,ierr)
+      Type(MEF90Ctx_Type),Intent(IN)                     :: MEF90Ctx
+      Type(tVec),Intent(IN)                              :: v
+      PetscInt,Intent(IN)                                :: QuadratureOrder,i,j
       PetscReal,Intent(OUT)                              :: i1
       Type(Vect2D),Intent(OUT)                           :: i2
       PetscErrorCode,Intent(OUT)                         :: ierr      
                      
-      Integer                                            :: iDof,numDof
-      Integer                                            :: iGauss,numGauss
-      Type(SectionReal)                                  :: coordSec
-      PetscReal,Dimension(:),Pointer                     :: coordDof
+      Type(tDM)                                          :: dm
+      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
+      Type(tIS)                                          :: setIS,setPointIS
+      Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elem
+      Type(MEF90ElementType)                             :: elementType
+      DMPolytopeType                                     :: cellType
+      PetscInt                                           :: iDof,iGauss,cell,set,dim
+      PetscInt,Dimension(:),Pointer                      :: setID,setPointID
       PetscReal                                          :: X,Y
-      
-      Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-      Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
-      Type(IS)                                           :: CellSetGlobalIS,setIS
-      PetscInt,Dimension(:),Pointer                      :: setID,cellID
-      PetscInt                                           :: set,cell
-      Type(MEF90ElementType)                            :: ElemType
-      Type(MEF90Element2DScal),Dimension(:),Pointer     :: Elem
+      PetscReal,Dimension(:),Pointer                     :: coordDof
 
       i1 = 0.0_Kr
       i2 = 0.0_Kr
       
-      Call DMmeshGetLabelIdIS(mesh,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-      Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-   
-      Call DMMeshGetSectionReal(mesh,'coordinates',coordSec,ierr);CHKERRQ(ierr)
-      Do set = 1,size(setID)
-         Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
-         Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(iErr)
-         Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
+      PetscCall(VecGetDM(v,dm,ierr))
+      PetscCall(DMGetDimension(dm,dim,ierr))
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
+      If (setIS /= PETSC_NULL_IS) Then
+         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         Do set = 1,size(setID)
+            PetscCall(DMGetStratumIS(dm,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
+            If (setPointIS /= PETSC_NULL_IS) Then
 
-         ElemType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
-         Call MEF90ElementCreate(mesh,setIS,Elem,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-         !!! Integrate
-         numDof   = ElemType%numDof
-         numGauss = size(Elem(1)%BF,2)
-         Allocate(coordDof(numDof*2))
-         Do cell = 1,size(cellID)
-            !!! Get value of each field at each Dof of the local element
-            Call SectionRealRestrictClosure(coordSec,MEF90DefMechCtx%DMVect,cellID(cell),numDof*2,coordDof,ierr);CHKERRQ(ierr)
-            Do iGauss = 1, numGauss
-               X = 0.0_Kr
-               Y = 0.0_Kr
-               Do iDof = 1, numDof
-                  X = X + Elem(cell)%BF(iDoF,iGauss) * coordDof(2*(iDof-1)+1)
-                  Y = Y + Elem(cell)%BF(iDoF,iGauss) * coordDof(2*(iDof-1)+2)
-               End Do
-               i1 = i1 + Elem(cell)%Gauss_C(iGauss) * X**i * Y**j
-            End Do
-         End Do
-         Call MEF90ElementDestroy(elem,ierr)
-         DeAllocate(coordDof)
-         Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
-      End Do
-      Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(DMPlexGetCellType(dm,setPointID(1),cellType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
+               PetscCall(MEF90ElementCreate(dm,setPointIS,elem,QuadratureOrder,elementType,ierr))
 
-      Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
-      Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
+               Do cell = 1, size(setPointID)
+                  PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,setPointID(cell),coordDof,ierr))
+                  Do iGauss = 1,size(elem(cell)%Gauss_C)
+                     X = 0.0_Kr
+                     Y = 0.0_Kr
+                     Do iDof = 1, size(elem(cell)%BF(:,1))
+                        X = X + Elem(cell)%BF(iDoF,iGauss) * coordDof(2*(iDof-1)+1)
+                        Y = Y + Elem(cell)%BF(iDoF,iGauss) * coordDof(2*(iDof-1)+2)
+                     End Do
+                     i1 = i1 + X**i * Y**j * elem(cell)%Gauss_C(iGauss)
+                  End Do ! iGauss
+                  PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,setPointID(cell),coordDof,ierr))
+               End Do ! cell
+
+               PetscCall(MEF90ElementDestroy(elem,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            End If ! pointIS
+            PetscCall(ISDestroy(setPointIS,ierr))
+         End Do ! set
+         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      End If ! setIS
+      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine Integrate2D_Scal
 End Program TestQuadrature
