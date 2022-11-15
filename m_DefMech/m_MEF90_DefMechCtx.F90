@@ -796,7 +796,7 @@ Contains
       DefMechCellSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechCellSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3,'Body force','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'Body force','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%CrackPressure,default%CrackPressure,'CrackPressure','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageATLinSoftk,default%DamageATLinSoftk,'damage_LinSoft_k','[unit-less] (k): k parameter in the Linear Softening damage model',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageAT1expb,default%DamageAT1expb,'damage_AT1exp_b','[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation',ierr))
@@ -806,10 +806,10 @@ Contains
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma,default%unilateralContactHydrostaticDeviatoricGamma,'unilateralContact_hydrostaticDeviatoric_gamma','[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechCellSetOptions%unilateralContactHybrid,default%unilateralContactHybrid,'unilateralContact_hybrid','Use hybrid unilateral contact formulation (Y/N)',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechCellSetOptions%drivingForceType,MEF90DefMech_drivingForceTypeList,default%drivingForceType,'drivingForce_type','Type of nucleation driving force',ierr))
-      PetscCall(PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementUpperBound,3,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
+      PetscCall(PetscBagRegisterBoolArray(bag,DefMechCellSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementLowerBound,3_Ki,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%displacementUpperBound,3_Ki,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechCellSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechCellSetOptions%CrackVolumeControlled,default%CrackVolumeControlled,'CrackVolumeControlled','Crack Pressure controlled by the crack volume in this block (Y/N)',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechCellSetOptions%WorkControlled,default%WorkControlled,'WorkControlled','Force magnitude controlled by its work in this block (Y/N)',ierr))
@@ -844,12 +844,12 @@ Contains
       DefMechFaceSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechFaceSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3,'Boundary force','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3_Ki,'Boundary force','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechFaceSetOptions%pressureForce,default%pressureForce,'pressureForce','without unit: internal crack pressure',ierr))
-      PetscCall(PetscBagRegisterBoolArray(bag,DefMechFaceSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%displacementUpperBound,3,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
+      PetscCall(PetscBagRegisterBoolArray(bag,DefMechFaceSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%displacementLowerBound,3_Ki,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%displacementUpperBound,3_Ki,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechFaceSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechFaceSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): Damage boundary value',ierr))
    End Subroutine PetscBagRegisterMEF90DefMechCtxFaceSetOptions
@@ -878,10 +878,10 @@ Contains
       DefMechVertexSetOptions%boundaryDisplacement   = default%boundaryDisplacement
       DefMechVertexSetOptions%displacementLowerBound = default%displacementLowerBound
       DefMechVertexSetOptions%displacementUpperBound = default%displacementUpperBound
-      PetscCall(PetscBagRegisterBoolArray(bag,DefMechVertexSetOptions%Has_displacementBC,3,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementLowerBound,3,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementUpperBound,3,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
+      PetscCall(PetscBagRegisterBoolArray(bag,DefMechVertexSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementLowerBound,3_Ki,'displacementLowerBound','[m] (U): Displacement lower bound',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechVertexSetOptions%displacementUpperBound,3_Ki,'displacementUpperBound','[m] (U): Displacement upper bound',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechVertexSetOptions%Has_DamageBC,default%Has_DamageBC,'DamageBC','Damage has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechVertexSetOptions%boundaryDamage,default%boundaryDamage,'boundaryDamage','[unit-less] (alpha): boundaryDamage',ierr))
    End Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions
