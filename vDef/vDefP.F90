@@ -101,7 +101,7 @@ Program CoupledPlasticityDamage
    
    
    !!! Get all MEF90-wide options
-   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,vDefDefaultGlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr);CHKERRQ(ierr)
    Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get DM from mesh
@@ -117,17 +117,17 @@ Program CoupledPlasticityDamage
    Call MEF90DefMechCtxCreate(MEF90DefMechCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
    If (dim == 2) Then
       Call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,vDefDefMechDefaultGlobalOptions2D, &
-                                         vDefDefMechDefaultCellSetOptions,vDefDefMechDefaultVertexSetOptions,ierr)
+                                         DefMechDefaultCellSetOptions,DefMechDefaultVertexSetOptions,ierr)
    Else
       Call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,vDefDefMechDefaultGlobalOptions3D, &
-                                         vDefDefMechDefaultCellSetOptions,vDefDefMechDefaultVertexSetOptions,ierr)
+                                         DefMechDefaultCellSetOptions,DefMechDefaultVertexSetOptions,ierr)
    End If
    Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
    
    !!! Create HeatXfer context, get all HeatXfer options
    Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,vDefHeatXferDefaultGlobalOptions, &
-                                       vDefHeatXferDefaultCellSetOptions,vDefHeatXferDefaultVertexSetOptions,ierr)
+   Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,HeatXferDefaultGlobalOptions, &
+                                       HeatXferDefaultCellSetOptions,HeatXferDefaultVertexSetOptions,ierr)
    Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
 
    !!! Get material properties bags

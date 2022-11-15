@@ -2,7 +2,7 @@ NP=2
 all:
 	-@make -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
-test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
+test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make -s testThermoElasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testThermoElasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
@@ -10,7 +10,7 @@ test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
 	make -s testThermoElasticity PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
-test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
+test3D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
 	make -s testThermoElasticity PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	make -s testThermoElasticity PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
@@ -28,21 +28,27 @@ include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 BASE_DIR=${MEF90_DIR}/ThermoElasticity
 
-ThermoElasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity
+ThermoElasticity:${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 
-${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
+${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
 	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
-ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} m_vDefDefault.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_vDefDefault.o: ${BASE_DIR}/m_vDefDefault.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+
 
 testThermoElasticity:
 	@echo ;echo "Testing ThermoElasticity with $${PREFIX} $${OPTIONSFILE}"
 	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n ${NP} ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElasticity $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/ThermoElasticity/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 

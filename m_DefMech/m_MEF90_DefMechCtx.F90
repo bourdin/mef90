@@ -37,7 +37,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscBag,Dimension(:),Pointer           :: VertexSetOptionsBag
       PetscBag,Dimension(:),Pointer           :: MaterialPropertiesBag
       Type(MEF90Ctx_Type),pointer             :: MEF90Ctx
-      Type(tDM),pointer                       :: megaDM
+      Type(tDM)                               :: megaDM
 
       Type(tPetscViewer)                      :: globalEnergyViewer
       Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer
@@ -556,15 +556,15 @@ Contains
       PetscCall(PetscObjectSetName(DefMechCtx%cumulatedPlasticDissipation,"cumulatedPlasticDissipation",ierr))
 
       !!! Create megaDM
-      Allocate(dmList(6))
+      Allocate(dmList(7))
       PetscCall(VecGetDM(DefMechCtx%displacementLocal,dmList(1),ierr))
       PetscCall(VecGetDM(DefMechCtx%damageLocal,dmList(2),ierr))
       PetscCall(VecGetDM(DefMechCtx%temperatureLocal,dmList(3),ierr))
       PetscCall(VecGetDM(DefMechCtx%bodyForce,dmList(4),ierr))
-      PetscCall(VecGetDM(DefMechCtx%boundaryForce,dmList(4),ierr))
-      PetscCall(VecGetDM(DefMechCtx%pressureForce,dmList(5),ierr))
-      PetscCall(VecGetDM(DefMechCtx%plasticStrain,dmList(6),ierr))
-      PetscCall(DMCreateSuperDM(dmList,6_kI,PETSC_NULL_IS,DefMechCtx%megaDM,ierr))
+      PetscCall(VecGetDM(DefMechCtx%boundaryForce,dmList(5),ierr))
+      PetscCall(VecGetDM(DefMechCtx%pressureForce,dmList(6),ierr))
+      PetscCall(VecGetDM(DefMechCtx%plasticStrain,dmList(7),ierr))
+      PetscCall(DMCreateSuperDM(dmList,7_kI,PETSC_NULL_IS,DefMechCtx%megaDM,ierr))
       DeAllocate(dmList)
 
       !!! Create the IO SF for all fields
@@ -907,9 +907,6 @@ Contains
       Type(MEF90DefMechFaceSetOptions_Type),Intent(IN)      :: defaultFaceSetOptions
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: defaultVertexSetOptions
       PetscErrorCode,Intent(INOUT)                          :: ierr
-      ! Character(len=MXSTLN),Dimension(:),Pointer            :: cellSetNames
-      ! Character(len=MXSTLN),Dimension(:),Pointer            :: cellSetNames
-      ! Character(len=MXSTLN),Dimension(:),Pointer            :: vertexSetNames
    
       Type(MEF90CtxGlobalOptions_Type),pointer              :: MEF90CtxGlobalOptions
       Type(tIS)                                             :: setIS
@@ -919,7 +916,6 @@ Contains
 
       Type(MEF90DefMechCellSetOptions_Type),pointer         :: cellSetOptions    
       Type(MEF90DefMechFaceSetOptions_Type),pointer         :: faceSetOptions    
-!       Type(IS)                                              :: cellSetGlobalIS  
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
       !!!

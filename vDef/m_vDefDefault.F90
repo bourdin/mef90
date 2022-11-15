@@ -9,7 +9,7 @@ module m_vDefDefault
 
 
 !!! Default values of the contexts
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: vDefDefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
+   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90CtxDefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                          1,                             & ! verbose
                                                          PETSC_FALSE,                   & ! validate
                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
@@ -92,7 +92,7 @@ module m_vDefDefault
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr)                    ! dampingCoefficientDamage
 
-   Type(MEF90DefMechCellSetOptions_Type),Parameter    :: vDefDefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
+   Type(MEF90DefMechCellSetOptions_Type),Parameter    :: DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          -1,                                                & ! elemTypeShortIDDispl will be overriden
                                                          -1,                                                & ! elemTypeShortIDDamage will be overriden
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! force
@@ -114,7 +114,7 @@ module m_vDefDefault
                                                          PETSC_FALSE,                                       & ! CrackVolumeControlled
                                                          PETSC_FALSE,                                       & ! WorkControlled
                                                          0._Kr)                                               ! Boundary Damage
-   Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: vDefDefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
+   Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
                                                          [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound
@@ -122,7 +122,7 @@ module m_vDefDefault
                                                          PETSC_FALSE,                                       & ! Has Damage BC
                                                          0.0_Kr)                                              ! boundary Damage
 
-   Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: vDefHeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
+   Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                          MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
                                                          PETSC_FALSE,         & ! addNullSpace
                                                          1,                   & ! tempOffset
@@ -133,7 +133,7 @@ module m_vDefDefault
                                                          2,                   & ! externalTempOffset
                                                          MEF90Scaling_Linear, & ! fluxScaling
                                                          1)                     ! fluxOffset
-   Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: vDefHeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
+   Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          -1,                   & ! elemTypeShortID will be overriden
                                                          0.0_Kr,               & ! flux
                                                          0.0_Kr,               & ! surfaceThermalConductivity
@@ -142,7 +142,7 @@ module m_vDefDefault
                                                          0.0_Kr,               & ! boundaryTemp
                                                          [0.0_Kr,0.0_Kr,0.0_Kr]) ! advectionVelocity
                                                          
-   Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: vDefHeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
+   Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
 
