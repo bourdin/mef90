@@ -215,9 +215,9 @@ Program HeatXfer
    End Do
 100 Format("Solving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("Solving transient step ",I4,", t=",ES12.5,"\n")
-101 Format("cell set ",I4," thermal energy: ",ES12.5," flux work: ",ES12.5," total: ",ES12.5,"\n")
-103 Format("face set ",I4,"                              flux work: ",ES12.5,"\n")
-102 Format("======= Total thermal energy: ",ES12.5," flux work: ",ES12.5," total: ",ES12.5,"\n")
+101 Format("cell set ",I4," thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
+102 Format("======= Total thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
+103 Format("face set ",I4,"                              flux: ",ES12.5,"\n")
    
    DeAllocate(time)
    DeAllocate(energy)

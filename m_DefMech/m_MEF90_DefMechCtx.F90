@@ -15,7 +15,7 @@ Module m_MEF90_DefMechCtx_Type
       Type(tVec),pointer                      :: bodyForce
       Type(tVec),pointer                      :: boundaryForce
       Type(tVec),pointer                      :: pressureForce
-      Type(tVec),pointer                      :: crackPressure
+      !Type(tVec),pointer                      :: crackPressure
       Type(tVec),Pointer                      :: plasticStrain
       Type(tVec),Pointer                      :: cumulatedPlasticDissipation
       Type(tVec),Pointer                      :: stress
@@ -361,6 +361,8 @@ Contains
       sizeofMEF90DefMechFaceSetOptions = size(transfer(DefMechFaceSetOptions,dummychar))*sizeofchar
       sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
 
+Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
+
       MEF90DefMech_SolverTypeList(1) = 'AltMin'
       MEF90DefMech_SolverTypeList(2) = 'QuasiNewton1'
       MEF90DefMech_SolverTypeList(3) = 'QuasiNewton2'
@@ -454,9 +456,7 @@ Contains
 
       PetscCall(MEF90DefMechCtxInitialize_Private(ierr))
       DefMechCtx%MEF90Ctx => MEF90Ctx
-      
-      PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr))
-      
+      PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr))      
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
@@ -554,6 +554,9 @@ Contains
       Allocate(DefMechCtx%cumulatedPlasticDissipation,stat=ierr)
       PetscCall(VecDuplicate(DefMechCtx%plasticStrain,DefMechCtx%cumulatedPlasticDissipation,ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%cumulatedPlasticDissipation,"cumulatedPlasticDissipation",ierr))
+      Allocate(DefMechCtx%stress,stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%plasticStrain,DefMechCtx%stress,ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%stress,"Stress",ierr))
 
       !!! Create megaDM
       Allocate(dmList(7))
@@ -595,7 +598,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechCtxDestroy(DefMechCtx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)          :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
       PetscErrorCode,Intent(OUT)                      :: ierr
       
       PetscInt                                        :: set
@@ -688,6 +691,11 @@ Contains
          DeAllocate(DefMechCtx%cumulatedPlasticDissipation)
          Nullify(DefMechCtx%cumulatedPlasticDissipation) 
       End If
+      If (Associated(DefMechCtx%Stress)) Then
+         PetscCall(VecDestroy(DefMechCtx%Stress,ierr))
+         DeAllocate(DefMechCtx%Stress)
+         Nullify(DefMechCtx%Stress) 
+      End If
 
       !!! Destroy all PetscSF
       PetscCall(PetscSFDestroy(DefMechCtx%displacementToIOSF,ierr))
@@ -709,6 +717,8 @@ Contains
       !!! Create the SF to exchange boundary values of the displacement and damage. 
       PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDisplacementSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDamageSF,ierr))
+
+      PetscCall(DMDestroy(DefMechCtx%megaDM,ierr))
    End Subroutine MEF90DefMechCtxDestroy
    
 
@@ -737,24 +747,22 @@ Contains
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'disp_addNullSpace','Add null space to SNES',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'displacement_addNullSpace','Add null space to SNES',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementLowerBoundScaling,MEF90ScalingList,default%displacementLowerBoundScaling,'displacementlowerbound_scaling','Displacement lower bound scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementUpperBoundScaling,MEF90ScalingList,default%displacementUpperBoundScaling,'displacementupperbound_scaling','Displacement upper bound scaling',ierr))
-
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDamageScaling,MEF90ScalingList,default%boundaryDamageScaling,'boundaryDamage_scaling','Boundary damage scaling',ierr))
-
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%bodyForceScaling,MEF90ScalingList,default%bodyForceScaling,'bodyforce_scaling','Body force scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryForceScaling,MEF90ScalingList,default%boundaryForceScaling,'boundaryforce_scaling','Boundary force scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%pressureForceScaling,MEF90ScalingList,default%pressureforceScaling,'pressureForce_scaling','Pressure force scaling',ierr))
-      PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%CrackPressureScaling,MEF90ScalingList,default%CrackPressureScaling,'CrackPressure_scaling','Crack Pressure scaling',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%CrackPressureScaling,MEF90ScalingList,default%CrackPressureScaling,'crackPressure_scaling','Crack Pressure scaling',ierr))
 
       PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr))
       PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr))
       PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%PCLag,default%PCLag,'defmech_pclag','Interval at which the PC is recomputed during alternate minimization',ierr))
-      PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%SOROmega,default%SOROmega,'defmech_SOR_Omega','Alterate Minimization over relaxation factor (>0 for limited, <0 for projected) ',ierr))
+      PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%BTType,MEF90DefMech_BTTypeList,default%BTType,'BT_Type','Backtracking type',ierr))
       PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%BTInterval,default%BTInterval,'BT_Interval','Interval at which Backtracking is run in inner loop (0 for outer loop)',ierr))
@@ -900,7 +908,7 @@ Contains
                                               defaultCellSetOptions,    &
                                               defaultFaceSetOptions,    &
                                               defaultVertexSetOptions,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)                :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)              :: DefMechCtx
       Character(len=*),Intent(IN)                           :: prefix
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)       :: defaultGlobalOptions
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)      :: defaultCellSetOptions
@@ -1012,11 +1020,11 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
 
-! 100 Format('Cell set ',I4)
-! 101 Format('cs',I4.4,'_')
-! 103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
-! 200 Format('Vertex set ',I4)
-! 201 Format('vs',I4.4,'_')
-! 203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
+100 Format('Cell set ',I4)
+101 Format('cs',I4.4,'_')
+103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
+200 Format('Vertex set ',I4)
+201 Format('vs',I4.4,'_')
+203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90DefMechCtxSetFromOptions
 End Module m_MEF90_DefMechCtx

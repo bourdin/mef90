@@ -34,13 +34,13 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear,     & ! pressureForceScaling
                                                          MEF90Scaling_Linear,     & ! crackPressureScaling
                                                          1e-3,                    & ! damage_atol
-                                                         1000,                    & ! maxit
-                                                         10,                      & ! PCLag
+                                                         1000_Ki,                 & ! maxit
+                                                         10_Ki,                   & ! PCLag
                                                          1.0_Kr,                  & ! SOROmega
                                                          0.,                      & ! irrevThres 
                                                          MEF90DefMech_BTTypeNULL, & ! BTType
-                                                         -1,                      & ! BTInt
-                                                         -1,                      & ! BTScope
+                                                         -1_Ki,                   & ! BTInt
+                                                         -1_Ki,                   & ! BTScope
                                                          1.0e-2,                  & ! BTTol
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1.0e-3,                  & ! InjectedVolumeAtol
@@ -53,7 +53,7 @@ module m_vDefDefault
                                                          MEF90DefMech_damageTypeAT1,                        & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
-                                                         1.0D-5,                                            & ! unilateralContactHydrostatocDeviatoricGamma
+                                                         1.0e-5,                                            & ! unilateralContactHydrostatocDeviatoricGamma
                                                          PETSC_FALSE,                                       & ! unilateralContactHybrid
                                                          1.0_Kr,                                            & ! DamageATLinSoftk
                                                          1.25_Kr,                                           & ! DamageAT1expb
@@ -89,7 +89,7 @@ module m_vDefDefault
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                          MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
                                                          PETSC_FALSE,         & ! addNullSpace
-                                                         0.,                  & ! initialTemperature
+                                                         0.0_Kr,              & ! initialTemperature
                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          MEF90Scaling_Linear, & ! fluxScaling
