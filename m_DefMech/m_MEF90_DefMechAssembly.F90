@@ -881,8 +881,7 @@ Contains
 !!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechElasticEnergy(x,MEF90DefMechCtx,energy,ierr)
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx,energy,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(INOUT)                       :: ierr

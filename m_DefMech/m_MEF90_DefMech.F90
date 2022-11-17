@@ -190,9 +190,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechOperatorDisplacement2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechOperatorDisplacement2D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechOperatorDisplacement3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechOperatorDisplacement3D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechOperatorDisplacement
    
@@ -217,9 +217,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechBilinearFormDisplacement2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechBilinearFormDisplacement2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechBilinearFormDisplacement3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechBilinearFormDisplacement3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechBilinearFormDisplacement
 
@@ -233,8 +233,7 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechWork(DisplacementVec,MEF90DefMechCtx,work,ierr)
-      Type(tVec),Intent(IN)                           :: DisplacementVec
+   Subroutine MEF90DefMechWork(MEF90DefMechCtx,work,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
       PetscReal,Dimension(:),Pointer                  :: work
       PetscErrorCode,Intent(INOUT)                    :: ierr
@@ -242,9 +241,9 @@ Contains
       PetscInt                                        :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechWork2D(DisplacementVec,MEF90DefMechCtx,work,ierr)
+         PetscCall(MEF90DefMechWork2D(MEF90DefMechCtx,work,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechWork3D(DisplacementVec,MEF90DefMechCtx,work,ierr)
+         PetscCall(MEF90DefMechWork3D(MEF90DefMechCtx,work,ierr))
       End If      
    End Subroutine MEF90DefMechWork
 
@@ -258,8 +257,7 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechCohesiveEnergy(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
-      Type(tVec),Intent(IN)                           :: DisplacementVec
+   Subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx,cohesiveEnergy,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
       PetscReal,Dimension(:),Pointer                  :: cohesiveEnergy
       PetscErrorCode,Intent(INOUT)                    :: ierr
@@ -267,9 +265,9 @@ Contains
       PetscInt                                        :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechCohesiveEnergy2D(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+         PetscCall(MEF90DefMechCohesiveEnergy2D(MEF90DefMechCtx,cohesiveEnergy,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechCohesiveEnergy3D(DisplacementVec,MEF90DefMechCtx,cohesiveEnergy,ierr)
+         PetscCall(MEF90DefMechCohesiveEnergy3D(MEF90DefMechCtx,cohesiveEnergy,ierr))
       End If      
    End Subroutine MEF90DefMechCohesiveEnergy
 
@@ -283,8 +281,7 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechElasticEnergy(x,MEF90DefMechCtx,energy,ierr)
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx,energy,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -292,9 +289,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechElasticEnergy2D(x,MEF90DefMechCtx,energy,ierr)
+         PetscCall(MEF90DefMechElasticEnergy2D(MEF90DefMechCtx,energy,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechElasticEnergy3D(x,MEF90DefMechCtx,energy,ierr)
+         PetscCall(MEF90DefMechElasticEnergy3D(MEF90DefMechCtx,energy,ierr))
       End If      
    End Subroutine MEF90DefMechElasticEnergy
 
@@ -335,8 +332,7 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechStress(x,MEF90DefMechCtx,stress,ierr)
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechStress(MEF90DefMechCtx,stress,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(tVec),Intent(IN)                              :: stress
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -344,9 +340,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechStress2D(x,MEF90DefMechCtx,stress,ierr)
+         PetscCall(MEF90DefMechStress2D(MEF90DefMechCtx,stress,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechStress3D(x,MEF90DefMechCtx,stress,ierr)
+         PetscCall(MEF90DefMechStress3D(MEF90DefMechCtx,stress,ierr))
       End If      
    End Subroutine MEF90DefMechStress
 
@@ -360,8 +356,7 @@ Contains
 !!!  (c) 2016 erwan
 !!!
 
-   Subroutine MEF90DefMechCrackVolume(x,MEF90DefMechCtx,CrackVolume,ierr)
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx,CrackVolume,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscReal,dimension(:),Pointer                     :: CrackVolume
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -369,9 +364,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechCrackVolume2D(x,MEF90DefMechCtx,CrackVolume,ierr)
+         PetscCall(MEF90DefMechCrackVolume2D(MEF90DefMechCtx,CrackVolume,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechCrackVolume3D(x,MEF90DefMechCtx,CrackVolume,ierr)
+         PetscCall(MEF90DefMechCrackVolume3D(MEF90DefMechCtx,CrackVolume,ierr))
       End If      
    End Subroutine MEF90DefMechCrackVolume
 
@@ -395,9 +390,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechOperatorDamage2D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechOperatorDamage2D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechOperatorDamage3D(snesTemp,x,residual,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechOperatorDamage3D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechOperatorDamage
    
@@ -422,9 +417,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+         PetscCall(MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechBilinearFormDamage
 
@@ -438,8 +433,7 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechSurfaceEnergy(x,MEF90DefMechCtx,energy,ierr)
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx,energy,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscReal,dimension(:),Pointer                     :: energy
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -447,9 +441,9 @@ Contains
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         ! Call MEF90DefMechSurfaceEnergy2D(x,MEF90DefMechCtx,energy,ierr)
+         PetscCall(MEF90DefMechSurfaceEnergy2D(MEF90DefMechCtx,energy,ierr))
       Else If (dim == 3) Then
-         ! Call MEF90DefMechSurfaceEnergy3D(x,MEF90DefMechCtx,energy,ierr)
+         PetscCall(MEF90DefMechSurfaceEnergy3D(MEF90DefMechCtx,energy,ierr))
       End If      
    End Subroutine MEF90DefMechSurfaceEnergy
 
@@ -460,6 +454,7 @@ Contains
 !!!  MEF90DefMechViewEXO: Save all fields in a MEF90DefMechCtx_Type in an exodus file
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr)
@@ -467,139 +462,8 @@ Contains
       PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
-      ! Type(Vec)                                          :: localVec
-      ! Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-
-      ! Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-
-      ! !!! cell-based fields are located before nodal ones in exodus files, so saving them first.
-      ! !!! they have no ghost points, so there is no real difference between their local and global vectors
-      ! !!!
-      ! If (MEF90DefMechGlobalOptions%ForceOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%Force)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMVect,MEF90DefMechCtx%Force,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%forceOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] force field not associated, not saving. Use -force_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%pressureForce)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%pressureForceOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] pressureForce field not associated, not saving. Use -pressureForce_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%CrackPressure)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%CrackPressure,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%CrackPressureOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] CrackPressure field not associated, not saving. Use -CrackPressure_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%plasticStrain)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%plasticStrainOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] plasticStrain field not associated, not saving. Use -plasticStrain_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-
-      ! If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%cumulatedPlasticDissipation)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMScal,MEF90DefMechCtx%cumulatedPlasticDissipation,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] cumulatedDissipatedPlasticEnergy field not associated, not saving. Use -cumulatedPlasticDissipationOffset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%stress)) Then
-      !       Call VecViewExodusCell(MEF90DefMechCtx%cellDMMatS,MEF90DefMechCtx%stress,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                              MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%stressOffset,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] stress field not associated, not saving. Use -stress_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-
-      ! If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
-      !     (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
-      !    If (Associated(MEF90DefMechCtx%boundaryDisplacement)) Then
-      !       Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%boundaryDisplacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDisplacementOffset,ierr);CHKERRQ(ierr)
-      !       Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] boundaryDisplacement field not associated, not saving. Use -boundaryDisplacement_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%displacement)) Then
-      !       Call DMGetLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMVect,MEF90DefMechCtx%Displacement,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call VecViewExodusVertex(MEF90DefMechCtx%DMVect,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%displacementOffset,ierr);CHKERRQ(ierr)
-      !       Call DMRestoreLocalVector(MEF90DefMechCtx%DMVect,localVec,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] displacement field not associated, not saving. Use -displacement_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%damage)) Then
-      !       Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%damage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%damageOffset,ierr);CHKERRQ(ierr)
-      !       Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] damage field not associated, not saving. Use -damage_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If ((MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) .AND. &
-      !     (MEF90DefMechGlobalOptions%boundaryDamageOffset /= MEF90DefMechGlobalOptions%damageOffset))Then
-      !    If (Associated(MEF90DefMechCtx%boundaryDamage)) Then
-      !       Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%boundaryDamage,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%boundaryDamageOffset,ierr);CHKERRQ(ierr)
-      !       Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] boundaryDamage field not associated, not saving. Use -boundaryDamage_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
-      !    If (Associated(MEF90DefMechCtx%temperature)) Then
-      !       Call DMGetLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalBegin(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call DMGlobalToLocalEnd(MEF90DefMechCtx%DMScal,MEF90DefMechCtx%temperature,INSERT_VALUES,localVec,ierr);CHKERRQ(ierr)
-      !       Call VecViewExodusVertex(MEF90DefMechCtx%DMScal,localVec,MEF90DefMechCtx%MEF90Ctx%IOcomm, &
-      !                                MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,MEF90DefMechGlobalOptions%temperatureOffset,ierr);CHKERRQ(ierr)
-      !       Call DMRestoreLocalVector(MEF90DefMechCtx%DMScal,localVec,ierr);CHKERRQ(ierr)
-      !    Else
-      !       Call PetscPrintf(PETSC_COMM_WORLD,"[WARNING] Temperature field not associated, not saving. Use -temperature_offset 0 \n",ierr);CHKERRQ(ierr)
-      !    End If
-      ! End If
-      ! If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
-      !    Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
-      ! End If
+      PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
    End Subroutine MEF90DefMechViewEXO
    
 #undef __FUNCT__
@@ -763,6 +627,7 @@ Contains
 !!!  MEF90DefMechCreateSNESDisplacement:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residual,ierr)
@@ -771,93 +636,47 @@ Contains
       Type(tVec),Intent(IN)                              :: residual
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
-      ! Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      ! Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-      ! Type(Mat)                                          :: matDisp
-      ! Type(SectionReal)                                  :: coordSec
-      ! Type(Vec)                                          :: CoordVec
-      ! PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
-      ! Type(VecScatter)                                   :: ScatterSecToVec
-      ! Type(MatNullSpace)                                 :: nspDisp
-      ! Type(Vec)                                          :: residualDisp
-      ! Type(KSP)                                          :: kspDisp
-      ! Type(PC)                                           :: pcDisp
-      ! SNESLineSearch                                     :: lsDisp
-      ! PetscReal                                          :: atol,rtol,dtol
-      ! PetscReal,Dimension(:),Pointer                     :: CoordPCPtr
-      ! PetscInt                                           :: dim
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(tDM)                                          :: dm
+      Type(tMat)                                         :: matTemp
+      Type(tMatNullSpace)                                :: nspTemp
+      Type(tKSP)                                         :: kspTemp
+      PetscReal                                          :: rtol,dtol
       
-      ! Call DMMeshGetDimension(MEF90DefMechCtx%DMVect,dim,ierr);CHKERRQ(ierr)
-      ! Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      ! Call DMCreateMatrix(MEF90DefMechCtx%DMVect,MATAIJ,matDisp,iErr);CHKERRQ(iErr)
-      ! Call MatSetOptionsPrefix(matDisp,"Disp_",ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDisp,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDisp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDisp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
-      !    Call DMMeshGetSectionReal(MEF90DefMechCtx%DMVect,'coordinates',coordSec,ierr);CHKERRQ(ierr)
-      !    Call DMMeshCreateGlobalScatter(MEF90DefMechCtx%DMVect,coordSec,ScatterSecToVec,ierr);CHKERRQ(ierr)
-      !    Call DMCreateGlobalVector(MEF90DefMechCtx%DMVect,coordVec,ierr)
-      !    Call SectionRealToVec(coordSec,ScatterSecToVec,SCATTER_FORWARD,coordVec,ierr);CHKERRQ(ierr)
-      !    Call MatNullSpaceCreateRigidBody(coordVec,nspDisp,ierr);CHKERRQ(ierr)
-      !    Call MatSetNearNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
-      !    !!!Call MatSetNullSpace(matDisp,nspDisp,ierr);CHKERRQ(ierr)
-      !    Call MatNullSpaceDestroy(nspDisp,ierr);CHKERRQ(ierr)
-      !    Call SectionRealDestroy(coordSec,ierr);CHKERRQ(ierr)
-      !    Call VecDestroy(coordVec,ierr);CHKERRQ(ierr)
-      !    Call VecScatterDestroy(ScatterSecToVec,ierr);CHKERRQ(ierr)
-      ! End If
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal,dm,ierr))
+      PetscCall(DMCreateMatrix(dm,matTemp,iErr))
+      PetscCall(MatSetOptionsPrefix(matTemp,"Displacement_",ierr))
+      !!! The matrix is not symmetric if the advection vector is /= 0
+      PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
+      If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
+         PetscCall(MatNullSpaceCreate(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
+         PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
+      End If
+      PetscCall(MatSetFromOptions(matTemp,ierr))
 
-      ! Call MatSetFromOptions(matDisp,ierr);CHKERRQ(ierr)
+      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDisp,ierr))
+      PetscCall(SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetDM(snesDisp,dm,ierr))
+      PetscCall(SNESSetType(snesDisp,SNESKSPONLY,ierr))
+      PetscCall(SNESSetOptionsPrefix(snesDisp,'Displacement_',ierr))
 
-      ! If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_TimeSteppingTypeQuasiStatic) Then
-      !    Call SNESCreate(PETSC_COMM_WORLD,snesDisp,ierr);CHKERRQ(ierr)
-      !    Call SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    Call SNESSetDM(snesDisp,MEF90DefMechCtx%DMVect,ierr);CHKERRQ(ierr)
-      !    Call SNESSetOptionsPrefix(snesDisp,'Disp_',ierr);CHKERRQ(ierr)
-      !    !Call SNESSetType(snesDisp,SNESKSPONLY,ierr);CHKERRQ(ierr)
-      !    Call SNESSetType(snesDisp,SNESLS,ierr);CHKERRQ(ierr)
-      !    Call SNESGetSNESLineSearch(snesDisp,lsDisp,ierr);CHKERRQ(ierr)
-      !    Call SNESLineSearchSetType(lsDisp,SNESLINESEARCHL2,ierr);CHKERRQ(ierr)
-         
-      !    Call SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    Call SNESSetJacobian(snesDisp,matDisp,matDisp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    atol = 1.0D-7
-      !    rtol = 1.0D-5
-      !    Call SNESSetTolerances(snesDisp,atol,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      !    Call SNESSetFromOptions(snesDisp,ierr);CHKERRQ(ierr)
-
-      !    !!! 
-      !    !!! Set some KSP options
-      !    !!!
-      !    Call SNESGetKSP(snesDisp,kspDisp,ierr);CHKERRQ(ierr)
-      !    Call KSPSetType(kspDisp,KSPCG,ierr);CHKERRQ(ierr)
-      !    Call KSPSetInitialGuessNonzero(kspDisp,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      !    atol = 1.0D-8
-      !    rtol = 1.0D-8
-      !    dtol = 1.0D+10
-      !    Call KSPSetTolerances(kspDisp,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      !    Call KSPSetFromOptions(kspDisp,ierr);CHKERRQ(ierr)
-      ! End If
-
-      ! !!! set coordinates in PC for GAMG
-      ! !!! For some reason, this makes gamg convergence worse, when the null space is specified.
-      ! !!! Will investigate later
-      ! Call KSPGetPC(kspDisp,pcDisp,ierr);CHKERRQ(ierr)
-      ! !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
-      ! !Allocate(coordPCPtr(size(CoordPtr)))
-      ! !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
-      ! !coordPCPtr = reshape((coordPtr),[size(CoordPtr)])
-      ! !Call PCSetCoordinates(pcDisp,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
-      ! !DeAllocate(coordPCPtr)
-      ! !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMVect,coordPtr,ierr);CHKERRQ(ierr)
-      ! Call PCSetFromOptions(pcDisp,ierr);CHKERRQ(ierr)
-
-      ! Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      ! !!! SNESView seems to segfault when PC ml is used, so we setup an additional debug level so we can bypass SNESView 
-      ! If (MEF90GlobalOptions%verbose > 1) Then
-      !    Call SNESView(snesDisp,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-      ! End If
+      PetscCall(SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetJacobian(snesDisp,matTemp,matTemp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetFromOptions(snesDisp,ierr))
+      !!! 
+      !!! Set some KSP options
+      !!!
+      PetscCall(SNESGetKSP(snesDisp,kspTemp,ierr))
+      PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
+      PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
+      rtol = 1.0D-8
+      dtol = 1.0D+10
+      PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetFromOptions(kspTemp,ierr))
+      PetscCall(MatDestroy(matTemp,ierr))
    End Subroutine MEF90DefMechCreateSNESDisplacement
 
 #undef __FUNCT__
@@ -867,6 +686,7 @@ Contains
 !!!  MEF90DefMechCreateSNESDamage:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,snesDamage,residual,ierr)
@@ -875,82 +695,46 @@ Contains
       Type(tVec),Intent(IN)                              :: residual
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
-      ! Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      ! Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-      ! Type(Mat)                                          :: matDamage
-      ! PetscReal,Dimension(:,:),Pointer                   :: CoordPtr
-      ! Type(Vec)                                          :: residualDamage
-      ! Type(KSP)                                          :: kspDamage
-      ! Type(PC)                                           :: pcDamage
-      ! SNESLineSearch                                     :: lsDamage
-      ! PetscReal                                          :: atol,rtol,dtol
-      ! PetscInt                                           :: dim
-      ! Type(Vec)                                          :: LB,UB
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(tDM)                                          :: dm
+      Type(tMat)                                         :: matTemp
+      Type(tKSP)                                         :: kspTemp
+      PetscReal                                          :: rtol,dtol
       
-      ! Call DMMeshGetDimension(MEF90DefMechCtx%DMScal,dim,ierr);CHKERRQ(ierr)
-      ! Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      ! Call DMCreateMatrix(MEF90DefMechCtx%DMScal,MATAIJ,matDamage,iErr);CHKERRQ(iErr)
-      ! Call MatSetOptionsPrefix(matDamage,"damage_",ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! Call MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      ! Call MatSetFromOptions(matDamage,ierr);CHKERRQ(ierr)
-
-      ! If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_TimeSteppingTypeQuasiStatic) Then
-      !    Call SNESCreate(PETSC_COMM_WORLD,snesDamage,ierr);CHKERRQ(ierr)
-      !    Call SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    Call SNESSetDM(snesDamage,MEF90DefMechCtx%DMScal,ierr);CHKERRQ(ierr)
-      !    Call SNESSetOptionsPrefix(snesDamage,'damage_',ierr);CHKERRQ(ierr)
-      !    Call SNESGetSNESLineSearch(snesDamage,lsDamage,ierr);CHKERRQ(ierr)
-      !    Call SNESLineSearchSetType(lsDamage,SNESLINESEARCHL2,ierr);CHKERRQ(ierr)
-         
-      !    !!! Set default bounds for the damage field
-      !    Call DMCreateGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
-      !    Call VecDuplicate(LB,UB,ierr);CHKERRQ(ierr)
-      !    Call VecSet(LB,0.0_Kr,ierr);CHKERRQ(ierr)
-      !    Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
-      !    Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
-
-
-      !    Call SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    Call SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-      !    atol = 1.0D-7
-      !    rtol = 1.0D-5
-      !    Call SNESSetTolerances(snesDamage,atol,rtol,PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      !    Call SNESSetFromOptions(snesDamage,ierr);CHKERRQ(ierr)
-
-      !    !!! 
-      !    !!! Set some KSP options
-      !    !!!
-      !    Call SNESGetKSP(snesDamage,kspDamage,ierr);CHKERRQ(ierr)
-      !    Call KSPSetType(kspDamage,KSPCG,ierr);CHKERRQ(ierr)
-      !    Call KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr);CHKERRQ(ierr)
-      !    rtol = 1.0D-8
-      !    atol = 1.0D-8
-      !    dtol = 1.0D+10
-      !    Call KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr);CHKERRQ(ierr)
-      !    Call KSPSetFromOptions(kspDamage,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dm,ierr))
+      PetscCall(DMCreateMatrix(dm,matTemp,iErr))
+      PetscCall(MatSetOptionsPrefix(matTemp,"Damage_",ierr))
+      !!! The matrix is not symmetric if the advection vector is /= 0
+      PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
+      ! If (MEF90DefMechGlobalOptions%addDamageNullSpace) Then
+      !    PetscCall(MatNullSpaceCreate(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
+      !    PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
       ! End If
-      
+      PetscCall(MatSetFromOptions(matTemp,ierr))
 
-      ! !!! set coordinates in PC for GAMG
-      ! !!! For some reason, this makes gamg convergence worse, when the null space is specified.
-      ! !!! Will investigate later
-      ! Call KSPGetPC(kspDamage,pcDamage,ierr);CHKERRQ(ierr)
-      ! !Call DMMeshGetCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
-      ! !Allocate(coordPCPtr(size(CoordPtr)))
-      ! !coordPCPtr = reshape(transpose(coordPtr),[size(CoordPtr)])
-      ! !coordPCPtr = reshape((coordPtr),[size(CoordPtr)])
-      ! !Call PCSetCoordinates(pcDamage,dim,size(coordPtr),coordPCPtr,ierr);CHKERRQ(ierr)
-      ! !DeAllocate(coordPCPtr)
-      ! !Call DMMeshRestoreCoordinatesF90(MEF90DefMechCtx%DMScal,coordPtr,ierr);CHKERRQ(ierr)
-      ! Call PCSetFromOptions(pcDamage,ierr);CHKERRQ(ierr)
+      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDamage,ierr))
+      PetscCall(SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetDM(snesDamage,dm,ierr))
+      PetscCall(SNESSetType(snesDamage,SNESKSPONLY,ierr))
+      PetscCall(SNESSetOptionsPrefix(snesDamage,'Damage_',ierr))
 
-      ! Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
-      ! !!! SNESView seems to segfault when PC ml is used, so we setup an additional debug level so we can bypass SNESView 
-      ! If (MEF90GlobalOptions%verbose > 1) Then
-      !    Call SNESView(snesDamage,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
-      ! End If
+      PetscCall(SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetJacobian(snesDamage,matTemp,matTemp,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetFromOptions(snesDamage,ierr))
+      !!! 
+      !!! Set some KSP options
+      !!!
+      PetscCall(SNESGetKSP(snesDamage,kspTemp,ierr))
+      PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
+      PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
+      rtol = 1.0D-8
+      dtol = 1.0D+10
+      PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetFromOptions(kspTemp,ierr))
+      PetscCall(MatDestroy(matTemp,ierr))
    End Subroutine MEF90DefMechCreateSNESDamage
 
 #undef __FUNCT__
