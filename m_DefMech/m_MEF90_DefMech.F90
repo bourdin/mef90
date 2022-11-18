@@ -35,27 +35,27 @@ Module m_MEF90_DefMech
       MEF90DefMechPlasticStrainUpdate3D      => MEF90DefMechPlasticStrainUpdate
 
    Implicit none
-   Private
-      Public :: MEF90DefMechSetTransients
-      Public :: MEF90DefMechOperatorDisplacement
-      Public :: MEF90DefMechBilinearFormDisplacement
-      Public :: MEF90DefMechCreateSNESDisplacement
+   !Private
+   Public :: MEF90DefMechSetTransients
+   Public :: MEF90DefMechOperatorDisplacement
+   Public :: MEF90DefMechBilinearFormDisplacement
+   Public :: MEF90DefMechCreateSNESDisplacement
 
-      Public :: MEF90DefMechOperatorDamage
-      Public :: MEF90DefMechBilinearFormDamage
-      Public :: MEF90DefMechCreateSNESDamage
-      Public :: MEF90DefMechUpdateDamageBounds
-      
-      Public :: MEF90DefMechFormatEXO
-      Public :: MEF90DefMechViewEXO
-      Public :: MEF90DefMechSurfaceEnergy
-      Public :: MEF90DefMechElasticEnergy
-      Public :: MEF90DefMechWork
-      Public :: MEF90DefMechCohesiveEnergy
-      Public :: MEF90DefMechPlasticDissipation
-      Public :: MEF90DefMechCrackVolume
-      Public :: MEF90DefMechStress
-      Public :: MEF90DefMechPlasticStrainUpdate
+   Public :: MEF90DefMechOperatorDamage
+   Public :: MEF90DefMechBilinearFormDamage
+   Public :: MEF90DefMechCreateSNESDamage
+   Public :: MEF90DefMechUpdateDamageBounds
+   
+   Public :: MEF90DefMechFormatEXO
+   Public :: MEF90DefMechViewEXO
+   Public :: MEF90DefMechSurfaceEnergy
+   Public :: MEF90DefMechElasticEnergy
+   Public :: MEF90DefMechWork
+   Public :: MEF90DefMechCohesiveEnergy
+   Public :: MEF90DefMechPlasticDissipation
+   Public :: MEF90DefMechCrackVolume
+   Public :: MEF90DefMechStress
+   Public :: MEF90DefMechPlasticStrainUpdate
 
 Contains
 #undef __FUNCT__

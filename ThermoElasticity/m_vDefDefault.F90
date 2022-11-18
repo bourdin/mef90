@@ -22,10 +22,11 @@ module m_vDefDefault
                                                          1_Ki)                            ! elementOrder
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: DefMechDefaultGlobalOptions = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                          MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+                                                         MEF90Scaling_Linear,     & ! cohesiveDisplacementScaling
                                                          MEF90Scaling_CST,        & ! displacementLowerBoundScaling
                                                          MEF90Scaling_CST,        & ! displacementUpperBoundScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
@@ -58,6 +59,7 @@ module m_vDefDefault
                                                          1.0_Kr,                                            & ! DamageATLinSoftk
                                                          1.25_Kr,                                           & ! DamageAT1expb
                                                          MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! cohesive Displacement
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
                                                          [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacement Lower Bound
