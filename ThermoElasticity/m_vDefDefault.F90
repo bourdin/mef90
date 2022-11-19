@@ -22,12 +22,13 @@ module m_vDefDefault
                                                          1_Ki)                            ! elementOrder
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: DefMechDefaultGlobalOptions = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
-                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! timeSteppingType
+                                                         MEF90DefMech_SolverTypeAltMin,            & ! solverType
                                                          PETSC_TRUE,              & ! disp_addNullSpace
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! displacementLowerBoundScaling
                                                          MEF90Scaling_CST,        & ! displacementUpperBoundScaling
+                                                         MEF90Scaling_CST,        & ! cohesiveDisplacementScaling
                                                          MEF90Scaling_CST,        & ! boundaryDamageScaling
                                                          MEF90Scaling_Linear,     & ! bodyForceScaling
                                                          MEF90Scaling_Linear,     & ! boundaryForceScaling
@@ -53,11 +54,12 @@ module m_vDefDefault
                                                          MEF90DefMech_damageTypeAT1,                        & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
-                                                         1.0e-5,                                            & ! unilateralContactHydrostatocDeviatoricGamma
+                                                         1.0e-5,                                            & ! unilateralContactHydrostaticDeviatoricGamma
                                                          PETSC_FALSE,                                       & ! unilateralContactHybrid
                                                          1.0_Kr,                                            & ! DamageATLinSoftk
                                                          1.25_Kr,                                           & ! DamageAT1expb
                                                          MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! cohesiveDisplacement
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
                                                          [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacement Lower Bound

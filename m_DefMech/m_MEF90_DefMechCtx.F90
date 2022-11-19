@@ -56,9 +56,9 @@ Module m_MEF90_DefMechCtx_Type
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscEnum                              :: boundaryDisplacementScaling
-      PetscEnum                              :: cohesiveDisplacementScaling
       PetscEnum                              :: displacementLowerBoundScaling
       PetscEnum                              :: displacementUpperBoundScaling
+      PetscEnum                              :: cohesiveDisplacementScaling
       PetscEnum                              :: boundaryDamageScaling
       PetscEnum                              :: bodyForceScaling
       PetscEnum                              :: boundaryForceScaling
