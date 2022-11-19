@@ -365,8 +365,6 @@ Contains
       sizeofMEF90DefMechFaceSetOptions = size(transfer(DefMechFaceSetOptions,dummychar))*sizeofchar
       sizeofMEF90DefMechVertexSetOptions = size(transfer(DefMechVertexSetOptions,dummychar))*sizeofchar
 
-Write(*,*) "__FUNCT__", sizeofMEF90DefMechGlobalOptions
-
       MEF90DefMech_SolverTypeList(1) = 'AltMin'
       MEF90DefMech_SolverTypeList(2) = 'QuasiNewton1'
       MEF90DefMech_SolverTypeList(3) = 'QuasiNewton2'
