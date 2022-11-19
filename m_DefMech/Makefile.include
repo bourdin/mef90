@@ -1,8 +1,8 @@
 MEF90_DEFMECH_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechCtx.o                \
-                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly2D.o         \
-                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly3D.o         \
-                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity2D.o       \
-                     #${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity3D.o       \
+                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly2D.o         \
+                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechAssembly3D.o         \
+                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity2D.o       \
+                     ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechPlasticity3D.o       \
                      ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass2D.o       \
                      ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitClass3D.o       \
                      ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DefMechSplitNone2D.o        \

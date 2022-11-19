@@ -52,7 +52,10 @@ Contains
 
       Type(MEF90_MATS)                                   :: D,DPlus
       Type(MEF90_MAT)                                    :: Pinv
-      PetscReal                                          :: nu,alpha
+      PetscReal                                          :: nu
+#if MEF90_DIM == 2
+      PetscReal                                          :: alpha
+#endif
       PetscErrorCode                                     :: ierr
       Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
@@ -111,7 +114,10 @@ Contains
 
       Type(MEF90_MATS)                                   :: D,StrainPlus
       Type(MEF90_MAT)                                    :: Pinv
-      PetscReal                                          :: alpha,E,nu
+      PetscReal                                          :: E, nu
+#if MEF90_DIM == 2
+      PetscReal                                          :: alpha
+#endif
       PetscErrorCode                                     :: ierr
       Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
@@ -197,7 +203,10 @@ Contains
       Type(MEF90_TENS4OS)                                :: A
       Type(MEF90_MATS)                                   :: D
       Type(MEF90_MAT)                                    :: Pinv
-      PetscReal                                          :: E, nu,alpha
+      PetscReal                                          :: E, nu
+#if MEF90_DIM == 2
+      PetscReal                                          :: alpha
+#endif
       PetscErrorCode                                     :: ierr
       Character(len=MEF90MXSTRLEN)                       :: IOBuffer
 

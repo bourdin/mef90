@@ -2,10 +2,8 @@
 Program ThermoElasticity
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
-   Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMech
    Use m_MEF90_HeatXfer
-   Use m_MEF90_HeatXferCtx
    Use m_vDefDefault
    Use petsc
    Implicit NONE
@@ -22,9 +20,6 @@ Program ThermoElasticity
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
 
    Type(tDM),target                                   :: dm,temperatureDM,displacementDM
-   Type(tIS)                                          :: setIS
-   PetscInt,Dimension(:),Pointer                      :: setID
-   PetscInt                                           :: set
    PetscReal,Dimension(:),Pointer                     :: time,energy,cellWork,faceWork
 
    Type(tSNES)                                        :: displacementSNES
@@ -41,10 +36,8 @@ Program ThermoElasticity
    !PetscInt                                           :: tsTemperatureMaxIter
 
    PetscBool                                          :: flg
-   Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 
-   PetscInt                                           :: step
    PetscInt                                           :: dim
 
    !!! Initialize MEF90

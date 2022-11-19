@@ -28,7 +28,7 @@ include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 BASE_DIR=${MEF90_DIR}/ThermoElasticity
 
-ThermoElasticity:${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
+ThermoElasticity:${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
