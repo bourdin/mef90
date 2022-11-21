@@ -442,7 +442,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechCtxCreate(DefMechCtx,dm,MEF90Ctx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)                 :: DefMechCtx
       Type(tDM),target,Intent(IN)                              :: dm
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
       PetscErrorCode,Intent(OUT)                               :: ierr
@@ -1036,13 +1036,5 @@ Contains
       End Do
       PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
-
-
-100 Format('Cell set ',I4)
-101 Format('cs',I4.4,'_')
-103 Format('\nRegistering cell set ',I4,' prefix: ',A,'\n')
-200 Format('Vertex set ',I4)
-201 Format('vs',I4.4,'_')
-203 Format('\nRegistering vertex set ',I4,' prefix: ',A,'\n')
    End Subroutine MEF90DefMechCtxSetFromOptions
 End Module m_MEF90_DefMechCtx
