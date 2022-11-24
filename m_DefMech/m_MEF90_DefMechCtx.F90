@@ -442,10 +442,10 @@ Contains
 !!!
 
    Subroutine MEF90DefMechCtxCreate(DefMechCtx,dm,MEF90Ctx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(INOUT)                 :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
       Type(tDM),target,Intent(IN)                              :: dm
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
-      PetscErrorCode,Intent(OUT)                               :: ierr
+      PetscErrorCode,Intent(INOUT)                             :: ierr
    
       PetscInt                                                 :: dim
       Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
@@ -606,7 +606,7 @@ Contains
 
    Subroutine MEF90DefMechCtxDestroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(INOUT)                    :: ierr
       
       PetscInt                                        :: set
    
@@ -753,7 +753,7 @@ Contains
       PetscBag                                                 :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
-      PetscErrorCode,Intent(OUT)                               :: ierr
+      PetscErrorCode,Intent(INOUT)                             :: ierr
 
       Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions
 
@@ -807,7 +807,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: DefMechCellSetOptions
       
@@ -856,7 +856,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechFaceSetOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90DefMechFaceSetOptions_Type),pointer      :: DefMechFaceSetOptions
       
@@ -893,7 +893,7 @@ Contains
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
-      PetscErrorCode,Intent(OUT)                            :: ierr
+      PetscErrorCode,Intent(INOUT)                          :: ierr
 
       Type(MEF90DefMechVertexSetOptions_Type),pointer       :: DefMechVertexSetOptions
       PetscCall(PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,DefMechVertexSetOptions,ierr))

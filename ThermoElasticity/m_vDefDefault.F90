@@ -97,20 +97,38 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear, & ! fluxScaling
                                                          MEF90Scaling_Linear)   ! boundaryFluxScaling
  
-     Type(MEF90HeatXferCellSetOptions_Type),Parameter :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
+   Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          0.0_Kr,        & ! flux
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr,        & ! boundaryTemperature
                                                          [0.0_Kr,0.0_Kr,0.0_Kr]) ! AdvectionVector
                                                          
-     Type(MEF90HeatXferFaceSetOptions_Type),Parameter :: HeatXferDefaultFaceSetOptions = MEF90HeatXferFaceSetOptions_Type( &
+   Type(MEF90HeatXferFaceSetOptions_Type),Parameter   :: HeatXferDefaultFaceSetOptions = MEF90HeatXferFaceSetOptions_Type( &
                                                          0.0_Kr,        & ! boundaryFlux
                                                          0.0_Kr,        & ! surfaceThermalConductivity
                                                          0.0_Kr,        & ! externalTemp
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemperature
                                                          
-     Type(MEF90HeatXferVertexSetOptions_Type),Parameter::HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
+   Type(MEF90HeatXferVertexSetOptions_Type),Parameter ::HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
+
+   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultNodalVariables2D = ["Displacement_X     ","Displacement_Y     ","Temperature        ","Damage             "]
+   Character(len=MEF90MXSTRLEN),Dimension(5),Parameter :: vDefDefaultNodalVariables3D = ["Displacement_X     ","Displacement_Y     ","Displacement_Z     ","Temperature        ","Damage             "]
+
+   Character(len=MEF90MXSTRLEN),Dimension(6),Parameter :: vDefDefaultCellVariables2D  = ["bodyForce_X        ","bodyForce_Y        ", &
+                                                                                         "Stress_XX          ","Stress_YY          ","Stress_XY          ", &
+                                                                                         "HeatFlux           "]
+   Character(len=MEF90MXSTRLEN),Dimension(10),Parameter :: vDefDefaultCellVariables3D = ["bodyForce_X        ","bodyForce_Y        ","bodyForce_Z        ", &
+                                                                                         "Stress_XX          ","Stress_YY          ","Stress_ZZ          ", &
+                                                                                         "Stress_YZ          ","Stress_XZ          ","Stress_XY          ", &
+                                                                                         "HeatFlux           "]
+
+   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultFaceVariables2D  = ["boundaryForce_X    ","boundaryForce_Y    ", &
+                                                                                         "boundaryHeatFlux   "]
+   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultFaceVariables3D =  ["boundaryForce_X    ","boundaryForce_Y    ","boundaryForce_Z    " ,&
+                                                                                         "boundaryHeatFlux   "]
+
+   Character(len=MEF90MXSTRLEN),Dimension(0) :: vDefDefaultGlobalVariables
 end module m_vDefDefault

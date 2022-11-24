@@ -263,6 +263,7 @@ Contains
 !!!  MEF90HeatXferCtxCreate:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferCtxCreate(HeatXferCtx,dm,MEF90Ctx,ierr)
@@ -348,11 +349,12 @@ Contains
 !!!  MEF90HeatXferCtxDestroy:
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferCtxDestroy(HeatXferCtx,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: HeatXferCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(INOUT)                    :: ierr
       
       PetscInt                                        :: set
    
@@ -411,7 +413,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90HeatXferGlobalOptions_Type),pointer      :: HeatXferGlobalOptions
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag,HeatXferGlobalOptions,ierr))
@@ -444,7 +446,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)  :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90HeatXferCellSetOptions_Type),pointer      :: HeatXferCellSetOptions
       PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(bag,HeatXferCellSetOptions,ierr))
@@ -470,7 +472,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferFaceSetOptions_Type),Intent(IN)  :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90HeatXferFaceSetOptions_Type),pointer      :: HeatXferFaceSetOptions
       PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(bag,HeatXferFaceSetOptions,ierr))
@@ -497,7 +499,7 @@ Contains
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                            :: ierr
+      PetscErrorCode,Intent(INOUT)                          :: ierr
 
       Type(MEF90HeatXferVertexSetOptions_Type),pointer      :: HeatXferVertexSetOptions
       PetscCall(PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(bag,HeatXferVertexSetOptions,ierr))

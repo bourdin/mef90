@@ -594,13 +594,13 @@ Contains
 !!!  
 !!!  MEF90DefMechWork:
 !!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2014-2022 Blaise Bourdin bourdin@lsu.edu
 !!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechWork(MEF90DefMechCtx,work,ierr)
+   Subroutine MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      PetscReal,Dimension(:),Pointer                     :: work
+      PetscReal,Dimension(:),Pointer                     :: bodyForceWork,boundaryForceWork
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(tDM)                                          :: dmDisplacement,dmBodyForce,dmBoundaryForce,dmPressureForce
@@ -609,7 +609,6 @@ Contains
       Type(tIS)                                          :: setIS,setPointIS
       PetscInt,dimension(:),Pointer                      :: setID,setPointID,vecOffset
       PetscInt                                           :: set,QuadratureOrder,cell,dim
-      Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90DefMechFaceSetOptions_Type),Pointer      :: faceSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemDisplacement
@@ -638,14 +637,13 @@ Contains
       PetscCall(DMGetLabelIdIS(dmDisplacement,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm,setIS,ierr))
 
-      work = 0.0_Kr
+      bodyForceWork = 0.0_Kr
       If (setIS /= PETSC_NULL_IS) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             myWork = 0.0_Kr
             PetscCall(DMGetStratumIS(dmDisplacement,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (setPointIS /= PETSC_NULL_IS) Then
-               PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -683,7 +681,7 @@ Contains
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
-            PetscCallMPI(MPI_AllReduce(myWork,work(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
+            PetscCallMPI(MPI_AllReduce(myWork,bodyForceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       End If ! setIS
@@ -692,6 +690,8 @@ Contains
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmDisplacement,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm,setIS,ierr))
+
+      boundaryForceWork = 0.0_Kr
       If (setIS /= PETSC_NULL_IS) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
@@ -750,7 +750,7 @@ Contains
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
-            PetscCallMPI(MPI_AllReduce(myWork,work(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
+            PetscCallMPI(MPI_AllReduce(myWork,boundaryForceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
@@ -888,11 +888,11 @@ Contains
 
       Type(tDM)                                          :: dmDisplacement,dmDamage,dmTemperature,dmPlasticStrain
       Type(tPetscSection)                                :: sectionPlasticStrain
-      PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof,plasticStrainDof
+      PetscReal,Dimension(:),Pointer                     :: displacementDof,damageDof,temperatureDof,plasticStrainArray
+      PetscInt                                           :: vecOffset
       Type(MEF90_MATS)                                   :: plasticStrainCell
       Type(tIS)                                          :: setIS,setPointIS
       PetscInt,dimension(:),Pointer                      :: setID,setPointID
-      PetscInt,Dimension(:),Pointer                      :: vecOffset
       PetscInt                                           :: set,QuadratureOrder,cell,dim
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
@@ -926,6 +926,7 @@ Contains
 
       energy = 0.0_Kr
       If (setIS /= PETSC_NULL_IS) Then
+         PetscCall(VecGetArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             myEnergy = 0.0_Kr
@@ -955,10 +956,6 @@ Contains
                numDofDisplacement = size(elemDisplacement(1)%BF(:,1))
                numDofDamage = size(elemDamage(1)%BF(:,1))
                numGauss = size(elemDisplacement(1)%Gauss_C)
-
-               Allocate(plasticStrainDof((dim*(dim+1_Ki))/2_Ki))
-               Allocate(vecOffset(1_Ki))
-
                Do cell = 1,size(setPointID)
                   damageGauss = 0.0_Kr
                   If (.NOT. cellIsElastic) Then
@@ -998,9 +995,8 @@ Contains
 ! End If
 ! #endif
 
-                  PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset(1),ierr))
-                  PetscCall(VecGetValues(MEF90DefMechCtx%plasticStrain,(dim*(dim+1_Ki))/2_Ki,vecOffset,plasticStrainDof,ierr))
-                  plasticStrainCell = plasticStrainDof
+                  PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset,ierr))
+                  plasticStrainCell = plasticStrainArray(vecOffset:vecOffset+SIZEOFMEF90_MATS)
 
                   Call Split%EED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,EEDPlus,EEDMinus)
                   If (cellIsElastic) Then
@@ -1013,10 +1009,6 @@ Contains
                      myEnergy = myEnergy + elemDisplacement(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
                   End Do ! iGauss
                End Do ! cell
-
-               DeAllocate(plasticStrainDof)
-               DeAllocate(vecOffset)
-
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
                PetscCall(MEF90ElementDestroy(elemDamage,ierr))
             End If ! setPointIS
@@ -1024,6 +1016,7 @@ Contains
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
    

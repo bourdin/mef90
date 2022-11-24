@@ -78,6 +78,7 @@ Contains
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90GlobalOptions
       Type(tDM)                                       :: dmDisplacement,dmDamage,dmCohesiveDisplacement
       Type(tVec)                                      :: tmpVec
+      Character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
@@ -107,7 +108,8 @@ Contains
          PetscCall(MEF90VecCopySF(tmpVec,MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%boundaryToDamageSF,ierr))
          PetscCall(DMRestoreLocalVector(dmDamage,tmpVec,ierr))
       Case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal,time,ierr))
+         Write(IOBuffer,'((A),": linear scaling of damage does not make any sense.\n")') __FUNCT__
+         SETERRQ(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal,1.0_Kr,ierr))
       End Select
@@ -230,20 +232,20 @@ Contains
 !!!  MEF90DefMechWork: wraps calls to MEF90DefMechWork from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!  
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-22 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechWork(MEF90DefMechCtx,work,ierr)
+   Subroutine MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)           :: MEF90DefMechCtx
-      PetscReal,Dimension(:),Pointer                  :: work
+      PetscReal,Dimension(:),Pointer                  :: bodyForceWork,boundaryForceWork
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       PetscInt                                        :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         PetscCall(MEF90DefMechWork2D(MEF90DefMechCtx,work,ierr))
+         PetscCall(MEF90DefMechWork2D(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
       Else If (dim == 3) Then
-         PetscCall(MEF90DefMechWork3D(MEF90DefMechCtx,work,ierr))
+         PetscCall(MEF90DefMechWork3D(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
       End If      
    End Subroutine MEF90DefMechWork
 

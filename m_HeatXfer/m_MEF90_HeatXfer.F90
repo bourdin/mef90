@@ -22,7 +22,7 @@ Module m_MEF90_HeatXfer
    Public MEF90HeatXferOperator
    Public MEF90HeatXferBilinearForm
    Public MEF90HeatXferEnergy
-   Public MEF90HeatXferUpdateTransients
+   Public MEF90HeatXferSetTransients
    Public MEF90HeatXferIFunction
    Public MEF90HeatXferIJacobian
    Public MEF90HeatXferViewEXO
@@ -31,17 +31,17 @@ Module m_MEF90_HeatXfer
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferUpdateTransients"
+#define __FUNCT__ "MEF90HeatXferSetTransients"
 !!!
 !!!  
-!!!  MEF90HeatXferUpdateTransients: Update all transient data (boundary / external temperature and fluxes)
+!!!  MEF90HeatXferSetTransients: Update all transient data (boundary / external temperature and fluxes)
 !!!                              using the proper scaling law
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time,ierr)
+   Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                             :: step
       PetscReal,Intent(IN)                            :: time
@@ -96,7 +96,7 @@ Contains
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,1.0_Kr,ierr))
       End Select
-   End Subroutine MEF90HeatXferUpdateTransients
+   End Subroutine MEF90HeatXferSetTransients
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferOperator"

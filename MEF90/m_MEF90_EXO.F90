@@ -74,7 +74,7 @@ Contains
 !!!
 Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
    Type(tPetscViewer),Intent(IN)                         :: Viewer
-   Character(len=*),Dimension(:),Pointer,Intent(IN)      :: nameG,nameC,nameV,nameS
+   Character(len=*),Dimension(:),Intent(IN)              :: nameG,nameC,nameV,nameS
    PetscReal,Dimension(:),Pointer                        :: time
    PetscErrorCode,Intent(INOUT)                          :: ierr
    
