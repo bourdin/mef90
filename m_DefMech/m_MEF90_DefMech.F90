@@ -208,20 +208,19 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDisplacement(snesDispl,x,A,M,MEF90DefMechCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesDispl
       Type(tVec),Intent(IN)                              :: x
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         PetscCall(MEF90DefMechBilinearFormDisplacement2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDisplacement2D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         PetscCall(MEF90DefMechBilinearFormDisplacement3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDisplacement3D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechBilinearFormDisplacement
 
@@ -656,6 +655,7 @@ Contains
       If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
          PetscCall(MatNullSpaceCreate(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
+         PetscCall(MatNullSpaceDestroy(nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
 

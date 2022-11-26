@@ -224,7 +224,7 @@ Program ThermoElasticity
             PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
-            !PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
@@ -259,7 +259,7 @@ write(*,*) 'elasticEnergy ', size(elasticEnergy), elasticEnergy
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
 
             !!! Save results and boundary Values
-            PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
+            !PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
          End Select
       End Do
    End If

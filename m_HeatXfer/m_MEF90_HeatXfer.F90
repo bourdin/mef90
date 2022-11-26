@@ -291,6 +291,7 @@ Contains
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
          PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
+         PetscCall(MatNullSpaceDestroy(nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
 

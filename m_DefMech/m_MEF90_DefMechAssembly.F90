@@ -297,6 +297,7 @@ Contains
                DeAllocate(plasticStrainDof)
                DeAllocate(vecOffset)
 
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
                PetscCall(MEF90ElementDestroy(elemDamage,ierr))
             End If ! setPointIS
@@ -318,8 +319,8 @@ Contains
               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellDisplacementType,ierr))
               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-              PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDisplacementType,elemDisplacementType,ierr))
-              PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemDamageType,ierr))
+              PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDisplacementType,elemDisplacementType,ierr))
+              PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemDamageType,ierr))
 
               !!! Allocate elements 
               QuadratureOrder = 2*elemDisplacementType%order
@@ -373,7 +374,9 @@ Contains
                PetscCall(MEF90ElementDestroy(elemDamage,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
+            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
+         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmDisplacement,locResidual,ADD_VALUES,residual,ierr))
@@ -392,11 +395,10 @@ Contains
 !!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement,displacement,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement,displacement,A,M,MEF90DefMechCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesDisplacement
       Type(tVec),Intent(IN)                              :: displacement
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
@@ -576,6 +578,7 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
                PetscCall(MEF90ElementDestroy(elemDamage,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
@@ -701,7 +704,7 @@ Contains
               PetscCall(PetscBagGetDataMEF90DefMechCtxFaceSetOptions(MEF90DefMechCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellDisplacementType,ierr))
-              PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDisplacementType,elemDisplacementType,ierr))
+              PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDisplacementType,elemDisplacementType,ierr))
 
               !!! Allocate elements 
               QuadratureOrder = 2*elemDisplacementType%order
@@ -1012,6 +1015,7 @@ Contains
                PetscCall(MEF90ElementDestroy(elemDisplacement,ierr))
                PetscCall(MEF90ElementDestroy(elemDamage,ierr))
             End If ! setPointIS
+            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
