@@ -118,9 +118,9 @@ Contains
       Case (MEF90Scaling_File)
          PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%cohesiveDisplacement,MEF90DefMechCtx%cohesiveDisplacementToIOSF,MEF90DefMechCtx%IOToCohesiveDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,time,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,time,ierr))
       Case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,1.0_Kr,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,1.0_Kr,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%displacementLowerBoundScaling)
@@ -147,27 +147,27 @@ Contains
       Case (MEF90Scaling_File)
          PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%bodyForce,MEF90DefMechCtx%bodyForceToIOSF,MEF90DefMechCtx%IOToBodyForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%bodyForce,time,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce,time,ierr))
       Case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%bodyForce,1.0_Kr,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce,1.0_Kr,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%boundaryForceScaling)
       Case (MEF90Scaling_File)
          PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%boundaryForce,MEF90DefMechCtx%boundaryForceToIOSF,MEF90DefMechCtx%IOToBoundaryForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%boundaryForce,time,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce,time,ierr))
       Case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%boundaryForce,1.0_Kr,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce,1.0_Kr,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%pressureForceScaling)
       Case (MEF90Scaling_File)
          PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%pressureForceToIOSF,MEF90DefMechCtx%IOToPressureForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
       Case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%pressureForce,time,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,time,ierr))
       Case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%pressureForce,1.0_Kr,ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,1.0_Kr,ierr))
       End Select
 
    End Subroutine MEF90DefMechSetTransients
@@ -464,7 +464,7 @@ Contains
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
-      PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      !PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
    End Subroutine MEF90DefMechViewEXO
    
 #undef __FUNCT__
