@@ -11,6 +11,7 @@ defmech:
     type: quasistatic
 temperature:
     offset: 0
+boundaryDisplacement_Scaling: constant
 cs0001:
     damage:
         type: AT2Elastic
@@ -22,13 +23,14 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
+    body Force: 1.,1.,1.
 fs0030:
     displacementBC: yes,no,no
-    boundaryDisplacement: -0.5,0.,0.
+    boundaryDisplacement: 0.5,0.,0.
     damageBC: 1
     boundaryDamage: 0
 fs0020:
     displacementBC: yes,no,no
-    boundaryDisplacement: 0.5,0.,0.
+    boundaryDisplacement: -0.5,0.,0.
     damageBC: 1
     boundaryDamage: 0
