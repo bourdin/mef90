@@ -34,7 +34,7 @@ Contains
    
       Type(tDM)                                       :: dmTemperature,dmFlux,dmBoundaryFlux,dmExternalTemperature
       Type(tPetscSection)                             :: sectionFlux,sectionBoundaryFlux,sectionExternalTemperature
-      Type(tVec)                                      :: locTemperature,locResidual
+      Type(tVec)                                      :: locResidual
       Type(tIS)                                       :: setIS,setPointIS
       PetscInt,dimension(:),Pointer                   :: setID,setPointID
       PetscInt                                        :: set,QuadratureOrder,vecOffset
@@ -60,9 +60,8 @@ Contains
       PetscCall(VecGetDM(MEF90HeatXferCtx%externalTemperatureLocal,dmExternalTemperature,ierr))
       PetscCall(DMGetLocalSection(dmExternalTemperature,sectionExternalTemperature,ierr))
 
-      PetscCall(DMGetLocalVector(dmTemperature,locTemperature,ierr))
       PetscCall(DMGetLocalVector(dmTemperature,locResidual,ierr))
-      PetscCall(MEF90VecGlobalToLocalConstraint(x,MEF90HeatXferCtx%temperatureLocal,locTemperature,ierr))
+      PetscCallA(DMGlobalToLocal(dmTemperature,x,INSERT_VALUES,MEF90HeatXferCtx%TemperatureLocal,ierr))
 
       PetscCall(VecSet(residual,0.0_Kr,ierr))
       PetscCall(VecSet(locResidual,0.0_Kr,ierr))
@@ -91,7 +90,7 @@ Contains
                   residualDof = 0.0_Kr
                   !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                   !!! If this happens, we will need to protect this loop
-                  PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                  PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                   Do iGauss = 1,size(elem(cell)%Gauss_C)
                      Do jDof = 1, size(elem(cell)%BF(:,1))
                         Do iDof = 1, size(elem(cell)%BF(:,1))
@@ -99,7 +98,7 @@ Contains
                         End Do ! iDof
                      End Do ! jDof
                   End Do ! iGauss
-                  PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                  PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                   PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
                End Do ! cell
 
@@ -109,7 +108,7 @@ Contains
                      residualDof = 0.0_Kr
                      !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                      !!! If this happens, we will need to protect this loop
-                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do jDof = 1, size(elem(cell)%BF(:,1))
                            Do iDof = 1, size(elem(cell)%BF(:,1))
@@ -117,7 +116,7 @@ Contains
                            End Do ! iDof
                         End Do ! jDof
                      End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
                   End Do ! cell
                End If ! cellSetOptions%advectionVector
@@ -195,7 +194,7 @@ Contains
                      residualDof = 0.0_Kr
                      !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                      !!! If this happens, we will need to protect this loop
-                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                      PetscCall(PetscSectionGetOffset(sectionExternalTemperature,setPointID(cell),vecOffset,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do jDof = 1, size(elem(cell)%BF(:,1))
@@ -205,7 +204,7 @@ Contains
                            residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureArray(vecOffset)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! jDof
                      End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
                   End Do ! cell
                   DeAllocate(residualDof)
@@ -222,7 +221,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMLocalToGlobalEnd(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
-      PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
+      !PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locResidual,ierr))
    End Subroutine MEF90HeatXferOperator
    
