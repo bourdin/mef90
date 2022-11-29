@@ -41,7 +41,7 @@ Program ThermoElasticity
    !PetscInt                                           :: tsTemperatureMaxIter
 
    PetscBool                                          :: flg
-   Character(len=MEF90MXSTRLEN)                       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)                       :: IOBuffer,convReason
    Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
@@ -175,6 +175,8 @@ Program ThermoElasticity
             PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+            PetscCallA(SNESGetConvergedReasonString(temperatureSNES,convReason,ierr))
+            write(*,*) 'TEMPERATURE SNES CONVERGENCE REASON = ',convReason
             PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
          Case (MEF90HeatXfer_timeSteppingTypeTransient)
             If (step > 1) Then
@@ -225,6 +227,8 @@ Program ThermoElasticity
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            PetscCallA(SNESGetConvergedReasonString(displacementSNES,convReason,ierr))
+            write(*,*) 'DISPLACEMENT SNES CONVERGENCE REASON = ',convReason
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
@@ -259,7 +263,7 @@ write(*,*) 'elasticEnergy ', size(elasticEnergy), elasticEnergy
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
 
             !!! Save results and boundary Values
-            !PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
+            PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
          End Select
       End Do
    End If
