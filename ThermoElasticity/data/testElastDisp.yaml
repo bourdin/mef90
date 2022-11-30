@@ -1,17 +1,14 @@
 verbose: 0
 time:
     min: 0
-    max: 1
-    numstep: 2
+    max: 10
+    numstep: 11
 heatxfer:
   timestepping:
     type: steadystate
 defmech:
   timestepping:
     type: quasistatic
-temperature:
-    offset: 0
-boundaryDisplacement_Scaling: constant
 cs0001:
     damage:
         type: AT2Elastic

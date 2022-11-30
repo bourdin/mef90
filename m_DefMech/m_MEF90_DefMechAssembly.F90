@@ -138,64 +138,56 @@ Contains
 
                Do cell = 1,size(setPointID)
                   residualDof = 0.0_Kr
-
-                  !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
-                  damageGauss = 0.0_Kr
-                  If (.NOT. cellIsElastic) Then
-                     PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
-                     Do iGauss = 1,numGauss
-                        Do iDof = 1,numDofDamage
-                           damageGauss = damageGauss + damageDof(iDof) * elemDamage(cell)%BF(iDof,iGauss)
-                        End Do ! iDof numDofDamage
-                     End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
-                  End If
-
-                  inelasticStrainGauss = 0.0_Kr
-                  PetscCall(DMPlexVecGetClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
                   Do iGauss = 1,numGauss
+                     !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
+                     damageGauss = 0.0_Kr
+                     If (.NOT. cellIsElastic) Then
+                        PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
+                           Do iDof = 1,numDofDamage
+                              damageGauss = damageGauss + damageDof(iDof) * elemDamage(cell)%BF(iDof,iGauss)
+                           End Do ! iDof numDofDamage
+                        PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
+                     End If
+
+                     inelasticStrainGauss = 0.0_Kr
+                     PetscCall(DMPlexVecGetClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
                      Do iDof = 1,numDofDisplacement
                         inelasticStrainGauss = inelasticStrainGauss + displacementDof(iDof) * elemDisplacement(cell)%GradS_BF(iDof,iGauss)
                      End Do ! iDof numDofDisplacement
-                  End Do ! iGauss
 
-                  PetscCall(DMPlexVecRestoreClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
 
-                  temperatureGauss = 0.0_Kr
-                  PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
-                  Do iGauss = 1,numGauss
+                     temperatureGauss = 0.0_Kr
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
                      Do iDof = 1,numDofDamage
                         temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemDamage(cell)%BF(iDof,iGauss)
                      End Do ! iDof numDofDamage
-                  End Do ! iGauss
 
-                  PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
-                  inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
+                     inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
 
-! #if MEF90_DIM == 2
-!!! We need something along these lines
-!!! Adding terms in planestrain for plasticity with tr(p) = 0
-! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
-!    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
-! End If
-! #endif
+   ! #if MEF90_DIM == 2
+   !!! We need something along these lines
+   !!! Adding terms in planestrain for plasticity with tr(p) = 0
+   ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
+   !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
+   ! End If
+   ! #endif
 
-                  PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset,ierr))
-                  plasticStrainCell = plasticStrainArray(vecOffset:vecOffset+SIZEOFMEF90_MATS)
+                     PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset,ierr))
+                     plasticStrainCell = plasticStrainArray(vecOffset:vecOffset+SIZEOFMEF90_MATS)
 
-                  Call Split%DEED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
-                  If (cellIsElastic) Then
-                     stressGauss = stressGaussPlus + stressGaussMinus
-                  Else
-                     stressGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlus + stressGaussMinus
-                  End If
+                     Call Split%DEED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,stressGaussPlus,stressGaussMinus)
+                     If (cellIsElastic) Then
+                        stressGauss = stressGaussPlus + stressGaussMinus
+                     Else
+                        stressGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlus + stressGaussMinus
+                     End If
 
-                  Do iGauss = 1,numGauss
                      Do iDof = 1,numDofDisplacement
                         residualDof(iDof) = residualDof(iDof) + elemDisplacement(cell)%Gauss_C(iGauss) * (stressGauss .DotP. elemDisplacement(cell)%GradS_BF(iDof,iGauss))
                      End Do ! iDof numDofDisplacement
                   End Do ! iGauss
-
                   PetscCall(DMPlexVecSetClosure(dmDisplacement,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
                End Do ! cell
 
@@ -471,36 +463,31 @@ Contains
 
                Do cell = 1,size(setPointID)
                   matDof = 0.0_Kr
-                  !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
-                  damageGauss = 0.0_Kr
-                  If (.NOT. cellIsElastic) Then
-                     PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
-                     Do iGauss = 1,numGauss
+                  Do iGauss = 1,numGauss
+                     !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
+                     damageGauss = 0.0_Kr
+                     If (.NOT. cellIsElastic) Then
+                        PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
                         Do iDof = 1,numDofDamage
                            damageGauss = damageGauss + damageDof(iDof) * elemDamage(cell)%BF(iDof,iGauss)
                         End Do ! iDof numDofDamage
-                     End Do ! iGauss
-                     PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
-                  End If
+                        PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
+                     End If
 
-                  inelasticStrainGauss = 0.0_Kr
-                  PetscCall(DMPlexVecGetClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
-                  Do iGauss = 1,numGauss
+                     inelasticStrainGauss = 0.0_Kr
+                     PetscCall(DMPlexVecGetClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
                      Do iDof = 1,numDofDisplacement
                         inelasticStrainGauss = inelasticStrainGauss + displacementDof(iDof) * elemDisplacement(cell)%GradS_BF(iDof,iGauss)
                      End Do ! iDof numDofDisplacement
-                  End Do ! iGauss
-                  PetscCall(DMPlexVecRestoreClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmDisplacement,PETSC_NULL_SECTION,MEF90DefMechCtx%displacementLocal,setPointID(cell),displacementDof,ierr))
 
-                  temperatureGauss = 0.0_Kr
-                  PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
-                  Do iGauss = 1,numGauss
+                     temperatureGauss = 0.0_Kr
+                     PetscCall(DMPlexVecGetClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
                      Do iDof = 1,numDofDamage
                         temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemDamage(cell)%BF(iDof,iGauss)
                      End Do ! iDof numDofDamage
-                  End Do ! iGauss
-                  PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
-                  inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                     PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90DefMechCtx%temperatureLocal,setPointID(cell),temperatureDof,ierr))
+                     inelasticStrainGauss = inelasticStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
 
 ! #if MEF90_DIM == 2
 !!! We need something along these lines
@@ -510,16 +497,15 @@ Contains
 ! End If
 ! #endif
 
-                  PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset,ierr))
-                  plasticStrainCell = plasticStrainArray(vecOffset:vecOffset+SIZEOFMEF90_MATS)
+                     PetscCall(PetscSectionGetOffset(sectionPlasticStrain,setPointID(cell),vecOffset,ierr))
+                     plasticStrainCell = plasticStrainArray(vecOffset:vecOffset+SIZEOFMEF90_MATS)
 
-                  If (cellIsElastic) Then
-                     AGauss = matpropSet%HookesLaw
-                  Else
-                     Call Split%D2EED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,AGaussPlus,AGaussMinus)
-                     AGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * AGaussPlus + AGaussMinus
-                  End If
-                  Do iGauss = 1,numGauss
+                     If (cellIsElastic) Then
+                        AGauss = matpropSet%HookesLaw
+                     Else
+                        Call Split%D2EED(inelasticStrainGauss - plasticStrainCell,matpropSet%HookesLaw,AGaussPlus,AGaussMinus)
+                        AGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * AGaussPlus + AGaussMinus
+                     End If
                      Do jDof = 0,numDofDisplacement-1
                         Do iDof = 1,numDofDisplacement
                            AGradS_BF = AGauss * elemDisplacement(cell)%GradS_BF(iDof,iGauss)
