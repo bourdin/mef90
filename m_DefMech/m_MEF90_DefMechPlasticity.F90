@@ -42,7 +42,7 @@ contains
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       Type(tVec),Intent(INOUT)                           :: plasticStrain
       Type(tVec),Intent(IN)                              :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
 ! #ifdef MEF90_HAVE_SNLP
 !       Type(DM)                                           :: Mesh
