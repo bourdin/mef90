@@ -158,7 +158,7 @@ Program HeatXfer
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          !!! Update fields
          PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-         PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+         !PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
          PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
          PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))

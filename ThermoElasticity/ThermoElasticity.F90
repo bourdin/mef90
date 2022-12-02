@@ -172,11 +172,11 @@ Program ThermoElasticity
          Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
          Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
             PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-            PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+            !PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
             PetscCallA(SNESGetConvergedReasonString(temperatureSNES,convReason,ierr))
-            write(*,*) 'TEMPERATURE SNES CONVERGENCE REASON = ',convReason
+!write(*,*) 'TEMPERATURE SNES CONVERGENCE REASON = ',convReason
             PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
          Case (MEF90HeatXfer_timeSteppingTypeTransient)
             If (step > 1) Then
@@ -224,20 +224,17 @@ Program ThermoElasticity
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
          Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
             PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
-            PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
+            !PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(SNESGetConvergedReasonString(displacementSNES,convReason,ierr))
-            write(*,*) 'DISPLACEMENT SNES CONVERGENCE REASON = ',convReason
+!write(*,*) 'DISPLACEMENT SNES CONVERGENCE REASON = ',convReason
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
             elasticEnergy   = 0.0_Kr
             bodyForceWork     = 0.0_Kr
             boundaryForceWork = 0.0_Kr
-write(*,*) 'bodyForceWork ', size(bodyForceWork), bodyForceWork
-write(*,*) 'boundaryForceWork ', size(boundaryForceWork), boundaryForceWork
-write(*,*) 'elasticEnergy ', size(elasticEnergy), elasticEnergy
             !PetscCallA(MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
             PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
             PetscCall(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))

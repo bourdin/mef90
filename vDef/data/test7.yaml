@@ -9,8 +9,8 @@ heatxfer:
 defmech:
     timestepping:
         type: quasistatic
-temperature:
-    offset: 0
+# temperature:
+#     offset: 0
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
@@ -19,12 +19,12 @@ cs0001:
         type: AT1
     plasticity:
         type: NONE 
-cs0010:
+fs0010:
     displacementBC: 1,1,1
     boundaryDisplacement: -5,0,0 
     damageBC: 1
     boundaryDamage: 0
-cs0020:
+fs0020:
     displacementBC: 1,1,1
     boundaryDisplacement: 5,0,0 
     damageBC: 1
