@@ -642,7 +642,11 @@ Contains
       Type(tMat)                                         :: matTemp
       Type(tMatNullSpace)                                :: nspTemp
       Type(tKSP)                                         :: kspTemp
+      Type(tPC)                                          :: pc
+      Type(tVec)                                         :: locCoord
+      PetscInt                                           :: dim,size
       PetscReal                                          :: rtol,dtol
+      PetscReal,Dimension(:),Pointer                     :: coord
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal,dm,ierr))
@@ -673,6 +677,13 @@ Contains
       !!!
       PetscCall(SNESGetKSP(snesDisp,kspTemp,ierr))
       PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
+      PetscCall(KSPGetPC(kspTemp,pc,ierr))
+      PetscCall(DMGetCoordinatesLocal(dm,locCoord,ierr))
+      PetscCall(VecGetArrayF90(locCoord,coord,ierr))
+      PetscCall(VecGetLocalSize(locCoord,size,ierr))
+      PetscCall(DMGetCoordinateDim(dm,dim,ierr))
+      PetscCall(PCSetCoordinates(pc,dim,size/dim,coord,ierr))
+      PetscCall(VecRestoreArrayF90(locCoord,coord,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
       rtol = 1.0D-8
       dtol = 1.0D+10
