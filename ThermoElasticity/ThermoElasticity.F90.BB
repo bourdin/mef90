@@ -141,17 +141,21 @@ Program ThermoElasticity
       temperatureInitialTime = time(1)
       PetscCallA(MEF90HeatXferCreateTS(MEF90HeatXferCtx,temperatureTS,temperatureResidual,temperatureInitialTime,temperatureInitialTimeStep,ierr))
       PetscCallA(TSGetAdapt(temperatureTS,temperatureTSAdapt,ierr))
+   Case (MEF90HeatXFer_timeSteppingTypeNULL)
+      Continue
    Case default
       Write(IOBuffer,'("Inconsistent value for MEF90HeatXferGlobalOptions%timeSteppingType: ",I2,".\n")') MEF90HeatXferGlobalOptions%timeSteppingType
-      SETERRA(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
+      SETERRQ(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
    End Select
 
    Select Case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
       PetscCallA(MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,displacementSNES,displacementResidual,ierr))
+   Case (MEF90DefMech_TimeSteppingTypeNULL)
+      PetscCallA(MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,displacementSNES,displacementResidual,ierr))
    Case default
       Write(IOBuffer,'("Inconsistent value for MEF90DefMechGlobalOptions%timeSteppingType: ",I2,".\n")') MEF90DefMechGlobalOptions%timeSteppingType
-      SETERRA(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
+      SETERRQ(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
    End Select
    !!! 
    !!! Allocate array of works and energies
@@ -163,103 +167,105 @@ Program ThermoElasticity
    !!!
    !!! Actual computations / time stepping
    !!!
-   If (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_timeSteppingTypeQuasiStatic) Then
-      Do step = 1,MEF90GlobalOptions%timeNumStep
-         Write(IOBuffer,100) step,time(step)
-         PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
+   Do step = 1,MEF90GlobalOptions%timeNumStep
+      Write(IOBuffer,100) step,time(step)
+      PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
 
-         !!! Solve for temperature
-         Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
-         Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
-            PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-            !PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
-            !!! Solve SNES
-            PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
-            PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
-         Case (MEF90HeatXfer_timeSteppingTypeTransient)
+      !!! Solve for temperature
+      Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
+      Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
+         PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
+         PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+         !!! Solve SNES
+         PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+         PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
+      Case (MEF90HeatXfer_timeSteppingTypeTransient)
+         If (step > 1) Then
+            Write(IOBuffer,200) step,time(step)
+            PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
             If (step > 1) Then
-               Write(IOBuffer,200) step,time(step)
-               PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
-               If (step > 1) Then
-                  !!! Update fields
-                  PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
-                  PetscCallA(TSSetMaxTime(temperatureTS,time(step),ierr))
-                  PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
-                  PetscCallA(TSSolve(temperatureTS,temperature,ierr))
-                  PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
-                  End If
+               !!! Update fields
+               PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
+               PetscCallA(TSSetMaxTime(temperatureTS,time(step),ierr))
+               PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+               PetscCallA(TSSolve(temperatureTS,temperature,ierr))
+               PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
                End If
-         End Select
+            End If
+      End Select
+
+      !!! Compute energies
+      PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,elasticEnergy,bodyForceWork,boundaryForceWork,ierr))
+      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      Do set = 1, size(setID)
+         Write(IOBuffer,101) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
+         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      End Do
+      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISDestroy(setIS,ierr))
+
+      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
+      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      Do set = 1, size(setID)
+         Write(IOBuffer,103) setID(set),boundaryForceWork(set)
+         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      End Do
+      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISDestroy(setIS,ierr))
+
+      Write(IOBuffer,102) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
+      PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+      !!! Save results
+      PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
+
+      !!! Solve for displacement
+      Select case(MEF90DefMechGlobalOptions%timeSteppingType)
+      Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
+         PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
+         PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
+         !!! Solve SNES
+         PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+         PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
          !!! Compute energies
-         PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,elasticEnergy,bodyForceWork,boundaryForceWork,ierr))
-         PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
-         PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
+         elasticEnergy   = 0.0_Kr
+         bodyForceWork     = 0.0_Kr
+         boundaryForceWork = 0.0_Kr
+write(*,*) 'bodyForceWork ', size(bodyForceWork), bodyForceWork
+write(*,*) 'boundaryForceWork ', size(boundaryForceWork), boundaryForceWork
+write(*,*) 'elasticEnergy ', size(elasticEnergy), elasticEnergy
+         !PetscCallA(MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
+         PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
+         PetscCall(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
+         PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
          PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1, size(setID)
-            Write(IOBuffer,101) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
+            Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
          End Do
          PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCallA(ISDestroy(setIS,ierr))
-   
-         PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
-         PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
+
+         PetscCall(DMGetLabelIdIS(displacementDM,MEF90FaceSetLabelName,setIS,ierr))
+         PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
          PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1, size(setID)
-            Write(IOBuffer,103) setID(set),boundaryForceWork(set)
+            Write(IOBuffer,203) setID(set),boundaryForceWork(set)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
          End Do
          PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCallA(ISDestroy(setIS,ierr))
-   
-         Write(IOBuffer,102) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
+         Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
          PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-         !!! Save results
-         PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
-   
-         !!! Solve for displacement
-         Select case(MEF90DefMechGlobalOptions%timeSteppingType)
-         Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
-            PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
-            !PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
-            !!! Solve SNES
-            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
-            PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
-            !!! Compute energies
-            elasticEnergy   = 0.0_Kr
-            bodyForceWork     = 0.0_Kr
-            boundaryForceWork = 0.0_Kr
-            !PetscCallA(MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
-            PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
-            PetscCallA(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
-            Do set = 1, size(setID)
-               Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
-               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-            End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
-            PetscCallA(ISDestroy(setIS,ierr))
+         !!! Save results and boundary Values
+         !PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
+      End Select
+   End Do
 
-            PetscCallA(DMGetLabelIdIS(displacementDM,MEF90FaceSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
-            Do set = 1, size(setID)
-               Write(IOBuffer,203) setID(set),boundaryForceWork(set)
-               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-            End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
-            PetscCallA(ISDestroy(setIS,ierr))
-            Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
-            PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-
-            !!! Save results and boundary Values
-            PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
-         End Select
-      End Do
-   End If
 100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("\nSolving transient step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
@@ -283,9 +289,6 @@ Program ThermoElasticity
       PetscCallA(SNESDestroy(temperatureSNES,ierr))
    Case (MEF90HeatXFer_timeSteppingTypeTransient)
       PetscCallA(TSDestroy(temperatureTS,ierr))
-   Case default
-      Write(IOBuffer,'("Inconsistent value for MEF90HeatXferGlobalOptions%timeSteppingType: ",I2,".\n")') MEF90HeatXferGlobalOptions%timeSteppingType
-      SETERRA(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
    End Select
    PetscCallA(VecDestroy(temperatureResidual,ierr))
    PetscCallA(VecDestroy(temperature,ierr))
@@ -293,9 +296,6 @@ Program ThermoElasticity
    Select Case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
       PetscCallA(SNESDestroy(displacementSNES,ierr))
-   Case default
-      Write(IOBuffer,'("Inconsistent value for MEF90DefMechGlobalOptions%timeSteppingType: ",I2,".\n")') MEF90DefMechGlobalOptions%timeSteppingType
-      SETERRA(MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
    End Select
    PetscCallA(VecDestroy(displacementResidual,ierr))
    PetscCallA(VecDestroy(displacement,ierr))
