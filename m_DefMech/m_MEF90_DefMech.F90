@@ -46,7 +46,6 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechCreateSNESDamage
    Public :: MEF90DefMechUpdateDamageBounds
    
-   Public :: MEF90DefMechFormatEXO
    Public :: MEF90DefMechViewEXO
    Public :: MEF90DefMechSurfaceEnergy
    Public :: MEF90DefMechElasticEnergy
@@ -468,160 +467,6 @@ Contains
    End Subroutine MEF90DefMechViewEXO
    
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechFormatEXO"
-!!!
-!!!  
-!!!  MEF90DefMechFormatEXO:
-!!!  
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-
-   Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(INOUT)           :: MEF90DefMechCtx
-      PetscReal,Dimension(:),Pointer                     :: time
-      PetscErrorCode,Intent(INOUT)                       :: ierr
-
-      ! Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameV,nameC
-      ! Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      ! Integer                                            :: dim,numfield,step
-
-      ! Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)
-      ! PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
-      ! Allocate(nameG(0))
-      ! !nameG(1) = "Elastic Energy"
-      ! !nameG(2) = "Work"
-      ! !nameG(3) = "Surface Energy"
-      ! !nameG(4) = "Total Energy"
-   
-      ! numfield = max(MEF90DefMechGlobalOptions%displacementOffset+dim-1, &
-      !                MEF90DefMechGlobalOptions%damageOffset,&
-      !                MEF90DefMechGlobalOptions%boundaryDisplacementOffset+dim-1,&
-      !                MEF90DefMechGlobalOptions%boundaryDamageOffset,&
-      !                MEF90DefMechGlobalOptions%temperatureOffset)
-      ! Allocate(nameV(numfield))
-      ! nameV = "empty"
-      ! If ((MEF90DefMechGlobalOptions%boundaryDisplacementOffset > 0) .AND. &
-      !     (MEF90DefMechGlobalOptions%boundaryDisplacementOffset /= MEF90DefMechGlobalOptions%displacementOffset)) Then
-      !    nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+0)    = "Boundary_Displacement_X"
-      !    nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+1)    = "Boundary_Displacement_Y"
-      !    If (dim == 3) Then
-      !       nameV(MEF90DefMechGlobalOptions%boundaryDisplacementOffset+2) = "Boundary_Displacement_Z"
-      !    End If
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%displacementOffset > 0) Then
-      !    nameV(MEF90DefMechGlobalOptions%displacementOffset+0)            = "Displacement_X"
-      !    nameV(MEF90DefMechGlobalOptions%displacementOffset+1)            = "Displacement_Y"
-      !    If (dim == 3) Then
-      !       nameV(MEF90DefMechGlobalOptions%displacementOffset+2)         = "Displacement_Z"
-      !    End If
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%damageOffset > 0) Then
-      !    nameV(MEF90DefMechGlobalOptions%damageOffset)                    = "Damage"
-      ! End If
-      ! If ((MEF90DefMechGlobalOptions%boundaryDamageOffset > 0) .AND. &
-      !     (MEF90DefMechGlobalOptions%boundaryDamageOffset /= MEF90DefMechGlobalOptions%damageOffset))Then
-      !    nameV(MEF90DefMechGlobalOptions%boundaryDamageOffset)            = "Boundary_Damage"
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%temperatureOffset > 0) Then
-      !    nameV(MEF90DefMechGlobalOptions%temperatureOffset)               = "Temperature"
-      ! End If
-      
-      ! numfield = 0
-      ! If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%forceOffset+dim-1)
-      ! End If
-      
-      ! If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%pressureForceOffset)
-      ! End If
-      
-      ! If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%CrackPressureOffset)
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%stressOffset+(dim*(dim+1))/2-1)
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%plasticStrainOffset+(dim*(dim+1))/2-1)
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
-      !    numfield = max(numfield,MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)
-      ! End If
-      ! Allocate(nameC(numfield))
-
-      ! If (numfield > 0) Then
-      !    nameC = "empty"
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%forceOffset > 0) Then
-      !    nameC(MEF90DefMechGlobalOptions%forceOffset+0)                                = "Force_X"
-      !    nameC(MEF90DefMechGlobalOptions%forceOffset+1)                                = "Force_Y"
-      !    If (dim == 3) Then
-      !       nameC(MEF90DefMechGlobalOptions%forceOffset+2)                             = "Force_Z"
-      !    End If
-      ! End If
-      
-      ! If (MEF90DefMechGlobalOptions%pressureForceOffset > 0) Then
-      !    nameC(MEF90DefMechGlobalOptions%pressureForceOffset)                          = "Pressure_Force"
-      ! End If
-      
-      ! If (MEF90DefMechGlobalOptions%CrackPressureOffset > 0) Then
-      !    nameC(MEF90DefMechGlobalOptions%CrackPressureOffset)                          = "Crack_Pressure"
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%stressOffset > 0) Then
-      !    If (dim == 2) Then
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+0)                            = "Stress_XX"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+1)                            = "Stress_YY"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+2)                            = "Stress_XY"
-      !    Else
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+0)                            = "Stress_XX"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+1)                            = "Stress_YY"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+2)                            = "Stress_ZZ"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+3)                            = "Stress_YZ"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+4)                            = "Stress_XZ"
-      !       nameC(MEF90DefMechGlobalOptions%stressOffset+5)                            = "Stress_XY"
-      !    End If
-      ! End If
-      ! If (MEF90DefMechGlobalOptions%plasticStrainOffset > 0) Then
-      !    If (dim == 2) Then
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)                     = "plasticStrain_XX"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)                     = "plasticStrain_YY"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)                     = "plasticStrain_XY"
-      !    Else
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+0)                     = "plasticStrain_XX"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+1)                     = "plasticStrain_YY"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+2)                     = "plasticStrain_ZZ"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+3)                     = "plasticStrain_YZ"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+4)                     = "plasticStrain_XZ"
-      !       nameC(MEF90DefMechGlobalOptions%plasticStrainOffset+5)                     = "plasticStrain_XY"
-      !    End If
-      ! End If
-
-      ! If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset > 0) Then
-      !    nameC(MEF90DefMechGlobalOptions%cumulatedPlasticDissipationOffset)       = "Cumulated_Plastic_Dissipation"
-      ! End If
-      
-      ! Call MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%fileEXOUNIT,nameG,nameC,nameV,ierr)
-      ! !!! This makes no sense, but there seems to be a bug in exodus / OSX where
-      ! !!! formatting is not flushed to the drive
-      ! Call MEF90CtxCloseEXO(MEF90DefMechCtx%MEF90Ctx,ierr)
-      ! Call MEF90CtxOpenEXO(MEF90DefMechCtx%MEF90Ctx,MEF90DefMechCtx%DM,ierr)
-      ! If (MEF90DefMechCtx%MEF90Ctx%rank == 0) Then
-      !    !Call EXUPDA(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,ierr)
-      !    If (associated(time)) then
-      !       Do step = 1, size(time)
-      !          Call EXPTIM(MEF90DefMechCtx%MEF90Ctx%fileExoUnit,step,time(step),ierr)
-      !       End Do
-      !    End If
-      ! End If
-      ! DeAllocate(nameG)
-      ! DeAllocate(nameV)
-      ! DeAllocate(nameC)
-   End Subroutine MEF90DefMechFormatEXO
-   
-#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCreateSNESDisplacement"
 !!!
 !!!  
@@ -631,65 +476,75 @@ Contains
 !!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisp,residual,ierr)
+   Subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,snesDisplacement,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(tSNES),Intent(OUT)                            :: snesDisp
+      Type(tSNES),Intent(OUT)                            :: snesDisplacement
       Type(tVec),Intent(IN)                              :: residual
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(tDM)                                          :: dm
-      Type(tMat)                                         :: matTemp
-      Type(tMatNullSpace)                                :: nspTemp
-      Type(tKSP)                                         :: kspTemp
+      Type(tMat)                                         :: matDisplacement
+      Type(tMatNullSpace)                                :: nspDisplacement
+      Type(tKSP)                                         :: kspDisplacement
       Type(tPC)                                          :: pc
-      Type(tVec)                                         :: locCoord
+      Type(tVec)                                         :: gCoord,locCoord,gVec
       PetscInt                                           :: dim,size
-      PetscReal                                          :: rtol,dtol
+      PetscReal                                          :: rtol,dtol,atol,stol
       PetscReal,Dimension(:),Pointer                     :: coord
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal,dm,ierr))
-      PetscCall(DMCreateMatrix(dm,matTemp,iErr))
-      PetscCall(MatSetOptionsPrefix(matTemp,"Displacement_",ierr))
+      PetscCall(DMCreateMatrix(dm,matDisplacement,ierr))
+      PetscCall(MatSetOptionsPrefix(matDisplacement,"Displacement_",ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
-      PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
-      PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
-      PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDisplacement,MAT_SPD,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDisplacement,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDisplacement,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
       If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
-         PetscCall(MatNullSpaceCreate(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
-         PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
-         PetscCall(MatNullSpaceDestroy(nspTemp,ierr))
+         PetscCall(DMGetCoordinates(dm,gCoord,ierr))
+         PetscCall(MatNullSpaceCreateRigidBody(gCoord,nspDisplacement,ierr))
+         PetscCall(MatSetNearNullSpace(matDisplacement,nspDisplacement,ierr))
+         PetscCall(MatNullSpaceDestroy(nspDisplacement,ierr))
       End If
-      PetscCall(MatSetFromOptions(matTemp,ierr))
+      PetscCall(MatSetFromOptions(matDisplacement,ierr))
 
-      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDisp,ierr))
-      PetscCall(SNESSetApplicationContext(snesDisp,MEF90DefMechCtx,ierr))
-      PetscCall(SNESSetDM(snesDisp,dm,ierr))
-      PetscCall(SNESSetType(snesDisp,SNESKSPONLY,ierr))
-      PetscCall(SNESSetOptionsPrefix(snesDisp,'Displacement_',ierr))
+      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDisplacement,ierr))
+      PetscCall(SNESSetApplicationContext(snesDisplacement,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetDM(snesDisplacement,dm,ierr))
+      PetscCall(SNESSetType(snesDisplacement,SNESKSPONLY,ierr))
+      PetscCall(SNESSetOptionsPrefix(snesDisplacement,'Displacement_',ierr))
 
-      PetscCall(SNESSetFunction(snesDisp,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr))
-      PetscCall(SNESSetJacobian(snesDisp,matTemp,matTemp,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr))
-      PetscCall(SNESSetFromOptions(snesDisp,ierr))
+      PetscCall(SNESSetFunction(snesDisplacement,residual,MEF90DefMechOperatorDisplacement,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetJacobian(snesDisplacement,matDisplacement,matDisplacement,MEF90DefMechBilinearFormDisplacement,MEF90DefMechCtx,ierr))
+      atol = 1.0D-7
+      rtol = 1.0D-5
+      stol = 1.0D-7
+      PetscCall(SNESSetTolerances(snesDisplacement,atol,rtol,stol,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(SNESSetFromOptions(snesDisplacement,ierr))
       !!! 
       !!! Set some KSP options
       !!!
-      PetscCall(SNESGetKSP(snesDisp,kspTemp,ierr))
-      PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
-      PetscCall(KSPGetPC(kspTemp,pc,ierr))
+      PetscCall(SNESGetKSP(snesDisplacement,kspDisplacement,ierr))
+      PetscCall(KSPSetType(kspDisplacement,KSPCG,ierr))
+      PetscCall(KSPGetPC(kspDisplacement,pc,ierr))
       PetscCall(DMGetCoordinatesLocal(dm,locCoord,ierr))
-      PetscCall(VecGetArrayF90(locCoord,coord,ierr))
-      PetscCall(VecGetLocalSize(locCoord,size,ierr))
+      PetscCall(DMGetGlobalVector(dm,gVec,ierr))
+      PetscCall(DMLocalToGlobalBegin(dm,locCoord,INSERT_VALUES,gVec,ierr))
+      PetscCall(DMLocalToGlobalEnd(dm,locCoord,INSERT_VALUES,gVec,ierr))
+      PetscCall(VecGetArrayF90(gVec,coord,ierr))
+      PetscCall(VecGetLocalSize(gVec,size,ierr))
       PetscCall(DMGetCoordinateDim(dm,dim,ierr))
       PetscCall(PCSetCoordinates(pc,dim,size/dim,coord,ierr))
-      PetscCall(VecRestoreArrayF90(locCoord,coord,ierr))
-      PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
+      PetscCall(VecRestoreArrayF90(gVec,coord,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,gVec,ierr))
+      PetscCall(KSPSetInitialGuessNonzero(kspDisplacement,PETSC_TRUE,ierr))
+      atol = 1.0D-8
       rtol = 1.0D-8
       dtol = 1.0D+10
-      PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
-      PetscCall(KSPSetFromOptions(kspTemp,ierr))
-      PetscCall(MatDestroy(matTemp,ierr))
+      PetscCall(KSPSetTolerances(kspDisplacement,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetFromOptions(kspDisplacement,ierr))
+      PetscCall(MatDestroy(matDisplacement,ierr))
    End Subroutine MEF90DefMechCreateSNESDisplacement
 
 #undef __FUNCT__
@@ -710,23 +565,19 @@ Contains
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(tDM)                                          :: dm
-      Type(tMat)                                         :: matTemp
-      Type(tKSP)                                         :: kspTemp
+      Type(tMat)                                         :: matDamage
+      Type(tKSP)                                         :: kspDamage
       PetscReal                                          :: rtol,dtol
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dm,ierr))
-      PetscCall(DMCreateMatrix(dm,matTemp,iErr))
-      PetscCall(MatSetOptionsPrefix(matTemp,"Damage_",ierr))
+      PetscCall(DMCreateMatrix(dm,matDamage,iErr))
+      PetscCall(MatSetOptionsPrefix(matDamage,"Damage_",ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
-      PetscCall(MatSetOption(matTemp,MAT_SPD,PETSC_TRUE,ierr))
-      PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
-      PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
-      ! If (MEF90DefMechGlobalOptions%addDamageNullSpace) Then
-      !    PetscCall(MatNullSpaceCreate(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
-      !    PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
-      ! End If
-      PetscCall(MatSetFromOptions(matTemp,ierr))
+      PetscCall(MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
+      PetscCall(MatSetFromOptions(matDamage,ierr))
 
       PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDamage,ierr))
       PetscCall(SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr))
@@ -735,19 +586,19 @@ Contains
       PetscCall(SNESSetOptionsPrefix(snesDamage,'Damage_',ierr))
 
       PetscCall(SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr))
-      PetscCall(SNESSetJacobian(snesDamage,matTemp,matTemp,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr))
+      PetscCall(SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr))
       PetscCall(SNESSetFromOptions(snesDamage,ierr))
       !!! 
       !!! Set some KSP options
       !!!
-      PetscCall(SNESGetKSP(snesDamage,kspTemp,ierr))
-      PetscCall(KSPSetType(kspTemp,KSPCG,ierr))
-      PetscCall(KSPSetInitialGuessNonzero(kspTemp,PETSC_TRUE,ierr))
+      PetscCall(SNESGetKSP(snesDamage,kspDamage,ierr))
+      PetscCall(KSPSetType(kspDamage,KSPCG,ierr))
+      PetscCall(KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr))
       rtol = 1.0D-8
       dtol = 1.0D+10
-      PetscCall(KSPSetTolerances(kspTemp,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
-      PetscCall(KSPSetFromOptions(kspTemp,ierr))
-      PetscCall(MatDestroy(matTemp,ierr))
+      PetscCall(KSPSetTolerances(kspDamage,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetFromOptions(kspDamage,ierr))
+      PetscCall(MatDestroy(matDamage,ierr))
    End Subroutine MEF90DefMechCreateSNESDamage
 
 #undef __FUNCT__

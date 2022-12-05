@@ -9,6 +9,18 @@ heatxfer:
 defmech:
   timestepping:
     type: quasistatic
+displacement:
+  snes:
+    type: ksponly
+  pc:
+    type: gamg
+    gamg:
+      type: classical
+  ksp:
+    atol: 1.e-8
+    rtol: 1.e-5
+    converged:
+      reason: ascii
 cs0001:
     damage:
         type: AT2Elastic
@@ -20,7 +32,6 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-    body Force: 1.,1.,1.
 fs0030:
     displacementBC: yes,yes,no
     boundaryDisplacement: 0.5,0.,0.

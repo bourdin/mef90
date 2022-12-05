@@ -821,7 +821,7 @@ Contains
       DefMechCellSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechCellSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'Body force','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'bodyForce','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%CrackPressure,default%CrackPressure,'CrackPressure','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageATLinSoftk,default%DamageATLinSoftk,'damage_LinSoft_k','[unit-less] (k): k parameter in the Linear Softening damage model',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageAT1expb,default%DamageAT1expb,'damage_AT1exp_b','[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation',ierr))
@@ -870,7 +870,7 @@ Contains
       DefMechFaceSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechFaceSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3_Ki,'Boundary force','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3_Ki,'boundaryForce','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechFaceSetOptions%pressureForce,default%pressureForce,'pressureForce','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterBoolArray(bag,DefMechFaceSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
