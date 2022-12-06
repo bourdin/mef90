@@ -41,6 +41,7 @@ Module m_MEF90_HeatXferCtx_Type
       PetscEnum                        :: externalTemperatureScaling
       PetscEnum                        :: fluxScaling
       PetscEnum                        :: boundaryFluxScaling
+      PetscBool                        :: temperatureExport
       !!! scaling = time (step) scaling law currently CST, Linear, Null (not present), File
    End Type MEF90HeatXferGlobalOptions_Type
 
@@ -419,6 +420,8 @@ Contains
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag,HeatXferGlobalOptions,ierr))
       PetscCall(PetscBagSetName(bag,trim(name),"HeatXferGlobalOptions MEF90 Heat transfer global options",ierr))
       PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
+
+      PetscCall(PetscBagRegisterBool(bag,HeatXferGlobalOptions%temperatureExport,default%temperatureExport,'temperature_export','Export temperature',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,HeatXferGlobalOptions%timeSteppingType,MEF90HeatXFer_timeSteppingTypeList,default%timeSteppingType,'heatxfer_timeStepping_type','Type of heat transfer computation',ierr))
       PetscCall(PetscBagRegisterBool(bag,HeatXferGlobalOptions%addNullSpace,default%addNullSpace,'heatxfer_addNullSpace','Add null space to SNES',ierr))

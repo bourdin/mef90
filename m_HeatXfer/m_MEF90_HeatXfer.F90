@@ -245,8 +245,8 @@ Contains
 !!!  MEF90HeatXferViewEXO:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
@@ -254,7 +254,13 @@ Contains
       PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+
+      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+
+      If (MEF90HeatXferGlobalOptions%temperatureExport) Then
+         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
    End Subroutine MEF90HeatXferViewEXO
 
 #undef __FUNCT__
@@ -264,7 +270,7 @@ Contains
 !!!  MEF90HeatXferCreateSNES:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residual,ierr)

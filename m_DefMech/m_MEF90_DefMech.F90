@@ -462,8 +462,25 @@ Contains
       PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
-      PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
-      !PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+
+      If (MEF90DefMechGlobalOptions%displacementExport) Then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
+      If (MEF90DefMechGlobalOptions%damageExport) Then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
+      If (MEF90DefMechGlobalOptions%stressExport) Then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%stress,MEF90DefMechCtx%stressToIOSF,MEF90DefMechCtx%IOToStressSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
+      If (MEF90DefMechGlobalOptions%plasticStrainExport) Then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%plasticStrain,MEF90DefMechCtx%plasticStrainToIOSF,MEF90DefMechCtx%IOToPlasticStrainSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%cumulatedPlasticDissipation,MEF90DefMechCtx%cumulatedPlasticDissToIOSF,MEF90DefMechCtx%IOToCumulatedPlasticDissSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
    End Subroutine MEF90DefMechViewEXO
    
 #undef __FUNCT__

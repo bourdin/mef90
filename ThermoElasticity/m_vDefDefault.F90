@@ -46,7 +46,12 @@ module m_vDefDefault
                                                          1.0e-4,                  & ! plasticStrainAtol
                                                          1.0e-3,                  & ! InjectedVolumeAtol
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
-                                                         0.0_Kr)                    ! dampingCoefficientDamage
+                                                         0.0_Kr,                  & ! dampingCoefficientDamage
+                                                         PETSC_TRUE,              & ! displacement_export
+                                                         PETSC_FALSE,             & ! damage_export
+                                                         PETSC_FALSE,             & ! stress_export
+                                                         PETSC_FALSE,             & ! plasticstrain_export
+                                                         PETSC_FALSE)               ! cumulatedplasticdissipation_export
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! bodyForce
@@ -95,7 +100,8 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          MEF90Scaling_Linear, & ! fluxScaling
-                                                         MEF90Scaling_Linear)   ! boundaryFluxScaling
+                                                         MEF90Scaling_Linear, & ! boundaryFluxScaling
+                                                         PETSC_TRUE)            ! temperature_export
  
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          0.0_Kr,        & ! flux
