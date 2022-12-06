@@ -129,7 +129,7 @@ Contains
                      PetscCall(PetscSectionGetOffset(sectionFlux,setPointID(cell),vecOffset,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           residualDof(iDof) = residualDof(iDof) - fluxArray(vecOffset)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(iDof) = residualDof(iDof) - fluxArray(vecOffset+1)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! iDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
@@ -173,7 +173,7 @@ Contains
                      PetscCall(PetscSectionGetOffset(sectionBoundaryFlux,setPointID(cell),vecOffset,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           residualDof(iDof) = residualDof(iDof) - boundaryFluxArray(vecOffset)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(iDof) = residualDof(iDof) - boundaryFluxArray(vecOffset+1)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! iDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
@@ -201,7 +201,7 @@ Contains
                            Do iDof = 1, size(elem(cell)%BF(:,1))
                               residualDof(jDof) = residualDof(jDof) + faceSetOptions%surfaceThermalConductivity*temperatureDof(iDof)*elem(cell)%BF(iDof,iGauss)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                            End Do ! iDof
-                           residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureArray(vecOffset)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureArray(vecOffset+1)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! jDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,MEF90HeatXferCtx%TemperatureLocal,setPointID(cell),temperatureDof,ierr))
@@ -466,7 +466,7 @@ Contains
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         bodyWorkCell = 0.0_Kr
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           bodyWorkCell = bodyWorkCell + fluxArray(vecOffset) * temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
+                           bodyWorkCell = bodyWorkCell + fluxArray(vecOffset+1) * temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
                         End Do ! iDof
                         myBodyWork = myBodyWork + bodyWorkCell * elem(cell)%Gauss_C(iGauss)
                      End Do ! iGauss
@@ -511,7 +511,7 @@ Contains
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         surfaceWorkCell = 0.0_Kr
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           surfaceWorkCell = surfaceWorkCell + boundaryFluxArray(vecOffset) * temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
+                           surfaceWorkCell = surfaceWorkCell + boundaryFluxArray(vecOffset+1) * temperatureDof(iDof) * elem(cell)%BF(iDof,iGauss)
                         End Do ! iDof
                         mySurfaceWork = mySurfaceWork + surfaceWorkCell * elem(cell)%Gauss_C(iGauss)
                      End Do ! iGauss
@@ -669,7 +669,7 @@ Contains
                      PetscCall(PetscSectionGetOffset(sectionFlux,setPointID(cell),vecOffset,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           residualDof(iDof) = residualDof(iDof) - fluxArray(vecOffset)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(iDof) = residualDof(iDof) - fluxArray(vecOffset+1)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! iDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locF,setPointID(cell),residualDof,ADD_VALUES,ierr))
@@ -713,7 +713,7 @@ Contains
                      PetscCall(PetscSectionGetOffset(sectionBoundaryFlux,setPointID(cell),vecOffset,ierr))
                      Do iGauss = 1,size(elem(cell)%Gauss_C)
                         Do iDof = 1, size(elem(cell)%BF(:,1))
-                           residualDof(iDof) = residualDof(iDof) - boundaryFluxArray(vecOffset)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(iDof) = residualDof(iDof) - boundaryFluxArray(vecOffset+1)*elem(cell)%BF(iDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! iDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecSetClosure(dmTemperature,PETSC_NULL_SECTION,locF,setPointID(cell),residualDof,ADD_VALUES,ierr))
@@ -741,7 +741,7 @@ Contains
                            Do iDof = 1, size(elem(cell)%BF(:,1))
                               residualDof(jDof) = residualDof(jDof) + faceSetOptions%surfaceThermalConductivity*temperatureDof(iDof)*elem(cell)%BF(iDof,iGauss)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                            End Do ! iDof
-                           residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureArray(vecOffset)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
+                           residualDof(jDof) = residualDof(jDof) - faceSetOptions%surfaceThermalConductivity*externalTemperatureArray(vecOffset+1)*elem(cell)%BF(jDof,iGauss)*elem(cell)%Gauss_C(iGauss)
                         End Do ! jDof
                      End Do ! iGauss
                      PetscCall(DMPlexVecRestoreClosure(dmTemperature,PETSC_NULL_SECTION,locTemperature,setPointID(cell),temperatureDof,ierr))
