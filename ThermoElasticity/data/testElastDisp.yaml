@@ -5,7 +5,7 @@ time:
     numstep: 11
 heatxfer:
   timestepping:
-    type: steadystate
+    type: NULL
 defmech:
   timestepping:
     type: quasistatic
@@ -14,8 +14,6 @@ displacement:
     type: ksponly
   pc:
     type: gamg
-    gamg:
-      type: classical
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
@@ -32,13 +30,19 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-fs0030:
-    displacementBC: yes,yes,no
-    boundaryDisplacement: 0.5,0.,0.
-    damageBC: 1
-    boundaryDamage: 0
 fs0020:
     displacementBC: yes,yes,no
     boundaryDisplacement: -0.5,0.,0.
     damageBC: 1
     boundaryDamage: 0
+fs0030:
+    displacementBC: yes,yes,no
+    boundaryDisplacement: 0.5,0.,0.
+    damageBC: 1
+    boundaryDamage: 0
+fs0040:
+    displacementBC: no,no,no
+    damageBC: no
+fs0050:
+    displacementBC: no,no,no
+    damageBC: no

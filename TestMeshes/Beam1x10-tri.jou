@@ -13,11 +13,15 @@ tridelaunay point placement gq
 block 1 surface 1
 sideset 20 curve 2
 sideset 30 curve 4
+sideset 40 curve 3
+sideset 50 curve 1
+
 mesh surface 1
 smooth surface 1
 
 block 1 element type tri3
 export mesh "Beam1x10-tri.gen" dimension 2 block all overwrite
-exit
+#exit
+
 
 
