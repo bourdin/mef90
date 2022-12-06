@@ -113,7 +113,7 @@ Program  TestHeatXferCtx
       Write(IOBuffer,'("Step: ",I4," Analysis time: ",ES12.5,"\n")') step,time(step)
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
       PetscCallA(VecSet(MEF90HeatXferCtx%temperatureLocal,time(step),ierr))
-      PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+      PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
       PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
       Do set = 1, numCellSet
          Write(*,'("   Cell set ",I4," energy:       ",ES12.5," body work: ",ES12.5)') cellSetID(set),energy(set),bodyWork(set)

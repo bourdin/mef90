@@ -141,8 +141,7 @@ Program HeatXfer
    !!!
    If (MEF90GlobalOptions%timeSkip > 0) Then
       ! PetscCallA(DMGetLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr))
-      ! PetscCallA(VecLoadExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, &
-      !                          MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90HeatXferGlobalOptions%TempOffset,ierr))
+      ! PetscCallA(VecLoadExodusVertex(MEF90HeatXferCtx%DMScal,localVec,MEF90HeatXferCtx%MEF90Ctx%IOcomm, MEF90HeatXferCtx%MEF90Ctx%fileExoUnit,MEF90GlobalOptions%timeSkip,MEF90HeatXferGlobalOptions%TempOffset,ierr))
       ! PetscCallA(DMLocalToGlobalBegin(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr))
       ! PetscCallA(DMLocalToGlobalEnd(MEF90HeatXferCtx%DMScal,localVec,INSERT_VALUES,MEF90HeatXferCtx%Temperature,ierr))
       ! PetscCallA(DMRestoreLocalVector(MEF90HeatXferCtx%DMScal,localVec,ierr))
@@ -157,8 +156,8 @@ Program HeatXfer
          Write(IOBuffer,100) step,time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          !!! Update fields
-         PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
-         PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
+         PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
+         !PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
          !!! Solve SNES
          PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
          PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
@@ -167,7 +166,7 @@ Program HeatXfer
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          If (step > 1) Then
             !!! Update fields
-            PetscCallA(MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time(step),ierr))
+            PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
             !PetscCallA(MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature,MEF90HeatXferCtx,ierr))
             !!! Make sure TS does not overstep
             !PetscCallA(TSGetTime(temperatureTS,t,ierr))
@@ -188,8 +187,8 @@ Program HeatXfer
 
       !!! Compute energies
       PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,cellWork,faceWork,ierr))
-      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
-      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
+      PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(IOBuffer,101) setID(set),energy(set),cellWork(set),energy(set)-cellWork(set)
@@ -198,8 +197,8 @@ Program HeatXfer
       PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
       PetscCallA(ISDestroy(setIS,ierr))
 
-      PetscCall(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
-      Call MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr);CHKERRQ(ierr)
+      PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
+      PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(IOBuffer,103) setID(set),faceWork(set)

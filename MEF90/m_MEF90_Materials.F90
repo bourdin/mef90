@@ -585,7 +585,7 @@ Contains
       PetscBag                               :: bag
       Character(len=*),intent(IN)            :: prefix,name
       type(MEF90MatProp3D_Type),intent(IN)   :: default
-      PetscErrorCode,intent(OUT)             :: ierr
+      PetscErrorCode,intent(INOUT)           :: ierr
 
       Type(MEF90MatProp3D_Type),pointer      :: matprop
       PetscCall(PetscBagGetDataMEF90MatProp3D(bag,matprop,ierr))
@@ -677,8 +677,8 @@ Contains
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(tDM),Intent(IN)                            :: dm
       Type(MEF90MatProp2D_Type),intent(IN)            :: defaultMaterial
-      PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+      PetscErrorCode,Intent(INOUT)                    :: ierr
 
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID
@@ -725,8 +725,8 @@ Contains
       PetscBag,Dimension(:),Pointer                   :: MEF90MatPropBag
       Type(tDM),Intent(IN)                            :: dm
       Type(MEF90MatProp3D_Type),intent(IN)            :: defaultMaterial
-      PetscErrorCode,Intent(OUT)                      :: ierr
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
+      PetscErrorCode,Intent(INOUT)                    :: ierr
 
       Type(tIS)                                       :: setIS
       PetscInt,Dimension(:),Pointer                   :: setID

@@ -22,7 +22,7 @@ Module m_MEF90_HeatXfer
    Public MEF90HeatXferOperator
    Public MEF90HeatXferBilinearForm
    Public MEF90HeatXferEnergy
-   Public MEF90HeatXferUpdateTransients
+   Public MEF90HeatXferSetTransients
    Public MEF90HeatXferIFunction
    Public MEF90HeatXferIJacobian
    Public MEF90HeatXferViewEXO
@@ -31,17 +31,17 @@ Module m_MEF90_HeatXfer
 Contains
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferUpdateTransients"
+#define __FUNCT__ "MEF90HeatXferSetTransients"
 !!!
 !!!  
-!!!  MEF90HeatXferUpdateTransients: Update all transient data (boundary / external temperature and fluxes)
+!!!  MEF90HeatXferSetTransients: Update all transient data (boundary / external temperature and fluxes)
 !!!                              using the proper scaling law
 !!!  
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90HeatXferUpdateTransients(MEF90HeatXferCtx,step,time,ierr)
+   Subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time,ierr)
       Type(MEF90HeatXferCtx_Type),Intent(INOUT)       :: MEF90HeatXferCtx
       PetscInt,Intent(IN)                             :: step
       PetscReal,Intent(IN)                            :: time
@@ -96,7 +96,7 @@ Contains
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,1.0_Kr,ierr))
       End Select
-   End Subroutine MEF90HeatXferUpdateTransients
+   End Subroutine MEF90HeatXferSetTransients
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferOperator"
@@ -245,8 +245,8 @@ Contains
 !!!  MEF90HeatXferViewEXO:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr)
@@ -254,7 +254,13 @@ Contains
       PetscInt,Intent(IN)                                :: step
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+      Type(MEF90HeatXferGlobalOptions_Type),pointer      :: MEF90HeatXferGlobalOptions
+
+      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+
+      If (MEF90HeatXferGlobalOptions%temperatureExport) Then
+         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+      End If
    End Subroutine MEF90HeatXferViewEXO
 
 #undef __FUNCT__
@@ -264,7 +270,7 @@ Contains
 !!!  MEF90HeatXferCreateSNES:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residual,ierr)
@@ -291,6 +297,7 @@ Contains
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
          PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
+         PetscCall(MatNullSpaceDestroy(nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
 

@@ -1,0 +1,44 @@
+verbose: 0
+time:
+    min: 0
+    max: 10
+    numstep: 11
+heatxfer:
+  timestepping:
+    type: steadystate
+defmech:
+  timestepping:
+    type: quasistatic
+displacement:
+  snes:
+    type: ksponly
+  pc:
+    type: gamg
+    gamg:
+      type: classical
+  ksp:
+    atol: 1.e-8
+    rtol: 1.e-5
+    converged:
+      reason: ascii
+cs0001:
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: NONE 
+    damageBC: yes
+    boundaryDamage: 0.
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+fs0030:
+    displacementBC: yes,yes,no
+    boundaryDisplacement: 0.5,0.,0.
+    damageBC: 1
+    boundaryDamage: 0
+fs0020:
+    displacementBC: yes,yes,no
+    boundaryDisplacement: -0.5,0.,0.
+    damageBC: 1
+    boundaryDamage: 0

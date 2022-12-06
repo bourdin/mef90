@@ -31,7 +31,9 @@ Module m_MEF90_DefMechCtx_Type
       Type(tPetscSF)                          :: bodyForceToIOSF,IOToBodyForceSF
       Type(tPetscSF)                          :: boundaryForceToIOSF,IOToBoundaryForceSF
       Type(tPetscSF)                          :: pressureForceToIOSF,IOToPressureForceSF
+      Type(tPetscSF)                          :: stressToIOSF,IOToStressSF
       Type(tPetscSF)                          :: plasticStrainToIOSF,IOToPlasticStrainSF
+      Type(tPetscSF)                          :: cumulatedPlasticDissToIOSF,IOToCumulatedPlasticDissSF
       
       PetscBag                                :: GlobalOptionsBag
       PetscBag,Dimension(:),Pointer           :: CellSetOptionsBag
@@ -77,7 +79,12 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: plasticStrainATol
       PetscReal                              :: InjectedVolumeATol
       PetscReal                              :: dampingCoefficientDisplacement
-      PetscReal                              :: dampingCoefficientDamage      
+      PetscReal                              :: dampingCoefficientDamage
+      PetscBool                              :: displacementExport
+      PetscBool                              :: damageExport  
+      PetscBool                              :: stressExport  
+      PetscBool                              :: plasticStrainExport  
+      PetscBool                              :: cumulatedPlasticDissipationExport  
    End Type MEF90DefMechGlobalOptions_Type
 
    Type MEF90DefMechCellSetOptions_Type
@@ -442,10 +449,10 @@ Contains
 !!!
 
    Subroutine MEF90DefMechCtxCreate(DefMechCtx,dm,MEF90Ctx,ierr)
-      Type(MEF90DefMechCtx_Type),Intent(INOUT)                 :: DefMechCtx
+      Type(MEF90DefMechCtx_Type),Intent(OUT)                   :: DefMechCtx
       Type(tDM),target,Intent(IN)                              :: dm
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
-      PetscErrorCode,Intent(OUT)                               :: ierr
+      PetscErrorCode,Intent(INOUT)                             :: ierr
    
       PetscInt                                                 :: dim
       Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
@@ -585,7 +592,9 @@ Contains
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%bodyForce,DefMechCtx%bodyForceToIOSF,DefMechCtx%IOTobodyForceSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%boundaryForce,DefMechCtx%boundaryForceToIOSF,DefMechCtx%IOToboundaryForceSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%pressureForce,DefMechCtx%pressureForceToIOSF,DefMechCtx%IOTopressureForceSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%stress,DefMechCtx%stressToIOSF,DefMechCtx%IOToStressSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%plasticStrain,DefMechCtx%plasticStrainToIOSF,DefMechCtx%IOToplasticStrainSF,ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%cumulatedPlasticDissipation,DefMechCtx%cumulatedPlasticDissToIOSF,DefMechCtx%IOToCumulatedPlasticDissSF,ierr))
 
       !!! Create the SF to exchange boundary values of the displacement and damage. 
       PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx,DefMechCtx%displacementLocal,DefMechCtx%displacementLocal,DefMechCtx%boundaryToDisplacementSF,dummySF,ierr))
@@ -606,7 +615,7 @@ Contains
 
    Subroutine MEF90DefMechCtxDestroy(DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(INOUT)        :: DefMechCtx
-      PetscErrorCode,Intent(OUT)                      :: ierr
+      PetscErrorCode,Intent(INOUT)                    :: ierr
       
       PetscInt                                        :: set
    
@@ -726,8 +735,12 @@ Contains
       PetscCall(PetscSFDestroy(DefMechCtx%IOToboundaryForceSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%pressureForceToIOSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%IOTopressureForceSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%stressToIOSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%IOToStressSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%plasticStrainToIOSF,ierr))
       PetscCall(PetscSFDestroy(DefMechCtx%IOToplasticStrainSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%cumulatedPlasticDissToIOSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%IOToCumulatedPlasticDissSF,ierr))
 
       !!! Destroy the SF to exchange boundary values of the displacement and damage. 
       PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDisplacementSF,ierr))
@@ -753,7 +766,7 @@ Contains
       PetscBag                                                 :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
-      PetscErrorCode,Intent(OUT)                               :: ierr
+      PetscErrorCode,Intent(INOUT)                             :: ierr
 
       Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions
 
@@ -764,6 +777,12 @@ Contains
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'displacement_addNullSpace','Add null space to SNES',ierr))
+
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%damageExport,default%damageExport,'damage_export','Export damage',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%stressExport,default%stressExport,'stress_export','Export stress',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%plasticStrainExport,default%plasticStrainExport,'plasticstrain_export','Export plastic strain',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%cumulatedPlasticDissipationExport,default%cumulatedPlasticDissipationExport,'cumulatedplasticdissipation_export','Export cumulated plastic dissipation',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementLowerBoundScaling,MEF90ScalingList,default%displacementLowerBoundScaling,'displacementlowerbound_scaling','Displacement lower bound scaling',ierr))
@@ -807,7 +826,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90DefMechCellSetOptions_Type),pointer      :: DefMechCellSetOptions
       
@@ -821,7 +840,7 @@ Contains
       DefMechCellSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechCellSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'Body force','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'bodyForce','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%CrackPressure,default%CrackPressure,'CrackPressure','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageATLinSoftk,default%DamageATLinSoftk,'damage_LinSoft_k','[unit-less] (k): k parameter in the Linear Softening damage model',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageAT1expb,default%DamageAT1expb,'damage_AT1exp_b','[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation',ierr))
@@ -856,7 +875,7 @@ Contains
       PetscBag                                           :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechFaceSetOptions_Type),Intent(IN)   :: default
-      PetscErrorCode,Intent(OUT)                         :: ierr
+      PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Type(MEF90DefMechFaceSetOptions_Type),pointer      :: DefMechFaceSetOptions
       
@@ -870,7 +889,7 @@ Contains
       DefMechFaceSetOptions%displacementUpperBound = default%displacementUpperBound
       DefMechFaceSetOptions%Has_displacementBC     = default%Has_displacementBC
 
-      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3_Ki,'Boundary force','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
+      PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryForce,3_Ki,'boundaryForce','[N.m^(-2) / N.m^(-1)] (f): boundary force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechFaceSetOptions%pressureForce,default%pressureForce,'pressureForce','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterBoolArray(bag,DefMechFaceSetOptions%Has_displacementBC,3_Ki,'DisplacementBC','Displacement has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,DefMechFaceSetOptions%boundaryDisplacement,3_Ki,'boundaryDisplacement','[m] (U): Displacement boundary value',ierr))
@@ -893,7 +912,7 @@ Contains
       PetscBag                                              :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
-      PetscErrorCode,Intent(OUT)                            :: ierr
+      PetscErrorCode,Intent(INOUT)                          :: ierr
 
       Type(MEF90DefMechVertexSetOptions_Type),pointer       :: DefMechVertexSetOptions
       PetscCall(PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,DefMechVertexSetOptions,ierr))
