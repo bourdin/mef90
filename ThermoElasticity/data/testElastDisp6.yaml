@@ -1,16 +1,19 @@
 verbose: 0
 time:
     min: 0
-    max: 1
-    numstep: 1
+    max: 2
+    numstep: 3
 heatxfer:
   timestepping:
-    type: null
+    type: steadystate
 defmech:
   timestepping:
     type: quasistatic
+temperature:
+  export: yes
 displacement:
-  addNullSpace: true
+  export: yes
+  addNullSpace: yes
   snes:
     type: ksponly
   pc:
@@ -25,8 +28,8 @@ displacement:
 stress:
   export: yes
 boundaryDisplacement:
-  scaling: linear
-bodyForce:
+  scaling: constant
+boundaryTemperature:
   scaling: constant
 cs0001:
     damage:
@@ -37,10 +40,23 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-    bodyForce: 0.,0.01,0.
 fs0030:
     displacementBC: yes,yes,no
     boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
 fs0020:
     displacementBC: yes,yes,no
     boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0040:
+    displacementBC: yes,yes,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0050:
+    displacementBC: yes,yes,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.

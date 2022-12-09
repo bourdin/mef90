@@ -346,7 +346,7 @@ End Subroutine MEF90EXOFormat
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
+      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs
       PetscScalar,Dimension(:),Pointer :: varray
       PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
@@ -354,6 +354,7 @@ End Subroutine MEF90EXOFormat
       Character(len=MXSTLN)            :: elemType
       PetscMPIInt                      :: rank
    
+      csxs = 0_Ki
       PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
       numCS = exinqi(exoid,EX_INQ_ELEM_BLK)
       Allocate(csID(numCS))
@@ -403,7 +404,7 @@ End Subroutine MEF90EXOFormat
       Type(tVec),Intent(INOUT)         :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs=0
+      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs
       PetscScalar,Dimension(:),Pointer :: varray
       PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
@@ -411,6 +412,7 @@ End Subroutine MEF90EXOFormat
       Character(len=MXSTLN)            :: elemType
       PetscMPIInt                      :: rank
    
+      csxs = 0_Ki
       PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
       numCS = exinqi(exoid,EX_INQ_ELEM_BLK)
       Allocate(csID(numCS))
@@ -462,13 +464,15 @@ Subroutine MEF90EXOVecViewSide_Private(v,exoid,step,offset,ierr)
    Type(tVec),Intent(IN)            :: v
    PetscErrorCode,Intent(INOUT)     :: ierr
 
-   PetscInt                         :: xs,xe,bs,c,numSS,set,ssLocalSize,ssxs=0,sscs=0
+   PetscInt                         :: xs,xe,bs,c,numSS,set,ssLocalSize,ssxs,sscs
    PetscScalar,Dimension(:),Pointer :: varray
    PetscInt,Dimension(:),Pointer    :: ssID,ssSize
    Type(tVec)                       :: vComp
    Type(tIS)                        :: compIS
    PetscMPIInt                      :: rank
 
+   ssxs = 0_Ki
+   sscs = 0_Ki
    PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
    numSS = exinqi(exoid,EX_INQ_SIDE_SETS)
    Allocate(ssID(numSS))
@@ -515,13 +519,15 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
    Type(tVec),Intent(IN)            :: v
    PetscErrorCode,Intent(INOUT)     :: ierr
 
-   PetscInt                         :: xs,xe,bs,c,numSS,set,ssLocalSize,ssxs=0,sscs=0
+   PetscInt                         :: xs,xe,bs,c,numSS,set,ssLocalSize,ssxs,sscs
    PetscScalar,Dimension(:),Pointer :: varray
    PetscInt,Dimension(:),Pointer    :: ssID,ssSize
    Type(tVec)                       :: vComp
    Type(tIS)                        :: compIS
    PetscMPIInt                      :: rank
 
+   ssxs = 0_Ki
+   sscs = 0_Ki
    PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
    numSS = exinqi(exoid,EX_INQ_SIDE_SETS)
    Allocate(ssID(numSS))

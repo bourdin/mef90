@@ -1,11 +1,11 @@
 verbose: 0
 time:
     min: 0
-    max: 1
-    numstep: 1
+    max: 10
+    numstep: 11
 heatxfer:
   timestepping:
-    type: null
+    type: steadystate
 defmech:
   timestepping:
     type: quasistatic
@@ -22,12 +22,10 @@ displacement:
     rtol: 1.e-5
     converged:
       reason: ascii
-stress:
-  export: yes
 boundaryDisplacement:
-  scaling: linear
-bodyForce:
   scaling: constant
+boundaryFlux:
+  scaling: linear
 cs0001:
     damage:
         type: AT2Elastic
@@ -37,10 +35,12 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-    bodyForce: 0.,0.01,0.
+fs0020:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    boundaryFlux: 1.
 fs0030:
     displacementBC: yes,yes,no
     boundaryDisplacement: 0.,0.,0.
-fs0020:
-    displacementBC: yes,yes,no
-    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 0.
