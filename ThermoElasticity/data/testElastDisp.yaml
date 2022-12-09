@@ -19,6 +19,8 @@ displacement:
     rtol: 1.e-5
     converged:
       reason: ascii
+stress:
+   export: yes
 cs0001:
     damage:
         type: AT2Elastic

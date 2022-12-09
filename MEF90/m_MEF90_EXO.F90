@@ -100,16 +100,16 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
          Call expvan(exoid,"n",size(nameV),nameV,ierr)
       End If
       If (size(nameS) > 0) Then
-         PetscCallA(expvp(exoid,"s",size(nameS),ierr))
-         PetscCallA(expvan(exoid,"s",size(nameS),nameS,ierr))
+         PetscCall(expvp(exoid,"s",size(nameS),ierr))
+         PetscCall(expvan(exoid,"s",size(nameS),nameS,ierr))
       End If
 
       !!! Write truth tables
-      PetscCallA(exinq(exoid,EX_INQ_SIDE_SETS,numSS,PETSC_NULL_REAL,PETSC_NULL_CHARACTER,ierr))
+      PetscCall(exinq(exoid,EX_INQ_SIDE_SETS,numSS,PETSC_NULL_REAL,PETSC_NULL_CHARACTER,ierr))
       If (size(nameS) > 0) Then
          Allocate(truthtable(numSS,size(nameS)))
          truthtable = .true.
-         PetscCallA(expsstt(exoid, numSS, size(nameS), truthtable, ierr))
+         PetscCall(expsstt(exoid, numSS, size(nameS), truthtable, ierr))
          DeAllocate(truthtable)
       End If
 
@@ -180,7 +180,7 @@ End Subroutine MEF90EXOFormat
       PetscCall(VecGetBlockSize(v,bs,ierr))
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
       PetscCall(PetscObjectSetName(iov,vecname,ierr))
-      PetscCallA(MEF90VecCopySF(v,iov,sf,ierr))
+      PetscCall(MEF90VecCopySF(v,iov,sf,ierr))
 
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
       PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
@@ -195,7 +195,7 @@ End Subroutine MEF90EXOFormat
          write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
       End If
-      PetscCallA(VecDestroy(iov,ierr))
+      PetscCall(VecDestroy(iov,ierr))
    End Subroutine MEF90EXOVecView
 
 #undef __FUNCT__
@@ -239,8 +239,8 @@ End Subroutine MEF90EXOFormat
          write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
       End If
-      PetscCallA(MEF90VecCopySF(iov,v,invSF,ierr))
-      PetscCallA(VecDestroy(iov,ierr))
+      PetscCall(MEF90VecCopySF(iov,v,invSF,ierr))
+      PetscCall(VecDestroy(iov,ierr))
    End Subroutine MEF90EXOVecLoad
 
 #undef __FUNCT__
@@ -477,8 +477,8 @@ Subroutine MEF90EXOVecViewSide_Private(v,exoid,step,offset,ierr)
    Do set=1,numSS
       Call exgsp(exoid,ssID(set),ssSize(set),PETSC_NULL_INTEGER,ierr)
    End Do
-   PetscCallA(VecGetOwnershipRange(v,xs,xe,ierr))
-   PetscCallA(VecGetBlockSize(v,bs,ierr))
+   PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
+   PetscCall(VecGetBlockSize(v,bs,ierr))
    Do set=1,numSS
       !  range of indices for set setID[set]: csxs:csxs + csSize[set]-1
       !  local slice of zonal values:         xs/bs,xm/bs-1
@@ -489,7 +489,7 @@ Subroutine MEF90EXOVecViewSide_Private(v,exoid,step,offset,ierr)
          Call expssv(exoid,step,offset,ssID(set),ssLocalSize,varray,ierr)
          PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
       Else
-         PetscCallA(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
+         PetscCall(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,ssLocalSize,xs+sscs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
@@ -530,8 +530,8 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
    Do set=1,numSS
       Call exgsp(exoid,ssID(set),ssSize(set),PETSC_NULL_INTEGER,ierr)
    End Do
-   PetscCallA(VecGetOwnershipRange(v,xs,xe,ierr))
-   PetscCallA(VecGetBlockSize(v,bs,ierr))
+   PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
+   PetscCall(VecGetBlockSize(v,bs,ierr))
    Do set=1,numSS
       !  range of indices for set setID[set]: csxs:csxs + csSize[set]-1
       !  local slice of zonal values:         xs/bs,xm/bs-1
@@ -542,7 +542,7 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
          PetscCall(exgssv(exoid,step,offset,ssID(set),ssLocalSize,varray,ierr))
          PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
       Else
-         PetscCallA(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
+         PetscCall(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,ssLocalSize,xs+sscs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))

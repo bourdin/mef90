@@ -61,7 +61,7 @@ Contains
       PetscCall(DMGetLocalSection(dmExternalTemperature,sectionExternalTemperature,ierr))
 
       PetscCall(DMGetLocalVector(dmTemperature,locResidual,ierr))
-      PetscCallA(DMGlobalToLocal(dmTemperature,x,INSERT_VALUES,MEF90HeatXferCtx%TemperatureLocal,ierr))
+      PetscCall(DMGlobalToLocal(dmTemperature,x,INSERT_VALUES,MEF90HeatXferCtx%TemperatureLocal,ierr))
 
       PetscCall(VecSet(residual,0.0_Kr,ierr))
       PetscCall(VecSet(locResidual,0.0_Kr,ierr))

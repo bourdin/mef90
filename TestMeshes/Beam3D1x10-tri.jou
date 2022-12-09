@@ -1,0 +1,31 @@
+set journal off
+set echo off
+reset
+#{L=10}
+#{H=1}
+#{h=.2}
+
+
+create brick X {L} Y {H} Z {H}
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+volume all scheme tetmesh
+
+block 1 body 1
+sideset 20 surface 4
+sideset 30 surface 6
+sideset 40 surface 3
+sideset 50 surface 5
+sideset 60 surface 2
+sideset 70 surface 1
+
+mesh volume all
+
+block 1 element type tet4
+export mesh "Beam3D1x10-tri.gen" dimension 3 block all overwrite
+exit
+
+
+
+

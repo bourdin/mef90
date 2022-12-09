@@ -1373,10 +1373,10 @@ Contains
 
         PetscCall(DMGetLabelIdIS(dm, "Face Sets", gssIS,ierr))
         PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,gssIS,ierr))
-        PetscCallA(ISGetSize(gssIS,numSS,ierr))
+        PetscCall(ISGetSize(gssIS,numSS,ierr))
         PetscCall(DMGetLabelIdIS(dm, "Face Sets", ssIS,ierr))
-        PetscCallA(DMPlexGetMigrationSF(dm,migrationSF,ierr))
-        PetscCallA(ISGetIndicesF90(ssIS, ssID,ierr))
+        PetscCall(DMPlexGetMigrationSF(dm,migrationSF,ierr))
+        PetscCall(ISGetIndicesF90(ssIS, ssID,ierr))
         Allocate(locfacesIS(numSS))
         Allocate(procSSID(numSS))
         Do set=1,numSS
@@ -1389,9 +1389,9 @@ Contains
             End If
         End Do
         Do set = 1, numSS
-            PetscCallA(DMGetStratumIS(dm, "Face Sets", procSSID(set), faceIS,ierr))
+            PetscCall(DMGetStratumIS(dm, "Face Sets", procSSID(set), faceIS,ierr))
             If (faceIS /= PETSC_NULL_IS) Then
-                PetscCallA(ISGetIndicesF90(faceIS, faceID,ierr))
+                PetscCall(ISGetIndicesF90(faceIS, faceID,ierr))
             Else
                 Allocate(faceID(0))
             End If
@@ -1407,17 +1407,17 @@ Contains
             PetscCall(PetscSFSetGraph(tempSF,size(faceID),size(faceID),ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
             PetscCall(PetscSFSetUp(tempSF,ierr))
             If (MEF90Ctx%NumProcs > 1) Then
-                PetscCallA(PetscSFComposeInverse(migrationSF,tempSF,sf,ierr))
+                PetscCall(PetscSFComposeInverse(migrationSF,tempSF,sf,ierr))
                 PetscCall(PetscSFDestroy(tempSF,ierr))
             Else
-                PetscCallA(PetscSFCreateInverseSF(tempSF,sf,ierr))
+                PetscCall(PetscSFCreateInverseSF(tempSF,sf,ierr))
                 PetscCall(PetscSFDestroy(tempSF,ierr))
             End If
             PetscCall(PetscSFSetUp(sf,ierr))
             DeAllocate(ilocal)
             DeAllocate(iremote)
             If (faceIS /= PETSC_NULL_IS) Then
-                PetscCallA(ISRestoreIndicesF90(faceIS,faceID,ierr))
+                PetscCall(ISRestoreIndicesF90(faceIS,faceID,ierr))
             Else
                 DeAllocate(faceID)
             End If
@@ -1426,8 +1426,8 @@ Contains
             Do i=1,nleaves
                 ilocal(i) = iremote(i)%index
             End Do
-            PetscCallA(ISCreateGeneral(MEF90Ctx%comm,nleaves,ilocal,PETSC_COPY_VALUES,locfacesIS(set),ierr))
-            PetscCallA(ISDestroy(faceIS,ierr))
+            PetscCall(ISCreateGeneral(MEF90Ctx%comm,nleaves,ilocal,PETSC_COPY_VALUES,locfacesIS(set),ierr))
+            PetscCall(ISDestroy(faceIS,ierr))
             PetscCall(PetscSFDestroy(sf,ierr))
             DeAllocate(ilocal)
             If (associated(emptyInd)) Then
@@ -1440,8 +1440,8 @@ Contains
         Do set = 1, numSS
             PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,locfacesIS(set),ierr))
         End Do
-        PetscCallA(ISConcatenate(MEF90Ctx%comm,numSS,locfacesIS,facesIS,ierr))
-        PetscCallA(ISGetIndicesF90(facesIS, faceID,ierr))
+        PetscCall(ISConcatenate(MEF90Ctx%comm,numSS,locfacesIS,facesIS,ierr))
+        PetscCall(ISGetIndicesF90(facesIS, faceID,ierr))
         If (MEF90Ctx%rank == 0) Then
             totalleaves = size(faceID)
         End If
@@ -1451,12 +1451,12 @@ Contains
             permIndices(i) = i-1
             facesID(i) = faceID(i)
         End Do
-        PetscCallA(ISRestoreIndicesF90(facesIS, faceID,ierr))
-        PetscCallA(ISRestoreIndicesF90(ssIS, ssID,ierr))
+        PetscCall(ISRestoreIndicesF90(facesIS, faceID,ierr))
+        PetscCall(ISRestoreIndicesF90(ssIS, ssID,ierr))
         PetscCall(PetscSortIntWithPermutation(totalleaves,facesID,permIndices,ierr))
-        PetscCallA(DMGetLocalVector(dm,localVec,ierr))
-        PetscCallA(VecGetBlockSize(localVec,numComponent,ierr))
-        PetscCallA(DMRestoreLocalVector(dm,localVec,ierr))
+        PetscCall(DMGetLocalVector(dm,localVec,ierr))
+        PetscCall(VecGetBlockSize(localVec,numComponent,ierr))
+        PetscCall(DMRestoreLocalVector(dm,localVec,ierr))
         Allocate(iremote(numComponent*totalleaves))
         Allocate(ilocal(numComponent*totalleaves))
         Do i=1,totalleaves
@@ -1470,7 +1470,7 @@ Contains
         PetscCall(PetscSFSetFromOptions(invSF,ierr))
         PetscCall(PetscSFSetGraph(invSF,numComponent*totalleaves,numComponent*totalleaves,ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(invSF,ierr))
-        PetscCallA(PetscSFCreateInverseSF(invSF,sf,ierr))
+        PetscCall(PetscSFCreateInverseSF(invSF,sf,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
         Do set=1,numSS
             PetscCall(ISDestroy(locfacesIS(set),ierr))
@@ -1481,8 +1481,8 @@ Contains
         DeAllocate(facesID)
         DeAllocate(ilocal)
         DeAllocate(iremote)
-        PetscCallA(ISDestroy(gssIS,ierr))
-        PetscCallA(ISDestroy(ssIS,ierr))
-        PetscCallA(ISDestroy(facesIS,ierr))
+        PetscCall(ISDestroy(gssIS,ierr))
+        PetscCall(ISDestroy(ssIS,ierr))
+        PetscCall(ISDestroy(facesIS,ierr))
     End Subroutine CreateSideSF_Private
 End Module m_MEF90_DMPlex
