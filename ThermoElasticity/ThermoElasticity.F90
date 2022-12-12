@@ -12,144 +12,148 @@ Program ThermoElasticity
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,                             & ! verbose
-                                                         PETSC_FALSE,                   & ! validate
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,                        & ! timeMin
-                                                         1.0_Kr,                        & ! timeMax
-                                                         11,                            & ! timeNumStep
-                                                         0,                             & ! timeSkip
-                                                         1.0_Kr,                        & ! frequency
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
-
-
-   !!! Defect mechanics contexts
    Type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-   Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
-                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
-                                                         PETSC_TRUE,              & ! disp_addNullSpace
-                                                         3,                       & ! DisplacementOffset
-                                                         2,                       & ! DamageOffset
-                                                         3,                       & ! boundaryDisplacementOffset
-                                                         0,                       & ! boundaryDamageOffset
-                                                         1,                       & ! temperatureOffset
-                                                         4,                       & ! ForceOffset
-                                                         3,                       & ! pressureForceOffset
-                                                         0,                       & ! CrackPressureOffset
-                                                         0,                       & ! plasticStrainOffset
-                                                         6,                       & ! StressOffset
-                                                         0,                       & ! cumulatedPlasticDissipationOffset
-                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
-                                                         0,                       & ! displacementLowerBoundScaling
-                                                         0,                       & ! displacementUpperBoundScaling
-                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear,     & ! ForceScaling
-                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
-                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
-                                                         1e-3,                    & ! damage_atol
-                                                         1000,                    & ! maxit
-                                                         10,                      & ! PCLag
-                                                         1.0_Kr,                  & ! SOROmega
-                                                         0.,                      & ! irrevThres
-                                                         MEF90DefMech_BTTypeNULL, & ! BTType
-                                                         -1,                      & ! BTInt
-                                                         -1,                      & ! BTScope
-                                                         1.0e-2,                  & ! BTTol
-                                                         1.0e-4,                  & ! plasticStrainAtol
-                                                         1.0e-3,                  & ! InjectedVolumeAtol
-                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
-                                                         0.0_Kr)                    ! dampingCoefficientDamage
 
-   Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
-                                                         MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
-                                                         MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! mode
-                                                         PETSC_TRUE,              & ! disp_addNullSpace
-                                                         3,                       & ! DisplacementOffset
-                                                         2,                       & ! DamageOffset
-                                                         3,                       & ! boundaryDisplacementOffset
-                                                         0,                       & ! boundaryDamageOffset
-                                                         1,                       & ! temperatureOffset
-                                                         4,                       & ! ForceOffset
-                                                         3,                       & ! pressureForceOffset
-                                                         0,                       & ! CrackPressureOffset
-                                                         0,                       & ! plasticStrainOffset
-                                                         7,                       & ! StressOffset
-                                                         0,                       & ! cumulatedPlasticDissipationOffset
-                                                         MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
-                                                         0,                       & ! displacementLowerBoundScaling
-                                                         0,                       & ! displacementUpperBoundScaling
-                                                         MEF90Scaling_CST,        & ! boundaryDamageScaling
-                                                         MEF90Scaling_Linear,     & ! ForceScaling
-                                                         MEF90Scaling_Linear,     & ! pressureForceScaling
-                                                         MEF90Scaling_Linear,     & ! CrackPressureScaling
-                                                         1e-4,                    & ! damage_atol
-                                                         1000,                    & ! maxit
-                                                         10,                      & ! PCLag
-                                                         1.0_Kr,                  & ! SOROmega
-                                                         0.,                      & ! irrevThres
-                                                         MEF90DefMech_BTTypeNULL, & ! BTType
-                                                         -1,                      & ! BTInt
-                                                         -1,                      & ! BTScope
-                                                         1.0e-2,                  & ! BTTol
-                                                         1.0e-4,                  & ! plasticStrainAtol
-                                                         1.0e-3,                  & ! InjectedVolumeAtol
-                                                         0.0_Kr,                  & ! dampingCoefficientDisplacement
-                                                         0.0_Kr)                    ! dampingCoefficientDamage
-
-   Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
-                                                         -1,                                      & ! elemTypeShortIDDispl will be overriden
-                                                         -1,                                      & ! elemTypeShortIDDamage will be overriden
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! force
-                                                         0.0_Kr,                                  & ! pressureForce
-                                                         0.0_Kr,                                  & ! CrackPressure
-                                                         MEF90DefMech_damageTypeAT1Elastic,       & ! damageType
-                                                         MEF90DefMech_plasticityTypeNone,         & ! plasticityType
-                                                         MEF90DefMech_unilateralContactTypeNone,  & ! unilateralContactType
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacementLowerBound
-                                                         [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY], & ! displacementUpperBound
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         PETSC_FALSE,                             & ! IsCrackPressureActivated
-                                                         PETSC_FALSE,                             & ! IsWorkControlledActivated
-                                                         0._Kr)                                     ! Boundary Damage
-   Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],   & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                  & ! boundary Displacement
-                                                         [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacementLowerBound
-                                                         [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY], & ! displacementUpperBound
-                                                         PETSC_FALSE,                             & ! Has Damage BC
-                                                         0.0_Kr)                                    ! boundary Damage
-
-   !!! HeatXfer contexts
    Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
-   Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                         MEF90HeatXfer_timeSteppingTypeSteadyState, & ! mode
-                                                         PETSC_FALSE,         & ! addNullSpace
-                                                         1,                   & ! tempOffset
-                                                         0.,                  & ! initialTemperature
-                                                         MEF90Scaling_Linear, & ! boundaryTempScaling
-                                                         0,                   & ! boundaryTempOffset
-                                                         MEF90Scaling_Linear, & ! externalTempScaling
-                                                         2,                   & ! externalTempOffset
-                                                         MEF90Scaling_Linear, & ! fluxScaling
-                                                         1)                     ! fluxOffset
-   Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-                                                         -1,            & ! elemTypeShortID will be overriden
-                                                         0.0_Kr,        & ! flux
-                                                         0.0_Kr,        & ! surfaceThermalConductivity
-                                                         0.0_Kr,        & ! externalTemp
-                                                         PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr,        & ! boundaryTemp
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr]) ! advectionVector
 
-   Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                         PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr)          ! boundaryTemp
+   Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
+   1,                             & ! verbose
+   PETSC_FALSE,                   & ! validate
+   MEF90TimeInterpolation_linear, & ! timeInterpolation
+   0.0_Kr,                        & ! timeMin
+   1.0_Kr,                        & ! timeMax
+   11,                            & ! timeNumStep
+   0,                             & ! timeSkip
+   1,                             & ! numCycle
+   MEF90FileFormat_EXOSingle)       ! fileFormat
+
+Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
+   MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
+   MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+   PETSC_TRUE,              & ! disp_addNullSpace
+   3,                       & ! DisplacementOffset
+   2,                       & ! DamageOffset
+   3,                       & ! boundaryDisplacementOffset
+   0,                       & ! boundaryDamageOffset
+   1,                       & ! temperatureOffset
+   4,                       & ! ForceOffset
+   3,                       & ! pressureForceOffset
+   0,                       & ! CrackPressureOffset
+   0,                       & ! plasticStrainOffset
+   6,                       & ! StressOffset
+   9,                       & ! cumulatedPlasticDissipationOffset
+   MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+   MEF90Scaling_CST,        & ! displacementLowerBoundScaling
+   MEF90Scaling_CST,        & ! displacementUpperBoundScaling
+   MEF90Scaling_CST,        & ! boundaryDamageScaling
+   MEF90Scaling_Linear,     & ! ForceScaling
+   MEF90Scaling_Linear,     & ! pressureForceScaling
+   MEF90Scaling_Linear,     & ! CrackPressureScaling
+   1e-3,                    & ! damage_atol
+   1000,                    & ! maxit
+   10,                      & ! PCLag
+   1.0_Kr,                  & ! SOROmega
+   0.,                      & ! irrevThres 
+   MEF90DefMech_BTTypeNULL, & ! BTType
+   -1,                      & ! BTInt
+   -1,                      & ! BTScope
+   1.0e-2,                  & ! BTTol
+   1.0e-4,                  & ! plasticStrainAtol
+   1.0e-3,                  & ! InjectedVolumeAtol
+   0.0_Kr,                  & ! dampingCoefficientDisplacement
+   0.0_Kr)                    ! dampingCoefficientDamage
+
+Type(MEF90DefMechGlobalOptions_Type),Parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
+   MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
+   MEF90DefMech_SolverTypeAltMin,            & ! timeSteppingType
+   PETSC_TRUE,              & ! disp_addNullSpace
+   3,                       & ! DisplacementOffset
+   2,                       & ! DamageOffset
+   3,                       & ! boundaryDisplacementOffset
+   0,                       & ! boundaryDamageOffset
+   1,                       & ! temperatureOffset
+   4,                       & ! ForceOffset
+   3,                       & ! pressureForceOffset
+   0,                       & ! CrackPressureOffset
+   0,                       & ! plasticStrainOffset
+   7,                       & ! StressOffset
+   13,                      & ! cumulatedPlasticDissipationOffset
+   MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
+   MEF90Scaling_CST,        & ! displacementLowerBoundScaling
+   MEF90Scaling_CST,        & ! displacementUpperBoundScaling
+   MEF90Scaling_CST,        & ! boundaryDamageScaling
+   MEF90Scaling_Linear,     & ! ForceScaling
+   MEF90Scaling_Linear,     & ! pressureForceScaling
+   MEF90Scaling_Linear,     & ! CrackPressureScaling
+   1e-4,                    & ! damage_atol
+   1000,                    & ! maxit
+   10,                      & ! PCLag
+   1.0_Kr,                  & ! SOROmega
+   0.,                      & ! irrevThres 
+   MEF90DefMech_BTTypeNULL, & ! BTType
+   -1,                      & ! BTInt
+   -1,                      & ! BTScope
+   1.0e-2,                  & ! BTTol
+   1.0e-4,                  & ! plasticStrainAtol
+   1.0e-3,                  & ! InjectedVolumeAtol
+   0.0_Kr,                  & ! dampingCoefficientDisplacement
+   0.0_Kr)                    ! dampingCoefficientDamage
+
+Type(MEF90DefMechCellSetOptions_Type),Parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
+   -1,                                                & ! elemTypeShortIDDispl will be overriden
+   -1,                                                & ! elemTypeShortIDDamage will be overriden
+   [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! force
+   0.0_Kr,                                            & ! pressureForce
+   0.0_Kr,                                            & ! CrackPressure
+   MEF90DefMech_damageTypeAT1,                        & ! damageType
+   MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
+   MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
+   1.0D-5,                                            & ! unilateralContactHydrostatocDeviatoricGamma
+   PETSC_FALSE,                                       & ! unilateralContactHybrid
+   1.0_Kr,                                            & ! DamageATLinSoftk
+   1.25_Kr,                                           & ! DamageAT1expb
+   MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
+   [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
+   [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
+   [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound
+   [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY],    & ! displacement Upper Bound
+   PETSC_FALSE,                                       & ! Has Damage BC
+   PETSC_FALSE,                                       & ! CrackVolumeControlled
+   PETSC_FALSE,                                       & ! WorkControlled
+   0._Kr)                                               ! Boundary Damage
+Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
+   [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
+   [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
+   [MEF90_NINFINITY,MEF90_NINFINITY,MEF90_NINFINITY], & ! displacement Lower Bound
+   [MEF90_INFINITY,MEF90_INFINITY,MEF90_INFINITY],    & ! displacement Upper Bound
+   PETSC_FALSE,                                       & ! Has Damage BC
+   0.0_Kr)                                              ! boundary Damage
+
+Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
+   MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
+   PETSC_FALSE,         & ! addNullSpace
+   1,                   & ! tempOffset
+   0.,                  & ! initialTemperature
+   MEF90Scaling_Linear, & ! boundaryTempScaling
+   0,                   & ! boundaryTempOffset
+   MEF90Scaling_Linear, & ! externalTempScaling
+   2,                   & ! externalTempOffset
+   MEF90Scaling_Linear, & ! fluxScaling
+   1)                     ! fluxOffset
+Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
+   -1,                   & ! elemTypeShortID will be overriden
+   0.0_Kr,               & ! flux
+   0.0_Kr,               & ! surfaceThermalConductivity
+   0.0_Kr,               & ! externalTemp
+   PETSC_FALSE,          & ! Has BC
+   0.0_Kr,               & ! boundaryTemp
+   [0.0_Kr,0.0_Kr,0.0_Kr]) ! advectionVelocity
+   
+Type(MEF90HeatXferVertexSetOptions_Type),Parameter :: MEF90HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
+   PETSC_FALSE,   & ! Has BC
+   0.0_Kr)          ! boundaryTemp
 
 
    Type(DM),target                                    :: Mesh
@@ -248,10 +252,9 @@ Program ThermoElasticity
    If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXfer_timeSteppingTypeSteadyState) Then
       Call MEF90HeatXferCreateSNES(MEF90HeatXferCtx,snesTemp,residualTemp,ierr)
    Else
-      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,ierr)
       tsTempInitialStep = (time(size(time))-time(1)) / (size(time) + 0.0_Kr) / 10.0_Kr
       tsTempInitialTime = time(1)
-      Call TSSetInitialTimeStep(tsTemp,tsTempInitialTime,tsTempInitialStep,ierr);CHKERRQ(ierr)
+      Call MEF90HeatXferCreateTS(MEF90HeatXferCtx,tsTemp,residualTemp,tsTempInitialTime,tsTempInitialStep,ierr)
       Call TSGetAdapt(tsTemp,tsAdaptTemp,ierr);CHKERRQ(ierr)
       Call TSAdaptSetFromOptions(tsAdaptTemp,ierr);CHKERRQ(ierr)
    End If
