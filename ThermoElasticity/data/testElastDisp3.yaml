@@ -3,6 +3,8 @@ time:
     min: 0
     max: 10
     numstep: 11
+element:
+  order: 2
 heatxfer:
   timestepping:
     type: null
@@ -16,7 +18,7 @@ displacement:
   pc:
     type: gamg
     gamg:
-      type: classical
+      type: agg
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
@@ -36,9 +38,9 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio:  0.
 fs0030:
-    boundaryForce: 1.,0.,0.
+    boundaryForce: 0.1,0.,0.
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
 fs0020:
-    displacementBC: yes,no,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: 0.,0.,0.

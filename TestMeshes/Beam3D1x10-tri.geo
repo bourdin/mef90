@@ -3,7 +3,10 @@ Mesh.Algorithm = 6;
 
 L = 10.;
 H = 1;
-h = .2;
+h = .08;
+
+Mesh.CharacteristicLengthMin = h;
+Mesh.CharacteristicLengthMax = h;
 
 Box(1) = {-L/2,-H/2,-H/2,L,H,H};
 Physical Volume(1) = {1};

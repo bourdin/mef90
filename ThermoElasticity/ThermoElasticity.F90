@@ -78,18 +78,18 @@ Program ThermoElasticity
       End If
    End If
    distribute: Block 
-       Type(tDM),target                    :: dmDist
-       PetscInt                            :: ovlp = 0_Ki
-       Type(tPetscSF)                      :: naturalPointSF
+      Type(tDM),target                    :: dmDist
+      PetscInt                            :: ovlp = 0_Ki
+      Type(tPetscSF)                      :: naturalPointSF
 
-       If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
-            PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
-           PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
-           PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
-           PetscCallA(DMDestroy(dm,ierr))
-           dm = dmDist
-       End If
+      If (MEF90Ctx%NumProcs > 1) Then
+         PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
+         PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
+         PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
+         PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
+         PetscCallA(DMDestroy(dm,ierr))
+         dm = dmDist
+      End If
    End Block distribute
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 

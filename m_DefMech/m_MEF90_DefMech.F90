@@ -501,11 +501,12 @@ Contains
       
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(tDM)                                          :: dm
+      Type(tPetscSection)                                :: section
       Type(tMat)                                         :: matDisplacement
       Type(tMatNullSpace)                                :: nspDisplacement
       Type(tKSP)                                         :: kspDisplacement
       Type(tPC)                                          :: pc
-      Type(tVec)                                         :: gCoord,locCoord,gVec
+      Type(tVec)                                         :: gCoord,lVec,gVec,locCoord
       PetscInt                                           :: dim,size
       PetscReal                                          :: rtol,dtol,atol,stol
       PetscReal,Dimension(:),Pointer                     :: coord
@@ -545,16 +546,19 @@ Contains
       PetscCall(SNESGetKSP(snesDisplacement,kspDisplacement,ierr))
       PetscCall(KSPSetType(kspDisplacement,KSPCG,ierr))
       PetscCall(KSPGetPC(kspDisplacement,pc,ierr))
-      PetscCall(DMGetCoordinatesLocal(dm,locCoord,ierr))
+      PetscCall(DMGetLocalVector(dm,lVec,ierr))
+      PetscCall(DMGetLocalSection(dm,section,ierr))
+      PetscCall(MEF90DefMechProjectCoordinates_Private(lVec,section,ierr))
       PetscCall(DMGetGlobalVector(dm,gVec,ierr))
-      PetscCall(DMLocalToGlobalBegin(dm,locCoord,INSERT_VALUES,gVec,ierr))
-      PetscCall(DMLocalToGlobalEnd(dm,locCoord,INSERT_VALUES,gVec,ierr))
-      PetscCall(VecGetArrayF90(gVec,coord,ierr))
-      PetscCall(VecGetLocalSize(gVec,size,ierr))
+      PetscCall(DMLocalToGlobalBegin(dm,lVec,INSERT_VALUES,gVec,ierr))
+      PetscCall(DMLocalToGlobalEnd(dm,lVec,INSERT_VALUES,gVec,ierr))
+      PetscCall(VecGetArrayF90(lVec,coord,ierr))
+      PetscCall(VecGetLocalSize(lVec,size,ierr))
       PetscCall(DMGetCoordinateDim(dm,dim,ierr))
-      PetscCall(PCSetCoordinates(pc,dim,size/dim,coord,ierr))
-      PetscCall(VecRestoreArrayF90(gVec,coord,ierr))
+      !PetscCall(PCSetCoordinates(pc,dim,size/dim,coord,ierr))
+      PetscCall(VecRestoreArrayF90(lVec,coord,ierr))
       PetscCall(DMRestoreGlobalVector(dm,gVec,ierr))
+      PetscCall(DMRestoreLocalVector(dm,lVec,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspDisplacement,PETSC_TRUE,ierr))
       atol = 1.0D-8
       rtol = 1.0D-8
@@ -682,4 +686,47 @@ Contains
          ! Call MEF90DefMechPlasticStrainUpdate3D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
       End If      
    End Subroutine MEF90DefMechPlasticStrainUpdate
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechProjectCoordinates_Private"
+
+   Subroutine MEF90DefMechProjectCoordinates_Private(v,s,ierr)
+      Type(tVec),intent(IN)              :: v
+      Type(tPetscSection),intent(IN)     :: s
+      PetscErrorCode,intent(INOUT)       :: ierr
+
+      PetscInt                           :: pStart,pEnd,p,numDof,i
+      Type(tDM)                          :: dm
+      Type(tPetscSection)                :: coordSection
+      Type(tVec)                         :: coordVec
+      PetscScalar,dimension(:),Pointer   :: coordArray,vArray
+      PetscScalar,dimension(3)           :: xyz
+      PetscInt                           :: dim,pOffset
+
+      PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
+      PetscCallA(VecGetDM(v,dm,ierr))
+      PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
+      PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
+      PetscCallA(DMGetDimension(dm,dim,ierr))
+      PetscCallA(VecGetArrayF90(v,vArray,ierr))
+
+      Do p = pStart,pEnd-1
+         PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
+         If (numDof > 0) Then
+               !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+               PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+               Do i = 1,dim
+                  xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+               End Do
+               PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+
+               PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
+               Do i = 1,numDof
+                  vArray(pOffset+i) = xyz(i)
+               End Do
+         End If
+      End Do
+      PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+      !!! Of course, this does not use informations from the section, so it does over-write constrained values
+   End Subroutine MEF90DefMechProjectCoordinates_Private
 End Module m_MEF90_DefMech

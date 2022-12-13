@@ -3,6 +3,8 @@ time:
     min: 0
     max: 10
     numstep: 11
+element:
+  order: 2
 heatxfer:
   timestepping:
     type: steadystate
@@ -16,7 +18,7 @@ displacement:
   pc:
     type: gamg
     gamg:
-      type: classical
+      type: agg
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
@@ -40,7 +42,7 @@ fs0020:
     boundaryDisplacement: 0.,0.,0.
     boundaryFlux: 1.
 fs0030:
-    displacementBC: yes,yes,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 0.
