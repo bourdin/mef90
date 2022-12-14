@@ -349,7 +349,7 @@ Contains
             Case(1)
                elemType = MEF90P1Lagrange3DBoundary
             Case(2)
-               elemType = MEF90P1Lagrange3DBoundary
+               elemType = MEF90P2Lagrange3DBoundary
             ! Case Default
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
@@ -413,13 +413,6 @@ Contains
                Allocate(BBinv(4))
                Do iELoc = 1,size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(iELoc),v0,BB,BBinv,detBBinv,ierr))
-! Write(*,*) 'BBinv:'
-! Write(*,*) BBinv(1:2)
-! Write(*,*) BBinv(3:4)
-! Write(*,*) 'BB:'
-! Write(*,*) BB(1:2)
-! Write(*,*) BB(3:4)
-! Write(*,*) 'V0:',v0                  
                   !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
@@ -555,26 +548,6 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
-! Write(*,*) 'BBinv:'
-! Write(*,*) BBinv(1:3)
-! Write(*,*) BBinv(4:6)
-! Write(*,*) BBinv(7:9)
-! Write(*,*) 'BB:'
-! Write(*,*) BB(1:3)
-! Write(*,*) BB(4:6)
-! Write(*,*) BB(7:9)
-! Write(*,*) 'V0:',v0
-! check: Block
-!    Type(Mat3D) :: J
-!    J%XX = BBinv(1); J%XY = BBinv(2); J%XZ = BBinv(3)
-!    J%YX = BBinv(4); J%YY = BBinv(5); J%YZ = BBinv(6)
-!    J%ZX = BBinv(7); J%ZY = BBinv(8); J%ZZ = BBinv(9)
-!    Write(*,*) 'O  :',J*Vect3D(0.0_Kr,0.0_Kr,0.0_Kr)
-!    Write(*,*) 'e1 :',J*Vect3D(1.0_Kr,0.0_Kr,0.0_Kr)
-!    Write(*,*) 'e2 :',J*Vect3D(0.0_Kr,1.0_Kr,0.0_Kr)
-!    Write(*,*) 'e3 :',J*Vect3D(0.0_Kr,0.0_Kr,1.0_Kr)
-! end block check
-
                   detBBinv = 8.0_Kr * detBBinv
                   Call ElementPLagrange3DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
