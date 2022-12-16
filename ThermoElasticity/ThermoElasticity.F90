@@ -55,22 +55,34 @@ Program ThermoElasticity
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
+   If (MEF90GlobalOptions%verbose > 1) Then
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
+   End If
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    PetscCallA(DMGetDimension(dm,dim,ierr))
 
    Inquire(file=MEF90Ctx%resultFile,exist=flg)
    If (flg) Then
       ! we assume that the output file exists and is formatted
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+      End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
    Else
       ! we need to create the output file
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+      End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+      End If
       If (dim ==2) Then
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
       Else
@@ -83,6 +95,9 @@ Program ThermoElasticity
       Type(tPetscSF)                      :: naturalPointSF
 
       If (MEF90Ctx%NumProcs > 1) Then
+         If (MEF90GlobalOptions%verbose > 1) Then
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
+         End If
          PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
          PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
          PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
@@ -108,10 +123,8 @@ Program ThermoElasticity
    !!! Get parse all materials data from the command line
    If (dim == 2) Then
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
-      !PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    Else
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium3D,MEF90Ctx,ierr))
-      !PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    End If   
    MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
@@ -133,6 +146,7 @@ Program ThermoElasticity
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
    Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
       PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
@@ -225,7 +239,7 @@ Program ThermoElasticity
             PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
-            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            !!!PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
