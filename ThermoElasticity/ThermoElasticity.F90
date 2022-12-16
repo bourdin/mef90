@@ -65,6 +65,7 @@ Program ThermoElasticity
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 
    PetscCallA(DMGetDimension(dm,dim,ierr))
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
    Inquire(file=MEF90Ctx%resultFile,exist=flg)
    If (flg) Then
@@ -80,16 +81,46 @@ Program ThermoElasticity
       End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Done Creating result file\n",ierr))
+      End If
+
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
-      End If
+      End If      
+      
+! ExoOpenSeq: Block
+!       PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
+! Write(*,*) 'viewer destroyed'
+
+!       If (MEF90Ctx%rank == 0) Then
+!          PetscCall(PetscViewerExodusIIOpen(PETSC_COMM_SELF,MEF90Ctx%resultFile,FILE_MODE_APPEND,MEF90Ctx%resultViewer,ierr))
+! Write(*,*) 'file open'
+!          If (dim ==2) Then
+!             PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
+!          Else
+!             PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
+!          End If
+! Write(*,*) 'file formatted'
+!          PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
+! Write(*,*) 'file close'
+!       End If
+!       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
+! End block ExoOpenSeq
+
+
       If (dim ==2) Then
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
       Else
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
       End If
+      PetscCall(PetscPrintf(PETSC_COMM_SELF,"Done Formatting result file\n",ierr))
    End If
-   distribute: Block 
+
+Call MPI_Barrier(PETSC_COMM_WORLD,ierr)
+GOTO 299
+distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
       Type(tPetscSF)                      :: naturalPointSF
@@ -104,13 +135,6 @@ Program ThermoElasticity
          PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
          PetscCallA(DMDestroy(dm,ierr))
          dm = dmDist
-      End If
-      PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
-      PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
-      PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
-      PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
-      PetscCallA(DMDestroy(dm,ierr))
-      dm = dmDist
       End If
    End Block distribute
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
@@ -153,7 +177,6 @@ Program ThermoElasticity
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
    !!!
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
    Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
       PetscCallA(MEF90HeatXferCreateSNES(MEF90HeatXferCtx,temperatureSNES,temperatureResidual,ierr))
@@ -179,6 +202,7 @@ Program ThermoElasticity
    Allocate(bodyForceWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(boundaryForceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
 
+GOTO 199
    !!!
    !!! Actual computations / time stepping
    !!!
@@ -292,6 +316,7 @@ Program ThermoElasticity
 203 Format("face set ",I4,"                              work: ",ES12.5," \n")
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 
+199 CONTINUE
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_timeSTeppingTypeQuasiStatic)
@@ -329,7 +354,8 @@ Program ThermoElasticity
    PetscCallA(PetscLogView(logViewer,ierr))
    PetscCallA(PetscViewerDestroy(logViewer,ierr))
 
-
+299 CONTINUE
+   PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))
