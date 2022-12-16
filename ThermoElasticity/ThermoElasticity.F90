@@ -56,7 +56,7 @@ Program ThermoElasticity
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
    If (MEF90GlobalOptions%verbose > 1) Then
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
+      PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
    End If
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
@@ -71,23 +71,23 @@ Program ThermoElasticity
    If (flg) Then
       ! we assume that the output file exists and is formatted
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
       End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
    Else
       ! we need to create the output file
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
       End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
 
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Done Creating result file\n",ierr))
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Creating result file\n",ierr))
       End If
 
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
       End If      
       
 ! ExoOpenSeq: Block
@@ -95,7 +95,7 @@ Program ThermoElasticity
 ! Write(*,*) 'viewer destroyed'
 
 !       If (MEF90Ctx%rank == 0) Then
-!          PetscCall(PetscViewerExodusIIOpen(PETSC_COMM_SELF,MEF90Ctx%resultFile,FILE_MODE_APPEND,MEF90Ctx%resultViewer,ierr))
+!          PetscCallA(PetscViewerExodusIIOpen(PETSC_COMM_SELF,MEF90Ctx%resultFile,FILE_MODE_APPEND,MEF90Ctx%resultViewer,ierr))
 ! Write(*,*) 'file open'
 !          If (dim ==2) Then
 !             PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
@@ -115,7 +115,7 @@ Program ThermoElasticity
       Else
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
       End If
-      PetscCall(PetscPrintf(PETSC_COMM_SELF,"Done Formatting result file\n",ierr))
+      PetscCallA(PetscPrintf(PETSC_COMM_SELF,"Done Formatting result file\n",ierr))
    End If
 
 Call MPI_Barrier(PETSC_COMM_WORLD,ierr)
@@ -127,7 +127,7 @@ distribute: Block
 
       If (MEF90Ctx%NumProcs > 1) Then
          If (MEF90GlobalOptions%verbose > 1) Then
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
+            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
          End If
          PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
          PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
