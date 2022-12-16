@@ -105,6 +105,13 @@ Program ThermoElasticity
          PetscCallA(DMDestroy(dm,ierr))
          dm = dmDist
       End If
+      PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
+      PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
+      PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
+      PetscCallA(PetscSFDestroy(naturalPointSF,ierr))
+      PetscCallA(DMDestroy(dm,ierr))
+      dm = dmDist
+      End If
    End Block distribute
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 
