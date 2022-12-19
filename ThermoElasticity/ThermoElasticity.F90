@@ -67,9 +67,15 @@ Program ThermoElasticity
    PetscCallA(DMGetDimension(dm,dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
-   Inquire(file=MEF90Ctx%resultFile,exist=flg)
+   !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
+   !!! Strangely enough, adding an MPI_Barrier does not help.
+   !!! There is no real good reason to call Inquire on all ranks anyway.
+   If (MEF90Ctx%rank == 0) Then
+      Inquire(file=MEF90Ctx%resultFile,exist=flg)
+   End If
+   PetscCallMPIA(MPI_Bcast(flg,1,MPI_LOGICAL,0,MEF90Ctx%Comm,ierr))
    If (flg) Then
-      ! we assume that the output file exists and is formatted
+      ! we assume that the output file is formatted
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
       End If
@@ -79,47 +85,23 @@ Program ThermoElasticity
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
       End If
+      PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
 
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Creating result file\n",ierr))
-      End If
-
-      If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
-      End If      
-      
-! ExoOpenSeq: Block
-!       PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
-! Write(*,*) 'viewer destroyed'
-
-!       If (MEF90Ctx%rank == 0) Then
-!          PetscCallA(PetscViewerExodusIIOpen(PETSC_COMM_SELF,MEF90Ctx%resultFile,FILE_MODE_APPEND,MEF90Ctx%resultViewer,ierr))
-! Write(*,*) 'file open'
-!          If (dim ==2) Then
-!             PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
-!          Else
-!             PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
-!          End If
-! Write(*,*) 'file formatted'
-!          PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
-! Write(*,*) 'file close'
-!       End If
-!       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
-! End block ExoOpenSeq
-
-
+      End If            
       If (dim ==2) Then
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
       Else
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
       End If
-      PetscCallA(PetscPrintf(PETSC_COMM_SELF,"Done Formatting result file\n",ierr))
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
+      End If
    End If
 
-Call MPI_Barrier(PETSC_COMM_WORLD,ierr)
-GOTO 299
 distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
@@ -202,7 +184,6 @@ distribute: Block
    Allocate(bodyForceWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(boundaryForceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
 
-GOTO 199
    !!!
    !!! Actual computations / time stepping
    !!!
@@ -316,7 +297,6 @@ GOTO 199
 203 Format("face set ",I4,"                              work: ",ES12.5," \n")
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 
-199 CONTINUE
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_timeSTeppingTypeQuasiStatic)
@@ -348,13 +328,10 @@ GOTO 199
    DeAllocate(boundaryForceWork)
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
-
    
    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
    PetscCallA(PetscLogView(logViewer,ierr))
    PetscCallA(PetscViewerDestroy(logViewer,ierr))
-
-299 CONTINUE
    PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
