@@ -1,8 +1,10 @@
 verbose: 0
 time:
     min: 0
-    max: 10
-    numstep: 11
+    max: 1
+    numstep: 1
+element:
+  order: 2
 heatxfer:
   timestepping:
     type: null
@@ -10,20 +12,23 @@ defmech:
   timestepping:
     type: quasistatic
 displacement:
-  addNullSpace: true
   snes:
     type: ksponly
   pc:
     type: gamg
     gamg:
-      type: classical
+      type: agg
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
     converged:
       reason: ascii
+stress:
+  export: yes
 boundaryDisplacement:
   scaling: linear
+bodyForce:
+  scaling: constant
 cs0001:
     damage:
         type: AT2Elastic
@@ -33,10 +38,10 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-    bodyForce: 0.,1.,0.
+    bodyForce: 0.,0.01,0.
 fs0030:
-    displacementBC: yes,no,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: 0.,0.,0.
 fs0020:
-    displacementBC: yes,no,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: 0.,0.,0.

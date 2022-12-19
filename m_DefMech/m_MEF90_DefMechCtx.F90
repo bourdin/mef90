@@ -54,7 +54,6 @@ Module m_MEF90_DefMechCtx_Type
    Type MEF90DefMechGlobalOptions_Type
       PetscEnum                              :: timeSteppingType
       PetscEnum                              :: solverType
-      PetscBool                              :: addDisplacementNullSpace
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscEnum                              :: boundaryDisplacementScaling
@@ -776,7 +775,6 @@ Contains
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%addDisplacementNullSpace,default%addDisplacementNullSpace,'displacement_addNullSpace','Add null space to SNES',ierr))
 
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%damageExport,default%damageExport,'damage_export','Export damage',ierr))

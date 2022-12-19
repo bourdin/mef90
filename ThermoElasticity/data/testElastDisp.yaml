@@ -3,6 +3,8 @@ time:
     min: 0
     max: 10
     numstep: 11
+element:
+  order: 2
 heatxfer:
   timestepping:
     type: NULL
@@ -14,6 +16,8 @@ displacement:
     type: ksponly
   pc:
     type: gamg
+    gamg:
+      type: agg
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
@@ -26,22 +30,16 @@ cs0001:
         type: AT2Elastic
     plasticity:
         type: NONE 
-    damageBC: yes
-    boundaryDamage: 0.
     HookesLaw:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
 fs0020:
-    displacementBC: yes,yes,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: -0.5,0.,0.
-    damageBC: 1
-    boundaryDamage: 0
 fs0030:
-    displacementBC: yes,yes,no
+    displacementBC: yes,yes,yes
     boundaryDisplacement: 0.5,0.,0.
-    damageBC: 1
-    boundaryDamage: 0
 fs0040:
     displacementBC: no,no,no
     damageBC: no

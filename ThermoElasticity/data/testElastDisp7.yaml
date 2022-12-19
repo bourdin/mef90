@@ -7,7 +7,7 @@ element:
   order: 2
 heatxfer:
   timestepping:
-    type: null
+    type: steadystate
 defmech:
   timestepping:
     type: quasistatic
@@ -24,8 +24,8 @@ displacement:
     converged:
       reason: ascii
 boundaryDisplacement:
-  scaling: linear
-boundaryForce:
+  scaling: constant
+boundaryFlux:
   scaling: linear
 cs0001:
     damage:
@@ -36,10 +36,12 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
-fs0030:
-    boundaryForce: 0.1,0.,0.
+fs0020:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
-fs0020:
+    boundaryFlux: 1.
+fs0030:
     displacementBC: yes,yes,yes
     boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 0.

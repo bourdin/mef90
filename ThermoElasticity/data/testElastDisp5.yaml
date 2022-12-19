@@ -1,0 +1,68 @@
+verbose: 0
+time:
+    min: 0
+    max: 10
+    numstep: 11
+element:
+  order: 2
+heatxfer:
+  timestepping:
+    type: steadystate
+defmech:
+  timestepping:
+    type: quasistatic
+displacement:
+  snes:
+    type: ksponly
+  pc:
+    type: gamg
+    gamg:
+      type: classical
+  ksp:
+    converged:
+      reason: ascii
+boundaryDisplacement:
+  scaling: constant
+boundaryTemperature:
+  scaling: linear
+stress:
+  export: yes
+cs0001:
+    damage:
+        type: AT2Elastic
+    plasticity:
+        type: NONE 
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.
+fs0030:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0020:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0040:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0050:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0060:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
+fs0070:
+    displacementBC: no,no,no
+    boundaryDisplacement: 0.,0.,0.
+    temperatureBC: yes
+    boundaryTemperature: 1.
