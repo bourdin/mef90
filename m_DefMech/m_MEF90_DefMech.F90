@@ -513,18 +513,18 @@ Contains
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal,dm,ierr))
       PetscCall(DMCreateMatrix(dm,matDisplacement,ierr))
       PetscCall(MatSetOptionsPrefix(matDisplacement,"Displacement_",ierr))
-      !!! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matDisplacement,MAT_SPD,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matDisplacement,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matDisplacement,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
-      If (MEF90DefMechGlobalOptions%addDisplacementNullSpace) Then
-         PetscCall(DMGetGlobalVector(dm,gCoord,ierr))
-         PetscCall(MEF90DefMechProjectCoordinates_Private(gCoord,ierr))
-         PetscCall(MatNullSpaceCreateRigidBody(gCoord,nspDisplacement,ierr))
-         PetscCall(MatSetNearNullSpace(matDisplacement,nspDisplacement,ierr))
-         PetscCall(MatNullSpaceDestroy(nspDisplacement,ierr))
-         PetscCall(DMRestoreGlobalVector(dm,gCoord,ierr))
-      End If
+      !!!
+      !!! Set the matrix near null-space consisting of all rigid motions.
+      !!!
+      PetscCall(DMGetGlobalVector(dm,gCoord,ierr))
+      PetscCall(MEF90DefMechProjectCoordinates_Private(gCoord,ierr))
+      PetscCall(MatNullSpaceCreateRigidBody(gCoord,nspDisplacement,ierr))
+      PetscCall(MatSetNearNullSpace(matDisplacement,nspDisplacement,ierr))
+      PetscCall(MatNullSpaceDestroy(nspDisplacement,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,gCoord,ierr))
       PetscCall(MatSetFromOptions(matDisplacement,ierr))
 
       PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDisplacement,ierr))

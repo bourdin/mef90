@@ -251,7 +251,7 @@ distribute: Block
             PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
-            !!!PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
