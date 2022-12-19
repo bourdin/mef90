@@ -37,7 +37,7 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio:  0.
 fs0030:
-    pressureForce: 1.
+    pressureForce: 0.1
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
 fs0020:
