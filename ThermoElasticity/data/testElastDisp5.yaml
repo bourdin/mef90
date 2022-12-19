@@ -12,7 +12,6 @@ defmech:
   timestepping:
     type: quasistatic
 displacement:
-  addNullSpace: true
   snes:
     type: ksponly
   pc:

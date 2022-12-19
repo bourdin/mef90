@@ -15,7 +15,6 @@ temperature:
   export: yes
 displacement:
   export: yes
-  addNullSpace: yes
   snes:
     type: ksponly
   pc:

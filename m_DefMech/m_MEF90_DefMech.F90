@@ -504,9 +504,7 @@ Contains
       Type(tMat)                                         :: matDisplacement
       Type(tMatNullSpace)                                :: nspDisplacement
       Type(tKSP)                                         :: kspDisplacement
-      Type(tPC)                                          :: pc
       Type(tVec)                                         :: gCoord
-      PetscInt                                           :: dim
       PetscReal                                          :: rtol,dtol,atol,stol
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
