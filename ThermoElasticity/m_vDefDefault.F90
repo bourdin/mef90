@@ -136,5 +136,5 @@ module m_vDefDefault
    Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultFaceVariables3D =  ["boundaryForce_X    ","boundaryForce_Y    ","boundaryForce_Z    " ,&
                                                                                          "boundaryHeatFlux   "]
 
-   Character(len=MEF90MXSTRLEN),Dimension(0) :: vDefDefaultGlobalVariables
+   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultGlobalVariables = ['junk']
 end module m_vDefDefault

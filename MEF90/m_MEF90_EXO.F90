@@ -69,7 +69,7 @@ Contains
 !!!  
 !!!  MEF90EXOFormat:
 !!!  
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2012-2022 Blaise Bourdin bourdin@lsu.edu
 !!!           2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
 Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
@@ -82,49 +82,56 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
    Integer                                               :: exoid
    PetscInt                                              :: step
    Character(len=MXSTLN)                                 :: sJunk
+   PetscReal                                             :: rJunk
    Logical,Dimension(:,:),Pointer                        :: truthtable
 
+
+   If (.NOT. associated(time)) Then
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_POINTER,"Time value must be allocated prior to calling MEF90EXOFormat")
+      STOP
+   End If
    PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+
    If (exoid > 0) Then
+      Call exinq(exoid,EX_INQ_SIDE_SETS,numSS,rJunk,sjunk,ierr)
+      Call exinq(exoid, EX_INQ_ELEM_BLK,numCS,rJunk,sjunk,ierr)
       !!! Write variable names
       If (size(nameG) > 0) Then
          Call expvp(exoid,"g",size(nameG),ierr)
          Call expvan(exoid,"g",size(nameG),nameG,ierr)
       End If
-      If (size(nameC) > 0) Then
-         Call expvp(exoid,"e",size(nameC),ierr)
-         Call expvan(exoid,"e",size(nameC),nameC,ierr)
-      End If
-      If (size(nameV) > 0) Then
-         Call expvp(exoid,"n",size(nameV),ierr)
-         Call expvan(exoid,"n",size(nameV),nameV,ierr)
-      End If
-      If (size(nameS) > 0) Then
-         PetscCall(expvp(exoid,"s",size(nameS),ierr))
-         PetscCall(expvan(exoid,"s",size(nameS),nameS,ierr))
-      End If
+       If (size(nameC) > 0) Then
+          Call expvp(exoid,"e",size(nameC),ierr)
+          Call expvan(exoid,"e",size(nameC),nameC,ierr)
+       End If
+       If (size(nameV) > 0) Then
+          Call expvp(exoid,"n",size(nameV),ierr)
+          Call expvan(exoid,"n",size(nameV),nameV,ierr)
+       End If
+       If (size(nameS) > 0) Then
+          PetscCall(expvp(exoid,"s",size(nameS),ierr))
+          PetscCall(expvan(exoid,"s",size(nameS),nameS,ierr))
+       End If
 
-      !!! Write truth tables
-      PetscCall(exinq(exoid,EX_INQ_SIDE_SETS,numSS,PETSC_NULL_REAL,PETSC_NULL_CHARACTER,ierr))
-      If (size(nameS) > 0) Then
-         Allocate(truthtable(numSS,size(nameS)))
-         truthtable = .true.
-         PetscCall(expsstt(exoid, numSS, size(nameS), truthtable, ierr))
-         DeAllocate(truthtable)
-      End If
+       !!! Write truth tables
+       If (size(nameS) > 0) Then
+          Allocate(truthtable(numSS,size(nameS)))
+          truthtable = .true.
+          PetscCall(expsstt(exoid, numSS, size(nameS), truthtable, ierr))
+          DeAllocate(truthtable)
+       End If
 
-      !!! Write truth tables
-      Call exinq(exoid, EX_INQ_ELEM_BLK,numCS,PETSC_NULL_REAL,sjunk,ierr)
-      If (size(nameC) > 0) Then
-         Allocate(truthtable(numCS,size(nameC)))
-         truthtable = .true.
-         Call expvtt(exoid, numCS, size(nameC), truthtable, ierr)
-         DeAllocate(truthtable)
-      End If
+       !!! Write truth tables
+       If (size(nameC) > 0) Then
+          Allocate(truthtable(numCS,size(nameC)))
+          truthtable = .true.
+          Call expvtt(exoid, numCS, size(nameC), truthtable, ierr)
+          DeAllocate(truthtable)
+       End If
 
-      Do step = 1,size(time)
-         Call exptim(exoid,step,time(step),ierr)
-      End Do
+       Do step = 1,size(time)
+          Call exptim(exoid,step,time(step),ierr)
+       End Do
    End If
 End Subroutine MEF90EXOFormat
 

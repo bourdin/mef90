@@ -55,34 +55,62 @@ Program ThermoElasticity
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
+   If (MEF90GlobalOptions%verbose > 1) Then
+      PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
+   End If
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
+   PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    PetscCallA(DMGetDimension(dm,dim,ierr))
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
-   Inquire(file=MEF90Ctx%resultFile,exist=flg)
+   !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
+   !!! Strangely enough, adding an MPI_Barrier does not help.
+   !!! There is no real good reason to call Inquire on all ranks anyway.
+   If (MEF90Ctx%rank == 0) Then
+      Inquire(file=MEF90Ctx%resultFile,exist=flg)
+   End If
+   PetscCallMPIA(MPI_Bcast(flg,1,MPI_LOGICAL,0,MEF90Ctx%Comm,ierr))
    If (flg) Then
-      ! we assume that the output file exists and is formatted
+      ! we assume that the output file is formatted
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+      End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
    Else
       ! we need to create the output file
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+      End If
+      PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+      End If            
       If (dim ==2) Then
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
       Else
          PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
       End If
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
+      End If
    End If
-   distribute: Block 
+
+distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
       Type(tPetscSF)                      :: naturalPointSF
 
       If (MEF90Ctx%NumProcs > 1) Then
+         If (MEF90GlobalOptions%verbose > 1) Then
+            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
+         End If
          PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
          PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
          PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
@@ -108,10 +136,8 @@ Program ThermoElasticity
    !!! Get parse all materials data from the command line
    If (dim == 2) Then
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
-      !PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    Else
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium3D,MEF90Ctx,ierr))
-      !PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag,MEF90HeatXferCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    End If   
    MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
@@ -225,7 +251,7 @@ Program ThermoElasticity
             PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
-            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            !!!PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
@@ -302,13 +328,11 @@ Program ThermoElasticity
    DeAllocate(boundaryForceWork)
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
-
    
    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
    PetscCallA(PetscLogView(logViewer,ierr))
    PetscCallA(PetscViewerDestroy(logViewer,ierr))
-
-
+   PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

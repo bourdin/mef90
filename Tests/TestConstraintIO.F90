@@ -65,7 +65,7 @@ Implicit NONE
     Type(tDM),target                                    :: dm,dmU,dmU0,dmSigma,dmSigma0
     PetscBool                                           :: interpolate = PETSC_TRUE
 
-    PetscInt                                            :: numNodalVar = 2, numCellVar = 3, numGVar = 0, numSideVar = 3
+    PetscInt                                            :: numNodalVar = 3, numCellVar = 3, numGVar = 0, numSideVar = 3
     Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
     Character(len=MEF90MXSTRLEN)                        :: name
     type(tIS)                                           :: cellIS,csIS,faceIS,ssIS
@@ -100,7 +100,7 @@ Implicit NONE
     Allocate(cellVarName(numCellVar))
     Allocate(gVarName(numGVar))
     Allocate(sideVarName(numSideVar))
-    nodalVarName = ["U_X","U_Y"]
+    nodalVarName = ["U_X","U_Y","U_Z"]
     cellVarName  = ["Sigma_11","Sigma_22","Sigma_33"]
     sideVarName = ["Sigma0_11","Sigma0_22","Sigma0_33"]
     
