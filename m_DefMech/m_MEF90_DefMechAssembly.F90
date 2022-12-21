@@ -1322,6 +1322,7 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
@@ -1345,11 +1346,10 @@ Contains
 !!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,MEF90DefMechCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
 
@@ -1390,7 +1390,6 @@ Contains
 
       PetscCall(DMGetDimension(dmDisplacement,dim,ierr))
 
-      PetscCall(DMGetLocalVector(dmDamage,locResidual,ierr))
       PetscCall(DMGlobalToLocal(dmDamage,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
 
       PetscCall(MatZeroEntries(A,ierr))
@@ -1494,6 +1493,7 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
