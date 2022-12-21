@@ -47,8 +47,8 @@ module m_vDefDefault
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr,                  & ! dampingCoefficientDamage
                                                          PETSC_TRUE,              & ! displacement_export
-                                                         PETSC_FALSE,             & ! damage_export
-                                                         PETSC_FALSE,             & ! stress_export
+                                                         PETSC_TRUE,              & ! damage_export
+                                                         PETSC_TRUE,              & ! stress_export
                                                          PETSC_FALSE,             & ! plasticstrain_export
                                                          PETSC_FALSE)               ! cumulatedplasticdissipation_export
 
@@ -119,21 +119,15 @@ module m_vDefDefault
                                                          PETSC_FALSE,   & ! Has BC
                                                          0.0_Kr)          ! boundaryTemp
 
-   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultNodalVariables2D = ["Displacement_X     ","Displacement_Y     ","Temperature        ","Damage             "]
-   Character(len=MEF90MXSTRLEN),Dimension(5),Parameter :: vDefDefaultNodalVariables3D = ["Displacement_X     ","Displacement_Y     ","Displacement_Z     ","Temperature        ","Damage             "]
+   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultNodalVariables2D = ["Displacement_X     ","Displacement_Y     ","Damage             "]
+   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultNodalVariables3D = ["Displacement_X     ","Displacement_Y     ","Displacement_Z     ","Damage             "]
 
-   Character(len=MEF90MXSTRLEN),Dimension(6),Parameter :: vDefDefaultCellVariables2D  = ["bodyForce_X        ","bodyForce_Y        ", &
-                                                                                         "Stress_XX          ","Stress_YY          ","Stress_XY          ", &
-                                                                                         "HeatFlux           "]
-   Character(len=MEF90MXSTRLEN),Dimension(10),Parameter :: vDefDefaultCellVariables3D = ["bodyForce_X        ","bodyForce_Y        ","bodyForce_Z        ", &
-                                                                                         "Stress_XX          ","Stress_YY          ","Stress_ZZ          ", &
-                                                                                         "Stress_YZ          ","Stress_XZ          ","Stress_XY          ", &
-                                                                                         "HeatFlux           "]
+   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultCellVariables2D  = ["Stress_XX          ","Stress_YY          ","Stress_XY          "]
+   Character(len=MEF90MXSTRLEN),Dimension(6),Parameter :: vDefDefaultCellVariables3D  = ["Stress_XX          ","Stress_YY          ","Stress_ZZ          ", &
+                                                                                         "Stress_YZ          ","Stress_XZ          ","Stress_XY          "]
 
-   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultFaceVariables2D  = ["boundaryForce_X    ","boundaryForce_Y    ", &
-                                                                                         "boundaryHeatFlux   "]
-   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultFaceVariables3D =  ["boundaryForce_X    ","boundaryForce_Y    ","boundaryForce_Z    " ,&
-                                                                                         "boundaryHeatFlux   "]
+   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultFaceVariables2D = ['junk']
+   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultFaceVariables3D = ['junk']
 
    Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultGlobalVariables = ['junk']
 end module m_vDefDefault
