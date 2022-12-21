@@ -406,20 +406,19 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamage(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDamage(snesDispl,x,A,M,MEF90DefMechCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesDispl
       Type(tVec),Intent(IN)                              :: x
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       PetscInt                                           :: dim      
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
       If (dim == 2) Then
-         PetscCall(MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
       Else If (dim == 3) Then
-         PetscCall(MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,flg,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechBilinearFormDamage
 
@@ -590,8 +589,6 @@ Contains
       PetscCall(SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr))
       PetscCall(SNESSetDM(snesDamage,dm,ierr))
       PetscCall(SNESSetType(snesDamage,SNESVINEWTONRSLS,ierr))
-      !PetscCall(SNESGetSNESLineSearch(snesDamage,lsDamage,ierr))
-      !PetscCall(SNESLineSearchSetType(lsDamage,SNESLINESEARCHL2,ierr))
       PetscCall(SNESSetOptionsPrefix(snesDamage,'Damage_',ierr))
 
       PetscCall(DMCreateGlobalVector(dm,LB,ierr))
