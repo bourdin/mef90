@@ -571,7 +571,9 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(tDM)                                          :: dm
       Type(tMat)                                         :: matDamage
+      SNESLineSearch                                     :: lsDamage
       Type(tKSP)                                         :: kspDamage
+      Type(tVec)                                         :: UB,LB
       PetscReal                                          :: rtol,dtol
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
@@ -587,8 +589,18 @@ Contains
       PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm,snesDamage,ierr))
       PetscCall(SNESSetApplicationContext(snesDamage,MEF90DefMechCtx,ierr))
       PetscCall(SNESSetDM(snesDamage,dm,ierr))
-      PetscCall(SNESSetType(snesDamage,SNESKSPONLY,ierr))
+      PetscCall(SNESSetType(snesDamage,SNESVINEWTONRSLS,ierr))
+      !PetscCall(SNESGetSNESLineSearch(snesDamage,lsDamage,ierr))
+      !PetscCall(SNESLineSearchSetType(lsDamage,SNESLINESEARCHL2,ierr))
       PetscCall(SNESSetOptionsPrefix(snesDamage,'Damage_',ierr))
+
+      PetscCall(DMCreateGlobalVector(dm,LB,ierr))
+      PetscCall(VecDuplicate(LB,UB,ierr))
+      PetscCall(VecSet(LB,0.0_Kr,ierr))
+      PetscCall(VecSet(UB,1.0_Kr,ierr))
+      PetscCall(SNESVISetVariableBounds(snesDamage,LB,UB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
+      PetscCall(VecDestroy(UB,ierr))
 
       PetscCall(SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr))
       PetscCall(SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr))
@@ -613,37 +625,40 @@ Contains
 !!!  MEF90DefMechUpdateDamageBounds:
 !!!  
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,snesDamage,alpha,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(tSNES),Intent(OUT)                            :: snesDamage
+      Type(tSNES),Intent(INOUT)                          :: snesDamage
       Type(tVec),Intent(IN)                              :: alpha
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
-      ! Type(Vec)                                          :: LB,UB
-      ! PetscReal,Dimension(:),Pointer                     :: LBPtr
-      ! PetscInt                                           :: i
-      ! Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(tDM)                                          :: dm
+      Type(tVec)                                         :: LB,UB
+      PetscReal,Dimension(:),Pointer                     :: LBPtr
+      PetscInt                                           :: i
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
-      ! Call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr);CHKERRQ(ierr)      
-      ! Call DMGetGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
-      ! Call DMGetGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(VecGetDM(alpha,dm,ierr))
+      PetscCall(DMGetGlobalVector(dm,LB,ierr))
+      PetscCall(DMGetGlobalVector(dm,UB,ierr))
 
-      ! Call VecSet(UB,1.0_Kr,ierr);CHKERRQ(ierr)
-      ! Call VecCopy(alpha,LB,ierr);CHKERRQ(ierr)
-      ! If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
-      !    Call VecGetArrayF90(LB,LBPtr,ierr);CHKERRQ(ierr)
-      !    Do i = 1, size(LBPtr)
-      !       If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
-      !          LBPtr(i) = 0.0_Kr
-      !       End If
-      !    End Do
-      !    Call VecRestoreArrayF90(LB,LBPtr,ierr);CHKERRQ(ierr)
-      ! End If
-      ! Call SNESVISetVariableBounds(snesDamage,LB,UB,ierr);CHKERRQ(ierr)
-      ! Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,LB,ierr);CHKERRQ(ierr)
-      ! Call DMRestoreGlobalVector(MEF90DefMechCtx%DMScal,UB,ierr);CHKERRQ(ierr)      
+      PetscCall(VecSet(UB,1.0_Kr,ierr))
+      PetscCall(VecCopy(alpha,LB,ierr))
+      If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
+         PetscCall(VecGetArrayF90(LB,LBPtr,ierr))
+         Do i = 1, size(LBPtr)
+            If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
+               LBPtr(i) = 0.0_Kr
+            End If
+         End Do
+         PetscCall(VecRestoreArrayF90(LB,LBPtr,ierr))
+      End If
+      PetscCall(SNESVISetVariableBounds(snesDamage,LB,UB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,UB,ierr)) 
    End Subroutine MEF90DefMechUpdateDamageBounds
 
 #undef __FUNCT__
