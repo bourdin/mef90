@@ -570,7 +570,6 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       Type(tDM)                                          :: dm
       Type(tMat)                                         :: matDamage
-      SNESLineSearch                                     :: lsDamage
       Type(tKSP)                                         :: kspDamage
       Type(tVec)                                         :: UB,LB
       PetscReal                                          :: rtol,dtol
