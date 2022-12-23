@@ -1370,7 +1370,6 @@ Contains
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      Type(tVec)                                         :: locResidual
       Class(MEF90DefMechAT_Type),Allocatable             :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic

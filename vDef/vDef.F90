@@ -39,6 +39,8 @@ Program vDef
 
    PetscReal                                          :: temperatureInitialTimeStep,temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
+   PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO
+
 
    PetscBool                                          :: flg
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
@@ -50,11 +52,18 @@ Program vDef
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
    PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(PetscLogStageRegister('HeatXfer    ',logStageHeatXfer,ierr))
+   PetscCallA(PetscLogStageRegister('Damage      ',logStageDamage,ierr))
+   PetscCallA(PetscLogStageRegister('Displacement',logStageDisplacement,ierr))
+   PetscCallA(PetscLogStageRegister('Energy      ',logStageEnergy,ierr))
+   PetscCallA(PetscLogStageRegister('IO          ',logStageIO,ierr))
+
 
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
+   PetscCallA(PetscLogStagePush(logStageIO,ierr))
    If (MEF90GlobalOptions%verbose > 1) Then
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
    End If
@@ -101,7 +110,7 @@ Program vDef
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
       End If
    End If
-
+   PetscCallA(PetscLogStagePop(ierr))
 distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
@@ -201,6 +210,7 @@ distribute: Block
          PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
 
          !!! Solve for temperature
+         PetscCallA(PetscLogStagePush(logStageHeatXfer,ierr))
          Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
          Case (MEF90HeatXfer_timeSteppingTypeSteadyState)
             PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx,step,time(step),ierr))
@@ -252,6 +262,7 @@ distribute: Block
             !!! Save results
             PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
          End If
+         PetscCallA(PetscLogStagePop(ierr))
 
          !!! Solve for displacement and damage
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
@@ -260,14 +271,20 @@ distribute: Block
             PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,damageSNES,damage,ierr))
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES displacement
+            PetscCallA(PetscLogStagePush(logStageDisplacement,ierr))
             PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
             PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
+            PetscCallA(PetscLogStagePop(ierr))
+
             !!! Solve SNES damage
+            PetscCallA(PetscLogStagePush(logStageDamage,ierr))
             PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
             PetscCallA(DMGlobalToLocal(damageDM,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
+            PetscCallA(PetscLogStagePop(ierr))
 
             !!! Compute energies
+            PetscCallA(PetscLogStagePush(logStageEnergy,ierr))
             energy   = 0.0_Kr
             bodyForceWork     = 0.0_Kr
             boundaryForceWork = 0.0_Kr
@@ -295,9 +312,12 @@ distribute: Block
             PetscCallA(ISDestroy(setIS,ierr))
             Write(IOBuffer,202) sum(energy),sum(bodyForceWork)+sum(boundaryForceWork),sum(energy)-sum(bodyForceWork)-sum(boundaryForceWork)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+            PetscCallA(PetscLogStagePop(ierr))
 
             !!! Save results and boundary Values
+            PetscCallA(PetscLogStagePush(logStageIO,ierr))
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
+            PetscCallA(PetscLogStagePop(ierr))
          End Select
       End Do
    End If
