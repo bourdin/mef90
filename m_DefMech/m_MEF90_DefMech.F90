@@ -572,7 +572,7 @@ Contains
       Type(tMat)                                         :: matDamage
       Type(tKSP)                                         :: kspDamage
       Type(tVec)                                         :: UB,LB
-      PetscReal                                          :: rtol,dtol
+      PetscReal                                          :: rtol,dtol,atol,stol
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dm,ierr))
@@ -600,6 +600,10 @@ Contains
 
       PetscCall(SNESSetFunction(snesDamage,residual,MEF90DefMechOperatorDamage,MEF90DefMechCtx,ierr))
       PetscCall(SNESSetJacobian(snesDamage,matDamage,matDamage,MEF90DefMechBilinearFormDamage,MEF90DefMechCtx,ierr))
+      atol = 1.0D-7
+      rtol = 1.0D-5
+      stol = 1.0D-7
+      PetscCall(SNESSetTolerances(snesDamage,atol,rtol,stol,PETSC_DEFAULT_INTEGER,PETSC_DEFAULT_INTEGER,ierr))
       PetscCall(SNESSetFromOptions(snesDamage,ierr))
       !!! 
       !!! Set some KSP options
@@ -607,9 +611,10 @@ Contains
       PetscCall(SNESGetKSP(snesDamage,kspDamage,ierr))
       PetscCall(KSPSetType(kspDamage,KSPCG,ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr))
+      atol = 1.0D-8
       rtol = 1.0D-8
       dtol = 1.0D+10
-      PetscCall(KSPSetTolerances(kspDamage,rtol,PETSC_DEFAULT_REAL,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr))
       PetscCall(KSPSetFromOptions(kspDamage,ierr))
       PetscCall(MatDestroy(matDamage,ierr))
    End Subroutine MEF90DefMechCreateSNESDamage

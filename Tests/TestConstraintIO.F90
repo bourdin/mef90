@@ -153,13 +153,13 @@ Implicit NONE
 
     ! create cell Vec holding sigma
     name = "Sigma"
-    PetscCall(MEF90CreateCellVector(dm,3_Ki,name,locVecSigma,ierr))
+    PetscCallA(MEF90CreateCellVector(dm,3_Ki,name,locVecSigma,ierr))
     PetscCallA(VecGetDM(locVecSigma,dmSigma,ierr))
     PetscCallA(DMGetLocalSection(dmSigma,sectionSigma,ierr))
 
     ! create cell Vec holding sigma
     name = "Sigma0"
-    PetscCall(MEF90CreateBoundaryCellVector(dm,3_Ki,name,locVecSigma0,ierr))
+    PetscCallA(MEF90CreateBoundaryCellVector(dm,3_Ki,name,locVecSigma0,ierr))
     PetscCallA(VecGetDM(locVecSigma0,dmSigma0,ierr))
     PetscCallA(DMGetLocalSection(dmSigma0,sectionSigma0,ierr))
 
@@ -187,7 +187,7 @@ Implicit NONE
     ! locCoord is obtained from dmSigma but all DMs have the same coordinates
     PetscCallA(DMGetCoordinatesLocal(dmSigma,locCoord,ierr))
     ! Fill locVecU with coordinates
-    PetscCall(project(locVecU,sectionU,ierr))
+    PetscCallA(project(locVecU,sectionU,ierr))
     PetscCallA(MEF90VecCopySF(locVecU0,locVecU,clSF,ierr))
 
     ! Reorder locVecU into ioVec and write ioVec
