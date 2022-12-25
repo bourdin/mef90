@@ -25,14 +25,15 @@ Program vDef
    Type(tIS)                                          :: setIS
    PetscInt,Dimension(:),Pointer                      :: setID
    PetscInt                                           :: set
-   PetscReal,Dimension(:),Pointer                     :: time,energy,bodyForceWork,boundaryForceWork
+   PetscReal,Dimension(:),Pointer                     :: time,elasticEnergy,bodyForceWork,boundaryForceWork,cohesiveEnergy,surfaceEnergy
 
    Type(tSNES)                                        :: displacementSNES,damageSNES
-   !SNESConvergedReason                                :: SNESDisplacementConvergedReason
+   SNESConvergedReason                                :: displacementSNESConvergedReason,damageSNESConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual,damage,damageResidual
+   Type(tVec)                                         :: damageAltMinOld
 
    Type(tSNES)                                        :: temperatureSNES
-   !SNESConvergedReason                                :: SNESTemperatureConvergedReason
+   SNESConvergedReason                                :: temperatureSNESConvergedReason
    Type(tTS)                                          :: temperatureTS
    Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
@@ -47,6 +48,10 @@ Program vDef
    Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
+   PetscInt                                           :: AltMinIter,AltMinStep=0_Ki
+   PetscReal                                          :: damageMaxChange,damageMin,damageMax
+   
+   
    PetscInt                                           :: dim
 
    !!! Initialize MEF90
@@ -111,7 +116,8 @@ Program vDef
       End If
    End If
    PetscCallA(PetscLogStagePop(ierr))
-distribute: Block 
+
+   distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
       Type(tPetscSF)                      :: naturalPointSF
@@ -170,7 +176,7 @@ distribute: Block
    PetscCallA(DMCreateGlobalVector(damageDM,damage,ierr))
    PetscCallA(PetscObjectSetName(damage,"damage",ierr))
    PetscCallA(VecDuplicate(damage,damageResidual,ierr))
-   PetscCallA(PetscObjectSetName(damageResidual,"damageResidual",ierr))
+   PetscCallA(VecDuplicate(damage,damageAltMinOld,ierr))
 
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -197,8 +203,10 @@ distribute: Block
    !!! 
    !!! Allocate array of works and energies
    !!!
-   Allocate(energy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(elasticEnergy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(bodyForceWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(cohesiveEnergy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
+   Allocate(surfaceEnergy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(boundaryForceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
 
    !!!
@@ -217,6 +225,12 @@ distribute: Block
             PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+            PetscCallA(SNESGetConvergedReason(temperatureSNES,temperatureSNESConvergedReason,ierr))
+            If (temperatureSNESConvergedReason < 0) Then  
+               Write(IOBuffer,400) "temperature",temperatureSNESConvergedReason
+               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+            End If
+
             PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
             PetscCallA(VecCopy(MEF90HeatXferCtx%temperatureLocal,MEF90DefMechCtx%temperatureLocal,ierr))
          Case (MEF90HeatXfer_timeSteppingTypeTransient)
@@ -236,12 +250,12 @@ distribute: Block
 
          If (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL) Then
             !!! Compute energies
-            PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,bodyForceWork,boundaryForceWork,ierr))
+            PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,elasticEnergy,bodyForceWork,boundaryForceWork,ierr))
             PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
-               Write(IOBuffer,101) setID(set),energy(set),bodyForceWork(set),energy(set)-bodyForceWork(set)
+               Write(IOBuffer,101) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -257,7 +271,7 @@ distribute: Block
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
       
-            Write(IOBuffer,102) sum(energy),sum(bodyForceWork)+sum(boundaryForceWork),sum(energy)-sum(bodyForceWork)-sum(boundaryForceWork)
+            Write(IOBuffer,102) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             !!! Save results
             PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx,step,ierr))
@@ -265,37 +279,96 @@ distribute: Block
          PetscCallA(PetscLogStagePop(ierr))
 
          !!! Solve for displacement and damage
+         PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
+         PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,damageSNES,damage,ierr))
+         PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
+         !PetscCallA(VecCopy(MEF90DefMechCtx%displacement,MEF90DefMechCtx%displacementPreviousStep,ierr))
+         !PetscCallA(VecCopy(damage,damagePreviousStep,ierr))
+
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
          Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
-            PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
-            PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,damageSNES,damage,ierr))
-            PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
-            !!! Solve SNES displacement
-            PetscCallA(PetscLogStagePush(logStageDisplacement,ierr))
-            PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
-            PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
-            PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
-            PetscCallA(PetscLogStagePop(ierr))
+            Select case(MEF90DefMechGlobalOptions%SolverType)
+            Case(MEF90DefMech_SolverTypeAltMin)
+               !PetscCallA(SNESSetLagPreconditioner(displacementSNES,1,ierr))
+               PetscCallA(SNESSetLagPreconditioner(damageSNES,1,ierr))
 
-            !!! Solve SNES damage
-            PetscCallA(PetscLogStagePush(logStageDamage,ierr))
-            PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
-            PetscCallA(DMGlobalToLocal(damageDM,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
-            PetscCallA(PetscLogStagePop(ierr))
+               AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
+                  AltMinStep = AltMinStep + 1
+                  Write(IObuffer,208) AltMinIter
+                  PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
 
+                  If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
+                     !PetscCallA(SNESSetLagPreconditioner(displacementSNES,-2,ierr))
+                     PetscCallA(SNESSetLagPreconditioner(damageSNES,-2,ierr))
+                  End If 
+
+                  !!! Solve SNES displacement
+                  PetscCallA(PetscLogStagePush(logStageDisplacement,ierr))
+                  PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+                  PetscCallA(SNESGetConvergedReason(displacementSNES,displacementSNESConvergedReason,ierr))
+                  If (displacementSNESConvergedReason < 0) Then  
+                     Write(IOBuffer,400) "displacement",displacementSNESConvergedReason
+                     PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+                  End If
+
+                  PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
+                  PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
+                  PetscCallA(PetscLogStagePop(ierr))
+
+                  PetscCallA(VecCopy(damage,damageAltMinOld,ierr))
+                  !!! Solve SNES damage
+                  PetscCallA(PetscLogStagePush(logStageDamage,ierr))
+                  PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
+                  PetscCallA(SNESGetConvergedReason(damageSNES,damageSNESConvergedReason,ierr))
+                  If (damageSNESConvergedReason < 0) Then  
+                     Write(IOBuffer,400) "damage",damageSNESConvergedReason
+                     PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+                  End If
+                  PetscCallA(DMGlobalToLocal(damageDM,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
+                  PetscCallA(PetscLogStagePop(ierr))
+
+                  PetscCallA(VecMin(damage,PETSC_NULL_INTEGER,damageMin,ierr))
+                  PetscCallA(VecMax(damage,PETSC_NULL_INTEGER,damageMax,ierr))
+                  
+                  PetscCallA(VecAxPy(damageAltMinOld,-1.0_Kr,damage,ierr))
+                  ! damageAltMinOld = damageAltMinOld - damage
+                  PetscCallA(VecNorm(damageAltMinOld,NORM_INFINITY,damageMaxChange,ierr))
+                  Write(IOBuffer,209) damageMin,damageMax,damageMaxChange                  
+                  PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+
+                  If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
+                     EXIT
+                  End If
+
+                  If (mod(AltMinIter,25) == 0) Then
+                     !!! Save results and boundary Values
+                     PetscCallA(PetscLogStagePush(logStageIO,ierr))
+                     PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
+                     PetscCallA(PetscLogStagePop(ierr))
+                  End If
+               End Do AltMin
+            Case default
+               Write(IOBuffer,*) "Unimplemented DefMech solver type: ", MEF90DefMechGlobalOptions%SolverType, "\n"
+               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+               STOP
+            End Select
             !!! Compute energies
             PetscCallA(PetscLogStagePush(logStageEnergy,ierr))
-            energy   = 0.0_Kr
+            elasticEnergy     = 0.0_Kr
             bodyForceWork     = 0.0_Kr
             boundaryForceWork = 0.0_Kr
+            surfaceEnergy     = 0.0_Kr
+            cohesiveEnergy    = 0.0_Kr
             PetscCallA(MEF90DefMechWork(MEF90DefMechCtx,bodyForceWork,boundaryForceWork,ierr))
-            PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,energy,ierr))
+            PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
+            PetscCallA(MEF90DefMechSurfaceEnergy(MEF90DefMechCtx,surfaceEnergy,ierr))
+
             PetscCallA(MEF90DefMechStress(MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr))
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
-               Write(IOBuffer,201) setID(set),energy(set),bodyForceWork(set),energy(set)-bodyForceWork(set)
+               Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -310,7 +383,7 @@ distribute: Block
             End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
-            Write(IOBuffer,202) sum(energy),sum(bodyForceWork)+sum(boundaryForceWork),sum(energy)-sum(bodyForceWork)-sum(boundaryForceWork)
+            Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             PetscCallA(PetscLogStagePop(ierr))
 
@@ -326,9 +399,14 @@ distribute: Block
 101 Format("cell set ",I4," thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
 102 Format("======= Total thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
 103 Format("face set ",I4,"                              flux: ",ES12.5,"\n")
-201 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
-203 Format("face set ",I4,"                              work: ",ES12.5," \n")
-202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+203 Format("face set ",I4,"                      boundary work: ",ES12.5,"\n")
+202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+
+208 Format("   Alt. Min. step ",I5," ")
+209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
+
+400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check https://petsc.org/release/docs/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
 
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%timeSteppingType)
@@ -356,12 +434,15 @@ distribute: Block
    PetscCallA(VecDestroy(displacementResidual,ierr))
    PetscCallA(VecDestroy(displacement,ierr))
    PetscCallA(VecDestroy(damageResidual,ierr))
+   PetscCallA(VecDestroy(damageAltMinOld,ierr))
    PetscCallA(VecDestroy(damage,ierr))
 
    DeAllocate(time)
-   DeAllocate(energy)
+   DeAllocate(elasticEnergy)
    DeAllocate(bodyForceWork)
    DeAllocate(boundaryForceWork)
+   DeAllocate(cohesiveEnergy)
+   DeAllocate(surfaceEnergy)
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    

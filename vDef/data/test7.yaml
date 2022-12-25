@@ -9,10 +9,10 @@ heatxfer:
 defmech:
     timestepping:
         type: quasistatic
-damage:
-    snes:
-        converged:
-            reason: ascii
+#damage:
+#    snes:
+#        converged:
+#            reason: ascii
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
