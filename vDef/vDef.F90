@@ -290,7 +290,7 @@ Program vDef
             Select case(MEF90DefMechGlobalOptions%SolverType)
             Case(MEF90DefMech_SolverTypeAltMin)
                !PetscCallA(SNESSetLagPreconditioner(displacementSNES,1,ierr))
-               PetscCallA(SNESSetLagPreconditioner(damageSNES,1,ierr))
+               PetscCallA(SNESSetLagPreconditioner(damageSNES,1_Ki,ierr))
 
                AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
                   AltMinStep = AltMinStep + 1
@@ -298,8 +298,8 @@ Program vDef
                   PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
 
                   If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
-                     !PetscCallA(SNESSetLagPreconditioner(displacementSNES,-2,ierr))
-                     PetscCallA(SNESSetLagPreconditioner(damageSNES,-2,ierr))
+                     !PetscCallA(SNESSetLagPreconditioner(displacementSNES,-2_Ki,ierr))
+                     PetscCallA(SNESSetLagPreconditioner(damageSNES,-2_Ki,ierr))
                   End If 
 
                   !!! Solve SNES displacement
