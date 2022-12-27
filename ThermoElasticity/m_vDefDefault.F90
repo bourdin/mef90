@@ -46,50 +46,51 @@ module m_vDefDefault
                                                          1.0e-3,                  & ! InjectedVolumeAtol
                                                          0.0_Kr,                  & ! dampingCoefficientDisplacement
                                                          0.0_Kr,                  & ! dampingCoefficientDamage
-                                                         PETSC_TRUE,              & ! displacement_export
-                                                         PETSC_TRUE,              & ! damage_export
-                                                         PETSC_TRUE,              & ! stress_export
-                                                         PETSC_FALSE,             & ! plasticstrain_export
-                                                         PETSC_FALSE)               ! cumulatedplasticdissipation_export
+                                                         PETSC_FALSE,             & ! temperatureExport
+                                                         PETSC_TRUE,              & ! displacementExport
+                                                         PETSC_TRUE,              & ! damageExport
+                                                         PETSC_TRUE,              & ! stressExport
+                                                         PETSC_FALSE,             & ! plasticStrainExport
+                                                         PETSC_FALSE)               ! cumulatedPlasticDissipationExport
 
    Type(MEF90DefMechCellSetOptions_Type),Parameter    :: DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! bodyForce
-                                                         0.0_Kr,                                            & ! CrackPressure
+                                                         0.0_Kr,                                            & ! crackPressure
                                                          MEF90DefMech_damageTypeAT1,                        & ! damageType
                                                          MEF90DefMech_plasticityTypeNone,                   & ! plasticityType
                                                          MEF90DefMech_unilateralContactTypeNone,            & ! unilateralContactType
                                                          1.0e-5,                                            & ! unilateralContactHydrostaticDeviatoricGamma
                                                          PETSC_FALSE,                                       & ! unilateralContactHybrid
-                                                         1.0_Kr,                                            & ! DamageATLinSoftk
-                                                         1.25_Kr,                                           & ! DamageAT1expb
+                                                         1.0_Kr,                                            & ! damageATLinSoftk
+                                                         1.25_Kr,                                           & ! damageAT1expb
                                                          MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! cohesiveDisplacement
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
-                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacement Lower Bound
-                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacement Upper Bound
-                                                         PETSC_FALSE,                                       & ! Has Damage BC
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! hasDisplacementBC
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundaryDisplacement
+                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacementLowerBound
+                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacementUpperBound
+                                                         PETSC_FALSE,                                       & ! hasDamageBC
                                                          0.0_Kr,                                            & ! boundaryDamage
-                                                         PETSC_FALSE,                                       & ! CrackVolumeControlled
-                                                         PETSC_FALSE)                                         ! WorkControlled
+                                                         PETSC_FALSE,                                       & ! crackVolumeControlled
+                                                         PETSC_FALSE)                                         ! workControlled
 
    Type(MEF90DefMechFaceSetOptions_Type),Parameter    :: DefMechDefaultFaceSetOptions = MEF90DefMechFaceSetOptions_Type( &
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundaryForce
                                                          0.0_Kr,                                            & ! pressureForce
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
-                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacement Lower Bound
-                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacement Upper Bound
-                                                         PETSC_FALSE,                                       & ! Has Damage BC
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! hasDisplacementBC
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundaryDisplacement
+                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacementLowerBound
+                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacementUpperBound
+                                                         PETSC_FALSE,                                       & ! hasDamageBC
                                                          0.0_Kr)                                              ! boundaryDamage
 
    Type(MEF90DefMechVertexSetOptions_Type),Parameter  :: DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
-                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! Has Displacement BC
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundary Displacement
-                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacement Lower Bound
-                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacement Upper Bound
-                                                         PETSC_FALSE,                                       & ! Has Damage BC
-                                                         0.0_Kr)                                              ! boundary Damage
+                                                         [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! hasDisplacementBC
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! boundaryDisplacement
+                                                         [MEF90NINFINITY,MEF90NINFINITY,MEF90NINFINITY],    & ! displacementLowerBound
+                                                         [MEF90INFINITY,MEF90INFINITY,MEF90INFINITY],       & ! displacementUpperBound
+                                                         PETSC_FALSE,                                       & ! hasDamageBC
+                                                         0.0_Kr)                                              ! boundaryDamage
 
 
    Type(MEF90HeatXferGlobalOptions_Type),Parameter    :: HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
@@ -100,34 +101,22 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          MEF90Scaling_Linear, & ! fluxScaling
                                                          MEF90Scaling_Linear, & ! boundaryFluxScaling
-                                                         PETSC_TRUE)            ! temperature_export
+                                                         PETSC_TRUE)            ! temperatureExport
  
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-                                                         0.0_Kr,        & ! flux
-                                                         PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr,        & ! boundaryTemperature
-                                                         [0.0_Kr,0.0_Kr,0.0_Kr]) ! AdvectionVector
+                                                         0.0_Kr,               & ! flux
+                                                         PETSC_FALSE,          & ! hasTemperatureBC
+                                                         0.0_Kr,               & ! boundaryTemperature
+                                                         [0.0_Kr,0.0_Kr,0.0_Kr]) ! advectionVector
                                                          
    Type(MEF90HeatXferFaceSetOptions_Type),Parameter   :: HeatXferDefaultFaceSetOptions = MEF90HeatXferFaceSetOptions_Type( &
                                                          0.0_Kr,        & ! boundaryFlux
                                                          0.0_Kr,        & ! surfaceThermalConductivity
                                                          0.0_Kr,        & ! externalTemp
-                                                         PETSC_FALSE,   & ! Has BC
+                                                         PETSC_FALSE,   & ! hasTemperatureBC
                                                          0.0_Kr)          ! boundaryTemperature
                                                          
    Type(MEF90HeatXferVertexSetOptions_Type),Parameter ::HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                         PETSC_FALSE,   & ! Has BC
-                                                         0.0_Kr)          ! boundaryTemp
-
-   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultNodalVariables2D = ["Displacement_X     ","Displacement_Y     ","Damage             "]
-   Character(len=MEF90MXSTRLEN),Dimension(4),Parameter :: vDefDefaultNodalVariables3D = ["Displacement_X     ","Displacement_Y     ","Displacement_Z     ","Damage             "]
-
-   Character(len=MEF90MXSTRLEN),Dimension(3),Parameter :: vDefDefaultCellVariables2D  = ["Stress_XX          ","Stress_YY          ","Stress_XY          "]
-   Character(len=MEF90MXSTRLEN),Dimension(6),Parameter :: vDefDefaultCellVariables3D  = ["Stress_XX          ","Stress_YY          ","Stress_ZZ          ", &
-                                                                                         "Stress_YZ          ","Stress_XZ          ","Stress_XY          "]
-
-   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultFaceVariables2D = ['junk']
-   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultFaceVariables3D = ['junk']
-
-   Character(len=MEF90MXSTRLEN),Dimension(1),Parameter :: vDefDefaultGlobalVariables = ['junk']
+                                                         PETSC_FALSE,   & ! hasTemperatureBC
+                                                         0.0_Kr)          ! boundaryTemperature
 end module m_vDefDefault
