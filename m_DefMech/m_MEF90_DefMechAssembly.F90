@@ -1538,7 +1538,7 @@ Contains
       PetscBool                                          :: cellIsElastic
       Type(MEF90_MATS)                                   :: C2
       Type(MEF90_VECT)                                   :: gradDamageGauss
-      PetscReal                                          :: damageGauss,C1,C3,myEnergy
+      PetscReal                                          :: damageGauss,C1,myEnergy
       PetscInt                                           :: iDof,iGauss,numDofDamage,numGauss
     
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
@@ -1574,6 +1574,8 @@ Contains
                numDofDamage = size(elemScal(1)%BF(:,1))
                numGauss = size(elemScal(1)%Gauss_C)
 
+               C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr / matpropSet%internalLength
+               C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
                Do cell = 1,size(setPointID)
                   PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
                   Do iGauss = 1,numGauss
@@ -1585,18 +1587,11 @@ Contains
                            gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof,iGauss)
                         End Do ! iDof numDofDamage
                      End If
-
-                     C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr / matpropSet%internalLength
-                     C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
-                     C3 = C1 * ATModel%w(damageGauss)
-                     Do iDof = 1,numDofDamage
-                        myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                          C3 * elemScal(cell)%BF(iDof,iGauss) + (C2 * gradDamageGauss .DotP. gradDamageGauss))
-                     End Do ! iDof numDofDamage
+                     myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) *  &
+                               (C1 * ATModel%w(damageGauss)  + (C2 * gradDamageGauss .DotP. gradDamageGauss))
                   End Do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
                End Do ! cell
-
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
