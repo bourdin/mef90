@@ -1366,7 +1366,7 @@ Contains
         PetscInt,dimension(:),Pointer           :: ssID,faceID
         Type(tPetscSF)                          :: migrationSF,tempSF
         Type(tVec)                              :: localVec
-        PetscInt                                :: set,face,nroots,nleaves=0,i=1,totalleaves=0,numComponent,j=1,numSS,key
+        PetscInt                                :: set,face,nroots,nleaves=0,i=1,totalleaves=0,numComponent,j=1,numSS,key,numFaces
         Type(PetscSFNode),dimension(:),Pointer  :: iremote
         Type(tIS),dimension(:),Pointer          :: locfacesIS
         PetscInt,dimension(:),Pointer           :: ilocal,permIndices,emptyInd,facesID,procSSID
@@ -1395,16 +1395,18 @@ Contains
             Else
                 Allocate(faceID(0))
             End If
-            Allocate(ilocal(size(faceID)))
-            Allocate(iremote(size(faceID)))
-            Do face = 1,size(faceID)
+            numFaces = size(faceID)
+            Allocate(ilocal(numFaces))
+            Allocate(iremote(numFaces))
+            Do face = 1,numFaces
                 iremote(face)%rank = MEF90Ctx%Rank
                 iremote(face)%index = face - 1
                 ilocal(face) = faceID(face)
             End Do
             PetscCall(PetscSFCreate(MEF90Ctx%Comm,tempSF,ierr))
             PetscCall(PetscSFSetFromOptions(tempSF,ierr))
-            PetscCall(PetscSFSetGraph(tempSF,size(faceID),size(faceID),ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
+            
+            PetscCall(PetscSFSetGraph(tempSF,numFaces,numFaces,ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
             PetscCall(PetscSFSetUp(tempSF,ierr))
             If (MEF90Ctx%NumProcs > 1) Then
                 PetscCall(PetscSFComposeInverse(migrationSF,tempSF,sf,ierr))

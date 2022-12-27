@@ -78,7 +78,7 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
    PetscReal,Dimension(:),Pointer                        :: time
    PetscErrorCode,Intent(INOUT)                          :: ierr
    
-   PetscInt                                              :: numCS,numSS
+   PetscInt                                              :: numCS,numSS,numG,numC,numV,numS
    Integer                                               :: exoid
    PetscInt                                              :: step
    Character(len=MXSTLN)                                 :: sJunk
@@ -96,40 +96,43 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
       Call exinq(exoid,EX_INQ_SIDE_SETS,numSS,rJunk,sjunk,ierr)
       Call exinq(exoid, EX_INQ_ELEM_BLK,numCS,rJunk,sjunk,ierr)
       !!! Write variable names
-      If (size(nameG) > 0) Then
-         Call expvp(exoid,"g",size(nameG),ierr)
-         Call expvan(exoid,"g",size(nameG),nameG,ierr)
+      numG = size(nameG)
+      If (numG > 0) Then
+         Call expvp(exoid,"g",numG,ierr)
+         Call expvan(exoid,"g",numG,nameG,ierr)
       End If
-       If (size(nameC) > 0) Then
-          Call expvp(exoid,"e",size(nameC),ierr)
-          Call expvan(exoid,"e",size(nameC),nameC,ierr)
+      numC = size(nameC)
+       If (numC > 0) Then
+          Call expvp(exoid,"e",numC,ierr)
+          Call expvan(exoid,"e",numC,nameC,ierr)
        End If
-       If (size(nameV) > 0) Then
-          Call expvp(exoid,"n",size(nameV),ierr)
-          Call expvan(exoid,"n",size(nameV),nameV,ierr)
+       numV = size(nameV)
+       If (numV > 0) Then
+          Call expvp(exoid,"n",numV,ierr)
+          Call expvan(exoid,"n",numV,nameV,ierr)
        End If
-       If (size(nameS) > 0) Then
-          PetscCall(expvp(exoid,"s",size(nameS),ierr))
-          PetscCall(expvan(exoid,"s",size(nameS),nameS,ierr))
-       End If
-
-       !!! Write truth tables
-       If (size(nameS) > 0) Then
-          Allocate(truthtable(numSS,size(nameS)))
-          truthtable = .true.
-          PetscCall(expsstt(exoid, numSS, size(nameS), truthtable, ierr))
-          DeAllocate(truthtable)
+       numS = size(nameS)
+       If (numS > 0) Then
+          PetscCall(expvp(exoid,"s",numS,ierr))
+          PetscCall(expvan(exoid,"s",numS,nameS,ierr))
        End If
 
        !!! Write truth tables
-       If (size(nameC) > 0) Then
-          Allocate(truthtable(numCS,size(nameC)))
+       If (numS > 0) Then
+          Allocate(truthtable(numSS,numS))
           truthtable = .true.
-          Call expvtt(exoid, numCS, size(nameC), truthtable, ierr)
+          PetscCall(expsstt(exoid, numSS, numS, truthtable, ierr))
           DeAllocate(truthtable)
        End If
 
-       Do step = 1,size(time)
+       If (numC > 0) Then
+          Allocate(truthtable(numCS,numC))
+          truthtable = .true.
+          Call expvtt(exoid, numCS, numC, truthtable, ierr)
+          DeAllocate(truthtable)
+       End If
+
+      Do step = 1,size(time)
           Call exptim(exoid,step,time(step),ierr)
        End Do
    End If
@@ -182,7 +185,7 @@ End Subroutine MEF90EXOFormat
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
       PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
-      PetscCall(PetscObjectGetName(v, vecname,ierr))
+      PetscCall(PetscObjectGetName(v,vecname,ierr))
 
       PetscCall(VecGetBlockSize(v,bs,ierr))
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
@@ -222,10 +225,13 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid 
-      PetscInt                                           :: offsetN = -1,offsetZ = -1, offsetS = -1,bs
+      PetscInt                                           :: offsetN,offsetZ,offsetS,bs
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
+      offsetN = -1
+      offsetZ = -1
+      offsetS = -1
       PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
@@ -259,11 +265,12 @@ End Subroutine MEF90EXOFormat
       PetscInt,Intent(OUT)             :: varIndex
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      Integer                          :: i,j,num_suffix = 5,num_vars
+      Integer                          :: i,j,num_suffix,num_vars
       Character(len=MXSTLN)            :: var_name,ext_name,suffix(5)
    
       suffix = ["   ","_X ","_XX","_1 ","_11"]
-      
+      num_suffix = size(suffix)
+
       varIndex = -1
       Call exgvp(exoid,obj_type,num_vars,ierr)
       Do i=1,num_vars
