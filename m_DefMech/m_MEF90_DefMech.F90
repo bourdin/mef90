@@ -463,7 +463,7 @@ Contains
 
       Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameN,nameC,nameF
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      Integer                                            :: dim,numFields,offset
+      PetscInt                                           :: dim,numFields,offset
 
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
