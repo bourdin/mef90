@@ -4,8 +4,7 @@ all:
 test: test2D test3D
 test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/vDef
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
-	make -s testvDef PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testvDef PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testvDef PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/${PETSC_ARCH}/bin/vDef
@@ -29,7 +28,7 @@ m_vDefDefault.o: ${BASE_DIR}/m_vDefDefault.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEA
 vDef:${MEF90_DIR}/${PETSC_ARCH}/bin/vDef
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/vDef: vDef.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+${MEF90_DIR}/${PETSC_ARCH}/bin/vDef: vDef.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDef.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
@@ -40,7 +39,7 @@ vDef.o: ${BASE_DIR}/vDef.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEATX
 vDefP:${MEF90_DIR}/${PETSC_ARCH}/bin/vDefP
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/vDefP: vDefP.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+${MEF90_DIR}/${PETSC_ARCH}/bin/vDefP: vDefP.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDefP.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
@@ -51,7 +50,7 @@ vDefP.o: ${BASE_DIR}/vDefP.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_HEA
 vDefHF:${MEF90_DIR}/${PETSC_ARCH}/bin/vDefHF
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/vDefHF: vDefHF.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+${MEF90_DIR}/${PETSC_ARCH}/bin/vDefHF: vDefHF.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDefHF.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
@@ -62,7 +61,7 @@ vDefHF.o: ${BASE_DIR}/vDefHF.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_H
 vDefUpa:${MEF90_DIR}/${PETSC_ARCH}/bin/vDefUpa
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/vDefUpa: vDefUpa.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+${MEF90_DIR}/${PETSC_ARCH}/bin/vDefUpa: vDefUpa.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDefUpa.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 
@@ -73,7 +72,7 @@ vDefUpa.o: ${BASE_DIR}/vDefUpa.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90
 vDefBT:${MEF90_DIR}/${PETSC_ARCH}/bin/vDefBT
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/vDefBT: vDefBT.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
+${MEF90_DIR}/${PETSC_ARCH}/bin/vDefBT: vDefBT.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 	-@${FLINKER} -o $@ vDefBT.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB} 
 

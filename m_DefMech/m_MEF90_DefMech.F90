@@ -447,6 +447,125 @@ Contains
    End Subroutine MEF90DefMechSurfaceEnergy
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechFormatEXO"
+!!!
+!!!  
+!!!  MEF90DefMechFormatEXO:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(INOUT)           :: MEF90DefMechCtx
+      PetscReal,Dimension(:),Pointer                     :: time
+      PetscErrorCode,Intent(OUT)                         :: ierr
+
+      Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameN,nameC,nameF
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Integer                                            :: dim,numFields,offset
+
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM,dim,ierr))
+      Allocate(nameG(0))
+      Allocate(nameF(0))
+
+      numFields = 0
+      If (MEF90DefMechGlobalOptions%displacementExport) Then
+         numFields = numFields+dim
+      End If
+      If (MEF90DefMechGlobalOptions%damageExport) Then
+         numFields = numFields+1
+      End If
+      If (MEF90DefMechGlobalOptions%temperatureExport) Then
+         numFields = numFields+1
+      End If
+
+      Allocate(nameN(numFields))
+      offset = 1
+      If (MEF90DefMechGlobalOptions%displacementExport) Then
+         nameN(offset+0) = "Displacement_X"
+         nameN(offset+1) = "Displacement_Y"
+         If (dim == 3) Then
+            nameN(offset+2) = "Displacement_Z"
+         End If
+         offset = offset + dim
+      End If
+      If (MEF90DefMechGlobalOptions%damageExport) Then
+         nameN(offset) = "Damage"
+         offset = offset + 1
+      End If
+      If (MEF90DefMechGlobalOptions%temperatureExport) Then
+         nameN(offset) = "Temperature"
+      End If
+      
+      numFields = 0
+      If (MEF90DefMechGlobalOptions%stressExport) Then
+         numFields = numFields + dim * (dim+1) / 2
+      End If
+      If (MEF90DefMechGlobalOptions%plasticStrainExport) Then
+         numFields = numFields + dim * (dim+1) / 2
+      End If
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
+         numFields = numFields + dim * (dim+1) / 2
+      End If
+
+      If (MEF90DefMechGlobalOptions%stressExport) Then
+         numFields = numFields + dim * (dim+1) / 2
+      End If
+      If (MEF90DefMechGlobalOptions%plasticStrainExport) Then
+         numFields = numFields + dim * (dim+1) / 2
+      End If
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
+         numFields = 1
+      End If
+      Allocate(nameC(numFields))
+
+      offset = 1
+      If (MEF90DefMechGlobalOptions%stressExport) Then
+         If (dim == 2) Then
+            nameC(offset+0) = "Stress_XX"
+            nameC(offset+1) = "Stress_YY"
+            nameC(offset+2) = "Stress_XY"
+         Else
+            nameC(offset+0) = "Stress_XX"
+            nameC(offset+1) = "Stress_YY"
+            nameC(offset+2) = "Stress_ZZ"
+            nameC(offset+3) = "Stress_YZ"
+            nameC(offset+4) = "Stress_XZ"
+            nameC(offset+5) = "Stress_XY"
+         End If
+         offset = offset + dim * (dim+1) / 2
+      End If
+
+      If (MEF90DefMechGlobalOptions%plasticStrainExport) Then
+         If (dim == 2) Then
+            nameC(offset+0) = "PlasticStrain_XX"
+            nameC(offset+1) = "PlasticStrain_YY"
+            nameC(offset+2) = "PlasticStrain_XY"
+         Else
+            nameC(offset+0) = "PlasticStrain_XX"
+            nameC(offset+1) = "PlasticStrain_YY"
+            nameC(offset+2) = "PlasticStrain_ZZ"
+            nameC(offset+3) = "PlasticStrain_YZ"
+            nameC(offset+4) = "PlasticStrain_XZ"
+            nameC(offset+5) = "PlasticStrain_XY"
+         End If
+         offset = offset + dim * (dim+1) / 2
+      End If
+
+      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
+         nameC(offset) = "CumulatedPlasticDissipation"
+      End If
+
+      PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,nameF,time,ierr))
+      DeAllocate(nameG)
+      DeAllocate(nameN)
+      DeAllocate(nameC)
+      DeAllocate(nameF)
+   End Subroutine MEF90DefMechFormatEXO
+   
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechViewEXO"
 !!!
 !!!  

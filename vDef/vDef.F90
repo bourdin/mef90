@@ -81,6 +81,16 @@ Program vDef
    PetscCallA(DMGetDimension(dm,dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
+   !!! Create HeatXfer context, get all HeatXfer options
+   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
+   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,HeatXferDefaultGlobalOptions,HeatXferDefaultCellSetOptions,HeatXferDefaultFaceSetOptions,HeatXferDefaultVertexSetOptions,ierr))
+   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+
+   !!! Create DefMechCtx, get all defMech options
+   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
+   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
+   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
    !!! There is no real good reason to call Inquire on all ranks anyway.
@@ -105,12 +115,8 @@ Program vDef
 
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
-      End If            
-      If (dim ==2) Then
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
-      Else
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
       End If
+      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
       End If
@@ -136,15 +142,6 @@ Program vDef
    End Block distribute
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
 
-   !!! Create HeatXfer context, get all HeatXfer options
-   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
-   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,HeatXferDefaultGlobalOptions,HeatXferDefaultCellSetOptions,HeatXferDefaultFaceSetOptions,HeatXferDefaultVertexSetOptions,ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
-
-   !!! Create DefMechCtx, get all defMech options
-   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
-   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
-   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
    PetscCallA(DMDestroy(dm,ierr))
 
@@ -351,7 +348,7 @@ Program vDef
                Write(IOBuffer,*) "Unimplemented DefMech solver type: ", MEF90DefMechGlobalOptions%SolverType, "\n"
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
                STOP
-            End Select
+            End Select ! solverType
             !!! Compute energies
             PetscCallA(PetscLogStagePush(logStageEnergy,ierr))
             elasticEnergy     = 0.0_Kr
@@ -391,9 +388,15 @@ Program vDef
             PetscCallA(PetscLogStagePush(logStageIO,ierr))
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
             PetscCallA(PetscLogStagePop(ierr))
-         End Select
-      End Do
-   End If
+
+            PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+            PetscCallA(PetscLogView(logViewer,ierr))
+            PetscCallA(PetscViewerDestroy(logViewer,ierr)) 
+         End Select ! timeStepingType
+      End Do ! step
+   End If ! timeSteppingType
+   Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
+   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)         
 100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("\nSolving transient step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
@@ -446,10 +449,12 @@ Program vDef
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    
-   PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-   PetscCallA(PetscLogView(logViewer,ierr))
-   PetscCallA(PetscViewerDestroy(logViewer,ierr))
    PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
+      Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
+      Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
+      Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+   End If
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

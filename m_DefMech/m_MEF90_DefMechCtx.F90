@@ -79,6 +79,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: InjectedVolumeATol
       PetscReal                              :: dampingCoefficientDisplacement
       PetscReal                              :: dampingCoefficientDamage
+      PetscBool                              :: temperatureExport
       PetscBool                              :: displacementExport
       PetscBool                              :: damageExport  
       PetscBool                              :: stressExport  
@@ -767,7 +768,7 @@ Contains
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
       PetscErrorCode,Intent(INOUT)                             :: ierr
 
-      Type(MEF90DefMechGlobalOptions_Type),pointer      :: DefMechGlobalOptions
+      Type(MEF90DefMechGlobalOptions_Type),pointer             :: DefMechGlobalOptions
 
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,DefMechGlobalOptions,ierr))
       PetscCall(PetscBagSetName(bag,trim(name),"DefMechGlobalOptions MEF90 Defect Mechanics global options",ierr))
@@ -776,11 +777,11 @@ Contains
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
 
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%damageExport,default%damageExport,'damage_export','Export damage',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%stressExport,default%stressExport,'stress_export','Export stress',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%plasticStrainExport,default%plasticStrainExport,'plasticstrain_export','Export plastic strain',ierr))
-      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%cumulatedPlasticDissipationExport,default%cumulatedPlasticDissipationExport,'cumulatedplasticdissipation_export','Export cumulated plastic dissipation',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement in result file',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%damageExport,default%damageExport,'damage_export','Export damage in result file',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%stressExport,default%stressExport,'stress_export','Export stress in result file',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%plasticStrainExport,default%plasticStrainExport,'plasticstrain_export','Export plastic strain in result file',ierr))
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%cumulatedPlasticDissipationExport,default%cumulatedPlasticDissipationExport,'cumulatedplasticdissipation_export','Export cumulated plastic dissipation in result file',ierr))
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%boundaryDisplacementScaling,MEF90ScalingList,default%boundaryDisplacementScaling,'boundaryDisplacement_scaling','Boundary displacement scaling',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%displacementLowerBoundScaling,MEF90ScalingList,default%displacementLowerBoundScaling,'displacementlowerbound_scaling','Displacement lower bound scaling',ierr))
