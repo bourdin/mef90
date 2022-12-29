@@ -61,17 +61,11 @@ Contains
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       If (self%b == 0.0_Kr) Then
          aAT1exp = 1.0_Kr - alpha
-         flops = 1.0
       Else
          aAT1exp = 1.0_Kr + (exp(-self%b * alpha) - 1.0_Kr) / (1.0_kr - exp(-self%b))
-         flops = 9.0
       EndIf
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function aAT1exp
 
 #undef __FUNCT__
@@ -85,17 +79,11 @@ Contains
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       If (self%b == 0.0_Kr) Then
          DaAT1exp = -1.0_Kr
-         flops = 0.0
       Else
          DaAT1exp = -self%b * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
-         flops = 9.0
       End If
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DaAT1exp
 
 #undef __FUNCT__
@@ -109,16 +97,11 @@ Contains
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
       If (self%b == 0.0_Kr) Then
          D2aAT1exp = 0.0_Kr
-         flops = 0.0
       Else
          D2aAT1exp = self%b**2 * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
-         flops = 9.0
       End If
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function D2aAT1exp
 
 #undef __FUNCT__

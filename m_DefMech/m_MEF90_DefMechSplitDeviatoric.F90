@@ -61,7 +61,6 @@ Contains
 
       EEDMinus  = trace(Strain)**2 * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)  * 0.5_Kr ! Ae^s.e^s /2
       EEDPlus   = ((HookesLaw * Strain) .dotP. Strain) * 0.5_Kr - EEDMinus
-      PetscCall(PetscLogFlops(6._pflop,ierr))
    End Subroutine
 
 #undef __FUNCT__
@@ -90,7 +89,6 @@ Contains
 
       DEEDMinus = (trace(Strain) * (HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM)) * MEF90_MATS_IDENTITY
       DEEDPlus  = (HookesLaw * Strain) - DEEDMinus
-      PetscCall(PetscLogFlops(4._pflop,ierr))
    End Subroutine
 
 #undef __FUNCT__
@@ -129,16 +127,13 @@ Contains
       D2EEDMinus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
       If (HookesLaw%isPlaneStress) Then
          D2EEDMinus%PoissonRatio  = D2EEDMinus%lambda / (D2EEDMinus%lambda + D2EEDMinus%mu) * 0.5_Kr
-         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else
          D2EEDMinus%PoissonRatio  = D2EEDMinus%lambda / (D2EEDMinus%lambda + 2.0_Kr * D2EEDMinus%mu) * 0.5_Kr
-         PetscCall(PetscLogFlops(17._pflop,ierr))
       End If
 #else
       D2EEDMinus%PoissonRatio  = D2EEDMinus%lambda / (D2EEDMinus%lambda + D2EEDMinus%mu) * 0.5_Kr
       D2EEDMinus%YoungsModulus = D2EEDMinus%mu * (3.0_Kr * D2EEDMinus%lambda + 2.0_Kr * D2EEDMinus%mu) / (D2EEDMinus%lambda + D2EEDMinus%mu)
       D2EEDMinus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu * 2.0_Kr / 3.0_Kr
-      PetscCall(PetscLogFlops(19._pflop,ierr))
 #endif
       D2EEDPlus = HookesLaw - D2EEDMinus
    End Subroutine

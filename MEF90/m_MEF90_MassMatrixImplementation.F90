@@ -39,9 +39,7 @@ Contains
       PetscReal,Dimension(:),Pointer                  :: MatElem
       PetscInt                                        :: iDoF1,iDoF2,numDof
       PetscInt                                        :: iGauss,numGauss
-      PetscLogDouble                                  :: flops
 
-      flops = 0.0_pflop
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
@@ -63,8 +61,6 @@ Contains
             End Do ! iGauss
             PetscCall(DMPlexMatSetClosure(dm,PETSC_NULL_SECTION,PETSC_NULL_SECTION,M,setPointID(point),MatElem,ADD_VALUES,ierr))
          End Do ! point
-         flops = 3 * numDof**2 * numGauss * size(setPointID)
-         PetscCall(PetscLogFlops(flops,ierr))
          DeAllocate(MatElem,stat=ierr)
       End If 
       PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))

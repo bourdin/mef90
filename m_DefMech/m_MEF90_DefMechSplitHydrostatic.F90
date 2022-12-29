@@ -93,7 +93,6 @@ Contains
 
       DEEDPlus  = MEF90_DefMechSplit_DSmoothPositiveSquare(trace(Strain),self%gamma) * ((HookesLaw%lambda + 2.0_Kr * HookesLaw%mu / MEF90_DIM) * 0.5_Kr) * MEF90_MATS_IDENTITY
       DEEDMinus =  (HookesLaw * Strain) - DEEDPlus
-      PetscCall(PetscLogFlops(6._pflop,ierr))
    End Subroutine
 
 #undef __FUNCT__
@@ -132,16 +131,13 @@ Contains
       D2EEDPlus%BulkModulus   = D2EEDMinus%lambda + D2EEDMinus%mu
       If (HookesLaw%isPlaneStress) Then
          D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + D2EEDPlus%mu) * 0.5_Kr
-         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else
          D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + 2.0_Kr * D2EEDPlus%mu) * 0.5_Kr
-         PetscCall(PetscLogFlops(17._pflop,ierr))
       End If
 #else
       D2EEDPlus%PoissonRatio  = D2EEDPlus%lambda / (D2EEDPlus%lambda + D2EEDPlus%mu) * 0.5_Kr
       D2EEDPlus%YoungsModulus = D2EEDPlus%mu * (3.0_Kr * D2EEDPlus%lambda + 2.0_Kr * D2EEDPlus%mu) / (D2EEDPlus%lambda + D2EEDPlus%mu)
       D2EEDPlus%BulkModulus   = D2EEDPlus%lambda + D2EEDPlus%mu * 2.0_Kr / 3.0_Kr
-      PetscCall(PetscLogFlops(19._pflop,ierr))
 #endif
       D2EEDMinus = HookesLaw - D2EEDPlus
    End Subroutine

@@ -893,12 +893,10 @@ Contains
             MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu) * 0.5_Kr
             MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
             MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
-            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             MEF90HookesLaw2DSum%PoissonRatio  = MEF90HookesLaw2DSum%lambda / (MEF90HookesLaw2DSum%lambda + 2.0_Kr * MEF90HookesLaw2DSum%mu) * 0.5_Kr
             MEF90HookesLaw2DSum%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DSum%mu * (1.0_Kr + MEF90HookesLaw2DSum%PoissonRatio)
             MEF90HookesLaw2DSum%BulkModulus   = MEF90HookesLaw2DSum%lambda + MEF90HookesLaw2DSum%mu
-            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DSum%type       = MEF90HookesLawTypeFull
@@ -933,7 +931,6 @@ Contains
          MEF90HookesLaw3DSum%PoissonRatio  = MEF90HookesLaw3DSum%lambda / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu) * 0.5_Kr
          MEF90HookesLaw3DSum%YoungsModulus = MEF90HookesLaw3DSum%mu * (3.0_Kr * MEF90HookesLaw3DSum%lambda + 2.0_Kr * MEF90HookesLaw3DSum%mu) / (MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu)
          MEF90HookesLaw3DSum%BulkModulus   = MEF90HookesLaw3DSum%lambda + MEF90HookesLaw3DSum%mu * 2.0_Kr / 3.0_Kr
-         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DSum%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DSum%fullTensor = A%fullTensor + B%fullTensor
@@ -975,12 +972,10 @@ Contains
             MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu) * 0.5_Kr
             MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
             MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
-            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             MEF90HookesLaw2DDiff%PoissonRatio  = MEF90HookesLaw2DDiff%lambda / (MEF90HookesLaw2DDiff%lambda + 2.0_Kr * MEF90HookesLaw2DDiff%mu) * 0.5_Kr
             MEF90HookesLaw2DDiff%YoungsModulus = 2.0_Kr * MEF90HookesLaw2DDiff%mu * (1.0_Kr + MEF90HookesLaw2DDiff%PoissonRatio)
             MEF90HookesLaw2DDiff%BulkModulus   = MEF90HookesLaw2DDiff%lambda + MEF90HookesLaw2DDiff%mu
-            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw2DDiff%type       = MEF90HookesLawTypeFull
@@ -1015,7 +1010,6 @@ Contains
          MEF90HookesLaw3DDiff%PoissonRatio  = MEF90HookesLaw3DDiff%lambda / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu) * 0.5_Kr
          MEF90HookesLaw3DDiff%YoungsModulus = MEF90HookesLaw3DDiff%mu * (3.0_Kr * MEF90HookesLaw3DDiff%lambda + 2.0_Kr * MEF90HookesLaw3DDiff%mu) / (MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu)
          MEF90HookesLaw3DDiff%BulkModulus   = MEF90HookesLaw3DDiff%lambda + MEF90HookesLaw3DDiff%mu * 2.0_Kr / 3.0_Kr
-         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else If ((A%type == MEF90HookesLawTypeFull) .AND. (B%type == MEF90HookesLawTypeFull)) Then
          MEF90HookesLaw3DDiff%type       = MEF90HookesLawTypeFull
          MEF90HookesLaw3DDiff%fullTensor = A%fullTensor - B%fullTensor
@@ -1040,8 +1034,6 @@ Contains
       Type(MEF90HookesLaw2D), Intent(IN)           :: A
       Type(MEF90HookesLaw2D)                       :: ScalarXMEF90HookesLaw2D
 
-      PetscErrorCode                               :: ierr
-
       If (A%type == MEF90HookesLawTypeIsotropic) Then
          ScalarXMEF90HookesLaw2D%type          = MEF90HookesLawTypeIsotropic
          ScalarXMEF90HookesLaw2D%lambda        = t * A%lambda
@@ -1051,12 +1043,10 @@ Contains
             ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
             ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
             ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
-            PetscCall(PetscLogFlops(9._pflop,ierr))
          Else
             ScalarXMEF90HookesLaw2D%PoissonRatio  = ScalarXMEF90HookesLaw2D%lambda / (ScalarXMEF90HookesLaw2D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw2D%mu) * 0.5_Kr
             ScalarXMEF90HookesLaw2D%YoungsModulus = 2.0_Kr * ScalarXMEF90HookesLaw2D%mu * (1.0_Kr + ScalarXMEF90HookesLaw2D%PoissonRatio)
             ScalarXMEF90HookesLaw2D%BulkModulus   = ScalarXMEF90HookesLaw2D%lambda + ScalarXMEF90HookesLaw2D%mu
-            PetscCall(PetscLogFlops(10._pflop,ierr))
          End If
       Else 
          ScalarXMEF90HookesLaw2D%type       = MEF90HookesLawTypeFull
@@ -1079,8 +1069,6 @@ Contains
       Type(MEF90HookesLaw3D), Intent(IN)           :: A
       Type(MEF90HookesLaw3D)                       :: ScalarXMEF90HookesLaw3D
 
-      PetscErrorCode                               :: ierr
-
       If (A%type == MEF90HookesLawTypeIsotropic) Then
          ScalarXMEF90HookesLaw3D%type          = MEF90HookesLawTypeIsotropic
          ScalarXMEF90HookesLaw3D%lambda        = t * A%lambda
@@ -1088,7 +1076,6 @@ Contains
          ScalarXMEF90HookesLaw3D%PoissonRatio  = ScalarXMEF90HookesLaw3D%lambda / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu) * 0.5_Kr
          ScalarXMEF90HookesLaw3D%YoungsModulus = ScalarXMEF90HookesLaw3D%mu * (3.0_Kr * ScalarXMEF90HookesLaw3D%lambda + 2.0_Kr * ScalarXMEF90HookesLaw3D%mu) / (ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu)
          ScalarXMEF90HookesLaw3D%BulkModulus   = ScalarXMEF90HookesLaw3D%lambda + ScalarXMEF90HookesLaw3D%mu * 2.0_Kr / 3.0_Kr
-         PetscCall(PetscLogFlops(14._pflop,ierr))
       Else 
          ScalarXMEF90HookesLaw3D%type       = MEF90HookesLawTypeFull
          ScalarXMEF90HookesLaw3D%fullTensor = t * A%fullTensor
@@ -1109,7 +1096,6 @@ Contains
       Type(MatS2D), Intent(IN)                     :: X
       Type(MatS2D)                                 :: MEF90HookesLaw2DXMatS2D
 
-      PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
       Select case(A%type)
@@ -1119,10 +1105,8 @@ Contains
             MEF90HookesLaw2DXMatS2D%XX = C1 * X%XX       + A%lambda * X%YY
             MEF90HookesLaw2DXMatS2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMatS2D%XY = C2 * X%XY
-            PetscCall(PetscLogFlops(10._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMatS2D = A%fullTensor * X
-            ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw2DXMatS2D
 
@@ -1140,7 +1124,6 @@ Contains
       Type(MatS3D), Intent(IN)                     :: X
       Type(MatS3D)                                 :: MEF90HookesLaw3DXMatS3D
 
-      PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
       Select case(A%type)
@@ -1154,10 +1137,8 @@ Contains
             MEF90HookesLaw3DXMatS3D%XZ = C2 * X%XZ
             MEF90HookesLaw3DXMatS3D%XY = C2 * X%XY
 
-            PetscCall(PetscLogFlops(21._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw3DXMatS3D = A%fullTensor * X
-            ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw3DXMatS3D
 
@@ -1174,7 +1155,6 @@ Contains
       Type(Mat2D), Intent(IN)                      :: X
       Type(Mat2D)                                  :: MEF90HookesLaw2DXMat2D
 
-      PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
       Select case(A%type)
@@ -1185,10 +1165,8 @@ Contains
             MEF90HookesLaw2DXMat2D%XY = C2 * X%XY
             MEF90HookesLaw2DXMat2D%YY = A%lambda * X%XX + C1 * X%YY
             MEF90HookesLaw2DXMat2D%YX = C2 * X%YX
-            PetscCall(PetscLogFlops(11._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw2DXMat2D = A%fullTensor * X
-            ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw2DXMat2D
 
@@ -1205,7 +1183,6 @@ Contains
       Type(Mat3D), Intent(IN)                      :: X
       Type(Mat3D)                                  :: MEF90HookesLaw3DXMat3D
 
-      PetscErrorCode                               :: ierr
       Real(Kind = Kr)                              :: C1, C2
 
       Select case(A%type)
@@ -1223,11 +1200,8 @@ Contains
             MEF90HookesLaw3DXMat3D%XZ = C2 * X%XZ
             MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
             MEF90HookesLaw3DXMat3D%ZZ = A%lambda * X%XX + A%lambda * X%YY + C1 * X%ZZ
-            PetscCall(PetscLogFlops(24._pflop,ierr))
          Case(MEF90HookesLawTypeFull)
             MEF90HookesLaw3DXMat3D = A%fullTensor * X
-            ! flops are counted in m_MEF90_LinAlg
       End Select
    End Function MEF90HookesLaw3DXMat3D
-
 End Module m_MEF90_Materials
