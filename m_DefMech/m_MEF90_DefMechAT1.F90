@@ -47,12 +47,7 @@ Contains
       Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       aAT1 = (1.0_kr - alpha)**2
-      flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function aAT1
 
 #undef __FUNCT__
@@ -66,12 +61,7 @@ Contains
       Class(MEF90DefMechAT1_Type),Intent(IN)           :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       DaAT1 = -2.0_Kr * (1.0_Kr - alpha)
-      flops = 2.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DaAT1
 
 #undef __FUNCT__

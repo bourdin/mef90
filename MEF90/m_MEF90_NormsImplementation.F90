@@ -49,9 +49,7 @@ Contains
       PetscInt                                        :: point
       PetscInt                                        :: iDoF1,numDof
       PetscInt                                        :: iGauss,numGauss
-      !PetscLogDouble                                  :: flops
 
-      !flops = 0.0_pflop
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -79,8 +77,6 @@ Contains
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
-         !flops = 3 * numDof**2 * numGauss * size(setPointID)
-         !PetscCall(PetscLogFlops(flops,ierr))
          ! Flop computation is different for scalar and Vec
          DeAllocate(Vloc,stat=ierr)
          DeAllocate(Uloc,stat=ierr)
@@ -120,9 +116,7 @@ Contains
       PetscInt                                        :: point
       PetscInt                                        :: iDoF1,numDof
       PetscInt                                        :: iGauss,numGauss
-      !PetscLogDouble                                  :: flops
 
-      !flops = 0.0_pflop
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -148,8 +142,6 @@ Contains
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
-         !flops = 3 * numDof**2 * numGauss * size(setPointID)
-         !PetscCall(PetscLogFlops(flops,ierr))
          ! Flop computation is different for scalar and Vec
          DeAllocate(Uloc,stat=ierr)
       End If 
@@ -185,9 +177,7 @@ Contains
       PetscInt                                        :: point
       PetscInt                                        :: iDoF1,numDof
       PetscInt                                        :: iGauss,numGauss
-      !PetscLogDouble                                  :: flops
 
-      !flops = 0.0_pflop
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
       PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -213,8 +203,6 @@ Contains
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
             PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
          End Do ! point
-         !flops = 3 * numDof**2 * numGauss * size(setPointID)
-         !PetscCall(PetscLogFlops(flops,ierr))
          ! Flop computation is different for scalar and Vec
          DeAllocate(Uloc,stat=ierr)
       End If 
@@ -253,9 +241,7 @@ Contains
          PetscInt                                        :: point
          PetscInt                                        :: iDoF1,numDof
          PetscInt                                        :: iGauss,numGauss
-         !PetscLogDouble                                  :: flops
    
-         !flops = 0.0_pflop
          PetscCall(VecGetDM(U,dm,ierr))
          PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
          PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
@@ -277,8 +263,6 @@ Contains
                End Do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
             End Do ! point
-            !flops = 3 * numDof**2 * numGauss * size(setPointID)
-            !PetscCall(PetscLogFlops(flops,ierr))
             ! Flop computation is different for scalar and Vec
             DeAllocate(Uloc,stat=ierr)
          End If 

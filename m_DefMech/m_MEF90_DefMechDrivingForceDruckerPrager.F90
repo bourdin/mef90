@@ -58,7 +58,6 @@ Contains
       PetscReal                                          :: beta0,beta1,beta2,beta3,DalphadeGauss
       PetscReal                                          :: E,Gc,delta,gamma,ell,sigma_cs,sigma_ts
       PetscReal                                          :: damageGauss,stiffnessMultGauss,DalphaStiffnessMultGauss
-      PetscLogDouble                                     :: flops
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
@@ -134,8 +133,6 @@ Contains
             End Do
          End Do
       End Do
-      !flops = 2 * numGauss * numDofDisplacement**2
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager
 
 #undef __FUNCT__
@@ -168,7 +165,6 @@ Contains
       PetscReal                                          :: E,Gc,delta,gamma,ell,sigma_cs,sigma_ts
       PetscReal                                          :: Dbeta1,Dbeta2,D
       PetscReal                                          :: damageGauss,stiffnessMultGauss,DalphaStiffnessMultGauss
-      PetscLogDouble                                     :: flops
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
@@ -246,8 +242,6 @@ Contains
             End Do
          End Do
       End Do
-      !flops = 2 * numGauss * numDofDisplacement**2
-      !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Subroutine MEF90DefMechBilinearFormDamageDrivingForceAT1DruckerPrager2
 
 

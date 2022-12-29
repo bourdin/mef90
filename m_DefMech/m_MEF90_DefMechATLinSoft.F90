@@ -58,12 +58,7 @@ Contains
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       aLinSoft = (1.0_Kr - alpha)**2 / (self%k + (1.0_Kr - self%k) * (1.0_Kr * alpha)**2)
-      flops = 8.0_pflop
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function aLinSoft
 
 #undef __FUNCT__
@@ -77,13 +72,8 @@ Contains
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       DaLinSoft = -2.0_Kr*alpha*(1.0_Kr - alpha)**2 * (self%k - 1.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**2 &
                 + (2.0_Kr*alpha - 2.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)
-      flops = 20.0_pflop
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DaLinSoft
 
 #undef __FUNCT__
@@ -97,14 +87,10 @@ Contains
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
       D2aLinSoft = 8.0_Kr*alpha**2 * (1.0_Kr - alpha)**2 * (self%k - 1.0_Kr)**2 / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**3 &
                   - 4.0_Kr*alpha * (2.0_Kr*alpha - 2.0_Kr) * (self%k - 1.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**2   &
                   - 2.0_Kr*(1.0_Kr - alpha)**2 * (self%k - 1.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**2               &
                   + 2.0_Kr / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)
-      flops = 44.0_pflop
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function D2aLinSoft
 
 #undef __FUNCT__
@@ -118,13 +104,8 @@ Contains
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       wLinSoft = alpha * (2.0_Kr - alpha)
 
-      flops = 2.0_pflop
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function wLinSoft
 
 #undef __FUNCT__
@@ -138,13 +119,8 @@ Contains
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       DwLinSoft = 2.0_Kr * (1.0_Kr - alpha)
 
-      flops = 2.0_pflop
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DwLinSoft
 
 #undef __FUNCT__

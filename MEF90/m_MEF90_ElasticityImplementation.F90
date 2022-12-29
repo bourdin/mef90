@@ -102,7 +102,6 @@ Contains
       PetscReal,Dimension(:,:),Pointer                   :: MatElem
       PetscInt                                           :: iDoF1,iDoF2,iGauss
       Type(SectionReal)                                  :: defaultSection
-      PetscLogDouble                                     :: flops
      
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -121,8 +120,6 @@ Contains
             Call DMmeshAssembleMatrix(K,mesh,defaultSection,cellID(cell),MatElem,ADD_VALUES,ierr);CHKERRQ(ierr)
          End Do
          DeAllocate(MatElem)
-         flops = 2 * elemType%numDof**2 * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
@@ -152,7 +149,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: Uloc
       Type(MEF90_MATS)                                   :: GradSUelem
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -175,8 +171,6 @@ Contains
          End Do      
          DeAllocate(Gloc)
          DeAllocate(Uloc)
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityOperatorSet
@@ -204,7 +198,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: xloc,Gloc
       Type(MEF90_VECT)                                   :: xelem
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -229,8 +222,6 @@ Contains
       
          DeAllocate(xloc)
          DeAllocate(Gloc)
-         flops = (2 * elemType%numDof * size(elem(1)%Gauss_C) + 1) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityOperatorAddTransientTermSet
@@ -257,7 +248,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: RHSloc
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -276,8 +266,6 @@ Contains
          End Do
       
          DeAllocate(RHSloc)
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCst
@@ -307,7 +295,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: RHSloc
       PetscInt                                           :: iDoF1,iGauss,i
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -327,8 +314,6 @@ Contains
          End Do
       
          DeAllocate(RHSloc)
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCell
@@ -356,7 +341,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: RHSloc,e0loc
       PetscInt                                           :: iDoF1,iGauss,i
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -377,8 +361,6 @@ Contains
          End Do
       
          DeAllocate(RHSloc)
-         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCell2
@@ -408,7 +390,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: RHSloc,e0loc
       PetscReal                                          :: e0elem
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -432,8 +413,6 @@ Contains
       
          DeAllocate(RHSloc)
          DeAllocate(e0loc)
-         flops = 5 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetVertex2
@@ -459,7 +438,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: RHSloc
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -478,8 +456,6 @@ Contains
          End Do
       
          DeAllocate(RHSloc)
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityForceRHSSetCst
@@ -506,7 +482,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc
       Type(MEF90_VECT)                                   :: fVect
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -525,8 +500,6 @@ Contains
             Call SectionRealRestore(F,cellID(cell),Floc,ierr);CHKERRQ(ierr)
          End Do
       
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -554,7 +527,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: Floc,RHSloc
       Type(MEF90_VECT)                                   :: Felem
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -578,8 +550,6 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do
       
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(Floc)
       End If
@@ -605,7 +575,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: RHSloc
       PetscInt                                           :: iDoF1,iGauss,c,numCell
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -624,8 +593,6 @@ Contains
             Call SectionRealUpdateClosure(RHS,mesh,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do ! cell
       
-         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -650,7 +617,6 @@ Contains
       PetscInt                                           :: cell
       PetscReal,Dimension(:),Pointer                     :: pressureloc,RHSloc
       PetscInt                                           :: iDoF1,iGauss,c,numCell
-      PetscLogDouble                                     :: flops
            
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -668,8 +634,6 @@ Contains
             Call SectionRealRestore(pressureSec,cellID(cell),pressureloc,ierr);CHKERRQ(ierr)
          End Do ! cell
       
-         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -698,7 +662,6 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: pressureloc,RHSloc
       PetscReal                                          :: pressureelem
       PetscInt                                           :: iDoF1,iGauss,c,numCell
-      PetscLogDouble                                     :: flops
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -722,8 +685,6 @@ Contains
             Call SectionRealUpdateClosure(RHS,meshDisplacement,cellID(cell),RHSloc,ADD_VALUES,ierr);CHKERRQ(iErr)
          End Do ! cell
       
-         flops = (2 * elemPressureType%numDof + 3 * elemDisplacementType%numDof) * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(RHSloc)
          DeAllocate(pressureloc)
       End If
@@ -753,7 +714,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
@@ -771,8 +731,6 @@ Contains
             End Do
          End Do
       
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -803,7 +761,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -822,8 +779,6 @@ Contains
             Call SectionRealRestore(f,cellID(cell),floc,ierr);CHKERRQ(ierr)
          End Do
       
-         flops = 4 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -853,7 +808,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -873,8 +827,6 @@ Contains
             End Do
          End Do
       
-         flops = 2 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(floc)
       End If
@@ -905,7 +857,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -923,8 +874,6 @@ Contains
             End Do
          End Do
       
-         flops = elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(x0loc)
       End If
@@ -955,7 +904,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -973,8 +921,6 @@ Contains
             Call SectionRealRestore(P,cellID(cell),ploc,ierr);CHKERRQ(ierr)
          End Do
       
-         flops = 3 * elemType%numDof * size(elem(1)%Gauss_C) * size(cellID) 
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
       End If
       Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
@@ -1009,7 +955,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1054,11 +999,8 @@ Contains
                Call SectionRealRestore(plasticStrain,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
-         flops = 3 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
          If (temperature%v /= 0) Then
-            flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
          End If
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
       End If   
@@ -1094,7 +1036,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1165,11 +1106,8 @@ Contains
             stressPtr = stressLoc / cellSize
             Call SectionRealUpdate(stress,cellID(cell),stressPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell
-         flops = size(elemDisplacement(1)%Gauss_C) * size(cellID) 
          If (temperature%v /= 0) Then
-            flops = flops + 2 * elemScalType%numDof * size(elemscal(1)%Gauss_C) * size(cellID)
          End If
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
          DeAllocate(damageloc)
@@ -1214,7 +1152,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
       
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1257,11 +1194,8 @@ Contains
             InelasticStrainPtr = InelasticStrainLoc / cellSize
             Call SectionRealUpdate(InelasticStrain,cellID(cell),InelasticStrainPtr,INSERT_VALUES,ierr);CHKERRQ(ierr)
          End Do ! cell
-         flops = size(elemDisplacement(1)%Gauss_C) * size(cellID)
          If (temperature%v /= 0) Then
-            flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
          End If
-         Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
          DeAllocate(InelasticStrainPtr)
@@ -1304,7 +1238,6 @@ Contains
       PetscInt,Dimension(:),Pointer                      :: cellID
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
-      PetscLogDouble                                     :: flops
      
       Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
@@ -1347,11 +1280,8 @@ Contains
                Call SectionRealRestore(cumulatedDissipatedPlasticEnergy,cellID(cell),cumulatedDissipatedPlasticEnergyLoc,ierr);CHKERRQ(ierr)
             End If
          End Do ! cell
-         !flops = 3 * size(elemDisplacement(1)%Gauss_C) * size(cellID) 
          !If (temperature%v /= 0) Then
-         !   flops = flops + 2 * elemtemperatureType%numDof * size(elemtemperature(1)%Gauss_C) * size(cellID)
          !End If
-         !Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
          DeAllocate(xloc)
          DeAllocate(damageloc)
       End If   

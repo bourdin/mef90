@@ -52,12 +52,7 @@ Contains
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       aKKL = 4.0_Kr * (1.0_Kr - alpha)**3 - 3.0_Kr * (1.0_Kr - alpha)**4
-      flops = 7.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function aKKL
 
 #undef __FUNCT__
@@ -70,12 +65,7 @@ Contains
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
-
       DaKKL = -12.0_Kr * ((1.0_Kr - alpha)**2 - (1.0_Kr - alpha)**3)
-      flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DaKKL
 
 #undef __FUNCT__
@@ -87,12 +77,8 @@ Contains
    PetscReal function D2aKKL(self,alpha)
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
 
       D2aKKL = 24.0_Kr * (1.0_Kr - alpha) - 36.0_Kr * (1.0_Kr - alpha)**2
-      flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function D2aKKL
 
 #undef __FUNCT__
@@ -105,12 +91,8 @@ Contains
    PetscReal function wKKL(self,alpha)
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
 
       wKKL = 1.0_Kr - 4.0_Kr * (1.0_Kr - alpha)**3 + 3.0_Kr * (1.0_Kr - alpha)**4
-      flops = 8.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function wKKL
 
 #undef __FUNCT__
@@ -123,12 +105,8 @@ Contains
    PetscReal function DwKKL(self,alpha)
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
 
       DwKKL = 12.0_Kr * ((1.0_Kr - alpha)**2 - (1.0_Kr - alpha)**3)
-      flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function DwKKL
 
 #undef __FUNCT__
@@ -141,11 +119,7 @@ Contains
    PetscReal function D2wKKL(self,alpha)
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
-      PetscLogDouble                                   :: flops
-      PetscErrorCode                                   :: ierr
 
       D2wKKL = 24.0_Kr * (1.0_Kr - alpha) - 36.0_Kr * (1.0_Kr - alpha)**2
-      flops = 6.0
-      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End function D2wKKL
 End module m_MEF90_DefMechATKKL

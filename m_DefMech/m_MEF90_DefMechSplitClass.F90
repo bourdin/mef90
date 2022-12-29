@@ -74,19 +74,15 @@ Contains
       PetscReal,Intent(IN)                             :: gamma
       PetscReal                                        :: MEF90_DefMechSplit_SmoothPositiveSquare
 
-      PetscErrorCode                                   :: ierr
       PetscReal                                        :: gammaOver2 
 
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_SmoothPositiveSquare = 0.0_Kr
-         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_SmoothPositiveSquare = (x+gammaOver2)**3 / 3.0_Kr / gamma
-         PetscCall(PetscLogFlops(6._pflop,ierr))
       Else
          MEF90_DefMechSplit_SmoothPositiveSquare = x**2 + gammaOver2**2/3.0_Kr
-         PetscCall(PetscLogFlops(6._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_SmoothPositiveSquare
 
@@ -104,19 +100,15 @@ Contains
       PetscReal,Intent(IN)                             :: gamma
       PetscReal                                        :: MEF90_DefMechSplit_DSmoothPositiveSquare
 
-      PetscErrorCode                                   :: ierr
       PetscReal                                        :: gammaOver2 
 
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_DSmoothPositiveSquare = 0.0_Kr
-         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_DSmoothPositiveSquare = (x+gammaOver2)**2 / gamma
-         PetscCall(PetscLogFlops(6._pflop,ierr))
       Else
          MEF90_DefMechSplit_DSmoothPositiveSquare = 2.0_Kr * x
-         PetscCall(PetscLogFlops(3._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_DSmoothPositiveSquare
 
@@ -134,19 +126,15 @@ Contains
       PetscReal,Intent(IN)                             :: gamma
       PetscReal                                        :: MEF90_DefMechSplit_D2SmoothPositiveSquare
 
-      PetscErrorCode                                   :: ierr
       PetscReal                                        :: gammaOver2 
 
       gammaOver2 = gamma * 0.5_Kr
       If (x <= -gammaOver2) Then
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 0.0_Kr
-         PetscCall(PetscLogFlops(2._pflop,ierr))
       Else if (x <= gammaOver2) Then
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 1.0_Kr + x / gammaOver2
-         PetscCall(PetscLogFlops(4._pflop,ierr))
       Else
          MEF90_DefMechSplit_D2SmoothPositiveSquare = 2.0_Kr 
-         PetscCall(PetscLogFlops(2._pflop,ierr))
       End If
    End Function MEF90_DefMechSplit_D2SmoothPositiveSquare
 
