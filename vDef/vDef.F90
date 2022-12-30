@@ -47,7 +47,7 @@ Program vDef
    PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO
 
 
-   PetscBool                                          :: flg
+   PetscBool                                          :: flg,EXONeedsFormatting
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 
@@ -81,6 +81,30 @@ Program vDef
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
+
+   !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
+   !!! Strangely enough, adding an MPI_Barrier does not help.
+   !!! There is no real good reason to call Inquire on all ranks anyway.
+   If (MEF90Ctx%rank == 0) Then
+      Inquire(file=MEF90Ctx%resultFile,exist=flg)
+   End If
+   PetscCallMPIA(MPI_Bcast(flg,1,MPI_LOGICAL,0,MEF90Ctx%Comm,ierr))
+   If (flg) Then
+      ! we assume that the output file is formatted
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+      End If
+      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
+   Else
+      ! we need to create the output file
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+      End If
+      PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
+      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
+      PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
+      EXONeedsFormatting = PETSC_TRUE
+   End If
 
    distribute: Block 
       Type(tDM),target                    :: dmDist
@@ -116,29 +140,7 @@ Program vDef
 
    PetscCallA(DMGetDimension(dm,dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-
-   !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
-   !!! Strangely enough, adding an MPI_Barrier does not help.
-   !!! There is no real good reason to call Inquire on all ranks anyway.
-   If (MEF90Ctx%rank == 0) Then
-      Inquire(file=MEF90Ctx%resultFile,exist=flg)
-   End If
-   PetscCallMPIA(MPI_Bcast(flg,1,MPI_LOGICAL,0,MEF90Ctx%Comm,ierr))
-   If (flg) Then
-      ! we assume that the output file is formatted
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
-      End If
-      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
-   Else
-      ! we need to create the output file
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
-      End If
-      PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
-      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
-      PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-
+   If (EXONeedsFormatting) Then
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
       End If
