@@ -117,9 +117,6 @@ Program vDef
    PetscCallA(DMGetDimension(dm,dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
-   !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
-   PetscCallA(DMDestroy(dm,ierr))
-
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
    !!! There is no real good reason to call Inquire on all ranks anyway.
@@ -151,6 +148,9 @@ Program vDef
       End If
    End If
    PetscCallA(PetscLogStagePop(ierr))
+
+   !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
+   PetscCallA(DMDestroy(dm,ierr))
 
    !!! Get parse all materials data from the command line
    If (dim == 2) Then

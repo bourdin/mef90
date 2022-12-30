@@ -18,11 +18,11 @@ defmech:
     pclag: 5
 temperature:
     offset: 0
-disp:
+displacement:
     snes:
         type: ksponly
     pc:
-        type: bjacobi
+        type: gamg
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -53,11 +53,11 @@ cs0002:
         type: NONE
     displacementbc: no,no,no
     damageBC: no
-cs0030:
+fs0030:
     displacementbc: no,no,no
     damageBC: yes
     boundaryDamage: 1.
-cs0040:
+fs0040:
     displacementbc: no,no,no
     damageBC: yes
     boundaryDamage: 0.

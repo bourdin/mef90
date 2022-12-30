@@ -54,7 +54,7 @@ unmerge curve 34
 
 block 1 surface 6 7 8 
 block 2 surface 3
-block 30 curve 15 16 18 19 34 36
+sideset 30 curve 15 16 18 19 34 36
 
 nodeset 401 vertex 21
 nodeset 402 vertex 22

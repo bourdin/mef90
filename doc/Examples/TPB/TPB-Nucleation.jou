@@ -48,7 +48,7 @@ split curve 6 at vertex 22
 
 block 1 surface 4
 block 2 surface 3
-block 30 curve 15 16 18 19
+sideset 30 curve 15 16 18 19
 
 nodeset 400 vertex 23 
 nodeset 401 vertex 24
