@@ -67,7 +67,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscEnum                              :: CrackPressureScaling
 
       PetscReal                              :: damageATol
-      PetscInt                               :: maxit
+      PetscInt                               :: damageMaxIt
       PetscInt                               :: PCLag
       PetscReal                              :: SOROmega
       PetscReal                              :: irrevthres
@@ -794,7 +794,7 @@ Contains
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%CrackPressureScaling,MEF90ScalingList,default%CrackPressureScaling,'crackPressure_scaling','Crack Pressure scaling',ierr))
 
       PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%damageATol,default%damageATol,'defmech_damage_atol','Absolute tolerance on damage error',ierr))
-      PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%maxit,default%maxit,'defmech_maxit','Maximum number of alternate minimizations for damage',ierr))
+      PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%damageMaxIt,default%damageMaxIt,'defmech_damage_maxit','Maximum number of alternate minimizations for damage',ierr))
       PetscCall(PetscBagRegisterInt (bag,DefMechGlobalOptions%PCLag,default%PCLag,'defmech_pclag','Interval at which the PC is recomputed during alternate minimization',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%SOROmega,default%SOROmega,'defmech_SOR_Omega','Alterate Minimization over relaxation factor (>0 for limited, <0 for projected) ',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechGlobalOptions%irrevthres,default%irrevthres,'defmech_irrevThres','Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)',ierr))
