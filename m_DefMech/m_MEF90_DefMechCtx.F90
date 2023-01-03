@@ -4,7 +4,11 @@ Module m_MEF90_DefMechCtx_Type
    Implicit none
    
    Type MEF90DefMechCtx_Type
+      Type(MEF90Ctx_Type),pointer             :: MEF90Ctx
+      Type(tDM)                               :: megaDM
+      PetscInt                                :: dim
       PetscReal                               :: analysisTime,timeStep
+
       !!!  vertex based vec
       Type(tVec),pointer                      :: displacementLocal,displacementPreviousStepLocal
       Type(tVec),pointer                      :: damageLocal,damagePreviousStepLocal
@@ -40,8 +44,6 @@ Module m_MEF90_DefMechCtx_Type
       PetscBag,Dimension(:),Pointer           :: FaceSetOptionsBag
       PetscBag,Dimension(:),Pointer           :: VertexSetOptionsBag
       PetscBag,Dimension(:),Pointer           :: MaterialPropertiesBag
-      Type(MEF90Ctx_Type),pointer             :: MEF90Ctx
-      Type(tDM)                               :: megaDM
 
       Type(tPetscViewer)                      :: globalEnergyViewer
       Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer
@@ -454,7 +456,6 @@ Contains
       Type(MEF90Ctx_Type),target,Intent(IN)                    :: MEF90Ctx
       PetscErrorCode,Intent(INOUT)                             :: ierr
    
-      PetscInt                                                 :: dim
       Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
       Type(tIS)                                                :: setIS
       PetscInt                                                 :: set,numSet
@@ -520,12 +521,13 @@ Contains
       DefMechCtx%timeStep = 0.0_Kr
    
       !!! Create Vecs and SF   
-      PetscCall(DMGetDimension(dm,dim,ierr))
+      PetscCall(DMGetDimension(dm,DefMechCtx%dim,ierr))
+
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
 
       vecName = "Displacement"
       Allocate(DefMechCtx%displacementLocal,stat=ierr)
-      PetscCall(MEF90CreateLocalVector(dm,MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,dim,vecName,DefMechCtx%displacementLocal,ierr)) 
+      PetscCall(MEF90CreateLocalVector(dm,MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,DefMechCtx%dim,vecName,DefMechCtx%displacementLocal,ierr)) 
       Allocate(DefMechCtx%displacementPreviousStepLocal,stat=ierr)
       PetscCall(VecDuplicate(DefMechCtx%displacementLocal,DefMechCtx%displacementPreviousStepLocal,ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%displacementPreviousStepLocal,"DisplacementPreviousStep",ierr))
@@ -549,20 +551,20 @@ Contains
 
       vecName = "cohesiveDisplacement"
       Allocate(DefMechCtx%cohesiveDisplacement,stat=ierr)
-      PetscCall(MEF90CreateLocalVector(dm,MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,dim,vecName,DefMechCtx%cohesiveDisplacement,ierr)) 
+      PetscCall(MEF90CreateLocalVector(dm,MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,DefMechCtx%dim,vecName,DefMechCtx%cohesiveDisplacement,ierr)) 
       vecName = "bodyForce"
       Allocate(DefMechCtx%bodyForce,stat=ierr)
-      PetscCall(MEF90CreateCellVector(dm,dim,vecName,DefMechCtx%bodyForce,ierr))
+      PetscCall(MEF90CreateCellVector(dm,DefMechCtx%dim,vecName,DefMechCtx%bodyForce,ierr))
       vecName = "boundaryForce"
       Allocate(DefMechCtx%boundaryForce,stat=ierr)
-      PetscCall(MEF90CreateBoundaryCellVector(dm,dim,vecName,DefMechCtx%boundaryForce,ierr))
+      PetscCall(MEF90CreateBoundaryCellVector(dm,DefMechCtx%dim,vecName,DefMechCtx%boundaryForce,ierr))
       vecName = "pressureForce"
       Allocate(DefMechCtx%pressureForce,stat=ierr)
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,DefMechCtx%pressureForce,ierr))
 
       vecName = "plasticStrain"
       Allocate(DefMechCtx%plasticStrain,stat=ierr)
-      PetscCall(MEF90CreateCellVector(dm,(dim*(dim+1_Ki))/2_Ki,vecName,DefMechCtx%plasticStrain,ierr))
+      PetscCall(MEF90CreateCellVector(dm,(DefMechCtx%dim*(DefMechCtx%dim+1_Ki))/2_Ki,vecName,DefMechCtx%plasticStrain,ierr))
       Allocate(DefMechCtx%cumulatedPlasticDissipation,stat=ierr)
       PetscCall(VecDuplicate(DefMechCtx%plasticStrain,DefMechCtx%cumulatedPlasticDissipation,ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%cumulatedPlasticDissipation,"cumulatedPlasticDissipation",ierr))

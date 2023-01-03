@@ -171,23 +171,24 @@ End Subroutine MEF90EXOFormat
 !!!
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
+!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca    
 !!!
-   Subroutine MEF90EXOVecView(v,sf,invSF,Viewer,step,ierr)
+   Subroutine MEF90EXOVecView(v,sf,invSF,Viewer,step,bs,ierr)
       Type(tVec),Intent(IN)                              :: v
       Type(tPetscSF),Intent(IN)                          :: sf,invSF
       Type(tPetscViewer),Intent(IN)                      :: Viewer
       PetscInt,Intent(IN)                                :: step
+      PetscInt,Intent(IN)                                :: bs
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid
-      PetscInt                                           :: offsetN = -1,offsetZ = -1, offsetS = -1,bs
+      PetscInt                                           :: offsetN = -1,offsetZ = -1, offsetS = -1
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
       PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
-      PetscCall(VecGetBlockSize(v,bs,ierr))
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
       PetscCall(PetscObjectSetName(iov,vecname,ierr))
       PetscCall(MEF90VecCopySF(v,iov,sf,ierr))
@@ -217,15 +218,16 @@ End Subroutine MEF90EXOFormat
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca    
 !!!
-   Subroutine MEF90EXOVecLoad(v,sf,invSF,Viewer,step,ierr)
+   Subroutine MEF90EXOVecLoad(v,sf,invSF,Viewer,step,bs,ierr)
       Type(tVec),Intent(INOUT)                           :: v
       Type(tPetscSF),Intent(IN)                          :: sf,invSF
       Type(tPetscViewer),Intent(IN)                      :: Viewer
       PetscInt,Intent(IN)                                :: step
+      PetscInt,Intent(IN)                                :: bs
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid 
-      PetscInt                                           :: offsetN,offsetZ,offsetS,bs
+      PetscInt                                           :: offsetN,offsetZ,offsetS
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
@@ -235,7 +237,6 @@ End Subroutine MEF90EXOFormat
       PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
-      PetscCall(VecGetBlockSize(v,bs,ierr))
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
       PetscCall(PetscObjectSetName(iov,vecname,ierr))
 

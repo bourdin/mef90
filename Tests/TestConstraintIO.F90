@@ -192,7 +192,7 @@ Implicit NONE
 
     ! Reorder locVecU into ioVec and write ioVec
     PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
     ! (iii) y geometric center
@@ -262,21 +262,21 @@ Implicit NONE
 
     ! Reorder and write ioS
     PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecView(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
 
     ! Reorder and write ioS0
     PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
-    PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
 
     ! Test read ioVecRead and ioSRead
     PetscCallA(VecSet(locVecU,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecLoad(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
     PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
     PetscCallA(VecSet(locVecSigma,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecLoad(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
     PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
     PetscCallA(VecSet(locVecSigma0,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,ierr))
+    PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
     PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
 
     ! Cleanup Vec

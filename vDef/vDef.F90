@@ -55,9 +55,6 @@ Program vDef
    PetscInt                                           :: AltMinIter,AltMinStep=0_Ki
    PetscReal                                          :: damageMaxChange,damageMin,damageMax
    
-   
-   PetscInt                                           :: dim
-
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
    PetscCallA(MEF90Initialize(ierr))
@@ -138,7 +135,7 @@ Program vDef
    ! DeAllocate(MEF90DefMechCtx%temperatureLocal)
    ! MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
 
-   PetscCallA(DMGetDimension(dm,dim,ierr))
+   PetscCallA(DMGetDimension(dm,MEF90DefMechCtx%dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    If (EXONeedsFormatting) Then
       If (MEF90GlobalOptions%verbose > 1) Then
@@ -155,7 +152,7 @@ Program vDef
    PetscCallA(DMDestroy(dm,ierr))
 
    !!! Get parse all materials data from the command line
-   If (dim == 2) Then
+   If (MEF90DefMechCtx%dim == 2) Then
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    Else
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium3D,MEF90Ctx,ierr))
@@ -226,15 +223,15 @@ Program vDef
       If (MEF90GlobalOptions%timeSkip > 0) Then
          Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
          Case (MEF90HeatXfer_timeSteppingTypeSteadyState)       
-            PetscCallA(MEF90EXOVecLoad(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,1_Ki,ierr))
          Case (MEF90HeatXfer_timeSteppingTypeTransient)
             PetscCallA(TSSetTime(temperatureTS,time(MEF90GlobalOptions%timeSkip),ierr))
          End Select
 
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
          Case (MEF90DefMech_timeSteppingTypeQuasiStatic)
-            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,ierr))
-            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,MEF90DefMechCtx%dim,ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90Ctx%resultViewer,MEF90GlobalOptions%timeSkip,1_Ki,ierr))
          End Select
       End If
 

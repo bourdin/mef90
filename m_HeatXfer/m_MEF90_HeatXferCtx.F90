@@ -13,6 +13,7 @@ Module m_MEF90_HeatXferCtx_Type
    Type MEF90HeatXferCtx_Type
       Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
       Type(tDM)                        :: megaDM
+      PetscInt                         :: dim
 
       Type(tVec)                       :: temperatureLocal
       Type(tVec)                       :: externalTemperatureLocal
