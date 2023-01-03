@@ -970,9 +970,9 @@ Contains
                End Do ! cell
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
