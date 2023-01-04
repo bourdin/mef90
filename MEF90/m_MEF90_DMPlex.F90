@@ -890,7 +890,7 @@ Contains
         Type(tPetscSection)                     :: locSection,locBSection
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         Type(PetscInt),dimension(:),Pointer     :: local,cindices
-        PetscInt                                :: pStart,pEnd,p,d,nleaves = 0,ldof,loff,cdof,coff,nsize = 0,nroots
+        PetscInt                                :: pStart,pEnd,p,d,nleaves,ldof,loff,cdof,coff,nsize,nroots
 
         nleaves = 0
         nsize   = 0
@@ -1222,7 +1222,7 @@ Contains
         Type(tPetscSF)                          :: overlapSF,idSF
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: remoteOffsets
-        PetscInt                                :: pStart,pEnd,p,n = 1
+        PetscInt                                :: pStart,pEnd,p,n
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
@@ -1270,7 +1270,7 @@ Contains
         Type(tPetscSF)                          :: overlapSF,idSF,tempSF,ttempSF
         Type(PetscSFNode),dimension(:),Pointer  :: remote,tempRemote,lgRemote,glRemote
         PetscInt,dimension(:),Pointer           :: tempLocal,lgLocal,glLocal,remoteOffsets
-        PetscInt                                :: pStart,pEnd,p,n = 1,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
+        PetscInt                                :: pStart,pEnd,p,n,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
@@ -1366,11 +1366,13 @@ Contains
         PetscInt,dimension(:),Pointer           :: ssID,faceID
         Type(tPetscSF)                          :: migrationSF,tempSF
         Type(tVec)                              :: localVec
-        PetscInt                                :: set,face,nroots,nleaves=0,i=1,totalleaves=0,numComponent,j=1,numSS,key,numFaces
+        PetscInt                                :: set,face,nroots,nleaves,i,totalleaves,numComponent,uNumComponent,j,numSS,key,numFaces
         Type(PetscSFNode),dimension(:),Pointer  :: iremote
         Type(tIS),dimension(:),Pointer          :: locfacesIS
         PetscInt,dimension(:),Pointer           :: ilocal,permIndices,emptyInd,facesID,procSSID
 
+        nleaves = 0_Ki
+        totalleaves = 0_Ki
         PetscCall(DMGetLabelIdIS(dm, "Face Sets", gssIS,ierr))
         PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,gssIS,ierr))
         PetscCall(ISGetSize(gssIS,numSS,ierr))
@@ -1458,6 +1460,10 @@ Contains
         PetscCall(PetscSortIntWithPermutation(totalleaves,facesID,permIndices,ierr))
         PetscCall(DMGetLocalVector(dm,localVec,ierr))
         PetscCall(VecGetBlockSize(localVec,numComponent,ierr))
+        PetscCall(MPI_Allreduce(numComponent,uNumComponent,1,MPIU_INTEGER,MPI_MAX,MEF90Ctx%comm,ierr))
+        If ((numComponent == 1) .AND. (uNumComponent > 1)) Then
+            numComponent = uNumComponent
+        End If
         PetscCall(DMRestoreLocalVector(dm,localVec,ierr))
         Allocate(iremote(numComponent*totalleaves))
         Allocate(ilocal(numComponent*totalleaves))
