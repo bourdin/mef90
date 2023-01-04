@@ -85,7 +85,6 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
    PetscReal                                             :: rJunk
    Logical,Dimension(:,:),Pointer                        :: truthtable
 
-
    If (.NOT. associated(time)) Then
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_POINTER,"Time value must be allocated prior to calling MEF90EXOFormat")
       STOP

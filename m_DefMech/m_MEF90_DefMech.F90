@@ -487,17 +487,7 @@ Contains
          numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim+1) / 2
       End If
 
-      If (MEF90DefMechGlobalOptions%stressExport) Then
-         numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim+1) / 2
-      End If
-      If (MEF90DefMechGlobalOptions%plasticStrainExport) Then
-         numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim+1) / 2
-      End If
-      If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
-         numFields = 1
-      End If
       Allocate(nameC(numFields))
-
       offset = 1
       If (MEF90DefMechGlobalOptions%stressExport) Then
          If (MEF90DefMechCtx%dim == 2) Then
@@ -532,9 +522,19 @@ Contains
       End If
 
       If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
-         nameC(offset) = "CumulatedPlasticDissipation"
+         If (MEF90DefMechCtx%dim == 2) Then
+            nameC(offset+0) = "CumulatedPLasticDissipation_XX"
+            nameC(offset+1) = "CumulatedPLasticDissipation_YY"
+            nameC(offset+2) = "CumulatedPLasticDissipation_XY"
+         Else
+            nameC(offset+0) = "CumulatedPLasticDissipation_XX"
+            nameC(offset+1) = "CumulatedPLasticDissipation_YY"
+            nameC(offset+2) = "CumulatedPLasticDissipation_ZZ"
+            nameC(offset+3) = "CumulatedPLasticDissipation_YZ"
+            nameC(offset+4) = "CumulatedPLasticDissipation_XZ"
+            nameC(offset+5) = "CumulatedPLasticDissipation_XY"
+         End If
       End If
-
       PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,nameF,time,ierr))
       DeAllocate(nameG)
       DeAllocate(nameN)
