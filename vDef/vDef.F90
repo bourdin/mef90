@@ -468,7 +468,8 @@ Program vDef
       End Do MainloopQS
    End If ! timeSteppingType
    Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
-   Call PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr);CHKERRQ(ierr)         
+   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+         
 100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("\nSolving transient step ",I4,", t=",ES12.5,"\n")
 101 Format("cell set ",I4," thermal energy: ",ES12.5," flux: ",ES12.5," total: ",ES12.5,"\n")
@@ -523,9 +524,9 @@ Program vDef
    
    PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
    If (.NOT. MEF90GlobalOptions%dryrun) Then
-      Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)
-      Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
-      Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+      PetscCallA(PetscLogView(logViewer,ierr))
+      PetscCallA(PetscViewerDestroy(logViewer,ierr))
    End If
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
