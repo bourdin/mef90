@@ -91,7 +91,7 @@ Contains
          PetscCall(DMGetLocalVector(dmDisplacement,tmpVec,ierr))
          PetscCall(PetscObjectSetName(tmpVec,"Displacement",ierr))
          PetscCall(MEF90EXOVecLoad(tmpVec,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,MEF90DefMechCtx%dim,ierr))
-         PetscCall(MEF90VecCopySF(tmpVec,MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%boundaryToDisplacementSF,ierr))
+         PetscCall(MEF90VecCopySF(tmpVec,MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementConstraintsSF,ierr))
          PetscCall(DMRestoreLocalVector(dmDisplacement,tmpVec,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,time,ierr))
@@ -104,7 +104,7 @@ Contains
          PetscCall(DMGetLocalVector(dmDamage,tmpVec,ierr))
          PetscCall(PetscObjectSetName(tmpVec,"Damage",ierr))
          PetscCall(MEF90EXOVecLoad(tmpVec,MEF90DefMechCtx%damageToIOSF,MEF90DefMechCtx%IOToDamageSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
-         PetscCall(MEF90VecCopySF(tmpVec,MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%boundaryToDamageSF,ierr))
+         PetscCall(MEF90VecCopySF(tmpVec,MEF90DefMechCtx%damageLocal,MEF90DefMechCtx%damageConstraintsSF,ierr))
          PetscCall(DMRestoreLocalVector(dmDamage,tmpVec,ierr))
       Case (MEF90Scaling_Linear)
          Write(IOBuffer,'((A),": linear scaling of damage does not make any sense.\n")') __FUNCT__

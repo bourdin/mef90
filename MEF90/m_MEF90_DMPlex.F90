@@ -58,7 +58,7 @@ Module m_MEF90_DMPlex
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
               MEF90CellSectionCreate,                                                &
-              MEF90VecCopySF,MEF90IOSFCreate,MEF90BoundaryIOSFCreate,                &
+              MEF90VecCopySF,MEF90IOSFCreate,MEF90FaceSetIOSFCreate,                &
               MEF90ConstraintSFCreate,MEF90VecGlobalToLocalConstraint,               &
               MEF90VecCreateIO,                                                      &
               MEF90CreateLocalVector,                                                &
@@ -816,16 +816,16 @@ Contains
     End subroutine MEF90IOSFCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90BoundaryIOSFCreate"
+#define __FUNCT__ "MEF90FaceSetIOSFCreate"
 !!!
 !!!  
-!!!  MEF90BoundaryIOSFCreate: sf mapping between local and IO ordering and distribution for 
+!!!  MEF90FaceSetIOSFCreate: sf mapping between local and IO ordering and distribution for 
 !!!                           Vec defined on Face Sets
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90BoundaryIOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
+    Subroutine MEF90FaceSetIOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSF),intent(OUT)         :: liosf,iolsf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -868,7 +868,7 @@ Contains
         End If
         PetscCall(PetscSFDestroy(iosideSF,ierr))
         PetscCall(PetscSFDestroy(sideioSF,ierr))
-    End subroutine MEF90BoundaryIOSFCreate
+    End subroutine MEF90FaceSetIOSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ConstraintSFCreate"
@@ -1007,7 +1007,7 @@ Contains
 #define __FUNCT__ "MEF90VecSetValuesFromOptions"
 !!!
 !!!  
-!!!  MEF90VecSetValuesFromOptions: Fill boundary values of a Vec using command line options
+!!!  MEF90VecSetValuesFromOptions: Fill values of a Vec using command line options
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!

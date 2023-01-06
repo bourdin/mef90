@@ -28,9 +28,9 @@ Module m_MEF90_DefMechCtx_Type
       Type(tPetscViewer)                      :: viewer
       Type(tPetscSF)                          :: displacementToIOSF,IOToDisplacementSF
       Type(tPetscSF)                          :: cohesiveDisplacementToIOSF,IOToCohesiveDisplacementSF
-      Type(tPetscSF)                          :: boundaryToDisplacementSF
+      Type(tPetscSF)                          :: displacementConstraintsSF
       Type(tPetscSF)                          :: damageToIOSF,IOToDamageSF
-      Type(tPetscSF)                          :: boundaryToDamageSF
+      Type(tPetscSF)                          :: damageConstraintsSF
       Type(tPetscSF)                          :: temperatureToIOSF,IOToTemperatureSF
       Type(tPetscSF)                          :: bodyForceToIOSF,IOToBodyForceSF
       Type(tPetscSF)                          :: boundaryForceToIOSF,IOToBoundaryForceSF
@@ -599,9 +599,9 @@ Contains
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%cumulatedPlasticDissipation,DefMechCtx%cumulatedPlasticDissToIOSF,DefMechCtx%IOToCumulatedPlasticDissSF,ierr))
 
       !!! Create the SF to exchange boundary values of the displacement and damage. 
-      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx,DefMechCtx%displacementLocal,DefMechCtx%displacementLocal,DefMechCtx%boundaryToDisplacementSF,dummySF,ierr))
+      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx,DefMechCtx%displacementLocal,DefMechCtx%displacementLocal,DefMechCtx%displacementConstraintsSF,dummySF,ierr))
       PetscCall(PetscSFDestroy(dummySF,ierr))
-      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx,DefMechCtx%damageLocal,DefMechCtx%damageLocal,DefMechCtx%boundaryToDamageSF,dummySF,ierr))
+      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx,DefMechCtx%damageLocal,DefMechCtx%damageLocal,DefMechCtx%damageConstraintsSF,dummySF,ierr))
       PetscCall(PetscSFDestroy(dummySF,ierr))
    End Subroutine MEF90DefMechCtxCreate
 
@@ -745,8 +745,8 @@ Contains
       PetscCall(PetscSFDestroy(DefMechCtx%IOToCumulatedPlasticDissSF,ierr))
 
       !!! Destroy the SF to exchange boundary values of the displacement and damage. 
-      PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDisplacementSF,ierr))
-      PetscCall(PetscSFDestroy(DefMechCtx%boundaryToDamageSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%displacementConstraintsSF,ierr))
+      PetscCall(PetscSFDestroy(DefMechCtx%damageConstraintsSF,ierr))
 
       !!! Destroy the megaDM
       PetscCall(DMDestroy(DefMechCtx%megaDM,ierr))

@@ -178,7 +178,7 @@ Implicit NONE
     ! Create SFs for copying from/into IO cell Vec
     PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecSigma,lioSSF,iolSSF,ierr))
     ! Create SFs for copying from/into IO cell Vec
-    PetscCallA(MEF90BoundaryIOSFCreate(MEF90Ctx,locVecSigma0,lioBSSF,iolBSSF,ierr))
+    PetscCallA(MEF90FaceSetIOSFCreate(MEF90Ctx,locVecSigma0,lioBSSF,iolBSSF,ierr))
     ! Create SFs for copying constrained dofs from/into Constraint Vec
     PetscCallA(MEF90ConstraintSFCreate(MEF90Ctx,locVecSigma,locVecSigma0,lcSSF,clSSF,ierr))
 
