@@ -436,7 +436,10 @@ Program vDef
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-            End Do
+               Write(IOBuffer,500) step,time(step),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
+               PetscCallA(PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr))
+               PetscCallA(PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr))
+               End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
 
@@ -451,6 +454,9 @@ Program vDef
             PetscCallA(ISDestroy(setIS,ierr))
             Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+            Write(IOBuffer,500) step,time(step),sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
+            PetscCallA(PetscViewerASCIIPrintf(MEF90DefMechCtx%globalEnergyViewer,IOBuffer,ierr))
+            PetscCallA(PetscViewerFlush(MEF90DefMechCtx%globalEnergyViewer,ierr))
             PetscCallA(PetscLogStagePop(ierr))
 
             !!! Save results and boundary Values
@@ -481,6 +487,7 @@ Program vDef
 201 Format("cell set ",I4,"  elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
 203 Format("face set ",I4,"                      boundary work: ",ES12.5,"\n")
 202 Format("======= Total: elastic energy: ",ES12.5," work: ",ES12.5," cohesive: ",ES12.5," surface: ",ES12.5," total: ",ES12.5,"\n")
+500 Format(I6, 6(ES16.5),"\n")
 
 208 Format("   Alt. Min. step ",I5," ")
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
