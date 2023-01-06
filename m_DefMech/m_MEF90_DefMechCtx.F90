@@ -25,7 +25,6 @@ Module m_MEF90_DefMechCtx_Type
       Type(tVec),Pointer                      :: cumulatedPlasticDissipation
       Type(tVec),Pointer                      :: stress
 
-      Type(tPetscViewer)                      :: viewer
       Type(tPetscSF)                          :: displacementToIOSF,IOToDisplacementSF
       Type(tPetscSF)                          :: cohesiveDisplacementToIOSF,IOToCohesiveDisplacementSF
       Type(tPetscSF)                          :: displacementConstraintsSF
