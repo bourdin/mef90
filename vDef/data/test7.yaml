@@ -9,8 +9,10 @@ heatxfer:
 defmech:
     timestepping:
         type: quasistatic
-# temperature:
-#     offset: 0
+#damage:
+#    snes:
+#        converged:
+#            reason: ascii
 cs0001:
     fracturetoughness: 1
     residualstiffness: 0.
@@ -19,12 +21,16 @@ cs0001:
         type: AT1
     plasticity:
         type: NONE 
-fs0010:
+    HookesLaw:
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio:  0.3
+fs0020:
     displacementBC: 1,1,1
     boundaryDisplacement: -5,0,0 
     damageBC: 1
     boundaryDamage: 0
-fs0020:
+fs0030:
     displacementBC: 1,1,1
     boundaryDisplacement: 5,0,0 
     damageBC: 1

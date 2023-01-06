@@ -40,8 +40,8 @@ merge all
 
 block 1 surface 5
 block 2 surface 3 4
-block 30 curve 1 7
-block 40 curve 20 21
+sideset 30 curve 1 7
+sideset 40 curve 20 21
 
 nodeset 400 vertex 16
 nodeset 401 vertex 17

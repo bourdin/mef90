@@ -58,7 +58,7 @@ Module m_MEF90_DMPlex
               MEF90SectionAllocateDof,MEF90SectionAllocateDofSet,                    &
               MEF90SetupConstraintTableSet,MEF90SectionAllocateConstraint,           &
               MEF90CellSectionCreate,                                                &
-              MEF90VecCopySF,MEF90IOSFCreate,MEF90BoundaryIOSFCreate,                &
+              MEF90VecCopySF,MEF90IOSFCreate,MEF90FaceSetIOSFCreate,                &
               MEF90ConstraintSFCreate,MEF90VecGlobalToLocalConstraint,               &
               MEF90VecCreateIO,                                                      &
               MEF90CreateLocalVector,                                                &
@@ -816,16 +816,16 @@ Contains
     End subroutine MEF90IOSFCreate
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90BoundaryIOSFCreate"
+#define __FUNCT__ "MEF90FaceSetIOSFCreate"
 !!!
 !!!  
-!!!  MEF90BoundaryIOSFCreate: sf mapping between local and IO ordering and distribution for 
+!!!  MEF90FaceSetIOSFCreate: sf mapping between local and IO ordering and distribution for 
 !!!                           Vec defined on Face Sets
 !!!  
 !!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-    Subroutine MEF90BoundaryIOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
+    Subroutine MEF90FaceSetIOSFCreate(MEF90Ctx,v,liosf,iolsf,ierr)
         Type(tVec),intent(IN)              :: v
         Type(tPetscSF),intent(OUT)         :: liosf,iolsf
         Type(MEF90Ctx_type),Intent(IN)     :: MEF90Ctx
@@ -868,7 +868,7 @@ Contains
         End If
         PetscCall(PetscSFDestroy(iosideSF,ierr))
         PetscCall(PetscSFDestroy(sideioSF,ierr))
-    End subroutine MEF90BoundaryIOSFCreate
+    End subroutine MEF90FaceSetIOSFCreate
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ConstraintSFCreate"
@@ -890,7 +890,7 @@ Contains
         Type(tPetscSection)                     :: locSection,locBSection
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         Type(PetscInt),dimension(:),Pointer     :: local,cindices
-        PetscInt                                :: pStart,pEnd,p,d,nleaves = 0,ldof,loff,cdof,coff,nsize = 0,nroots
+        PetscInt                                :: pStart,pEnd,p,d,nleaves,ldof,loff,cdof,coff,nsize,nroots
 
         nleaves = 0
         nsize   = 0
@@ -1007,7 +1007,7 @@ Contains
 #define __FUNCT__ "MEF90VecSetValuesFromOptions"
 !!!
 !!!  
-!!!  MEF90VecSetValuesFromOptions: Fill boundary values of a Vec using command line options
+!!!  MEF90VecSetValuesFromOptions: Fill values of a Vec using command line options
 !!!  
 !!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
@@ -1222,7 +1222,7 @@ Contains
         Type(tPetscSF)                          :: overlapSF,idSF
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: remoteOffsets
-        PetscInt                                :: pStart,pEnd,p,n = 1
+        PetscInt                                :: pStart,pEnd,p,n
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
@@ -1270,7 +1270,7 @@ Contains
         Type(tPetscSF)                          :: overlapSF,idSF,tempSF,ttempSF
         Type(PetscSFNode),dimension(:),Pointer  :: remote,tempRemote,lgRemote,glRemote
         PetscInt,dimension(:),Pointer           :: tempLocal,lgLocal,glLocal,remoteOffsets
-        PetscInt                                :: pStart,pEnd,p,n = 1,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
+        PetscInt                                :: pStart,pEnd,p,n,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
@@ -1366,11 +1366,13 @@ Contains
         PetscInt,dimension(:),Pointer           :: ssID,faceID
         Type(tPetscSF)                          :: migrationSF,tempSF
         Type(tVec)                              :: localVec
-        PetscInt                                :: set,face,nroots,nleaves=0,i=1,totalleaves=0,numComponent,j=1,numSS,key
+        PetscInt                                :: set,face,nroots,nleaves,i,totalleaves,numComponent,uNumComponent,j,numSS,key,numFaces
         Type(PetscSFNode),dimension(:),Pointer  :: iremote
         Type(tIS),dimension(:),Pointer          :: locfacesIS
         PetscInt,dimension(:),Pointer           :: ilocal,permIndices,emptyInd,facesID,procSSID
 
+        nleaves = 0_Ki
+        totalleaves = 0_Ki
         PetscCall(DMGetLabelIdIS(dm, "Face Sets", gssIS,ierr))
         PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,gssIS,ierr))
         PetscCall(ISGetSize(gssIS,numSS,ierr))
@@ -1395,16 +1397,18 @@ Contains
             Else
                 Allocate(faceID(0))
             End If
-            Allocate(ilocal(size(faceID)))
-            Allocate(iremote(size(faceID)))
-            Do face = 1,size(faceID)
+            numFaces = size(faceID)
+            Allocate(ilocal(numFaces))
+            Allocate(iremote(numFaces))
+            Do face = 1,numFaces
                 iremote(face)%rank = MEF90Ctx%Rank
                 iremote(face)%index = face - 1
                 ilocal(face) = faceID(face)
             End Do
             PetscCall(PetscSFCreate(MEF90Ctx%Comm,tempSF,ierr))
             PetscCall(PetscSFSetFromOptions(tempSF,ierr))
-            PetscCall(PetscSFSetGraph(tempSF,size(faceID),size(faceID),ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
+            
+            PetscCall(PetscSFSetGraph(tempSF,numFaces,numFaces,ilocal,PETSC_COPY_VALUES,iremote,PETSC_COPY_VALUES,ierr))
             PetscCall(PetscSFSetUp(tempSF,ierr))
             If (MEF90Ctx%NumProcs > 1) Then
                 PetscCall(PetscSFComposeInverse(migrationSF,tempSF,sf,ierr))
@@ -1456,6 +1460,10 @@ Contains
         PetscCall(PetscSortIntWithPermutation(totalleaves,facesID,permIndices,ierr))
         PetscCall(DMGetLocalVector(dm,localVec,ierr))
         PetscCall(VecGetBlockSize(localVec,numComponent,ierr))
+        PetscCall(MPI_Allreduce(numComponent,uNumComponent,1,MPIU_INTEGER,MPI_MAX,MEF90Ctx%comm,ierr))
+        If ((numComponent == 1) .AND. (uNumComponent > 1)) Then
+            numComponent = uNumComponent
+        End If
         PetscCall(DMRestoreLocalVector(dm,localVec,ierr))
         Allocate(iremote(numComponent*totalleaves))
         Allocate(ilocal(numComponent*totalleaves))

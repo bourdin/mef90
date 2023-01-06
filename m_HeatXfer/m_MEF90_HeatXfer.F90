@@ -61,7 +61,7 @@ Contains
       Case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dm,tmpVec,ierr))
          PetscCall(PetscObjectSetName(tmpVec,"Temperature",ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
          PetscCall(MEF90VecCopySF(tmpVec,MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%boundaryToTemperatureSF,ierr))
          PetscCall(DMRestoreLocalVector(dm,tmpVec,ierr))
       Case (MEF90Scaling_Linear)
@@ -72,7 +72,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%externalTemperatureLocal,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))    
+         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%externalTemperatureLocal,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))    
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -81,7 +81,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%fluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%fluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -90,7 +90,7 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%boundaryFluxLocal,MEF90HeatXferCtx%boundaryFluxToIOSF,MEF90HeatXferCtx%IOToBoundaryFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))      
+         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%boundaryFluxLocal,MEF90HeatXferCtx%boundaryFluxToIOSF,MEF90HeatXferCtx%IOToBoundaryFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))      
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -116,11 +116,9 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
       
-      PetscInt                                           :: dim      
-      PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
-      If (dim == 2) Then
+      If (MEF90HeatXferCtx%dim == 2) Then
          PetscCall(MEF90HeatXferOperator2D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
-      Else If (dim == 3) Then
+      Else If (MEF90HeatXferCtx%dim == 3) Then
          PetscCall(MEF90HeatXferOperator3D(snesTemp,x,residual,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferOperator
@@ -143,12 +141,9 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
 
-      PetscInt                                           :: dim      
-
-      PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
-      If (dim == 2) Then
+      If (MEF90HeatXferCtx%dim == 2) Then
          PetscCall(MEF90HeatXferBilinearForm2D(snesTemp,x,A,M,MEF90HeatXferCtx,ierr))
-      Else If (dim == 3) Then
+      Else If (MEF90HeatXferCtx%dim == 3) Then
          PetscCall(MEF90HeatXferBilinearForm3D(snesTemp,x,A,M,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferBilinearForm
@@ -169,12 +164,9 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: energy,bodyWork,surfaceWork
       PetscErrorCode,Intent(INOUT)                       :: ierr
    
-      PetscInt                                           :: dim      
-
-      PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
-      If (dim == 2) Then
+      If (MEF90HeatXferCtx%dim == 2) Then
          PetscCall(MEF90HeatXFerEnergy2D(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
-      Else If (dim == 3) Then
+      Else If (MEF90HeatXferCtx%dim == 3) Then
          PetscCall(MEF90HeatXFerEnergy3D(MEF90HeatXferCtx,energy,bodyWork,surfaceWork,ierr))
       End If      
    End Subroutine MEF90HeatXFerEnergy
@@ -198,12 +190,9 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
       
-      PetscInt                                           :: dim      
-
-      PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
-      If (dim == 2) Then
+      If (MEF90HeatXferCtx%dim == 2) Then
          PetscCall(MEF90HeatXFerIFunction2D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
-      Else If (dim == 3) Then
+      Else If (MEF90HeatXferCtx%dim == 3) Then
          PetscCall(MEF90HeatXFerIFunction3D(tempTS,time,x,xdot,F,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXFerIFunction
@@ -228,12 +217,9 @@ Contains
       Type(MEF90HeatXferCtx_Type),Intent(IN)             :: MEF90HeatXferCtx
       PetscErrorCode,Intent(OUT)                         :: ierr  
       
-      PetscInt                                           :: dim      
-
-      PetscCall(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
-      If (dim == 2) Then
+      If (MEF90HeatXferCtx%dim == 2) Then
          PetscCall(MEF90HeatXferIJacobian2D(tempTS,t,x,xdot,shift,A,M,MEF90HeatXferCtx,ierr))
-      Else If (dim == 3) Then
+      Else If (MEF90HeatXferCtx%dim == 3) Then
          PetscCall(MEF90HeatXferIJacobian3D(tempTS,t,x,xdot,shift,A,M,MEF90HeatXferCtx,ierr))
       End If      
    End Subroutine MEF90HeatXferIJacobian
@@ -259,7 +245,7 @@ Contains
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
 
       If (MEF90HeatXferGlobalOptions%temperatureExport) Then
-         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,ierr))
+         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferCtx%temperatureToIOSF,MEF90HeatXferCtx%IOToTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       End If
    End Subroutine MEF90HeatXferViewEXO
 

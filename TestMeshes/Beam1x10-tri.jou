@@ -8,13 +8,18 @@ reset
 
 create surface rectangle width {L} height {H} zplane
 surface 1 scheme tridelaunay size {h}
-tridelaunay point placement gq
+#tridelaunay point placement gq
 
 block 1 surface 1
 sideset 20 curve 2
 sideset 30 curve 4
 sideset 40 curve 3
 sideset 50 curve 1
+
+nodeset 200 curve 2
+nodeset 300 curve 4
+nodeset 400 curve 3
+nodeset 500 curve 1
 
 mesh surface 1
 smooth surface 1

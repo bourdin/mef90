@@ -67,6 +67,16 @@ Program ThermoElasticity
    PetscCallA(DMGetDimension(dm,dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
+   !!! Create HeatXfer context, get all HeatXfer options
+   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
+   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,HeatXferDefaultGlobalOptions,HeatXferDefaultCellSetOptions,HeatXferDefaultFaceSetOptions,HeatXferDefaultVertexSetOptions,ierr))
+   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+
+   !!! Create DefMechCtx, get all defMech options
+   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
+   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
+   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
    !!! There is no real good reason to call Inquire on all ranks anyway.
@@ -92,11 +102,7 @@ Program ThermoElasticity
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
       End If            
-      If (dim ==2) Then
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables2D,vDefDefaultNodalVariables2D,vDefDefaultFaceVariables2D,time,ierr))
-      Else
-         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,vDefDefaultGlobalVariables,vDefDefaultCellVariables3D,vDefDefaultNodalVariables3D,vDefDefaultFaceVariables3D,time,ierr))
-      End If
+      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
       End If

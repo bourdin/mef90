@@ -970,9 +970,9 @@ Contains
                End Do ! cell
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -1322,6 +1322,7 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
@@ -1345,11 +1346,10 @@ Contains
 !!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,flg,MEF90DefMechCtx,ierr)
+   Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,MEF90DefMechCtx,ierr)
       Type(tSNES),Intent(IN)                             :: snesDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tMat),Intent(INOUT)                           :: A,M
-      MatStructure,Intent(INOUT)                         :: flg
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(OUT)                         :: ierr
 
@@ -1370,7 +1370,6 @@ Contains
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
-      Type(tVec)                                         :: locResidual
       Class(MEF90DefMechAT_Type),Allocatable             :: ATModel
       Class(MEF90_DEFMECHSPLIT),Allocatable              :: Split
       PetscBool                                          :: cellIsElastic
@@ -1390,7 +1389,6 @@ Contains
 
       PetscCall(DMGetDimension(dmDisplacement,dim,ierr))
 
-      PetscCall(DMGetLocalVector(dmDamage,locResidual,ierr))
       PetscCall(DMGlobalToLocal(dmDamage,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
 
       PetscCall(MatZeroEntries(A,ierr))
@@ -1494,6 +1492,7 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
@@ -1539,7 +1538,7 @@ Contains
       PetscBool                                          :: cellIsElastic
       Type(MEF90_MATS)                                   :: C2
       Type(MEF90_VECT)                                   :: gradDamageGauss
-      PetscReal                                          :: damageGauss,C1,C3,myEnergy
+      PetscReal                                          :: damageGauss,C1,myEnergy
       PetscInt                                           :: iDof,iGauss,numDofDamage,numGauss
     
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag,MEF90CtxGlobalOptions,ierr))
@@ -1575,6 +1574,8 @@ Contains
                numDofDamage = size(elemScal(1)%BF(:,1))
                numGauss = size(elemScal(1)%Gauss_C)
 
+               C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr / matpropSet%internalLength
+               C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
                Do cell = 1,size(setPointID)
                   PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
                   Do iGauss = 1,numGauss
@@ -1586,18 +1587,11 @@ Contains
                            gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof,iGauss)
                         End Do ! iDof numDofDamage
                      End If
-
-                     C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr / matpropSet%internalLength
-                     C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_Kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
-                     C3 = C1 * ATModel%w(damageGauss)
-                     Do iDof = 1,numDofDamage
-                        myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                          C3 * elemScal(cell)%BF(iDof,iGauss) + (C2 * gradDamageGauss .DotP. gradDamageGauss))
-                     End Do ! iDof numDofDamage
+                     myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) *  &
+                               (C1 * ATModel%w(damageGauss)  + (C2 * gradDamageGauss .DotP. gradDamageGauss))
                   End Do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
                End Do ! cell
-
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
             End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
