@@ -1,9 +1,11 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMech
 #include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petsctao.h"
    Use m_MEF90
    Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMechAT
+   Use petsctao
 
    Use m_MEF90_DefMechAssembly2D, &
       MEF90DefMechOperatorDisplacement2D     => MEF90DefMechOperatorDisplacement,      &
@@ -13,8 +15,11 @@ Module m_MEF90_DefMech
       MEF90DefMechPlasticdissipation2D       => MEF90DefMechPlasticDissipation,        &
       MEF90DefMechElasticEnergy2D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage2D           => MEF90DefMechOperatorDamage,            &
+      MEF90DefMechTAOGradientDamage2D        => MEF90DefMechTAOGradientDamage,         &
       MEF90DefMechBilinearFormDamage2D       => MEF90DefMechBilinearFormDamage,        &
+      MEF90DefMechTAOHessianDamage2D         => MEF90DefMechTAOHessianDamage,          &
       MEF90DefMechSurfaceEnergy2D            => MEF90DefMechSurfaceEnergy,             &
+      MEF90DefMechTAOObjectiveDamage2D       => MEF90DefMechTAOObjectiveDamage,        &
       MEF90DefMechCrackVolume2D              => MEF90DefMechCrackVolume,               &
       MEF90DefMechStress2D                   => MEF90DefMechStress
    Use m_MEF90_DefMechPlasticity2D, &
@@ -27,8 +32,11 @@ Module m_MEF90_DefMech
       MEF90DefMechPlasticdissipation3D       => MEF90DefMechPlasticDissipation,        &
       MEF90DefMechElasticEnergy3D            => MEF90DefMechElasticEnergy,             &
       MEF90DefMechOperatorDamage3D           => MEF90DefMechOperatorDamage,            &
+      MEF90DefMechTAOGradientDamage3D        => MEF90DefMechTAOGradientDamage,         &
       MEF90DefMechBilinearFormDamage3D       => MEF90DefMechBilinearFormDamage,        &
+      MEF90DefMechTAOHessianDamage3D         => MEF90DefMechTAOHessianDamage,          &
       MEF90DefMechSurfaceEnergy3D            => MEF90DefMechSurfaceEnergy,             &
+      MEF90DefMechTAOObjectiveDamage3D       => MEF90DefMechTAOObjectiveDamage,        &
       MEF90DefMechCrackVolume3D              => MEF90DefMechCrackVolume,               &
       MEF90DefMechStress3D                   => MEF90DefMechStress
    Use m_MEF90_DefMechPlasticity3D, &
@@ -45,6 +53,12 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechBilinearFormDamage
    Public :: MEF90DefMechCreateSNESDamage
    Public :: MEF90DefMechUpdateDamageBounds
+
+   Public :: MEF90DefMechTAOObjectiveDamage
+   Public :: MEF90DefMechTAOGradientDamage
+   Public :: MEF90DefMechTAOHessianDamage
+   Public :: MEF90DefMechCreateTAODamage
+   Public :: MEF90DefMechTAOUpdateDamageBounds
    
    Public :: MEF90DefMechViewEXO
    Public :: MEF90DefMechSurfaceEnergy
@@ -364,19 +378,42 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechOperatorDamage(snesTemp,x,residual,MEF90DefMechCtx,ierr)
-      Type(tSNES),Intent(IN)                             :: snesTemp
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechOperatorDamage(snesDamage,damage,residual,MEF90DefMechCtx,ierr)
+      Type(tSNES),Intent(IN)                             :: snesDamage
+      Type(tVec),Intent(IN)                              :: damage
       Type(tVec),Intent(INOUT)                           :: residual
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
       If (MEF90DefMechCtx%dim == 2) Then
-         PetscCall(MEF90DefMechOperatorDamage2D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechOperatorDamage2D(snesDamage,damage,residual,MEF90DefMechCtx,ierr))
       Else If (MEF90DefMechCtx%dim == 3) Then
-         PetscCall(MEF90DefMechOperatorDamage3D(snesTemp,x,residual,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechOperatorDamage3D(snesDamage,damage,residual,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechOperatorDamage
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechTAOGradientDamage"
+!!!
+!!!  
+!!!  MEF90DefMechTAOGradientDamage: 
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechTAOGradientDamage(taoDamage,damage,residual,MEF90DefMechCtx,ierr)
+      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tVec),Intent(IN)                              :: damage
+      Type(tVec),Intent(INOUT)                           :: residual
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(INOUT)                       :: ierr
+      
+      If (MEF90DefMechCtx%dim == 2) Then
+         PetscCall(MEF90DefMechTAOGradientDamage2D(taoDamage,damage,residual,MEF90DefMechCtx,ierr))
+      Else If (MEF90DefMechCtx%dim == 3) Then
+         PetscCall(MEF90DefMechTAOGradientDamage3D(taoDamage,damage,residual,MEF90DefMechCtx,ierr))
+      End If      
+   End Subroutine MEF90DefMechTAOGradientDamage
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamage"
@@ -388,19 +425,42 @@ Contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90DefMechBilinearFormDamage(snesDispl,x,A,M,MEF90DefMechCtx,ierr)
-      Type(tSNES),Intent(IN)                             :: snesDispl
-      Type(tVec),Intent(IN)                              :: x
+   Subroutine MEF90DefMechBilinearFormDamage(snesDamage,damage,A,M,MEF90DefMechCtx,ierr)
+      Type(tSNES),Intent(IN)                             :: snesDamage
+      Type(tVec),Intent(IN)                              :: damage
       Type(tMat),Intent(INOUT)                           :: A,M
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       If (MEF90DefMechCtx%dim == 2) Then
-         PetscCall(MEF90DefMechBilinearFormDamage2D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDamage2D(snesDamage,damage,A,M,MEF90DefMechCtx,ierr))
       Else If (MEF90DefMechCtx%dim == 3) Then
-         PetscCall(MEF90DefMechBilinearFormDamage3D(snesDispl,x,A,M,MEF90DefMechCtx,ierr))
+         PetscCall(MEF90DefMechBilinearFormDamage3D(snesDamage,damage,A,M,MEF90DefMechCtx,ierr))
       End If      
    End Subroutine MEF90DefMechBilinearFormDamage
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechTAOHessianDamage"
+!!!
+!!!  
+!!!  MEF90DefMechTAOHessianDamage: 
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechTAOHessianDamage(taoDamage,damage,A,M,MEF90DefMechCtx,ierr)
+      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tVec),Intent(IN)                              :: damage
+      Type(tMat),Intent(INOUT)                           :: A,M
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(INOUT)                       :: ierr
+
+      If (MEF90DefMechCtx%dim == 2) Then
+         PetscCall(MEF90DefMechTAOHessianDamage2D(taoDamage,damage,A,M,MEF90DefMechCtx,ierr))
+      Else If (MEF90DefMechCtx%dim == 3) Then
+         PetscCall(MEF90DefMechTAOHessianDamage3D(taoDamage,damage,A,M,MEF90DefMechCtx,ierr))
+      End If      
+   End Subroutine MEF90DefMechTAOHessianDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSurfaceEnergy"
@@ -423,6 +483,29 @@ Contains
          PetscCall(MEF90DefMechSurfaceEnergy3D(MEF90DefMechCtx,energy,ierr))
       End If      
    End Subroutine MEF90DefMechSurfaceEnergy
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechTAOObjectiveDamage"
+!!!
+!!!  
+!!!  MEF90DefMechTAOObjectiveDamage: 
+!!!  
+!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechTAOObjectiveDamage(taoDamage,damage,energy,MEF90DefMechCtx,ierr)
+      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tVec),Intent(IN)                              :: damage
+      PetscReal,Intent(INOUT)                            :: energy
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      PetscErrorCode,Intent(INOUT)                       :: ierr
+      
+      If (MEF90DefMechCtx%dim == 2) Then
+         PetscCall(MEF90DefMechTAOObjectiveDamage2D(taoDamage,damage,energy,MEF90DefMechCtx,ierr))
+      Else If (MEF90DefMechCtx%dim == 3) Then
+         PetscCall(MEF90DefMechTAOObjectiveDamage3D(taoDamage,damage,energy,MEF90DefMechCtx,ierr))
+      End If      
+   End Subroutine MEF90DefMechTAOObjectiveDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechFormatEXO"
@@ -673,7 +756,7 @@ Contains
       
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dm,ierr))
-      PetscCall(DMCreateMatrix(dm,matDamage,iErr))
+      PetscCall(DMCreateMatrix(dm,matDamage,ierr))
       PetscCall(MatSetOptionsPrefix(matDamage,"Damage_",ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr))
@@ -717,6 +800,74 @@ Contains
    End Subroutine MEF90DefMechCreateSNESDamage
 
 #undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCreateTAODamage"
+!!!
+!!!  
+!!!  MEF90DefMechCreateTAODamage:
+!!!  
+!!!  (c) 2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,residual,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(Tao),Intent(OUT)                              :: taoDamage
+      Type(tVec),Intent(IN)                              :: residual
+      PetscErrorCode,Intent(INOUT)                       :: ierr
+      
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+      Type(tDM)                                          :: dm
+      Type(tMat)                                         :: matDamage
+      Type(tKSP)                                         :: kspDamage
+      Type(tVec)                                         :: UB,LB
+      PetscReal                                          :: rtol,dtol,atol,stol
+      
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dm,ierr))
+      PetscCall(DMCreateMatrix(dm,matDamage,ierr))
+      PetscCall(MatSetOptionsPrefix(matDamage,"Damage_",ierr))
+      !!! The matrix is not symmetric if the advection vector is /= 0
+      PetscCall(MatSetOption(matDamage,MAT_SPD,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDamage,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
+      PetscCall(MatSetOption(matDamage,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
+      PetscCall(MatSetFromOptions(matDamage,ierr))
+
+      PetscCall(TAOCreate(MEF90DefMechCtx%MEF90Ctx%Comm,taoDamage,ierr))
+      PetscCall(TAOSetApplicationContext(taoDamage,MEF90DefMechCtx,ierr))
+      ! PetscCall(TAOSetDM(taoDamage,dm,ierr))
+      PetscCall(TAOSetType(taoDamage,TAOBNTR,ierr))
+      PetscCall(TAOSetOptionsPrefix(taoDamage,'Damage_',ierr))
+
+      PetscCall(DMCreateGlobalVector(dm,LB,ierr))
+      PetscCall(VecDuplicate(LB,UB,ierr))
+      PetscCall(VecSet(LB,0.0_Kr,ierr))
+      PetscCall(VecSet(UB,1.0_Kr,ierr))
+      PetscCall(TAOSetVariableBounds(taoDamage,LB,UB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
+      PetscCall(VecDestroy(UB,ierr))
+
+      PetscCall(TAOSetObjective(taoDamage,MEF90DefMechTAOObjectiveDamage,MEF90DefMechCtx,ierr))
+      PetscCall(TAOSetGradient(taoDamage,residual,MEF90DefMechTAOGradientDamage,MEF90DefMechCtx,ierr))
+      PetscCall(TAOSetHessian(taoDamage,matDamage,matDamage,MEF90DefMechTAOHessianDamage,MEF90DefMechCtx,ierr))
+      atol = 1.0D-5
+      rtol = 1.0D-4
+      stol = 1.0D-5
+      PetscCall(TAOSetTolerances(taoDamage,atol,rtol,stol,ierr))
+      PetscCall(TAOSetFromOptions(taoDamage,ierr))
+      ! !!! 
+      ! !!! Set some KSP options
+      ! !!!
+      PetscCall(TAOGetKSP(taoDamage,kspDamage,ierr))
+      PetscCall(KSPSetType(kspDamage,KSPSTCG,ierr))
+      PetscCall(KSPSetInitialGuessNonzero(kspDamage,PETSC_TRUE,ierr))
+      atol = 1.0D-8
+      rtol = 1.0D-8
+      dtol = 1.0D+10
+      PetscCall(KSPSetTolerances(kspDamage,rtol,atol,dtol,PETSC_DEFAULT_INTEGER,ierr))
+      PetscCall(KSPSetFromOptions(kspDamage,ierr))
+      PetscCall(MatDestroy(matDamage,ierr))
+   End Subroutine MEF90DefMechCreateTAODamage
+
+#undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechUpdateDamageBounds"
 !!!
 !!!  
@@ -758,6 +909,49 @@ Contains
       PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
       PetscCall(DMRestoreGlobalVector(dm,UB,ierr)) 
    End Subroutine MEF90DefMechUpdateDamageBounds
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechTAOUpdateDamageBounds"
+!!!
+!!!  
+!!!  MEF90DefMechTAOUpdateDamageBounds:
+!!!  
+!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!
+
+   Subroutine MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx,taoDamage,alpha,ierr)
+      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
+      Type(Tao),Intent(INOUT)                            :: taoDamage
+      Type(tVec),Intent(IN)                              :: alpha
+      PetscErrorCode,Intent(INOUT)                       :: ierr
+      
+      Type(tDM)                                          :: dm
+      Type(tVec)                                         :: LB,UB
+      PetscReal,Dimension(:),Pointer                     :: LBPtr
+      PetscInt                                           :: i
+      Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
+
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+      PetscCall(VecGetDM(alpha,dm,ierr))
+      PetscCall(DMGetGlobalVector(dm,LB,ierr))
+      PetscCall(DMGetGlobalVector(dm,UB,ierr))
+
+      PetscCall(VecSet(UB,1.0_Kr,ierr))
+      PetscCall(VecCopy(alpha,LB,ierr))
+      If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
+         PetscCall(VecGetArrayF90(LB,LBPtr,ierr))
+         Do i = 1, size(LBPtr)
+            If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
+               LBPtr(i) = 0.0_Kr
+            End If
+         End Do
+         PetscCall(VecRestoreArrayF90(LB,LBPtr,ierr))
+      End If
+      PetscCall(TAOSetVariableBounds(taoDamage,LB,UB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
+      PetscCall(DMRestoreGlobalVector(dm,UB,ierr)) 
+   End Subroutine MEF90DefMechTAOUpdateDamageBounds
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticStrainUpdate"
