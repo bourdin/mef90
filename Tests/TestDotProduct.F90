@@ -197,26 +197,60 @@ Program  TestMassMatrix
             L1Norm = L1Norm + L1NormSet
             L2Norm = L2Norm + L2NormSet
             H1Norm = H1Norm + H1NormSet
-            ! Write(IOBuffer,'("set ",I4," L1 norm ", ES12.5,"\n")') setID(set), L1NormSet
-            ! PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-            ! Write(IOBuffer,'("set ",I4," L2 norm ", ES12.5,"\n")') setID(set), L2NormSet
-            ! PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-            ! Write(IOBuffer,'("set ",I4," H1 norm ", ES12.5,"\n")') setID(set), H1NormSet
-            ! PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         End Do
         PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        Write(IOBuffer,'("Cell sets: \n")')
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        Write(IOBuffer,'("   L1 norm          ", ES12.5,"\n")') L1Norm
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        Write(IOBuffer,'("   L2 norm          ", ES12.5,"\n")') L2Norm
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        Write(IOBuffer,'("   H1 norm          ", ES12.5,"\n")') H1Norm
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
-    Write(IOBuffer,'("L1 norm          ", ES12.5,"\n")') L1Norm
-    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    Write(IOBuffer,'("L2 norm          ", ES12.5,"\n")') L2Norm
-    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    Write(IOBuffer,'("H1 norm          ", ES12.5,"\n")') H1Norm
-    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
 
-    ! setType = MEF90FaceSetType
-    ! PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
-    ! L2Norm    = 0.0_Kr
+    setType = MEF90FaceSetType
+    PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
+    L1Norm = 0.0_Kr
+    L2Norm = 0.0_Kr
+    If (setIS /= PETSC_NULL_IS) Then
+        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        Do set = 1,size(setID)
+            myL1NormSet = 0.0_Kr
+            myL2NormSet = 0.0_Kr
+            PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
+            PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(DMPlexGetCellType(dmU,setPointID(1),faceType,ierr))
+            PetscCallA(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,faceType,elementType,ierr))
+            quadratureOrder = elementType%order * 2
+            If (dim == 2) Then
+                PetscCallA(MEF90ElementCreate(dmU,setPointIS,elem2D,QuadratureOrder,elementType,ierr))
+                PetscCallA(MEF90L2DotProductSet(myL1NormSet,One,U,setType,setID(set),elem2D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem2D,elementType,ierr))
+                PetscCallA(MEF90ElementDestroy(elem2D,ierr))
+            Else
+                PetscCallA(MEF90ElementCreate(dmU,setPointIS,elem3D,QuadratureOrder,elementType,ierr))
+                PetscCallA(MEF90L2DotProductSet(myL1NormSet,One,U,setType,setID(set),elem3D,elementType,ierr))
+                PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
+                PetscCallA(MEF90ElementDestroy(elem3D,ierr))
+            End If
+            PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISDestroy(setPointIS,ierr))
+            Call MPI_AllReduce(myL1NormSet,L1NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
+            Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
+            L1Norm = L1Norm + L1NormSet
+            L2Norm = L2Norm + L2NormSet
+        End Do
+        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        Write(IOBuffer,'("Face sets: \n")')
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        Write(IOBuffer,'("   L1 norm          ", ES12.5,"\n")') L1Norm
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        Write(IOBuffer,'("   L2 norm          ", ES12.5,"\n")') L2Norm
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+    End If ! setIS
+    PetscCallA(ISDestroy(setIS,ierr))
     ! If (setIS /= PETSC_NULL_IS) Then
     !     PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
     !     QuadratureOrder = elementType%order * 2

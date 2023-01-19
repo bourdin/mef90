@@ -105,12 +105,12 @@ Implicit NONE
     PetscCallA(PetscSectionSetUp(section,ierr))
 
     PetscCallA(DMSetLocalSection(dm,section,ierr))
-    PetscCallA(PetscObjectViewFromOptions(section,PETSC_NULL_OPTIONS,"-dm_section_view",ierr))
+    PetscCallA(PetscObjectViewFromOptions(section,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
 
     PetscCallA(DMGetLocalVector(dm,v,ierr))
 
     PetscCallA(VecSet(v,-1.0_kR,ierr))
-    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-dm_vec_view",ierr))
+    PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
 
     Do p = pStart,pEnd-1
         PetscCall(MEF90VecGetClosureSize(v,p,numDofClosure,ierr))

@@ -11,7 +11,6 @@ Program TestMaterials
    Type(MEF90MatProp2D_Type),pointer   :: matProp2D
    Type(MEF90MatProp3D_Type),pointer   :: matProp3D
    Type(MatS2D)                        :: E2D
-   Type(MatS3D)                        :: E3D
    Character(len=256)                  :: IOBuffer
    Character(len=80)                   :: name,prefix
    PetscErrorCode                      :: ierr

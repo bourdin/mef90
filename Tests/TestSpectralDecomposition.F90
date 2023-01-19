@@ -3,7 +3,6 @@ Program TestSpectralDecomposition
    Use m_MEF90
    IMPLICIT NONE
 
-   PetscReal                        :: E, nu
    Type(MatS2D)                     :: M2D,D2D
    Type(Mat2D)                      :: P2D
    Type(MatS3D)                     :: M3D,D3D
@@ -12,35 +11,34 @@ Program TestSpectralDecomposition
    Type(MatS3D),Dimension(3)        :: ppleDirections3D
    PetscReal,Dimension(2)           :: ppleValues2D
    PetscReal,Dimension(3)           :: ppleValues3D
-   PetscBool                        :: flg,mef90
-   Character(len=1024)              :: IOBuffer
-   PetscInt                         :: ierr
+   PetscBool                        :: flg
+   PetscErrorCode                   :: ierr
    PetscInt                         :: i,j,n=10
    PetscRandom                      :: RdmCtx
 
-   Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
-   Call PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr);CHKERRQ(ierr)
-   Call PetscRandomSetFromOptions(RdmCtx,ierr);CHKERRQ(ierr)
-   Call PetscRandomSetInterval(RdmCtx,-1.0_Kr,1.0_Kr,ierr);CHKERRQ(ierr)
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr))
+   PetscCallA(PetscRandomSetFromOptions(RdmCtx,ierr))
+   PetscCallA(PetscRandomSetInterval(RdmCtx,-1.0_Kr,1.0_Kr,ierr))
    
-   Call PetscOptionsGetInt(PETSC_NULL_CHARACTER,'-n',n,flg,ierr);CHKERRQ(ierr)
+   PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-n',n,flg,ierr))
    Write(*,*) 'Testing SpectralDecomposition'
    Do i = 1,n
-      Call PetscRandomGetValue(RdmCtx,M2D%XX,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M2D%YY,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M2D%XY,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%XX,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%YY,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%XY,ierr))
       Call SpectralDecomposition(M2D,ppleValues2D,ppleDirections2D)
       Do j = 1,2
          M2D = M2D - ppleValues2D(j) * ppleDirections2D(j)   
       End Do
 
-      Call PetscRandomGetValue(RdmCtx,M3D%XX,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%YY,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%ZZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%YZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%XZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%XY,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XX,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%YY,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%ZZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%YZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XY,ierr))
       Call SpectralDecomposition(M3D,ppleValues3D,ppleDirections3D)
       Do j = 1,3
          M3D = M3D - ppleValues3D(j) * ppleDirections3D(j)   
@@ -50,23 +48,23 @@ Program TestSpectralDecomposition
 
    Write(*,*) 'Testing EigenVectorValues and MatRaRt'
    Do i = 1,n
-      Call PetscRandomGetValue(RdmCtx,M2D%XX,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M2D%YY,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M2D%XY,ierr);CHKERRQ(ierr)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%XX,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%YY,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M2D%XY,ierr))
       Call Diagonalize(M2D,P2D,D2D)
-      M2D = M2D - MatRaRt(D2D,P2D)
-      Call PetscRandomGetValue(RdmCtx,M3D%XX,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%YY,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%ZZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%YZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%XZ,ierr);CHKERRQ(ierr)
-      Call PetscRandomGetValue(RdmCtx,M3D%XY,ierr);CHKERRQ(ierr)
+      M2D = M2D - MEF90MatRaRt(D2D,P2D)
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XX,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%YY,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%ZZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%YZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XZ,ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx,M3D%XY,ierr))
       Call Diagonalize(M3D,P3D,D3D)
-      M3D = M3D - MatRaRt(D3D,P3D)
+      M3D = M3D - MEF90MatRaRt(D3D,P3D)
       Write(*,*) i, norm(M2D),norm(M3D)
    End Do
 
-   Call PetscRandomDestroy(RdmCtx,ierr);CHKERRQ(ierr)
-   Call MEF90Finalize(ierr)
-   Call PetscFinalize()
+   PetscCallA(PetscRandomDestroy(RdmCtx,ierr))
+   PetscCallA(MEF90Finalize(ierr))
+   PetscCallA(PetscFinalize(ierr))
 End Program TestSpectralDecomposition

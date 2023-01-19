@@ -1,6 +1,7 @@
 Program HookeLaw
 #include <petsc/finclude/petsc.h>
    Use m_MEF90
+   Use petsc
    IMPLICIT NONE
 
    PetscReal                        :: E, nu
@@ -9,8 +10,7 @@ Program HookeLaw
    Type(MatS2D)                     :: sigma2D,Epsilon2D
    Type(MatS3D)                     :: sigma3D,Epsilon3D
    PetscBool                        :: flg,mef90
-   Character(len=1024)              :: IOBuffer
-   PetscInt                         :: ierr
+   PetscErrorCode                   :: ierr
    PetscInt                         :: i,n
    PetscRandom                      :: RdmCtx
 

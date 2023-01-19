@@ -1,0 +1,79 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       /Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/SquareFaceSet.gen 
+  result file:         runTestVec.exo 
+  log file:            runTestVec.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 
+PetscSection Object: Temperature 2 MPI processes
+  type not yet set
+1 fields
+  field 0 with 1 components
+Process 0:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  1 offset   0
+  (   5) dim  1 offset   1
+  (   6) dim  1 offset   2
+  (   7) dim  1 offset   3
+  (   8) dim  1 offset   4
+  (   9) dim  1 offset   5
+  (  10) dim  0 offset   6
+  (  11) dim  0 offset   6
+  (  12) dim  0 offset   6
+  (  13) dim  0 offset   6
+  (  14) dim  0 offset   6
+  (  15) dim  0 offset   6
+  (  16) dim  0 offset   6
+  (  17) dim  0 offset   6
+  (  18) dim  0 offset   6
+Process 1:
+  (   0) dim  0 offset   0
+  (   1) dim  0 offset   0
+  (   2) dim  0 offset   0
+  (   3) dim  0 offset   0
+  (   4) dim  1 offset   0
+  (   5) dim  1 offset   1
+  (   6) dim  1 offset   2
+  (   7) dim  1 offset   3
+  (   8) dim  1 offset   4
+  (   9) dim  1 offset   5
+  (  10) dim  0 offset   6
+  (  11) dim  0 offset   6
+  (  12) dim  0 offset   6
+  (  13) dim  0 offset   6
+  (  14) dim  0 offset   6
+  (  15) dim  0 offset   6
+  (  16) dim  0 offset   6
+  (  17) dim  0 offset   6
+  (  18) dim  0 offset   6
+Vec Object: Temperature 1 MPI process
+  type: seq
+Vec Object: Temperature 1 MPI process
+  type: seq
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.
+0.

@@ -96,7 +96,6 @@ program testVonMises2D
    integer(kind=c_int)  :: m = 1
    integer(kind=c_int)  :: p = 1
    type(SNLP),pointer   :: s
-   integer              :: i,j
    integer(kind=c_int)  :: exit_code
    real(kind=c_double),dimension(:),pointer  ::x
    type(ctx),target     :: ctx_ptr
@@ -118,7 +117,6 @@ program testVonMises2D
    x = ctx_ptr%PlasticStrain
    
    call SNLPNew(s,n,m,p,c_funloc(fhg),c_null_funptr,c_loc(ctx_ptr))
-   call SNLPSolve(s,n,m,p,c_funloc(fhg),c_null_funptr,c_loc(ctx_ptr))
    s%show_progress = 1
    
    exit_code = SNLPL1SQP(s,x)

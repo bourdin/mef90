@@ -16,7 +16,7 @@ Program TestSplit
 
    PetscBool                        :: flg,mef90
    Character(len=1024)              :: IOBuffer
-   PetscInt                         :: ierr
+   PetscErrorCode                   :: ierr
    PetscInt                         :: i,j,n=10
    PetscRandom                      :: RdmCtx
    PetscReal                        :: eps = 2.0_Kr * epsilon(1.0_Kr)
