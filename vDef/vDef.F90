@@ -64,7 +64,6 @@ Program vDef
    PetscCallA(PetscLogStageRegister('Energy      ',logStageEnergy,ierr))
    PetscCallA(PetscLogStageRegister('IO          ',logStageIO,ierr))
 
-
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
@@ -163,14 +162,12 @@ Program vDef
    PetscCallA(DMCreateGlobalVector(temperatureDM,temperature,ierr))
    PetscCallA(PetscObjectSetName(temperature,"Temperature",ierr))
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
-   PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal,displacementDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
    PetscCallA(DMCreateGlobalVector(displacementDM,displacement,ierr))
    PetscCallA(PetscObjectSetName(displacement,"displacement",ierr))
    PetscCallA(VecDuplicate(displacement,displacementResidual,ierr))
-   PetscCallA(PetscObjectSetName(displacementResidual,"displacementResidual",ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%damageLocal,damageDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
@@ -343,10 +340,10 @@ Program vDef
                   End If
 
                   PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
-                  PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
                   PetscCallA(PetscLogStagePop(ierr))
 
                   PetscCallA(PetscLogStagePush(logStageDamage,ierr))
+                  PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
                   PetscCallA(VecCopy(damage,damageAltMinOld,ierr))
                   !!! Solve SNES damage
                   PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))

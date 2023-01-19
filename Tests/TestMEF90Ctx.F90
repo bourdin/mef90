@@ -5,13 +5,12 @@ Program  TestMEF90Ctx
    Implicit NONE   
 
    PetscErrorCode                      :: ierr
-   !PetscReal,Dimension(:),Pointer      :: time
    Type(MEF90Ctx_Type),target          :: MEF90Ctx
    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
    Type(tDM),target                    :: dm
    PetscBool                           :: flg
    PetscBool                           :: interpolate = PETSC_FALSE
-   Character(len=MEF90MXSTRLEN)       :: IOBuffer
+   Character(len=MEF90MXSTRLEN)        :: IOBuffer
 
    MEF90GlobalOptions_default%verbose           = 1
    MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
@@ -35,8 +34,9 @@ Program  TestMEF90Ctx
 
    distribute: Block 
       Type(tDM),target                    :: dmDist
+      PetscInt                            :: ovlp = 0_Ki
       If (MEF90Ctx%NumProcs > 1) Then
-         PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+         PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
          PetscCallA(DMDestroy(dm,ierr))
          dm = dmDist
       End If

@@ -37,8 +37,9 @@ Implicit NONE
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
+        PetscInt                            :: ovlp = 0_Ki
         If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
+            PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
             PetscCallA(DMDestroy(dm,ierr))
             dm = dmDist
         End If

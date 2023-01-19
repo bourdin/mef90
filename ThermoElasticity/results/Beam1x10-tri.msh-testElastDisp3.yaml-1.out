@@ -1,0 +1,91 @@
+ 
+ 
+ 
+ 
+Solving steady state step    1, t= 0.00000E+00 
+cell set    1 elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  0.00000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  0.00000E+00 work:  0.00000E+00 total:  0.00000E+00 
+ 
+Solving steady state step    2, t= 1.00000E+00 
+cell set    1 elastic energy:  5.00000E-02 work:  0.00000E+00 total:  5.00000E-02 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  1.00000E-01  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  5.00000E-02 work:  1.00000E-01 total: -5.00000E-02 
+ 
+Solving steady state step    3, t= 2.00000E+00 
+cell set    1 elastic energy:  2.00000E-01 work:  0.00000E+00 total:  2.00000E-01 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  4.00000E-01  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  2.00000E-01 work:  4.00000E-01 total: -2.00000E-01 
+ 
+Solving steady state step    4, t= 3.00000E+00 
+cell set    1 elastic energy:  4.50000E-01 work:  0.00000E+00 total:  4.50000E-01 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  9.00000E-01  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  4.50000E-01 work:  9.00000E-01 total: -4.50000E-01 
+ 
+Solving steady state step    5, t= 4.00000E+00 
+cell set    1 elastic energy:  8.00000E-01 work:  0.00000E+00 total:  8.00000E-01 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  1.60000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  8.00000E-01 work:  1.60000E+00 total: -8.00000E-01 
+ 
+Solving steady state step    6, t= 5.00000E+00 
+cell set    1 elastic energy:  1.25000E+00 work:  0.00000E+00 total:  1.25000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  2.50000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  1.25000E+00 work:  2.50000E+00 total: -1.25000E+00 
+ 
+Solving steady state step    7, t= 6.00000E+00 
+cell set    1 elastic energy:  1.80000E+00 work:  0.00000E+00 total:  1.80000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  3.60000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  1.80000E+00 work:  3.60000E+00 total: -1.80000E+00 
+ 
+Solving steady state step    8, t= 7.00000E+00 
+cell set    1 elastic energy:  2.45000E+00 work:  0.00000E+00 total:  2.45000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  4.90000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  2.45000E+00 work:  4.90000E+00 total: -2.45000E+00 
+ 
+Solving steady state step    9, t= 8.00000E+00 
+cell set    1 elastic energy:  3.20000E+00 work:  0.00000E+00 total:  3.20000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  6.40000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  3.20000E+00 work:  6.40000E+00 total: -3.20000E+00 
+ 
+Solving steady state step   10, t= 9.00000E+00 
+cell set    1 elastic energy:  4.05000E+00 work:  0.00000E+00 total:  4.05000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  8.10000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  4.05000E+00 work:  8.10000E+00 total: -4.05000E+00 
+ 
+Solving steady state step   11, t= 1.00000E+01 
+cell set    1 elastic energy:  5.00000E+00 work:  0.00000E+00 total:  5.00000E+00 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  1.00000E+01  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+======= Total elastic energy:  5.00000E+00 work:  1.00000E+01 total: -5.00000E+00 

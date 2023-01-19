@@ -18,9 +18,6 @@ displacement:
     type: gamg
     gamg:
       type: classical
-  ksp:
-    converged:
-      reason: ascii
 boundaryDisplacement:
   scaling: constant
 boundaryTemperature:

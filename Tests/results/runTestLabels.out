@@ -1,0 +1,37 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       /Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/SquareFaceSet.gen 
+  result file:         runTestLabels.exo 
+  log file:            runTestLabels.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 11 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 0 ; Element order (possibly overridden in application contexts)
+ 
+/Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/SquareFaceSet.gen                                                                                                                                                                                        
+=== Cell Sets === 
+ Cell Sets ID:                     1
+ Cell Sets ID:                     1
+    points                    0                    1                    2                    3
+ Face Sets ID:                    20                   22
+    points                   15                   17
+    points                   16                   18
+    points                    0                    1                    2                    3
+=== Face Sets === 
+ Face Sets ID:                    21                   22
+    points                   13                   18
+    points                   14                   17
+=== Vertex Sets === 
+ Vertex Sets ID:                    20
+    points                    4                    8                    9
+ Vertex Sets ID:                    10
+    points                    6                    7                    9

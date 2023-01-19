@@ -21,8 +21,6 @@ displacement:
   ksp:
     atol: 1.e-8
     rtol: 1.e-5
-    converged:
-      reason: ascii
 stress:
    export: yes
 cs0001:

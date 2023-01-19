@@ -1,6 +1,7 @@
 Program HookeLaw
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
+   Use petsc
    IMPLICIT NONE
 
    PetscReal                        :: E, nu
@@ -8,7 +9,7 @@ Program HookeLaw
    Type(Tens4OS3D)                  :: HookeLaw3D
    PetscBool                        :: flg,mef90
    Character(len=1024)              :: IOBuffer
-   PetscInt                         :: ierr
+   PetscErrorCode                   :: ierr
 
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
    PetscCallA(MEF90Initialize(ierr))

@@ -66,7 +66,7 @@ Program  TestHeatXferCtx
    End If
    distribute: Block 
        Type(tDM),target                    :: dmDist
-       PetscInt                            :: ovlp = 0
+       PetscInt                            :: ovlp = 0_Ki
        Type(tPetscSF)                      :: naturalPointSF
 
        If (MEF90Ctx%NumProcs > 1) Then

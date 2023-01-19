@@ -2,9 +2,9 @@
  
  
  MEF90 Global Context:  
-  geometry file:       /Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/SquareFaceSet.gen 
-  result file:         runTestMEF90Ctx.exo 
-  log file:            runTestMEF90Ctx.log 
+  geometry file:       /Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/Beam1x10-tri.gen 
+  result file:         runTestMassMatrix.exo 
+  log file:            runTestMassMatrix.log 
 PetscBag Object:  MEF90Ctx () MEF90 Global options object
   verbose = 1 ; Verbosity: level
   dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
@@ -17,5 +17,5 @@ PetscBag Object:  MEF90Ctx () MEF90 Global options object
   element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
   element_order = 1 ; Element order (possibly overridden in application contexts)
  
- verbose is set 
- time_min is NOT set 
+Total mass        1.00000E+01  
+Boundary mass     2.20000E+01  

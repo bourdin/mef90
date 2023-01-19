@@ -2,7 +2,7 @@ Mesh.Algorithm = 6;
 
 L = 10.;
 H = 1;
-h = .02;
+h = .2;
 
 Point(1) = {-L/2, -H/2, 0, h};
 Point(2) = { L/2, -H/2, 0, h};

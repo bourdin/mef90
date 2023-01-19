@@ -3,7 +3,7 @@ Mesh.Algorithm = 6;
 
 L = 10.;
 H = 1;
-h = .08;
+h = .2;
 
 Mesh.CharacteristicLengthMin = h;
 Mesh.CharacteristicLengthMax = h;

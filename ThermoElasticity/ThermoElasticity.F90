@@ -28,11 +28,11 @@ Program ThermoElasticity
    PetscReal,Dimension(:),Pointer                     :: time,energy,bodyForceWork,boundaryForceWork
 
    Type(tSNES)                                        :: displacementSNES
-   !SNESConvergedReason                                :: SNESDisplacementConvergedReason
+   SNESConvergedReason                                :: displacementSNESConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual
 
    Type(tSNES)                                        :: temperatureSNES
-   !SNESConvergedReason                                :: SNESTemperatureConvergedReason
+   SNESConvergedReason                                :: temperatureSNESConvergedReason
    Type(tTS)                                          :: temperatureTS
    Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
@@ -40,12 +40,11 @@ Program ThermoElasticity
    PetscReal                                          :: temperatureInitialTimeStep,temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
 
-   PetscBool                                          :: flg
+   PetscBool                                          :: flg,EXONeedsFormatting
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
-   PetscInt                                           :: dim
 
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
@@ -63,19 +62,6 @@ Program ThermoElasticity
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
-
-   PetscCallA(DMGetDimension(dm,dim,ierr))
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-
-   !!! Create HeatXfer context, get all HeatXfer options
-   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
-   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,HeatXferDefaultGlobalOptions,HeatXferDefaultCellSetOptions,HeatXferDefaultFaceSetOptions,HeatXferDefaultVertexSetOptions,ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
-
-   !!! Create DefMechCtx, get all defMech options
-   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
-   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
-   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
 
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
@@ -98,17 +84,10 @@ Program ThermoElasticity
       PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
-      End If            
-      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
-      End If
+      EXONeedsFormatting = PETSC_TRUE
    End If
 
-distribute: Block 
+   distribute: Block 
       Type(tDM),target                    :: dmDist
       PetscInt                            :: ovlp = 0_Ki
       Type(tPetscSF)                      :: naturalPointSF
@@ -136,11 +115,27 @@ distribute: Block
    PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
    PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
+   PetscCallA(VecDestroy(MEF90DefMechCtx%temperatureLocal,ierr))
+   DeAllocate(MEF90DefMechCtx%temperatureLocal)
+   MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
+
+   PetscCallA(DMGetDimension(dm,MEF90DefMechCtx%dim,ierr))
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
+   If (EXONeedsFormatting) Then
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+      End If
+      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
+      End If
+   End If
+
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
    PetscCallA(DMDestroy(dm,ierr))
 
    !!! Get parse all materials data from the command line
-   If (dim == 2) Then
+   If (MEF90DefMechCtx%dim == 2) Then
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium2D,MEF90Ctx,ierr))
    Else
       PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%megaDM,MEF90Mathium3D,MEF90Ctx,ierr))
@@ -153,14 +148,12 @@ distribute: Block
    PetscCallA(DMCreateGlobalVector(temperatureDM,temperature,ierr))
    PetscCallA(PetscObjectSetName(temperature,"Temperature",ierr))
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
-   PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal,displacementDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
    PetscCallA(DMCreateGlobalVector(displacementDM,displacement,ierr))
    PetscCallA(PetscObjectSetName(displacement,"displacement",ierr))
    PetscCallA(VecDuplicate(displacement,displacementResidual,ierr))
-   PetscCallA(PetscObjectSetName(displacementResidual,"displacementResidual",ierr))
 
    !!! 
    !!! Create SNES or TS, Mat and set KSP default options
@@ -205,6 +198,12 @@ distribute: Block
             PetscCallA(DMLocalToGlobal(temperatureDM,MEF90HeatXferCtx%temperatureLocal,INSERT_VALUES,temperature,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
+            PetscCallA(SNESGetConvergedReason(temperatureSNES,temperatureSNESConvergedReason,ierr))
+            If (temperatureSNESConvergedReason < 0) Then  
+               Write(IOBuffer,400) "temperature",temperatureSNESConvergedReason
+               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+            End If
+
             PetscCallA(DMGlobalToLocal(temperatureDM,temperature,INSERT_VALUES,MEF90HeatXferCtx%temperatureLocal,ierr))
             PetscCallA(VecCopy(MEF90HeatXferCtx%temperatureLocal,MEF90DefMechCtx%temperatureLocal,ierr))
          Case (MEF90HeatXfer_timeSteppingTypeTransient)
@@ -258,6 +257,11 @@ distribute: Block
             PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
             !!! Solve SNES
             PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
+            PetscCallA(SNESGetConvergedReason(displacementSNES,displacementSNESConvergedReason,ierr))
+            If (displacementSNESConvergedReason < 0) Then  
+               Write(IOBuffer,400) "displacement",displacementSNESConvergedReason
+               PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+            End If
             PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
 
             !!! Compute energies
@@ -302,6 +306,7 @@ distribute: Block
 201 Format("cell set ",I4," elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
 203 Format("face set ",I4,"                              work: ",ES12.5," \n")
 202 Format("======= Total elastic energy: ",ES12.5," work: ",ES12.5," total: ",ES12.5,"\n")
+400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check https://petsc.org/release/docs/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
 
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%timeSteppingType)
@@ -333,6 +338,7 @@ distribute: Block
    DeAllocate(bodyForceWork)
    DeAllocate(boundaryForceWork)
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
+   Nullify(MEF90HeatXferCtx%temperatureLocal)
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    
    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
