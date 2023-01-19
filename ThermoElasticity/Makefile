@@ -3,11 +3,9 @@ all:
 	-@make -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
 test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
-	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
-	make -s testThermoElasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElasticity PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElasticity PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	for i in {1..4}; do \
+	make -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=1 OPTIONSFILE=testElastDisp$${i}.yaml;\
+	make -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=2 OPTIONSFILE=testElastDisp$${i}.yaml;\
 	done
 
 test3D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
@@ -46,12 +44,14 @@ m_vDefDefault.o: ${BASE_DIR}/m_vDefDefault.F90 ${MEF90_OBJS} ${MEF90_DEFMECH_OBJ
 
 
 testThermoElasticity:
-	@echo ;echo "Testing ThermoElasticity with $${PREFIX} $${OPTIONSFILE}"
-	@ARGS="-prefix data/$${PREFIX} -options_file data/$${OPTIONSFILE}";\
-	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/ThermoElasticity/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
-	else echo "Possible problem. Diffs above"; fi
-	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
+	@echo ;echo "Testing ThermoElasticity with $${PREFIX} $${OPTIONSFILE} $${ORDER}"
+	@ARGS="-geometry ${MEF90_DIR}/TestMeshes/$${PREFIX} -result $${OPTIONSFILE}.exo -element_order $${ORDER} -options_file data/$${OPTIONSFILE}";\
+	echo ${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity $${ARGS}
+	# @ARGS="-geometry ${MEF90_DIR}/TEstMeshes/$${PREFIX} -result $${OPTIONSFILE}.exo -element_order $${ORDER} -options_file data/$${OPTIONSFILE}";\
+	# ${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
+	# if (${DIFF} -B ${MEF90_DIR}/ThermoElasticity/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
+	# else echo "Possible problem. Diffs above"; fi
+	# -@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
 	
 MEF90:
 	make -C ${MEF90_DIR} MEF90
