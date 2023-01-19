@@ -26,7 +26,7 @@ smooth surface 1
 
 block 1 element type tri3
 export mesh "Beam1x10-tri.gen" dimension 2 block all overwrite
-#exit
+exit
 
 
 

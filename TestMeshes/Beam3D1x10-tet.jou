@@ -23,7 +23,7 @@ sideset 70 surface 1
 mesh volume all
 
 block 1 element type tet4
-export mesh "Beam3D1x10-tri.gen" dimension 3 block all overwrite
+export mesh "Beam3D1x10-tet.gen" dimension 3 block all overwrite
 exit
 
 

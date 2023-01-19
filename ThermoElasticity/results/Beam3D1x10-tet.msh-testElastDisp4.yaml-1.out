@@ -1,0 +1,13 @@
+ 
+ 
+ 
+ 
+Solving steady state step    1, t= 1.00000E+00 
+cell set    1 elastic energy:  9.32241E-02 work:  1.86448E-01 total: -9.32241E-02 
+face set   20                              work:  0.00000E+00  
+face set   30                              work:  0.00000E+00  
+face set   40                              work:  0.00000E+00  
+face set   50                              work:  0.00000E+00  
+face set   60                              work:  0.00000E+00  
+face set   70                              work:  0.00000E+00  
+======= Total elastic energy:  9.32241E-02 work:  1.86448E-01 total: -9.32241E-02 
