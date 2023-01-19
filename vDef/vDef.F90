@@ -130,9 +130,9 @@ Program vDef
    PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
    PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
    PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
-   ! PetscCallA(VecDestroy(MEF90DefMechCtx%temperatureLocal,ierr))
-   ! DeAllocate(MEF90DefMechCtx%temperatureLocal)
-   ! MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
+   PetscCallA(VecDestroy(MEF90DefMechCtx%temperatureLocal,ierr))
+   DeAllocate(MEF90DefMechCtx%temperatureLocal)
+   MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
 
    PetscCallA(DMGetDimension(dm,MEF90DefMechCtx%dim,ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
@@ -530,6 +530,7 @@ Program vDef
    DeAllocate(cohesiveEnergy)
    DeAllocate(surfaceEnergy)
    PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx,ierr))
+   Nullify(MEF90HeatXferCtx%temperatureLocal)
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
    
    PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))

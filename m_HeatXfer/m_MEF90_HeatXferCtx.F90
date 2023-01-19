@@ -15,10 +15,10 @@ Module m_MEF90_HeatXferCtx_Type
       Type(tDM)                        :: megaDM
       PetscInt                         :: dim
 
-      Type(tVec)                       :: temperatureLocal
-      Type(tVec)                       :: externalTemperatureLocal
-      Type(tVec)                       :: fluxLocal
-      Type(tVec)                       :: boundaryFluxLocal
+      Type(tVec),pointer               :: temperatureLocal
+      Type(tVec),pointer               :: externalTemperatureLocal
+      Type(tVec),pointer               :: fluxLocal
+      Type(tVec),pointer               :: boundaryFluxLocal
 
       Type(tPetscViewer)               :: viewer
       Type(tPetscSF)                   :: temperatureToIOSF,IOToTemperatureSF
@@ -316,12 +316,16 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
       
       vecName = "Temperature"
+      Allocate(HeatXferCtx%temperatureLocal)
       PetscCall(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,vecName,HeatXferCtx%temperatureLocal,ierr)) 
       vecName = "ExternalTemperature"
+      Allocate(HeatXferCtx%externalTemperatureLocal)
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%externalTemperatureLocal,ierr))
       vecName = "Flux"
+      Allocate(HeatXferCtx%fluxLocal)
       PetscCall(MEF90CreateCellVector(dm,1_Ki,vecName,HeatXferCtx%fluxLocal,ierr))
       vecName = "BoundaryFlux"
+      Allocate(HeatXferCtx%boundaryFluxLocal)
       PetscCall(MEF90CreateBoundaryCellVector(dm,1_Ki,vecName,HeatXferCtx%boundaryFluxLocal,ierr))
 
       !!! Create the  unknowns and parameters superDM
@@ -360,10 +364,26 @@ Contains
       
       PetscInt                                        :: set
    
-      PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
-      PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
-      PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
-      PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
+      If (Associated(HeatXferCtx%temperatureLocal)) Then
+         PetscCall(VecDestroy(HeatXferCtx%temperatureLocal,ierr))
+         DeAllocate(HeatXferCtx%temperatureLocal)
+         Nullify(HeatXferCtx%temperatureLocal)
+      End If
+      If (Associated(HeatXferCtx%ExternalTemperatureLocal)) Then
+         PetscCall(VecDestroy(HeatXferCtx%ExternalTemperatureLocal,ierr))
+         DeAllocate(HeatXferCtx%ExternalTemperatureLocal)
+         Nullify(HeatXferCtx%ExternalTemperatureLocal)
+      End If
+      If (Associated(HeatXferCtx%fluxLocal)) Then
+         PetscCall(VecDestroy(HeatXferCtx%fluxLocal,ierr))
+         DeAllocate(HeatXferCtx%fluxLocal)
+         Nullify(HeatXferCtx%fluxLocal)
+      End If
+      If (Associated(HeatXferCtx%boundaryFluxLocal)) Then
+         PetscCall(VecDestroy(HeatXferCtx%boundaryFluxLocal,ierr))
+         DeAllocate(HeatXferCtx%boundaryFluxLocal)
+         Nullify(HeatXferCtx%boundaryFluxLocal)
+      End If
 
       !!! Destroy SFs
       PetscCall(PetscSFDestroy(HeatXferCtx%temperatureToIOSF,ierr))
