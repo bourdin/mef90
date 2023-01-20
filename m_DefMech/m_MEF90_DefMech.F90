@@ -402,7 +402,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechTAOGradientDamage(taoDamage,damage,residual,MEF90DefMechCtx,ierr)
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tVec),Intent(INOUT)                           :: residual
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -449,7 +449,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechTAOHessianDamage(taoDamage,damage,A,M,MEF90DefMechCtx,ierr)
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tMat),Intent(INOUT)                           :: A,M
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -494,7 +494,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechTAOObjectiveDamage(taoDamage,damage,energy,MEF90DefMechCtx,ierr)
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       PetscReal,Intent(INOUT)                            :: energy
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -810,7 +810,7 @@ Contains
 
    Subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx,taoDamage,residual,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(Tao),Intent(OUT)                              :: taoDamage
+      Type(tTao),Intent(OUT)                             :: taoDamage
       Type(tVec),Intent(IN)                              :: residual
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
@@ -922,7 +922,7 @@ Contains
 
    Subroutine MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx,taoDamage,alpha,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(Tao),Intent(INOUT)                            :: taoDamage
+      Type(tTao),Intent(INOUT)                           :: taoDamage
       Type(tVec),Intent(IN)                              :: alpha
       PetscErrorCode,Intent(INOUT)                       :: ierr
       

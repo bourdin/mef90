@@ -30,7 +30,7 @@ Program vDef
    PetscReal,Dimension(:),Pointer                     :: time,elasticEnergy,bodyForceWork,boundaryForceWork,cohesiveEnergy,surfaceEnergy
 
    Type(tSNES)                                        :: displacementSNES,damageSNES
-   Type(Tao)                                          :: damageTAO
+   Type(tTao)                                         :: damageTAO
    SNESConvergedReason                                :: displacementSNESConvergedReason,damageSNESConvergedReason
    TaoConvergedReason                                 :: damageTAOConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual,damage,damageResidual

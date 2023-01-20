@@ -1344,7 +1344,7 @@ Contains
 !!!
 
    Subroutine  MEF90DefMechTAOGradientDamage(taoDamage,damage,residual,MEF90DefMechCtx,ierr)
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tVec),Intent(INOUT)                           :: residual
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -1709,7 +1709,7 @@ Contains
 !!!
 
    Subroutine MEF90DefMechTAOHessianDamage(taoDamage,damage,A,M,MEF90DefMechCtx,ierr)
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       Type(tMat),Intent(INOUT)                           :: A,M
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
@@ -1975,7 +1975,7 @@ Contains
 
    Subroutine MEF90DefMechTAOObjectiveDamage(taoDamage,damage,energy,MEF90DefMechCtx,ierr)
       Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(Tao),Intent(IN)                               :: taoDamage
+      Type(tTao),Intent(IN)                              :: taoDamage
       Type(tVec),Intent(IN)                              :: damage
       PetscReal,Intent(INOUT)                            :: energy
       PetscErrorCode,Intent(INOUT)                       :: ierr
