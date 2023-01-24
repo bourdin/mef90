@@ -777,6 +777,7 @@ Contains
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
 
+      PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%temperatureExport,default%temperatureExport,'temperature_export','Export temperature in result file',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement in result file',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%damageExport,default%damageExport,'damage_export','Export damage in result file',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%stressExport,default%stressExport,'stress_export','Export stress in result file',ierr))

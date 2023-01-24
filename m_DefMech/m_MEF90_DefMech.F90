@@ -474,6 +474,7 @@ Contains
       End If
       If (MEF90DefMechGlobalOptions%temperatureExport) Then
          nameN(offset) = "Temperature"
+         offset = offset + 1
       End If
       
       numFields = 0
@@ -523,16 +524,16 @@ Contains
 
       If (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) Then
          If (MEF90DefMechCtx%dim == 2) Then
-            nameC(offset+0) = "CumulatedPLasticDissipation_XX"
-            nameC(offset+1) = "CumulatedPLasticDissipation_YY"
-            nameC(offset+2) = "CumulatedPLasticDissipation_XY"
+            nameC(offset+0) = "CumulatedPlasticDissipation_XX"
+            nameC(offset+1) = "CumulatedPlasticDissipation_YY"
+            nameC(offset+2) = "CumulatedPlasticDissipation_XY"
          Else
-            nameC(offset+0) = "CumulatedPLasticDissipation_XX"
-            nameC(offset+1) = "CumulatedPLasticDissipation_YY"
-            nameC(offset+2) = "CumulatedPLasticDissipation_ZZ"
-            nameC(offset+3) = "CumulatedPLasticDissipation_YZ"
-            nameC(offset+4) = "CumulatedPLasticDissipation_XZ"
-            nameC(offset+5) = "CumulatedPLasticDissipation_XY"
+            nameC(offset+0) = "CumulatedPlasticDissipation_XX"
+            nameC(offset+1) = "CumulatedPlasticDissipation_YY"
+            nameC(offset+2) = "CumulatedPlasticDissipation_ZZ"
+            nameC(offset+3) = "CumulatedPlasticDissipation_YZ"
+            nameC(offset+4) = "CumulatedPlasticDissipation_XZ"
+            nameC(offset+5) = "CumulatedPlasticDissipation_XY"
          End If
       End If
       PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,nameF,time,ierr))

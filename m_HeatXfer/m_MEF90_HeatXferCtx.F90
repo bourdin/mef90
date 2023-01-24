@@ -479,6 +479,7 @@ Contains
 
       HeatXferCellSetOptions%advectionVector = default%advectionVector
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%Flux,default%Flux,'Flux','[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux',ierr))
+      PetscCall(PetscBagRegisterBool(bag,HeatXferCellSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferCellSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
       PetscCall(PetscBagRegisterRealArray(bag,HeatXferCellSetOptions%advectionVector,3_Ki,'advectionVector','[m.s^(-1)] (V): advection vector',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions
