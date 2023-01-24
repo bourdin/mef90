@@ -4,7 +4,7 @@ time:
     max: 10
     numstep: 11
 element:
-  order: 2
+  order: 1
 heatxfer:
   timestepping:
     type: NULL

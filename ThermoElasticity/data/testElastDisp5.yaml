@@ -4,7 +4,7 @@ time:
     max: 10
     numstep: 11
 element:
-  order: 2
+  order: 1
 heatxfer:
   timestepping:
     type: steadystate
@@ -24,6 +24,12 @@ boundaryTemperature:
   scaling: linear
 stress:
   export: yes
+temperature:
+  snes:
+    type: ksponly
+  pc:
+    type: none
+  export: yes
 cs0001:
     damage:
         type: AT2Elastic
@@ -33,33 +39,41 @@ cs0001:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.
+    flux: 1.
+    temperatureBC: no
 fs0030:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
 fs0020:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
 fs0040:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
 fs0050:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
 fs0060:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
 fs0070:
     displacementBC: no,no,no
     boundaryDisplacement: 0.,0.,0.
     temperatureBC: yes
     boundaryTemperature: 1.
+    boundaryFlux: 0.
