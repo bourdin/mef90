@@ -31,10 +31,10 @@ Program vDef
    SNESConvergedReason                                :: displacementSNESConvergedReason,damageSNESConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual,damage,damageResidual
    Type(tVec)                                         :: damageAltMinOld
-   ! Type(tVec)                                         :: damageLB,damageUB   
-   ! PetscReal,Dimension(:),Pointer                     :: damageArray,damageAltMinOldArray,damageLBArray,damageUBArray
-   ! PetscInt                                           :: iDof
-   ! PetscReal                                          :: SOROmega,mySOROmega
+   Type(tVec)                                         :: damageLB,damageUB
+   PetscReal,Dimension(:),Pointer                     :: damageArray,damageAltMinOldArray,damageLBArray,damageUBArray
+   PetscInt                                           :: iDof
+   PetscReal                                          :: SOROmega,mySOROmega
 
    Type(tSNES)                                        :: temperatureSNES
    SNESConvergedReason                                :: temperatureSNESConvergedReason
@@ -356,36 +356,35 @@ Program vDef
 
                   !!! Over relaxation of the damage variable
                   If (AltMinIter > 1) Then
-                     !!! Commenting out SOR until petsc MR !5947 (add SNESVIGetVariableBounds) is merged
-                     ! If ((MEF90DefMechGlobalOptions%SOROmega > 0.0_Kr) .AND. (MEF90DefMechGlobalOptions%SOROmega /= 1.0)) Then
-                     !    mySOROmega = MEF90DefMechGlobalOptions%SOROmega
-                     !    !!! LIMITED SOR
-                     !    PetscCallA(SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr))
-                     !    PetscCallA(VecGetArrayF90(damageLB,damageLBArray,ierr))
-                     !    PetscCallA(VecGetArrayF90(damageUB,damageUBArray,ierr))
-                     !    PetscCallA(VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr))
-                     !    PetscCallA(VecGetArrayF90(damage,damageArray,ierr))
-                     !    Do iDof = 1, size(damageArray)
-                     !       If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
-                     !          mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                     !       Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
-                     !          mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                     !       End If
-                     !    End Do
-                     !    PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr))
-                     !    PetscCallA(VecRestoreArrayF90(damage,damageArray,ierr))
-                     !    PetscCallA(VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr))
-                     !    PetscCallA(VecRestoreArrayF90(damageUB,damageUBArray,ierr))
-                     !    PetscCallA(VecRestoreArrayF90(damageLB,damageLBArray,ierr))
-                     !    PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
-                     ! Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
-                     !    !!! PROJECTED SOR
-                     !    SOROmega = -MEF90DefMechGlobalOptions%SOROmega
-                     !    PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
-                     !    PetscCallA(SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr))
-                     !    PetscCallA(VecPointwiseMax(damage,damage,damageLB,ierr))
-                     !    PetscCallA(VecPointwiseMin(damage,damage,damageUB,ierr))
-                     ! EndIf
+                     If ((MEF90DefMechGlobalOptions%SOROmega > 0.0_Kr) .AND. (MEF90DefMechGlobalOptions%SOROmega /= 1.0)) Then
+                        mySOROmega = MEF90DefMechGlobalOptions%SOROmega
+                        !!! LIMITED SOR
+                        PetscCallA(SNESVIGetVariableBounds(damageSNES,damageLB,damageUB,ierr))
+                        PetscCallA(VecGetArrayReadF90(damageLB,damageLBArray,ierr))
+                        PetscCallA(VecGetArrayReadF90(damageUB,damageUBArray,ierr))
+                        PetscCallA(VecGetArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
+                        PetscCallA(VecGetArrayReadF90(damage,damageArray,ierr))
+                        Do iDof = 1, size(damageArray)
+                           If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
+                              mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                           Else If (damageArray(iDof) < damageAltMinOldArray(iDof)) Then
+                              mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                           End If
+                        End Do
+                        PetscCallA(VecRestoreArrayReadF90(damage,damageArray,ierr))
+                        PetscCallA(VecRestoreArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
+                        PetscCallA(VecRestoreArrayReadF90(damageUB,damageUBArray,ierr))
+                        PetscCallA(VecRestoreArrayReadF90(damageLB,damageLBArray,ierr))
+                        PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr))
+                        PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
+                     Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
+                        !!! PROJECTED SOR
+                        SOROmega = -MEF90DefMechGlobalOptions%SOROmega
+                        PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
+                        PetscCallA(SNESVIGetVariableBounds(damageSNES,damageLB,damageUB,ierr))
+                        PetscCallA(VecPointwiseMax(damage,damage,damageLB,ierr))
+                        PetscCallA(VecPointwiseMin(damage,damage,damageUB,ierr))
+                     EndIf
                   End If
 
                   !!! Monitor the progress of the Alt Min algorithm

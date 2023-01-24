@@ -47,7 +47,6 @@ Module m_MEF90_DefMechCtx_Type
       Type(tPetscViewer)                      :: globalEnergyViewer
       Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer
 
-      Type(tSNES)                             :: SNESDisp,SNESDamage
       PetscBool                               :: hasDisplacementBounds
       PetscBool                               :: hasUnilateralContact
    End Type MEF90DefMechCtx_Type
