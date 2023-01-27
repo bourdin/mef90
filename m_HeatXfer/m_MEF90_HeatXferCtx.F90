@@ -314,6 +314,8 @@ Contains
          PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90HeatXferVertexSetOptions,HeatXferCtx%VertexSetOptionsBag(set),ierr))
       End Do
       PetscCall(ISDestroy(setIS,ierr))
+
+      PetscCall(DMGetDimension(dm,HeatXferCtx%dim,ierr))
       
       vecName = "Temperature"
       Allocate(HeatXferCtx%temperatureLocal)

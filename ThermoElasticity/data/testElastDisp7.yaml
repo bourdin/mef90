@@ -11,6 +11,8 @@ heatxfer:
 defmech:
   timestepping:
     type: quasistatic
+temperature:
+  export: yes
 displacement:
   snes:
     type: ksponly
