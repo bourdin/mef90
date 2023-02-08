@@ -304,6 +304,7 @@ contains
                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
                Allocate(damageloc(elemScalType%numDof))
                Do cell = 1,size(cellID)
+                  !print *,"cell = ", cell
                   !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
                   Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)

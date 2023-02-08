@@ -2843,6 +2843,78 @@ Contains
       Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
    End Function Tens4OS3DTransform
 
+  Function Tens4OS2DXTens4OS2D(T1,T2)
+      !!! Compute the double contraction of 4th order tensors
+      !!! i.e. C_{ijkl} = T1_{ijpq}:T2_{pqkl}
+      !!! (c) 2022 Jean-Michel Scherer scherer@caltech.edu
+      Type(Tens4OS2D),Intent(IN)                  :: T1,T2
+
+      Type(Tens4OS2D)                             :: Tens4OS2DXTens4OS2D
+
+      PetscReal,Dimension(2,2,2,2)                :: TT1,TT2,C
+      Integer                                     :: i,j,k,l
+      Integer                                     :: p,q
+      PetscLogDouble                              :: flops
+      PetscErrorCode                              :: ierr
+
+      TT1 = T1
+      TT2 = T2
+      C = 0.0_Kr
+      Do i = 1,2
+         Do j = 1,2
+            Do k = 1,2
+               Do l = 1,2
+                  Do p = 1,2
+                     Do q = 1,2
+                        C(i,j,k,l) = C(i,j,k,l) + TT1(i,j,p,q) * TT2(p,q,k,l)
+                     End Do
+                  End Do
+               End Do
+            End Do
+         End Do
+      End Do
+
+      Tens4OS2DXTens4OS2D = C
+      flops = 192 ! 2**6 * 3
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function Tens4OS2DXTens4OS2D
+
+   Function Tens4OS3DXTens4OS3D(T1,T2)
+      !!! Compute the double contraction of 4th order tensors
+      !!! i.e. C_{ijkl} = T1_{ijpq}:T2_{pqkl}
+      !!! (c) 2022 Jean-Michel Scherer scherer@caltech.edu
+      Type(Tens4OS3D),Intent(IN)                  :: T1,T2
+
+      Type(Tens4OS3D)                             :: Tens4OS3DXTens4OS3D
+
+      PetscReal,Dimension(3,3,3,3)                :: TT1,TT2,C
+      Integer                                     :: i,j,k,l
+      Integer                                     :: p,q
+      PetscLogDouble                              :: flops
+      PetscErrorCode                              :: ierr
+
+      TT1 = T1
+      TT2 = T2
+      C = 0.0_Kr
+      Do i = 1,3
+         Do j = 1,3
+            Do k = 1,3
+               Do l = 1,3
+                  Do p = 1,3
+                     Do q = 1,3
+                        C(i,j,k,l) = C(i,j,k,l) + TT1(i,j,p,q) * TT2(p,q,k,l)
+                     End Do
+                  End Do
+               End Do
+            End Do
+         End Do
+      End Do
+
+      Tens4OS3DXTens4OS3D = C
+      flops = 2187 ! 3**6 * 3
+      Call PetscLogFlops(flops,ierr);CHKERRQ(ierr)
+   End Function Tens4OS3DXTens4OS3D
+
    Function Tens4OS2DSquareRoot(T)
       Type(Tens4OS2D),Intent(IN)                  :: T
       Type(Tens4OS2D)                             :: Tens4OS2DSquareRoot
