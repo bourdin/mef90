@@ -2,27 +2,27 @@
 verbose: 1
 time:
     min: 0
-    max: 5
-    numstep: 101
+    max: 10
+    numstep: 51
     interpolation: linear
 heatxfer:
-    timestepping:
+    timestepping: 
         type: null
 defmech:
-    timestepping:
-        type: quasistatic
-    damage:
-        atol: 1.0e-3
-    sor:
-        omega: 1.4
-    pclag: 5
-temperature:
-    offset: 0
+  timeStepping: 
+    type: quasistatic
+  solver:
+    type: altmin
+  damage:
+    atol: 1.0e-3
+  sor:
+    omega: 1.4
+  pclag: 5
 displacement:
-    snes:
-        type: ksponly
-    pc:
-        type: gamg
+  snes:
+    type: ksponly
+  pc:
+    type: gamg
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -48,7 +48,7 @@ cs0002:
     internallength: 3.3e-3
     residualstiffness: 0.
     damage:
-        type: AT2Elastic
+        type: AT1Elastic
     plasticity:
         type: NONE
     displacementbc: no,no,no
@@ -57,10 +57,10 @@ fs0030:
     displacementbc: no,no,no
     damageBC: yes
     boundaryDamage: 1.
-fs0040:
+fs0031:
     displacementbc: no,no,no
     damageBC: yes
-    boundaryDamage: 0.
+    boundaryDamage: 1.
 vs0400:
     displacementBC: yes,yes,no
     boundaryDisplacement: 0,-1,0

@@ -5,87 +5,84 @@ set info on
 #{mm = 1./90}
 #{l = 90*mm}
 #{w = 20*mm}
-#{h=8*mm}
+#{h = 8*mm}
 #{L = 80*mm}
 #{a = 4.5*mm}
-#{wload = 2*mm}
+#{ratio=3/4}
+#{wf=a+(w-a)*ratio}
+
 #{lc = 3*mm}
 #{epsc = .001*mm}
-#{theta = PI/4}
+#{theta = atan(1)}
 
 #{ell = 0.3*mm}
 #{hf = ell/6}
 #{hc = .5*mm}
 
-#{hf = 5e-4}
+#{hf = 1e-3}
 #{hc = 2e-2}
 #{hstr = tostring(hf)}
 
 
 create vertex x 0 y {a} z 0
-create vertex x {a/tan(theta)} y 0 z 0
+create vertex x {a*sin(theta)} y 0 z 0
 create vertex x {l/2} y 0 z 0
 create vertex x {l/2} y {w} z 0
 create vertex x {-l/2} y {w} z 0
 create vertex x {-l/2} y 0 z 0
-create vertex x {-a/tan(theta)} y 0 z 0
+create vertex x {-a*sin(theta)} y 0 z 0
 
 create surface vertex all
 
-create surface rectangle width {a/tan(theta)} height {1.8*w}
+create surface rectangle width {2*a*sin(theta)/2} height {2*wf}
 webcut body 1 sweep surface 2 vector 0 0 1 through_all 
 delete body 2
 
 imprint all 
 merge all
 
+create vertex x 0 y {w} z 0
 create vertex x {L/2} y 0 z 0
 create vertex x {-L/2} y 0 z 0
 
-split curve 2 at vertex 20
-split curve 6 at vertex 21
-
-create vertex x {-wload/2} y {w} z 0
-create vertex x {0} y {w} z 0
-create vertex x {wload/2} y {w} z 0
-split curve 4 at vertex 24 25 26
+split curve 4 at vertex 20
+split curve 2 at vertex 21
+split curve 6 at vertex 22
 
 webcut surface 4 plane yplane offset {a+lc}
 webcut surface 5 plane xplane
 imprint all 
 merge all
-unmerge curve 36
+unmerge curve 34
 
 block 1 surface 6 7 8 
 block 2 surface 3
-block 30 curve 15 16 18 19 36 38
-block 40 curve 27 28
+sideset 30 curve 18 19
+sideset 31 curve 34 36
 
-nodeset 401 vertex 21
-nodeset 402 vertex 20
-nodeset 400 vertex 25 
+nodeset 402 vertex 21
+nodeset 401 vertex 22
+nodeset 400 vertex 20 
 
-surface all scheme trimesh
+draw block all nodeset all
+hardcopy "TPB-Crack.png" png
+
+surface all scheme tridelaunay
+tridelaunay point placement asp
 surface 6 7 8 size {hf}
 mesh surface 6 7 8
 
+tridelaunay point placement gq
 curve 3 5 size {hc}
 mesh curve 3 5
-surface 3 sizing function type bias start curve 31 35 13 34 19 finish curve 3 5
+surface 3 sizing function type bias start curve 29 30 32 33 13 finish curve 3 5
 mesh surface 3
 smooth surface all
 
-block 1 to 9 element type tri3
-block 10 to 99 element type bar2
-#{filename = Quote("TPB-Crack-"//hstr//"-sieve.gen")}
+{filename = Quote("TPB-Crack.gen")}
 export mesh {filename} dimension 2 block all overwrite
 
-delete block 30 40
-sideset 30 curve 15 16 18 19 36 38
-sideset 40 curve 27 28
-#{filename = Quote("TPB-Crack-"//hstr//"-dmplex.gen")}
-export mesh {filename} dimension 2 block all overwrite
-
+quality volume all shape global list verbose errors
 
 
 
