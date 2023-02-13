@@ -23,7 +23,7 @@ displacement:
     snes:
         type: ksponly
     pc:
-        type: bjacobi
+        type: gamg
 cs0001:
     hookesLaw:  
         type: isotropic

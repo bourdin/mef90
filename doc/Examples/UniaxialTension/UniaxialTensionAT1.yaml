@@ -22,7 +22,7 @@ displacement:
     snes:
         type: ksponly
     pc:
-        type: ml
+        type: gamg
 damage:
     snes:
         atol: 1e-6
