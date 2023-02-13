@@ -18,7 +18,7 @@ time:
     min: 0
     max: 5
     numstep: 1
-disp:
+displacement:
     snes:
         type: ksponly
     pc:
@@ -38,12 +38,12 @@ cs0001:
         type: NONE
     displacementbc: no,no,no
     damageBC: no
-cs0020:
+fs0020:
     displacementbc: yes,no,no
     boundaryDisplacement: -.5,0,0
     damageBC: yes
     boundaryDamage: 0.
-cs0030:
+fs0030:
     displacementbc: yes,no,no
     boundaryDisplacement: .5,0,0
     damageBC: yes

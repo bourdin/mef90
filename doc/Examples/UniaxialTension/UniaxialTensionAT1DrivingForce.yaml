@@ -18,7 +18,7 @@ time:
     min: 0
     max: 10
     numstep: 51
-disp:
+displacement:
     snes:
         type: ksponly
         atol: 1e-8
@@ -31,8 +31,8 @@ damage:
         rtol: 1e-5
         linesearch:
             type: cp
-        pc:
-            type: bjacobi
+    pc:
+        type: bjacobi
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -53,12 +53,12 @@ cs0001:
         tensilestrength: 2.
         compressivestrength: 4.
         alpha: 5.
-cs0020:
+fs0020:
     displacementbc: yes,no,no
     boundaryDisplacement: -.5,0,0
     damageBC: yes
     boundaryDamage: 0.
-cs0030:
+fs0030:
     displacementbc: yes,no,no
     boundaryDisplacement: .5,0,0
     damageBC: yes
