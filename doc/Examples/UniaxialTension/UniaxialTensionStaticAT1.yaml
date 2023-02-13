@@ -1,36 +1,39 @@
 ### global options
 verbose: 1
-boundaryDisplacement_scaling: linear
-heatxfer:
-    timestepping:
-        type: null
-defmech:
-    timestepping:
-        type: quasistatic
-    damage:
-        atol: 1.0e-3
-    sor:
-        omega: 1.4
-    pclag: 5
-temperature:
-    offset: 0
 time:
     min: 0
     max: 5
     numstep: 1
+heatxfer:
+    timestepping:
+        type: null
+defmech:
+    timestepping: 
+        type: quasistatic
+    solver:
+        type: altmin
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.
+    pclag: 5
 displacement:
     snes:
         type: ksponly
     pc:
         type: gamg
+damage:
+    snes:
+        atol: 1e-6
+        rtol: 1e-5
 cs0001:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
-        PoissonRatio:  0.
-        PlaneStress: 0
-    FractureToughness: 0.93
-    internallength: .05
+        PoissonRatio:  0.3
+        PlaneStress: 1
+    FractureToughness: 1
+    internallength: .03
     residualstiffness: 0.
     damage:
         type: AT1

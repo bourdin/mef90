@@ -1,6 +1,5 @@
 ### global options
 verbose: 1
-boundaryDisplacement_scaling: linear
 heatxfer:
     timestepping:
         type: null

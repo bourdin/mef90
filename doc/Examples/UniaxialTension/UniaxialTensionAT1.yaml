@@ -1,23 +1,23 @@
 ### global options
 verbose: 1
-boundaryDisplacement_scaling: linear
+time:
+    min: 0
+    max: 5
+    numstep: 21
 heatxfer:
     timestepping:
         type: null
 defmech:
     timestepping:
         type: quasistatic
+    solver:
+        type: altmin
     damage:
         atol: 1.0e-3
     sor:
         omega: 1.
-    pclag: 1
-temperature:
-    offset: 0
-time:
-    min: 0
-    max: 5
-    numstep: 21
+    pclag: 5
+    irrevthres: 0.
 displacement:
     snes:
         type: ksponly
@@ -27,10 +27,6 @@ damage:
     snes:
         atol: 1e-6
         rtol: 1e-5
-        linesearch:
-            type: cp
-    pc:
-        type: bjacobi
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -47,12 +43,12 @@ cs0001:
     displacementbc: no,no,no
     damageBC: no
 fs0020:
-    displacementbc: yes,no,no
+    displacementbc: yes,yes,no
     boundaryDisplacement: -.5,0,0
     damageBC: yes
     boundaryDamage: 0.
 fs0030:
-    displacementbc: yes,no,no
+    displacementbc: yes,yes,no
     boundaryDisplacement: .5,0,0
     damageBC: yes
     boundaryDamage: 0.
