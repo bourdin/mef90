@@ -101,7 +101,7 @@ module m_vDefDefault
                                                          MEF90Scaling_Linear, & ! externalTempScaling
                                                          MEF90Scaling_Linear, & ! fluxScaling
                                                          MEF90Scaling_Linear, & ! boundaryFluxScaling
-                                                         PETSC_TRUE)            ! temperatureExport
+                                                         PETSC_FALSE)           ! temperatureExport
  
    Type(MEF90HeatXferCellSetOptions_Type),Parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                          0.0_Kr,               & ! flux
