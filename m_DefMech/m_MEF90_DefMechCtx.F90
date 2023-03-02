@@ -54,6 +54,7 @@ Module m_MEF90_DefMechCtx_Type
    Type MEF90DefMechGlobalOptions_Type
       PetscEnum                              :: timeSteppingType
       PetscEnum                              :: solverType
+      PetscEnum                              :: damageSolverType
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscEnum                              :: boundaryDisplacementScaling
@@ -294,6 +295,12 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_TimeSteppingTypeList
    
    Enum,bind(c)
+      enumerator  :: MEF90DefMech_DamageSolverTypeSNES = 0, &
+                     MEF90DefMech_DamageSolverTypeTAO
+   End Enum
+   Character(len = MEF90MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_DamageSolverTypeList
+
+   Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
                      MEF90DefMech_BTTypeBackward,    &
                      MEF90DefMech_BTTypeForward
@@ -385,6 +392,12 @@ Contains
       MEF90DefMech_TimeSteppingTypeList(4) = '_MEF90DefMech_TimeSteppingType'
       MEF90DefMech_TimeSteppingTypeList(5) = ''
       
+      MEF90DefMech_DamageSolverTypeList(1) = 'SNES'
+      MEF90DefMech_DamageSolverTypeList(2) = 'Tao'
+      MEF90DefMech_DamageSolverTypeList(3) = 'MEF90DefMech_DamageSolverType'
+      MEF90DefMech_DamageSolverTypeList(4) = '_MEF90DefMech_DamageSolverType'
+      MEF90DefMech_DamageSolverTypeList(5) = ''
+
       MEF90DefMech_BTTypeList(1) = 'Null'
       MEF90DefMech_BTTypeList(2) = 'Backward'
       MEF90DefMech_BTTypeList(3) = 'Forward'
@@ -776,6 +789,7 @@ Contains
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%damageSolverType,MEF90DefMech_DamageSolverTypeList,default%damageSolverType,'DefMech_damageSolver_Type','Type of defect mechanics damage solver',ierr))
 
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%temperatureExport,default%temperatureExport,'temperature_export','Export temperature in result file',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement in result file',ierr))

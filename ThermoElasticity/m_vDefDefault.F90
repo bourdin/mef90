@@ -24,6 +24,7 @@ module m_vDefDefault
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: DefMechDefaultGlobalOptions = MEF90DefMechGlobalOptions_Type( &
                                                          MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! timeSteppingType
                                                          MEF90DefMech_SolverTypeAltMin,            & ! solverType
+                                                         MEF90DefMech_DamageSolverTypeSNES,        & ! damageSolverType
                                                          MEF90Scaling_Linear,     & ! boundaryDisplacementScaling
                                                          MEF90Scaling_CST,        & ! displacementLowerBoundScaling
                                                          MEF90Scaling_CST,        & ! displacementUpperBoundScaling

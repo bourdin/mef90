@@ -1024,6 +1024,5 @@ Contains
       PetscCall(DMLocalToGlobalBegin(dm,locV,INSERT_VALUES,v,ierr))
       PetscCall(DMLocalToGlobalEnd(dm,locV,INSERT_VALUES,v,ierr))
       PetscCall(DMRestoreLocalVector(dm,locV,ierr))
-      !!! Of course, this does not use informations from the section, so it does over-write constrained values
    End Subroutine MEF90DefMechProjectCoordinates_Private
 End Module m_MEF90_DefMech
