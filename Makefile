@@ -46,7 +46,7 @@ WorkControlled: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 vDef: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef vDefTAO
+	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef
 #	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT vDefHF
 
 YAMLValidator: MEF90 m_DefMech m_HeatXfer
