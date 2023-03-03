@@ -41,7 +41,7 @@ Contains
 
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
       ! D=P^(-1).A.P
-      call Diagonalize(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%InelasticStrain),MatProjLocBasisToPrincipalBasis,MatDiagPrincipalBasis)
+      call Diagonalize(deviatoricPart(myctx_ptr%HookesLaw*myctx_ptr%totalStrain),MatProjLocBasisToPrincipalBasis,MatDiagPrincipalBasis)
 
       f(1) = ( (myctx_ptr%HookesLaw * (xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) /2.
       h(1) = Trace(xMatS)

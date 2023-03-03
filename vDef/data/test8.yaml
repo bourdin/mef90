@@ -11,8 +11,10 @@ defmech:
     type: quasistatic
 boundaryDisplacement:
   scaling: linear
-boundaryTemp:
+boundaryTemperature:
   scaling: linear
+temperature:
+  export: 1
 cs0001:
   fracturetoughness: 1
   residualstiffness: 0.
@@ -22,17 +24,17 @@ cs0001:
     type: AT1
   plasticity:
     type: NONE
-cs0010:
+fs0020:
   displacementBC: 1,1,1
   boundaryDisplacement: -.5,0,0 
   damageBC: 1
   boundaryDamage: 0
-  tempBC: 1
-  boundaryTemp: 0
-cs0020:
+  temperatureBC: 1
+  boundaryTemperature: 0
+fs0030:
   displacementBC: 1,0,1
   boundaryDisplacement: .5,0,0 
   damageBC: 1
   boundaryDamage: 0
-  tempBC: 1
-  boundaryTemp: 100
+  temperatureBC: 1
+  boundaryTemperature: 100

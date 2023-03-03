@@ -46,8 +46,8 @@ contains
 
 ! #ifdef MEF90_HAVE_SNLP
 !       Type(DM)                                           :: Mesh
-!       Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,inelasticStrainSec,plasticStrainPreviousSec,cumulatedDissipatedPlasticEnergyVariationSec,cumulatedDissipatedPlasticEnergyOldSec
-!       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,inelasticStrainLoc,damageLoc,plasticStrainPreviousLoc
+!       Type(SectionReal)                                  :: plasticStrainSec,plasticStrainOldSec,totalStrainSec,plasticStrainPreviousSec,cumulatedDissipatedPlasticEnergyVariationSec,cumulatedDissipatedPlasticEnergyOldSec
+!       PetscReal,Dimension(:),Pointer                     :: plasticStrainLoc,plasticStrainOldLoc,totalStrainLoc,damageLoc,plasticStrainPreviousLoc
 !       PetscReal,Dimension(:),Pointer                     :: cumulatedDissipatedPlasticEnergyVariationLoc,cumulatedDissipatedPlasticEnergyOldLoc
 !       type(c_funptr)                                     :: snlp_fhg,snlp_Dfhg
 !       integer(kind=c_int)                                :: snlp_n,snlp_m,snlp_p
@@ -81,7 +81,7 @@ contains
 !       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainOldSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealToVec(plasticStrainOldSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
 
-!       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,inelasticStrainSec,ierr);CHKERRQ(ierr)
+!       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,totalStrainSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealToVec(plasticStrainOldSec,MEF90DefMechCtx%cellDMMatSScatter,SCATTER_REVERSE,plasticStrainOld,ierr);CHKERRQ(ierr)
 
 !       Call SectionRealDuplicate(MEF90DefMechCtx%cellDMMatSSec,plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
@@ -302,14 +302,14 @@ contains
 !                QuadratureOrder = 2 * (elemDisplacementType%order - 1)
 !                Call MEF90Element_Create(MEF90DefMechCtx%DMVect,setIS,elemDisplacement,QuadratureOrder,CellSetOptions%elemTypeShortIDDisplacement,ierr);CHKERRQ(ierr)
 !                Call MEF90Element_Create(MEF90DefMechCtx%DMScal,setIS,elemScal,QuadratureOrder,CellSetOptions%elemTypeShortIDDamage,ierr);CHKERRQ(ierr)
-!                Call MEF90InelasticStrainSet(inelasticStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
+!                Call MEF90totalStrainSet(totalStrainSec,xSec,temperatureSec,MEF90DefMechCtx%DMVect,MEF90DefMechCtx%DMScal,setIS,matpropSet%LinearThermalExpansion, &
 !                                             elemDisplacement,elemDisplacementType,elemScal,elemScalType,ierr)
 !                Allocate(damageloc(elemScalType%numDof))
 !                Do cell = 1,size(cellID)
-!                   !! actualiser le ctx (  HookesLaw ,InelasticStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
+!                   !! actualiser le ctx (  HookesLaw ,totalStrainSec, plasticStrainStrainSec, plasticStrainOldSec  )
 !                   Call SectionRealRestrict(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestrict(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
-!                   Call SectionRealRestrict(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+!                   Call SectionRealRestrict(totalStrainSec,cellID(cell),totalStrainLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyOldSec,cellID(cell),cumulatedDissipatedPlasticEnergyOldLoc,ierr);CHKERRQ(ierr)
 
@@ -323,7 +323,7 @@ contains
 
 !                   PlasticityCtx%Damage = damageCellAvg
 !                   PlasticityCtx%PlasticStrainOld = plasticStrainOldLoc
-!                   PlasticityCtx%InelasticStrain = InelasticStrainLoc
+!                   PlasticityCtx%totalStrain = totalStrainLoc
 !                   PlasticityCtx%plasticStrainPrevious = plasticStrainLoc
 !                   PlasticityCtx%cumulatedDissipatedPlasticEnergy = cumulatedDissipatedPlasticEnergyOldLoc(1)
 
@@ -334,7 +334,7 @@ contains
 !                   !!! Brittle in traction, Ductile in compression
 !                   Select Case(cellSetOptions%unilateralContactType)
 !                   ! Case (MEF90DefMech_unilateralContactTypeBrittleDuctile)
-!                   !       If (Trace(PlasticityCtx%InelasticStrain) > 0.0_Kr ) Then
+!                   !       If (Trace(PlasticityCtx%totalStrain) > 0.0_Kr ) Then
 !                   !          plasticStrainLoc = plasticStrainOldLoc
 !                   !          Call SectionRealRestrict(plasticStrainPreviousSec,cellID(cell),plasticStrainPreviousLoc,ierr);CHKERRQ(ierr)
 !                   !          plasticStrainPreviousLoc = plasticStrainLoc
@@ -363,14 +363,14 @@ contains
 !                         STOP
 !                   End Select
 !                   if (.NOT. PlasticityCtx%isViscousPlasticity) then
-!                      cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%InelasticStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
+!                      cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * ( PlasticityCtx%HookesLaw * ( PlasticityCtx%totalStrain - PlasticStrainMatS ) ) .dotP. ( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
 !                   else
 !                      cumulatedDissipatedPlasticEnergyVariationLoc(1) = Stiffness * PlasticityCtx%viscousCumulatedDissipatedPlasticEnergyVariation
 !                   endif
 
 ! #if MEF90_DIM == 2
 !                   if (PlasticityCtx%isPlaneStress .eqv. .FALSE.) then
-!                      Sigma_33_PlaneStrain = (PlasticityCtx%HookesLaw%YoungsModulus - 2.0_Kr*PlasticityCtx%HookesLaw%PoissonRatio*PlasticityCtx%HookesLaw%mu)*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%InelasticStrain)
+!                      Sigma_33_PlaneStrain = (PlasticityCtx%HookesLaw%YoungsModulus - 2.0_Kr*PlasticityCtx%HookesLaw%PoissonRatio*PlasticityCtx%HookesLaw%mu)*trace(PlasticStrainMatS) + PlasticityCtx%HookesLaw%lambda*trace(PlasticityCtx%totalStrain)
 !                      cumulatedDissipatedPlasticEnergyVariationLoc(1) = cumulatedDissipatedPlasticEnergyVariationLoc(1) + Stiffness * ( PlasticityCtx%HookesLaw%lambda *trace(PlasticStrainMatS) - Sigma_33_PlaneStrain ) * trace( PlasticStrainMatS - PlasticityCtx%plasticStrainOld )
 !                   endif
 ! #endif
@@ -380,7 +380,7 @@ contains
 
 !                   Call SectionRealRestore(plasticStrainSec,cellID(cell),plasticStrainLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestore(plasticStrainOldSec,cellID(cell),plasticStrainOldLoc,ierr);CHKERRQ(ierr)
-!                   Call SectionRealRestore(inelasticStrainSec,cellID(cell),inelasticStrainLoc,ierr);CHKERRQ(ierr)
+!                   Call SectionRealRestore(totalStrainSec,cellID(cell),totalStrainLoc,ierr);CHKERRQ(ierr)
 !                End Do !cell
 !                Call MEF90Element_Destroy(elemDisplacement,ierr)
 !                Call MEF90Element_Destroy(elemScal,ierr)
@@ -400,7 +400,7 @@ contains
 
 !       Call SectionRealDestroy(plasticStrainSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealDestroy(plasticStrainOldSec,ierr);CHKERRQ(ierr)
-!       Call SectionRealDestroy(inelasticStrainSec,ierr);CHKERRQ(ierr)
+!       Call SectionRealDestroy(totalStrainSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealDestroy(plasticStrainPreviousSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealDestroy(cumulatedDissipatedPlasticEnergyVariationSec,ierr);CHKERRQ(ierr)
 !       Call SectionRealDestroy(cumulatedDissipatedPlasticEnergyOldSec,ierr);CHKERRQ(ierr)

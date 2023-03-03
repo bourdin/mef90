@@ -67,7 +67,7 @@ Contains
       endif
 
       PlasticStrainFlow = xMatS-myctx_ptr%PlasticStrainOld
-      Stress = (myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)) !*StiffnessA
+      Stress = (myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS)) !*StiffnessA
 
 #if MEF90_DIM==2
       !!! If plane strain
@@ -77,9 +77,9 @@ Contains
       lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
 
       Strain3D      = 0.0_Kr
-      Strain3D%XX   = myctx_ptr%InelasticStrain%XX
-      Strain3D%YY   = myctx_ptr%InelasticStrain%YY
-      Strain3D%XY   = myctx_ptr%InelasticStrain%XY
+      Strain3D%XX   = myctx_ptr%totalStrain%XX
+      Strain3D%YY   = myctx_ptr%totalStrain%YY
+      Strain3D%XY   = myctx_ptr%totalStrain%XY
 
       PlasticStrainFlow3D    = 0.0_Kr
       PlasticStrainFlow3D%XX = xMatS%XX - myctx_ptr%PlasticStrainOld%XX
@@ -94,7 +94,7 @@ Contains
       Stress3D%ZZ  = lambda*(Trace(Strain3D)) + 2*mu*(Strain3D%ZZ+Trace(xMatS))
 #elif MEF90_DIM==3
       Stress3D             = Stress
-      Strain3D             = myctx_ptr%InelasticStrain
+      Strain3D             = myctx_ptr%totalStrain
       PlasticStrainFlow3D  = xMatS - myctx_ptr%PlasticStrainOld
 #endif
 
@@ -108,7 +108,7 @@ Contains
       
       dt = myctx_ptr%Viscositydt 
 
-      f(1) = 0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%InelasticStrain-xMatS)
+      f(1) = 0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%totalStrain-xMatS)
       Do s = 1,1
          m = m_s(:,s) 
          n = n_s(:,s) 

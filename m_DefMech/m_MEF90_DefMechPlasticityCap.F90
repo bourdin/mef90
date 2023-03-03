@@ -49,7 +49,7 @@ Contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
       endif
 
-      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
+      Stress=(myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS))*StiffnessA
       f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0_Kr
       g(1) = myctx_ptr%CoefficientCapModelD * sqrt( MEF90_DIM / (MEF90_DIM - 1.0_kr) * ( deviatoricPart(Stress)  .DotP.  deviatoricPart(Stress) ))  - myctx_ptr%CoefficientCapModel0*StiffnessB + myctx_ptr%CoefficientCapModel1*Trace(Stress) + myctx_ptr%CoefficientCapModel2*Trace(Stress)**2.0_Kr
    end subroutine FHG_CAPMODEL

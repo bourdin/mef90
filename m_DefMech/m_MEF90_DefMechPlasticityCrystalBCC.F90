@@ -75,7 +75,7 @@ Contains
       endif
       
       PlasticStrainFlow = xMatS-myctx_ptr%PlasticStrainOld
-      Stress = (myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))
+      Stress = (myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS))
 
 #if MEF90_DIM==2
       !!! If plane strain
@@ -85,9 +85,9 @@ Contains
       lambda = E * nu / (1.0_Kr + nu) / (1 - 2.0_Kr * nu)
          
       Strain3D      = 0.0_Kr
-      Strain3D%XX   = myctx_ptr%InelasticStrain%XX
-      Strain3D%YY   = myctx_ptr%InelasticStrain%YY
-      Strain3D%XY   = myctx_ptr%InelasticStrain%XY
+      Strain3D%XX   = myctx_ptr%totalStrain%XX
+      Strain3D%YY   = myctx_ptr%totalStrain%YY
+      Strain3D%XY   = myctx_ptr%totalStrain%XY
      
       PlasticStrainFlow3D    = 0.0_Kr
       PlasticStrainFlow3D%XX = xMatS%XX - myctx_ptr%PlasticStrainOld%XX
@@ -108,7 +108,7 @@ Contains
       PlasticStrain3D%ZZ = -(PlasticStrain3D%XX + PlasticStrain3D%YY)
 #elif MEF90_DIM==3
       Stress3D             = Stress
-      Strain3D             = myctx_ptr%InelasticStrain
+      Strain3D             = myctx_ptr%totalStrain
       PlasticStrainFlow3D  = xMatS - myctx_ptr%PlasticStrainOld
       PlasticStrain3D      = xMatS
 #endif
@@ -161,7 +161,7 @@ Contains
          end if
       End Do
       if (myctx_ptr%isViscousPlasticity) then
-         f(1) = (0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%InelasticStrain-xMatS)) + (StiffnessB * myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation)
+         f(1) = (0.5_Kr * StiffnessA * Stress .DotP. (myctx_ptr%totalStrain-xMatS)) + (StiffnessB * myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation)
          TotalPlasticIncrement = MEF90MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
 #if MEF90_DIM==2
          h(1) = PlasticStrainFlow3D%XX - TotalPlasticIncrement%XX

@@ -1,0 +1,269 @@
+ 
+ 
+ 
+ 
+Solving steady state step    1, t= 0.00000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+ 
+Solving steady state step    2, t= 7.50000E-02 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.83733E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.83733E-02 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.83733E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.83733E-02 
+ 
+Solving steady state step    3, t= 1.50000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.13493E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.13493E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.13493E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.13493E-01 
+ 
+Solving steady state step    4, t= 2.25000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.55360E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.55360E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.55360E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.55360E-01 
+ 
+Solving steady state step    5, t= 3.00000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  4.53973E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.53973E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  4.53973E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.53973E-01 
+ 
+Solving steady state step    6, t= 3.75000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  7.09333E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.09333E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  7.09333E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.09333E-01 
+ 
+Solving steady state step    7, t= 4.50000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.02144E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.02144E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.02144E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.02144E+00 
+ 
+Solving steady state step    8, t= 5.25000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.39029E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.39029E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.39029E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.39029E+00 
+ 
+Solving steady state step    9, t= 6.00000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.81589E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.81589E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.81589E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.81589E+00 
+ 
+Solving steady state step   10, t= 6.75000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.29824E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.29824E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.29824E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.29824E+00 
+ 
+Solving steady state step   11, t= 7.50000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.83733E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.83733E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.83733E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.83733E+00 
+ 
+Solving steady state step   12, t= 8.25000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  3.43317E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.43317E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  3.43317E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  3.43317E+00 
+ 
+Solving steady state step   13, t= 9.00000E-01 
+   Alt. Min. step     1 alpha min / max 9.63568E-03 /  9.02196E-02, max change  9.02196E-02 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.38470E-01, max change  4.82652E-02 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  2.31092E-01, max change  9.27198E-02 
+   Alt. Min. step     4 alpha min / max 0.00000E+00 /  4.05701E-01, max change  1.74628E-01 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  6.65919E-01, max change  2.60218E-01 
+   Alt. Min. step     6 alpha min / max 0.00000E+00 /  9.04576E-01, max change  2.38657E-01 
+   Alt. Min. step     7 alpha min / max 0.00000E+00 /  9.91043E-01, max change  3.54394E-01 
+   Alt. Min. step     8 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.07899E-01 
+   Alt. Min. step     9 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.95136E-01 
+   Alt. Min. step    10 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.54601E-02 
+   Alt. Min. step    11 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.57351E-02 
+   Alt. Min. step    12 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.84363E-02 
+   Alt. Min. step    13 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.21578E-02 
+   Alt. Min. step    14 alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.15470E-03 
+   Alt. Min. step    15 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.57280E-03 
+   Alt. Min. step    16 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.11452E-02 
+   Alt. Min. step    17 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.28815E-02 
+   Alt. Min. step    18 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.47184E-02 
+   Alt. Min. step    19 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.60529E-02 
+   Alt. Min. step    20 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.52731E-02 
+   Alt. Min. step    21 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.12483E-02 
+   Alt. Min. step    22 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.11306E-03 
+   Alt. Min. step    23 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.67265E-03 
+   Alt. Min. step    24 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.06895E-03 
+   Alt. Min. step    25 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.19287E-04 
+cell set    1  elastic energy:  1.52408E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.21538E+00 total:  1.23062E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.52408E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.21538E+00 total:  1.23062E+00 
+ 
+Solving steady state step   14, t= 9.75000E-01 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  9.00209E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.79925E-03 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.68240E-04 
+cell set    1  elastic energy:  1.34264E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.21949E+00 total:  1.23291E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.34264E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.21949E+00 total:  1.23291E+00 
+ 
+Solving steady state step   15, t= 1.05000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.67413E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.15279E-03 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.94567E-04 
+cell set    1  elastic energy:  1.18990E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22289E+00 total:  1.23479E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.18990E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22289E+00 total:  1.23479E+00 
+ 
+Solving steady state step   16, t= 1.12500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.55722E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.81762E-04 
+cell set    1  elastic energy:  1.06396E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22570E+00 total:  1.23634E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.06396E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22570E+00 total:  1.23634E+00 
+ 
+Solving steady state step   17, t= 1.20000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.66878E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.53221E-04 
+cell set    1  elastic energy:  9.54660E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22809E+00 total:  1.23764E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  9.54660E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.22809E+00 total:  1.23764E+00 
+ 
+Solving steady state step   18, t= 1.27500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.88832E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.77516E-04 
+cell set    1  elastic energy:  8.61308E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23012E+00 total:  1.23874E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  8.61308E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23012E+00 total:  1.23874E+00 
+ 
+Solving steady state step   19, t= 1.35000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.23950E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.62636E-04 
+cell set    1  elastic energy:  7.80905E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23186E+00 total:  1.23967E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  7.80905E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23186E+00 total:  1.23967E+00 
+ 
+Solving steady state step   20, t= 1.42500E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.69693E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.85955E-04 
+cell set    1  elastic energy:  7.11124E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23337E+00 total:  1.24048E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  7.11124E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23337E+00 total:  1.24048E+00 
+ 
+Solving steady state step   21, t= 1.50000E+00 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  3.24028E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.42758E-04 
+cell set    1  elastic energy:  6.50163E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23467E+00 total:  1.24118E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+face set   60                      boundary work:  0.00000E+00 
+face set   70                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  6.50163E-03 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.23467E+00 total:  1.24118E+00 
+ Total number of alternate minimizations:          55  
