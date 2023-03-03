@@ -4,14 +4,13 @@ all:
 test: test2D test3D
 test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/vDef
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
-	make -s testvDef PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testvDef PREFIX=Beam1x10-tri.msh OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/${PETSC_ARCH}/bin/vDef
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
-	make -s testvDef PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testvDef PREFIX=Beam3D1x10-tet.msh  OPTIONSFILE=$${OPTIONSFILE};\
 	done
-	#make -s testvDef PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
@@ -93,12 +92,12 @@ vDefBT.o: ${BASE_DIR}/vDefBT.F90 m_vDefDefault.o ${MEF90_DEFMECH_OBJS} ${MEF90_H
 
 testvDef:
 	@echo ;echo "Testing vDef with $${PREFIX} $${OPTIONSFILE}"
-	@ARGS="-prefix data/$${PREFIX} -options_file_yaml data/$${OPTIONSFILE}";\
+	@ARGS="-geometry ${MEF90_DIR}/TestMeshes/$${PREFIX} -result $${PREFIX}-$${OPTIONSFILE}.exo -options_file data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/vDef $${ARGS} | grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
-	if (${DIFF} -B ${MEF90_DIR}/vDef/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
+	if (${DIFF} -B ${MEF90_DIR}/vDef/results/$${PREFIX}-$${OPTIONSFILE}.out $${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
-	
+
 MEF90:
 	make -C ${MEF90_DIR} MEF90
 m_HeatXfer:
