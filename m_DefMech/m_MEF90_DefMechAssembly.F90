@@ -1341,6 +1341,7 @@ Contains
 !!!  MEF90DefMechTAOGradientDamage:
 !!!  
 !!!  (c) 2012-20 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
    Subroutine  MEF90DefMechTAOGradientDamage(taoDamage,damage,residual,MEF90DefMechCtx,ierr)
@@ -1536,6 +1537,7 @@ Contains
 !!!  MEF90DefMechTAOHessianDamage:
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechTAOHessianDamage(taoDamage,damage,A,M,MEF90DefMechCtx,ierr)
@@ -1657,6 +1659,7 @@ Contains
 !!!  MEF90DefMechTAOObjectiveDamage:
 !!!  
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
    Subroutine MEF90DefMechTAOObjectiveDamage(taoDamage,damage,energy,MEF90DefMechCtx,ierr)
@@ -1669,7 +1672,7 @@ Contains
       PetscReal,dimension(:),Pointer                     :: surfaceEnergy,elasticEnergy
       Type(tDM)                                          :: dmDamage
       Type(tIS)                                          :: setIS
-      PetscInt                                           :: numSet,set
+      PetscInt                                           :: numSet
 
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal,dmDamage,ierr))
       PetscCall(DMGlobalToLocal(dmDamage,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))

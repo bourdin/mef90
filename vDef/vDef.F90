@@ -73,7 +73,7 @@ Program vDef
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
    If (MEF90GlobalOptions%verbose > 1) Then
-      PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
+      PetscCallA(PetscPrintf(MEF90Ctx%comm,"Reading geometry\n",ierr))
    End If
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
@@ -91,13 +91,13 @@ Program vDef
    If (flg) Then
       ! we assume that the output file is formatted
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Opening result file\n",ierr))
       End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
    Else
       ! we need to create the output file
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Creating result file\n",ierr))
       End If
       PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
@@ -112,7 +112,7 @@ Program vDef
 
       If (MEF90Ctx%NumProcs > 1) Then
          If (MEF90GlobalOptions%verbose > 1) Then
-            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
+            PetscCallA(PetscPrintf(MEF90Ctx%comm,"Distributing mesh\n",ierr))
          End If
          PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
          PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
@@ -141,11 +141,11 @@ Program vDef
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    If (EXONeedsFormatting) Then
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Formatting result file\n",ierr))
       End If
       PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Done Formatting result file\n",ierr))
       End If
    End If
 
@@ -410,7 +410,7 @@ Program vDef
                         PetscCallA(VecRestoreArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
                         PetscCallA(VecRestoreArrayReadF90(damageUB,damageUBArray,ierr))
                         PetscCallA(VecRestoreArrayReadF90(damageLB,damageLBArray,ierr))
-                        PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr))
+                        PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,MEF90Ctx%comm,ierr))
                         PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
                      Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
                         !!! PROJECTED SOR
@@ -460,9 +460,9 @@ Program vDef
             PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
             PetscCallA(MEF90DefMechSurfaceEnergy(MEF90DefMechCtx,surfaceEnergy,ierr))
 
-            PetscCallA(MEF90DefMechStress(MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr))
+
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
+            PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
@@ -470,12 +470,12 @@ Program vDef
                Write(IOBuffer,500) step,time(step),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
                PetscCallA(PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr))
                PetscCallA(PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr))
-               End Do
+            End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
 
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90FaceSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
+            PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,203) setID(set),boundaryForceWork(set)
@@ -483,6 +483,7 @@ Program vDef
             End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
+
             Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             Write(IOBuffer,500) step,time(step),sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
@@ -491,6 +492,9 @@ Program vDef
             PetscCallA(PetscLogStagePop(ierr))
 
             !!! Save results and boundary Values
+            If (MEF90DefMechGlobalOptions%stressExport) Then
+               PetscCallA(MEF90DefMechStress(MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr))
+            End If
             PetscCallA(PetscLogStagePush(logStageIO,ierr))
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
             PetscCallA(PetscLogStagePop(ierr))
@@ -508,7 +512,7 @@ Program vDef
       End Do MainloopQS
    End If ! timeSteppingType
    Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
-   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+   PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          
 100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("\nSolving transient step ",I4,", t=",ES12.5,"\n")

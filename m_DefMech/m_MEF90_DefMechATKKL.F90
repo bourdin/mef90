@@ -120,6 +120,6 @@ Contains
       Class(MEF90DefMechATKKL_Type),Intent(IN)         :: self
       PetscReal                                        :: alpha
 
-      D2wKKL = 24.0_Kr * (1.0_Kr - alpha) - 36.0_Kr * (1.0_Kr - alpha)**2
+      D2wKKL = -24.0_Kr * (1.0_Kr - alpha) + 36.0_Kr * (1.0_Kr - alpha)**2
    End function D2wKKL
 End module m_MEF90_DefMechATKKL

@@ -479,7 +479,7 @@ Contains
       DefMechCtx%MEF90Ctx => MEF90Ctx
       PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr))      
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -488,7 +488,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
       PetscCall(DMGetLabelIdIS(dm,MEF90FaceSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%FaceSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -497,7 +497,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
       PetscCall(DMGetLabelIdIS(dm,MEF90VertexSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -513,8 +513,8 @@ Contains
       PetscCall(PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n",ierr))
       PetscCall(PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr))
       
-      PetscCall(DMGetLabelIdIS(dm,MEF90FaceSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
       Do set = 1, numSet
@@ -648,7 +648,7 @@ Contains
       
       !!! 
       !!! Close energy viewers
-      !!!      
+      !!!    
       PetscCall(PetscViewerDestroy(DefMechCtx%globalEnergyViewer,ierr))
       Do set = 1, size(DefMechCtx%setEnergyViewer)
          PetscCall(PetscViewerDestroy(DefMechCtx%setEnergyViewer(set),ierr))
@@ -1030,7 +1030,7 @@ Contains
       !!! Registering Vertex Set Context
       !!!
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90VertexSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Vertex set ',I4)") setID(set)
