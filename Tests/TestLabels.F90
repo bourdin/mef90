@@ -13,7 +13,8 @@ Implicit NONE
     PetscInt                            :: set
     type(tIS)                           :: setIS,setPointIS
     PetscInt,Dimension(:),pointer       :: setID,pointID
-    PetscInt                            :: i
+    PetscInt                            :: labelSize,i
+    Character(len=MEF90MXSTRLEN)        :: IOBuffer
 
     MEF90GlobalOptions_default%verbose           = 1
     MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
@@ -48,15 +49,22 @@ Implicit NONE
 
     Do i = 1, size(MEF90SetLabelName)
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90SetLabelName(i))//' ===\n',ierr))
+        PetscCallA(DMGetLabelSize(dm,MEF90SetLabelName(i),labelSize,ierr))
+        Write(IOBuffer,'("label size",I5,"\n")') labelSize
+        ! Note that label size refers only to the local dm, not the whole mesh
+        PetscCallA(PetscSynchronizedPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+        PetscCallA(PetscSynchronizedFlush(PETSC_COMM_WORLD,PETSC_STDOUT,ierr))
         PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(i), setIS, ierr))
         If (setIS /= PETSC_NULL_IS) Then
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
-            Write(*,*) trim(MEF90SetLabelName(i))//' ID: ', setID
+            Write(IOBuffer,*) trim(MEF90SetLabelName(i))//' ID: ', setID,'\n'
+            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
             Do set = 1, size(setID)
                 PetscCallA(DMGetStratumIS(dm,MEF90SetLabelName(i),setID(set),setPointIS,ierr))
                 If (setPointIS /= PETSC_NULL_IS) Then
                     PetscCallA(ISGetIndicesF90(setPointIS,pointID,ierr))
-                    Write(*,*) '   points', pointID
+                    Write(IOBuffer,*) '   points', pointID,'\n'
+                    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
                     PetscCallA(ISRestoreIndicesF90(setPointIS,pointID,ierr))
                 End If ! setPointIS
                 PetscCallA(ISDestroy(setPointIS,ierr))
@@ -66,6 +74,8 @@ Implicit NONE
         PetscCallA(ISDestroy(setIS,ierr))
     End Do
     PetscCallA(DMDestroy(dm,ierr))
+
+    
     
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
