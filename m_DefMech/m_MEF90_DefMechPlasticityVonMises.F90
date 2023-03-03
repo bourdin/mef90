@@ -50,7 +50,7 @@ Contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
       endif
 
-      Stress=myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
+      Stress=myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS)
 
       If (myctx_ptr%isLinearIsotropicHardening .eqv. .true. ) then
          PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy+(Stress .DotP. (xMatS-myctx_ptr%PlasticStrainOld)))/myctx_ptr%YieldStress
@@ -118,10 +118,10 @@ Contains
       if ( myctx_ptr%isPlaneStress .eqv. .true.) then
          !!! If plane stress
          Strain      = 0.0_Kr
-         Strain%XX   = myctx_ptr%InelasticStrain%XX
-         Strain%YY   = myctx_ptr%InelasticStrain%YY
-         Strain%XY   = myctx_ptr%InelasticStrain%XY
-         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
+         Strain%XX   = myctx_ptr%totalStrain%XX
+         Strain%YY   = myctx_ptr%totalStrain%YY
+         Strain%XY   = myctx_ptr%totalStrain%XY
+         Strain%ZZ   = (-lambda*Trace(myctx_ptr%totalStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
 
          PlasticStrainFlow    = 0.0_Kr
          PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
@@ -137,9 +137,9 @@ Contains
       else
          !!! If plane strain
          Strain      = 0.0_Kr
-         Strain%XX   = myctx_ptr%InelasticStrain%XX
-         Strain%YY   = myctx_ptr%InelasticStrain%YY
-         Strain%XY   = myctx_ptr%InelasticStrain%XY
+         Strain%XX   = myctx_ptr%totalStrain%XX
+         Strain%YY   = myctx_ptr%totalStrain%YY
+         Strain%XY   = myctx_ptr%totalStrain%XY
 
          PlasticStrainFlow    = 0.0_Kr
          PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
@@ -205,7 +205,7 @@ Contains
          StiffnessB = (1.0_Kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
       endif
 
-      Stress = myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS)
+      Stress = myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS)
 
       If (myctx_ptr%isLinearIsotropicHardening .eqv. .true. ) then
          PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy+(Stress .DotP. (xMatS-myctx_ptr%PlasticStrainOld)))/myctx_ptr%YieldStress

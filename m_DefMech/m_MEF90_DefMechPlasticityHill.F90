@@ -60,10 +60,10 @@ Contains
       if ( myctx_ptr%isPlaneStress .eqv. .true.) then
          !!! If plane stress
          Strain      = 0.0_Kr
-         Strain%XX   = myctx_ptr%InelasticStrain%XX
-         Strain%YY   = myctx_ptr%InelasticStrain%YY
-         Strain%XY   = myctx_ptr%InelasticStrain%XY
-         Strain%ZZ   = (-lambda*Trace(myctx_ptr%InelasticStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
+         Strain%XX   = myctx_ptr%totalStrain%XX
+         Strain%YY   = myctx_ptr%totalStrain%YY
+         Strain%XY   = myctx_ptr%totalStrain%XY
+         Strain%ZZ   = (-lambda*Trace(myctx_ptr%totalStrain) - 2*mu*Trace(myctx_ptr%plasticStrainPrevious))/(lambda + 2*mu)
 
          PlasticStrainFlow    = 0.0_Kr
          PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
@@ -79,9 +79,9 @@ Contains
       else
          !!! If plane strain
          Strain      = 0.0_Kr
-         Strain%XX   = myctx_ptr%InelasticStrain%XX
-         Strain%YY   = myctx_ptr%InelasticStrain%YY
-         Strain%XY   = myctx_ptr%InelasticStrain%XY
+         Strain%XX   = myctx_ptr%totalStrain%XX
+         Strain%YY   = myctx_ptr%totalStrain%YY
+         Strain%XY   = myctx_ptr%totalStrain%XY
 
          PlasticStrainFlow    = 0.0_Kr
          PlasticStrainFlow%XX = xMatS%XX-myctx_ptr%PlasticStrainOld%XX
