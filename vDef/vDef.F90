@@ -51,7 +51,7 @@ Program vDef
    PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO
 
 
-   PetscBool                                          :: flg,EXONeedsFormatting
+   PetscBool                                          :: flg,EXONeedsFormatting = PETSC_FALSE
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 
