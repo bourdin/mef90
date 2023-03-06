@@ -102,7 +102,7 @@ Contains
 
       TotalPlasticIncrementCrystal = 0.0_Kr
       TotalPlasticIncrement        = 0.0_Kr
-      myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = 0.0_Kr
+      myctx_ptr%viscousCumulatedPlasticDissipationIncrement = 0.0_Kr
       
       normS = (2.0_Kr*SQRT(1.0_Kr))
       
@@ -119,7 +119,7 @@ Contains
                                     & MAX( (ABS(StiffnessA*ResolvedShearStress(s)) -  StiffnessB*myctx_ptr%YieldTau0) / myctx_ptr%YieldTau0 , 0. )**myctx_ptr%ViscosityN
             TotalPlasticIncrementCrystal = TotalPlasticIncrementCrystal + (PlasticSlipIncrement(s) * MatrixMu)
             !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)   
-            myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
+            myctx_ptr%viscousCumulatedPlasticDissipationIncrement = myctx_ptr%viscousCumulatedPlasticDissipationIncrement + ResolvedShearStress(s)*PlasticSlipIncrement(s)
          else
             print *, "Rate-independent crystal plasticity is not implemented."
             !PlasticSlipIncrement(s) = dt * myctx_ptr%eta * SIGN(1.0_Kr, ResolvedShearStress(s)) *&
@@ -128,7 +128,7 @@ Contains
             !myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
          endif 
       End Do
-      f(1) = f(1) + StiffnessB*myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation
+      f(1) = f(1) + StiffnessB*myctx_ptr%viscousCumulatedPlasticDissipationIncrement
       TotalPlasticIncrement = MEF90MatRtaR(TotalPlasticIncrementCrystal,myctx_ptr%RotationMatrix3D%fullTensor)
 #if MEF90_DIM==2
       h(1) = PlasticStrainFlow3D%XX - TotalPlasticIncrement%XX

@@ -21,7 +21,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
       Real(Kind = Kr)             :: CoefficientCapModel2
       Real(Kind = Kr)             :: CoefficientCapModelD
       PetscBool                   :: isPlaneStress
-      Real(Kind = Kr)             :: cumulatedDissipatedPlasticEnergy
+      Real(Kind = Kr)             :: cumulatedPlasticDensity
       PetscBool                   :: isLinearIsotropicHardening
       Real(Kind = Kr)             :: CoeffF
       Real(Kind = Kr)             :: CoeffG
@@ -41,7 +41,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
       Real(Kind = Kr)             :: ViscosityGamma0
       Real(Kind = Kr)             :: ViscosityN
       Real(Kind = Kr)             :: Viscositydt
-      Real(Kind = Kr)             :: viscousCumulatedDissipatedPlasticEnergyVariation
+      Real(Kind = Kr)             :: viscousCumulatedPlasticDissipationIncrement
       Real(Kind = Kr)             :: m
    End Type MEF90DefMechPlasticityCtx
 End Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D

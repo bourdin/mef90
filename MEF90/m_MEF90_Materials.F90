@@ -64,9 +64,9 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoeffL                                           ! coefficient L Hill matrix
       PetscReal                     :: YieldTau0                                        ! Hill yield stress
       PetscReal                     :: residualYieldTau0                                ! Hill residual yield stress
-      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1
-      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2
-      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
+      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1 (Hill)
+      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2 (Hill)
+      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi  (Hill)
       PetscReal                     :: delta                                            ! residual Gurson and Green
       PetscReal                     :: cohesiveStiffness
       PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-Prager driving force
@@ -77,9 +77,9 @@ Module m_MEF90_Materials_Types
       PetscBool                     :: isNoPlCoupling
       Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
       PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
-      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
-      PetscReal                     :: ViscosityN                                       ! viscosity exponent
-      PetscReal                     :: Viscositydt                                      ! time step size
+      PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate (Crystal)
+      PetscReal                     :: ViscosityN                                       ! viscosity exponent (Crystal)
+      PetscReal                     :: Viscositydt                                      ! time step size (remove, add to PlasticityCtx and recompute before calling plastic strain update)
       PetscReal                     :: m                                                ! equivalent stress exponent for rate-independent crystal plasticity
       Character(len=MEF90MXSTRLEN)  :: Name
    End Type MEF90MatProp2D_Type
@@ -110,10 +110,10 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: CoeffL                                           ! coefficient L Hill matrix
       PetscReal                     :: YieldTau0                                        ! Hill yield stress
       PetscReal                     :: residualYieldTau0                                ! Hill residual yield stress
-      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1
-      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2
-      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi
-      PetscReal                     :: delta                                            ! residual Gurson and Green
+      PetscReal                     :: phi1                                             ! Bunge Euler angle phi1 (Hill)
+      PetscReal                     :: phi2                                             ! Bunge Euler angle phi2 (Hill)
+      PetscReal                     :: Phi                                              ! Bunge Euler angle Phi  (Hill)
+      PetscReal                     :: delta                                            ! residual Gurson and Green 
       PetscReal                     :: cohesiveStiffness
       PetscReal                     :: drivingForceTensileStrength                      ! tensile strength in Drucker-Prager driving force
       PetscReal                     :: drivingForceCompressiveStrength                  ! compressive strength in Drucker-Prager driving force
@@ -121,7 +121,7 @@ Module m_MEF90_Materials_Types
       PetscReal                     :: drivingForceGamma                                ! gamma parameter in Drucker-Prager driving force
       PetscBool                     :: isLinearIsotropicHardening
       PetscBool                     :: isNoPlCoupling
-      Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global
+      Type(MEF90RotationMatrix3D)   :: RotationMatrix                                   ! rotation matrix from the global frame to the material frame: X_local = R . X_global (Plasticity Crystal)
       PetscBool                     :: isViscousPlasticity                              ! boolean telling if crystal plasticity is viscous or rate-independent
       PetscReal                     :: ViscosityGamma0                                  ! viscosity reference slip rate
       PetscReal                     :: ViscosityN                                       ! viscosity exponent

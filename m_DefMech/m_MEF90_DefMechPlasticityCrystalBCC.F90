@@ -133,7 +133,7 @@ Contains
 
       TotalPlasticIncrementCrystal = 0.0_Kr
       TotalPlasticIncrement        = 0.0_Kr
-      myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = 0.0_Kr
+      myctx_ptr%viscousCumulatedPlasticDissipationIncrement = 0.0_Kr
 
       dt = myctx_ptr%Viscositydt
       active = 0
@@ -151,7 +151,7 @@ Contains
                                     & MAX( (ABS(StiffnessA*ResolvedShearStress(s)) -  StiffnessB*CRSS) / myctx_ptr%YieldTau0 , 0. )**myctx_ptr%ViscosityN
             TotalPlasticIncrementCrystal = TotalPlasticIncrementCrystal + (PlasticSlipIncrement(s) * MatrixMu(s))
             !myctx_ptr%plasticSlipsVariation(s) = PlasticSlipIncrement(s)
-            myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation = myctx_ptr%viscouscumulatedDissipatedPlasticEnergyVariation + ResolvedShearStress(s)*PlasticSlipIncrement(s)
+            myctx_ptr%viscousCumulatedPlasticDissipationIncrement = myctx_ptr%viscousCumulatedPlasticDissipationIncrement + ResolvedShearStress(s)*PlasticSlipIncrement(s)
          else
             taueq = taueq + ABS( (StiffnessA * ResolvedShearStress(s)) /  CRSS ) ** myctx_ptr%m
             !myctx_ptr%PlasticSlipsVariation(s) = SIGN(1.0_KR, ResolvedShearStress(s)) * (Stress3DCrystal .DotP. PlasticStrainFlow3DCrystal) * (ABS( (StiffnessA * ResolvedShearStress(s)) / CRSS ) ** (myctx_ptr%m - 1.0_Kr)) / CRSS
