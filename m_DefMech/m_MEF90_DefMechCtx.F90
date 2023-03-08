@@ -54,6 +54,7 @@ Module m_MEF90_DefMechCtx_Type
    Type MEF90DefMechGlobalOptions_Type
       PetscEnum                              :: timeSteppingType
       PetscEnum                              :: solverType
+      PetscEnum                              :: damageSolverType
 
       !!! scaling = time (step) scaling law currently CST, Linear, or File
       PetscEnum                              :: boundaryDisplacementScaling
@@ -294,6 +295,12 @@ Module m_MEF90_DefMechCtx
    Character(len = MEF90MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_TimeSteppingTypeList
    
    Enum,bind(c)
+      enumerator  :: MEF90DefMech_DamageSolverTypeSNES = 0, &
+                     MEF90DefMech_DamageSolverTypeTAO
+   End Enum
+   Character(len = MEF90MXSTRLEN),Dimension(5),protected   :: MEF90DefMech_DamageSolverTypeList
+
+   Enum,bind(c)
       enumerator  :: MEF90DefMech_BTTypeNULL = 0,    &
                      MEF90DefMech_BTTypeBackward,    &
                      MEF90DefMech_BTTypeForward
@@ -385,6 +392,12 @@ Contains
       MEF90DefMech_TimeSteppingTypeList(4) = '_MEF90DefMech_TimeSteppingType'
       MEF90DefMech_TimeSteppingTypeList(5) = ''
       
+      MEF90DefMech_DamageSolverTypeList(1) = 'SNES'
+      MEF90DefMech_DamageSolverTypeList(2) = 'Tao'
+      MEF90DefMech_DamageSolverTypeList(3) = 'MEF90DefMech_DamageSolverType'
+      MEF90DefMech_DamageSolverTypeList(4) = '_MEF90DefMech_DamageSolverType'
+      MEF90DefMech_DamageSolverTypeList(5) = ''
+
       MEF90DefMech_BTTypeList(1) = 'Null'
       MEF90DefMech_BTTypeList(2) = 'Backward'
       MEF90DefMech_BTTypeList(3) = 'Forward'
@@ -466,7 +479,7 @@ Contains
       DefMechCtx%MEF90Ctx => MEF90Ctx
       PetscCall(PetscBagCreate(MEF90Ctx%comm,sizeofMEF90DefMechGlobalOptions,DefMechCtx%GlobalOptionsBag,ierr))      
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%CellSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -475,7 +488,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
       PetscCall(DMGetLabelIdIS(dm,MEF90FaceSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%FaceSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -484,7 +497,7 @@ Contains
       PetscCall(ISDestroy(setIS,ierr))
 
       PetscCall(DMGetLabelIdIS(dm,MEF90VertexSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%VertexSetOptionsBag(numSet),stat=ierr)
       Do set = 1, numSet
@@ -500,8 +513,8 @@ Contains
       PetscCall(PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer,"# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n",ierr))
       PetscCall(PetscViewerFlush(DefMechCtx%globalEnergyViewer,ierr))
       
-      PetscCall(DMGetLabelIdIS(dm,MEF90FaceSetLabelName,setIS,ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
       Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
       Do set = 1, numSet
@@ -635,7 +648,7 @@ Contains
       
       !!! 
       !!! Close energy viewers
-      !!!      
+      !!!    
       PetscCall(PetscViewerDestroy(DefMechCtx%globalEnergyViewer,ierr))
       Do set = 1, size(DefMechCtx%setEnergyViewer)
          PetscCall(PetscViewerDestroy(DefMechCtx%setEnergyViewer(set),ierr))
@@ -776,6 +789,7 @@ Contains
 
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%timeSteppingType,MEF90DefMech_TimeSteppingTypeList,default%timeSteppingType,'DefMech_TimeStepping_Type','Type of defect mechanics Time steping',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%solverType,MEF90DefMech_SolverTypeList,default%solverType,'DefMech_solver_Type','Type of defect mechanics solver',ierr))
+      PetscCall(PetscBagRegisterEnum(bag,DefMechGlobalOptions%damageSolverType,MEF90DefMech_DamageSolverTypeList,default%damageSolverType,'DefMech_damageSolver_Type','Type of defect mechanics damage solver',ierr))
 
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%temperatureExport,default%temperatureExport,'temperature_export','Export temperature in result file',ierr))
       PetscCall(PetscBagRegisterBool(bag,DefMechGlobalOptions%displacementExport,default%displacementExport,'displacement_export','Export displacement in result file',ierr))
@@ -1016,7 +1030,7 @@ Contains
       !!! Registering Vertex Set Context
       !!!
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90VertexSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
+      PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
       PetscCall(ISGetIndicesF90(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Vertex set ',I4)") setID(set)

@@ -1,0 +1,335 @@
+ 
+ 
+ 
+ 
+Solving steady state step    1, t= 0.00000E+00 
+cell set    1 thermal energy:  0.00000E+00 flux:  0.00000E+00 total:  0.00000E+00 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  0.00000E+00 flux:  7.41098-323 total: -7.41098-323 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  0.00000E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  0.00000E+00 
+ 
+Solving steady state step    2, t= 7.50000E-01 
+cell set    1 thermal energy:  2.81250E+02 flux:  0.00000E+00 total:  2.81250E+02 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  2.81250E+02 flux:  7.41098-323 total:  2.81250E+02 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.81079E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.81079E-02 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.81079E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.81079E-02 
+ 
+Solving steady state step    3, t= 1.50000E+00 
+cell set    1 thermal energy:  1.12500E+03 flux:  0.00000E+00 total:  1.12500E+03 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.12500E+03 flux:  7.41098-323 total:  1.12500E+03 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.12432E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.12432E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.12432E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.12432E-01 
+ 
+Solving steady state step    4, t= 2.25000E+00 
+cell set    1 thermal energy:  2.53125E+03 flux:  0.00000E+00 total:  2.53125E+03 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  2.53125E+03 flux:  7.41098-323 total:  2.53125E+03 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.52971E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.52971E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.52971E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.52971E-01 
+ 
+Solving steady state step    5, t= 3.00000E+00 
+cell set    1 thermal energy:  4.50000E+03 flux:  0.00000E+00 total:  4.50000E+03 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  4.50000E+03 flux:  7.41098-323 total:  4.50000E+03 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  4.49726E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.49726E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  4.49726E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  4.49726E-01 
+ 
+Solving steady state step    6, t= 3.75000E+00 
+cell set    1 thermal energy:  7.03125E+03 flux:  0.00000E+00 total:  7.03125E+03 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  7.03125E+03 flux:  7.41098-323 total:  7.03125E+03 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  7.02697E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.02697E-01 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  7.02697E-01 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  7.02697E-01 
+ 
+Solving steady state step    7, t= 4.50000E+00 
+cell set    1 thermal energy:  1.01250E+04 flux:  0.00000E+00 total:  1.01250E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.01250E+04 flux:  7.41098-323 total:  1.01250E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.01188E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.01188E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.01188E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.01188E+00 
+ 
+Solving steady state step    8, t= 5.25000E+00 
+cell set    1 thermal energy:  1.37812E+04 flux:  0.00000E+00 total:  1.37812E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.37812E+04 flux:  7.41098-323 total:  1.37812E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.37729E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.37729E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.37729E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.37729E+00 
+ 
+Solving steady state step    9, t= 6.00000E+00 
+cell set    1 thermal energy:  1.80000E+04 flux:  0.00000E+00 total:  1.80000E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.80000E+04 flux:  7.41098-323 total:  1.80000E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  1.79890E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.79890E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  1.79890E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  1.79890E+00 
+ 
+Solving steady state step   10, t= 6.75000E+00 
+cell set    1 thermal energy:  2.27813E+04 flux:  0.00000E+00 total:  2.27813E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  2.27813E+04 flux:  7.41098-323 total:  2.27813E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.27674E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.27674E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.27674E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.27674E+00 
+ 
+Solving steady state step   11, t= 7.50000E+00 
+cell set    1 thermal energy:  2.81250E+04 flux:  0.00000E+00 total:  2.81250E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  2.81250E+04 flux:  7.41098-323 total:  2.81250E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  0.00000E+00, max change  0.00000E+00 
+cell set    1  elastic energy:  2.81079E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.81079E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  2.81079E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  0.00000E+00 total:  2.81079E+00 
+ 
+Solving steady state step   12, t= 8.25000E+00 
+cell set    1 thermal energy:  3.40312E+04 flux:  0.00000E+00 total:  3.40312E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  3.40312E+04 flux:  7.41098-323 total:  3.40312E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  3.77049E-03, max change  3.77049E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  3.86860E-03, max change  1.15643E-04 
+cell set    1  elastic energy:  3.40086E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.87856E-04 total:  3.40105E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  3.40086E+00 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.87856E-04 total:  3.40105E+00 
+ 
+Solving steady state step   13, t= 9.00000E+00 
+cell set    1 thermal energy:  4.05000E+04 flux:  0.00000E+00 total:  4.05000E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  4.05000E+04 flux:  7.41098-323 total:  4.05000E+04 
+   Alt. Min. step     1 alpha min / max 7.78080E-03 /  7.51408E-02, max change  7.51408E-02 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.12126E-01, max change  3.69851E-02 
+   Alt. Min. step     3 alpha min / max 0.00000E+00 /  1.86900E-01, max change  7.48026E-02 
+   Alt. Min. step     4 alpha min / max 0.00000E+00 /  3.35325E-01, max change  1.48522E-01 
+   Alt. Min. step     5 alpha min / max 0.00000E+00 /  5.77430E-01, max change  2.42105E-01 
+   Alt. Min. step     6 alpha min / max 0.00000E+00 /  8.45210E-01, max change  2.67780E-01 
+   Alt. Min. step     7 alpha min / max 0.00000E+00 /  9.78508E-01, max change  2.87083E-01 
+   Alt. Min. step     8 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.10873E-01 
+   Alt. Min. step     9 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.21952E-01 
+   Alt. Min. step    10 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.34795E-01 
+   Alt. Min. step    11 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.40045E-02 
+   Alt. Min. step    12 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.37926E-05 
+cell set    1  elastic energy:  3.07337E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18012E+00 total:  1.21085E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  3.07337E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18012E+00 total:  1.21085E+00 
+ 
+Solving steady state step   14, t= 9.75000E+00 
+cell set    1 thermal energy:  4.75313E+04 flux:  0.00000E+00 total:  4.75313E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  4.75313E+04 flux:  7.41098-323 total:  4.75313E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.93297E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.20257E-05 
+cell set    1  elastic energy:  3.35503E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18244E+00 total:  1.21599E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  3.35503E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18244E+00 total:  1.21599E+00 
+ 
+Solving steady state step   15, t= 1.05000E+01 
+cell set    1 thermal energy:  5.51250E+04 flux:  0.00000E+00 total:  5.51250E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  5.51250E+04 flux:  7.41098-323 total:  5.51250E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.55328E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  4.42355E-05 
+cell set    1  elastic energy:  3.68980E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18430E+00 total:  1.22120E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  3.68980E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18430E+00 total:  1.22120E+00 
+ 
+Solving steady state step   16, t= 1.12500E+01 
+cell set    1 thermal energy:  6.32812E+04 flux:  0.00000E+00 total:  6.32812E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  6.32812E+04 flux:  7.41098-323 total:  6.32812E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.26567E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  2.79936E-05 
+cell set    1  elastic energy:  4.07253E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18582E+00 total:  1.22654E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  4.07253E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18582E+00 total:  1.22654E+00 
+ 
+Solving steady state step   17, t= 1.20000E+01 
+cell set    1 thermal energy:  7.20000E+04 flux:  0.00000E+00 total:  7.20000E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  7.20000E+04 flux:  7.41098-323 total:  7.20000E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.04463E-03 
+   Alt. Min. step     2 alpha min / max 0.00000E+00 /  1.00000E+00, max change  1.81943E-05 
+cell set    1  elastic energy:  4.49942E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18707E+00 total:  1.23207E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  4.49942E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18707E+00 total:  1.23207E+00 
+ 
+Solving steady state step   18, t= 1.27500E+01 
+cell set    1 thermal energy:  8.12812E+04 flux:  0.00000E+00 total:  8.12812E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  8.12812E+04 flux:  7.41098-323 total:  8.12812E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  8.71999E-04 
+cell set    1  elastic energy:  4.96876E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18811E+00 total:  1.23780E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  4.96876E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18811E+00 total:  1.23780E+00 
+ 
+Solving steady state step   19, t= 1.35000E+01 
+cell set    1 thermal energy:  9.11250E+04 flux:  0.00000E+00 total:  9.11250E+04 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  9.11250E+04 flux:  7.41098-323 total:  9.11250E+04 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  7.42524E-04 
+cell set    1  elastic energy:  5.47605E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18900E+00 total:  1.24376E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  5.47605E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18900E+00 total:  1.24376E+00 
+ 
+Solving steady state step   20, t= 1.42500E+01 
+cell set    1 thermal energy:  1.01531E+05 flux:  0.00000E+00 total:  1.01531E+05 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.01531E+05 flux:  7.41098-323 total:  1.01531E+05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  6.30548E-04 
+cell set    1  elastic energy:  6.02124E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18976E+00 total:  1.24997E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  6.02124E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.18976E+00 total:  1.24997E+00 
+ 
+Solving steady state step   21, t= 1.50000E+01 
+cell set    1 thermal energy:  1.12500E+05 flux:  0.00000E+00 total:  1.12500E+05 
+face set   20                              flux:  7.41098-323 
+face set   30                              flux:  0.00000E+00 
+face set   40                              flux:  0.00000E+00 
+face set   50                              flux:  0.00000E+00 
+======= Total thermal energy:  1.12500E+05 flux:  7.41098-323 total:  1.12500E+05 
+   Alt. Min. step     1 alpha min / max 0.00000E+00 /  1.00000E+00, max change  5.39989E-04 
+cell set    1  elastic energy:  6.60309E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19041E+00 total:  1.25644E+00 
+face set   20                      boundary work:  0.00000E+00 
+face set   30                      boundary work:  0.00000E+00 
+face set   40                      boundary work:  0.00000E+00 
+face set   50                      boundary work:  0.00000E+00 
+======= Total: elastic energy:  6.60309E-02 work:  0.00000E+00 cohesive:  0.00000E+00 surface:  1.19041E+00 total:  1.25644E+00 
+ Total number of alternate minimizations:          37  

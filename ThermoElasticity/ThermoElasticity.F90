@@ -40,7 +40,7 @@ Program ThermoElasticity
    PetscReal                                          :: temperatureInitialTimeStep,temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
 
-   PetscBool                                          :: flg,EXONeedsFormatting
+   PetscBool                                          :: flg,EXONeedsFormatting = PETSC_FALSE
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 

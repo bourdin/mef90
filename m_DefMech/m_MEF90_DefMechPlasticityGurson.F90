@@ -46,7 +46,7 @@ subroutine FHG_GURSON(x,f,h,g,myctx) bind(c)
        StiffnessA = ( (1.0_Kr - myctx_ptr%Damage)**2 /( 1.0_Kr + ( myctx_ptr%CoefficientLinSoft - 1.0_Kr )*(1.0_Kr - (1.0_Kr - myctx_ptr%Damage)**2 ) ) ) + myctx_ptr%residualStiffness
     endif
 
-    Stress=(myctx_ptr%HookesLaw*(myctx_ptr%InelasticStrain-xMatS))*StiffnessA
+    Stress=(myctx_ptr%HookesLaw*(myctx_ptr%totalStrain-xMatS))*StiffnessA
     f(1) = ( (myctx_ptr%HookesLaw *(xMatS-myctx_ptr%PlasticStrainOld)) .DotP. (xMatS-myctx_ptr%PlasticStrainOld) ) * StiffnessA / 2.0
 
     if ( myctx_ptr%Damage == 0.0_Kr) then

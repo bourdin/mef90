@@ -8,7 +8,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
       Type(MEF90_HOOKESLAW)       :: HookesLaw
       Real(Kind = Kr)             :: YieldStress
       Real(Kind = Kr)             :: DuctileCouplingPower
-      Type(MEF90_MATS)            :: InelasticStrain
+      Type(MEF90_MATS)            :: totalStrain
       Type(MEF90_MATS)            :: PlasticStrainOld
       Type(MEF90_MATS)            :: plasticStrainPrevious
       Real(Kind = Kr)             :: Damage

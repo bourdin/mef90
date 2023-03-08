@@ -1,6 +1,7 @@
 #include "../MEF90/mef90.inc"
 Program vDef
 #include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petsctao.h"
    Use m_MEF90
    Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMech
@@ -8,6 +9,7 @@ Program vDef
    Use m_MEF90_HeatXferCtx
    Use m_vDefDefault
    Use petsc
+   Use petsctao
    Implicit NONE
 
    PetscErrorCode                                     :: ierr
@@ -28,7 +30,9 @@ Program vDef
    PetscReal,Dimension(:),Pointer                     :: time,elasticEnergy,bodyForceWork,boundaryForceWork,cohesiveEnergy,surfaceEnergy
 
    Type(tSNES)                                        :: displacementSNES,damageSNES
+   Type(tTao)                                         :: damageTAO
    SNESConvergedReason                                :: displacementSNESConvergedReason,damageSNESConvergedReason
+   TaoConvergedReason                                 :: damageTAOConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual,damage,damageResidual
    Type(tVec)                                         :: damageAltMinOld
    Type(tVec)                                         :: damageLB,damageUB
@@ -47,7 +51,7 @@ Program vDef
    PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO
 
 
-   PetscBool                                          :: flg,EXONeedsFormatting
+   PetscBool                                          :: flg,EXONeedsFormatting = PETSC_FALSE
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
    Type(tPetscViewer)                                 :: logViewer
 
@@ -69,7 +73,7 @@ Program vDef
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
 
    If (MEF90GlobalOptions%verbose > 1) Then
-      PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Reading geometry\n",ierr))
+      PetscCallA(PetscPrintf(MEF90Ctx%comm,"Reading geometry\n",ierr))
    End If
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
@@ -87,13 +91,13 @@ Program vDef
    If (flg) Then
       ! we assume that the output file is formatted
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Opening result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Opening result file\n",ierr))
       End If
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_APPEND,ierr))
    Else
       ! we need to create the output file
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Creating result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Creating result file\n",ierr))
       End If
       PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
@@ -108,7 +112,7 @@ Program vDef
 
       If (MEF90Ctx%NumProcs > 1) Then
          If (MEF90GlobalOptions%verbose > 1) Then
-            PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Distributing mesh\n",ierr))
+            PetscCallA(PetscPrintf(MEF90Ctx%comm,"Distributing mesh\n",ierr))
          End If
          PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
          PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
@@ -137,11 +141,11 @@ Program vDef
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
    If (EXONeedsFormatting) Then
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Formatting result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Formatting result file\n",ierr))
       End If
       PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
       If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,"Done Formatting result file\n",ierr))
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Done Formatting result file\n",ierr))
       End If
    End If
 
@@ -162,12 +166,14 @@ Program vDef
    PetscCallA(DMCreateGlobalVector(temperatureDM,temperature,ierr))
    PetscCallA(PetscObjectSetName(temperature,"Temperature",ierr))
    PetscCallA(VecDuplicate(temperature,temperatureResidual,ierr))
+   PetscCallA(PetscObjectSetName(temperatureResidual,"temperatureResidual",ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal,displacementDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
    PetscCallA(DMCreateGlobalVector(displacementDM,displacement,ierr))
    PetscCallA(PetscObjectSetName(displacement,"displacement",ierr))
    PetscCallA(VecDuplicate(displacement,displacementResidual,ierr))
+   PetscCallA(PetscObjectSetName(displacementResidual,"displacementResidual",ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%damageLocal,damageDM,ierr)) 
    !!! This only borrows a reference so we do not need to delete it
@@ -194,7 +200,13 @@ Program vDef
    Select Case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
       PetscCallA(MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx,displacementSNES,displacementResidual,ierr))
-      PetscCallA(MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,damageSNES,damageResidual,ierr))
+      Select Case(MEF90DefMechGlobalOptions%damageSolverType)
+      Case(MEF90DefMech_DamageSolverTypeSNES)
+         PetscCallA(MEF90DefMechCreateSNESDamage(MEF90DefMechCtx,damageSNES,damageResidual,ierr))
+      Case(MEF90DefMech_DamageSolverTypeTao)
+         PetscCallA(MEF90DefMechCreateTAODamage(MEF90DefMechCtx,damageTAO,damageResidual,ierr))
+         PetscCallA(TAOSetSolution(damageTAO,damage,ierr))
+      End Select ! MEF90DefMechGlobalOptions%damageSolverType
    Case (MEF90DefMech_TimeSteppingTypeNULL)
       Continue
    End Select
@@ -310,7 +322,12 @@ Program vDef
 
          !!! Solve for displacement and damage
          PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx,step,time(step),ierr))
-         PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,damageSNES,damage,ierr))
+         Select Case(MEF90DefMechGlobalOptions%damageSolverType)
+         Case(MEF90DefMech_DamageSolverTypeSNES)
+            PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx,damageSNES,damage,ierr))
+         Case(MEF90DefMech_DamageSolverTypeTao)
+            PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx,damageTAO,damage,ierr))
+         End Select ! MEF90DefMechGlobalOptions%damageSolverType
          PetscCallA(DMLocalToGlobal(displacementDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,displacement,ierr))
 
          Select case(MEF90DefMechGlobalOptions%timeSteppingType)
@@ -318,7 +335,9 @@ Program vDef
             Select case(MEF90DefMechGlobalOptions%SolverType)
             Case(MEF90DefMech_SolverTypeAltMin)
                PetscCallA(SNESSetLagPreconditioner(displacementSNES,1_Ki,ierr))
-               PetscCallA(SNESSetLagPreconditioner(damageSNES,1_Ki,ierr))
+               If (MEF90DefMechGlobalOptions%damageSolverType == MEF90DefMech_DamageSolverTypeSNES) Then
+                  PetscCallA(SNESSetLagPreconditioner(damageSNES,1_Ki,ierr))
+               End If
 
                AltMin: Do AltMinIter = 1, MEF90DefMechGlobalOptions%damageMaxIt
                   AltMinStep = AltMinStep + 1
@@ -327,7 +346,9 @@ Program vDef
 
                   If (mod(AltMinIter-1,MEF90DefMechGlobalOptions%PCLag) == 0) Then
                      PetscCallA(SNESSetLagPreconditioner(displacementSNES,-2_Ki,ierr))
-                     PetscCallA(SNESSetLagPreconditioner(damageSNES,-2_Ki,ierr))
+                     If (MEF90DefMechGlobalOptions%damageSolverType == MEF90DefMech_DamageSolverTypeSNES) Then
+                        PetscCallA(SNESSetLagPreconditioner(damageSNES,2_Ki,ierr))
+                     End If
                   End If 
 
                   !!! Solve SNES displacement
@@ -340,18 +361,32 @@ Program vDef
                   End If
 
                   PetscCallA(DMGlobalToLocal(displacementDM,displacement,INSERT_VALUES,MEF90DefMechCtx%displacementLocal,ierr))
+                  PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
                   PetscCallA(PetscLogStagePop(ierr))
 
                   PetscCallA(PetscLogStagePush(logStageDamage,ierr))
+                  PetscCallA(VecCopy(damage,damageAltMinOld,ierr))
+
+                  !!! Solve for damage field
                   PetscCallA(DMLocalToGlobal(damageDM,MEF90DefMechCtx%damageLocal,INSERT_VALUES,damage,ierr))
                   PetscCallA(VecCopy(damage,damageAltMinOld,ierr))
-                  !!! Solve SNES damage
-                  PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
-                  PetscCallA(SNESGetConvergedReason(damageSNES,damageSNESConvergedReason,ierr))
-                  If (damageSNESConvergedReason < 0) Then  
-                     Write(IOBuffer,400) "damage",damageSNESConvergedReason
-                     PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
-                  End If
+                  Select Case(MEF90DefMechGlobalOptions%damageSolverType)
+                  Case(MEF90DefMech_DamageSolverTypeSNES)
+                     PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
+                     PetscCallA(SNESGetConvergedReason(damageSNES,damageSNESConvergedReason,ierr))
+                     If (damageSNESConvergedReason < 0) Then  
+                        Write(IOBuffer,400) "damage",damageSNESConvergedReason
+                        PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+                     End If
+                  Case(MEF90DefMech_DamageSolverTypeTao)
+                     PetscCallA(TAOSolve(damageTAO,ierr))
+                     PetscCallA(TAOGetConvergedReason(damageTAO,damageTAOConvergedReason,ierr))
+                     If (damageTAOConvergedReason < 0) Then  
+                        Write(IOBuffer,401) "damage",damageTAOConvergedReason
+                        PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
+                     End If
+                     PetscCallA(TAOGetSolution(damageTAO,damage,ierr))
+                  End Select ! MEF90DefMechGlobalOptions%damageSolverType
                   PetscCallA(DMGlobalToLocal(damageDM,damage,INSERT_VALUES,MEF90DefMechCtx%damageLocal,ierr))
 
                   !!! Over relaxation of the damage variable
@@ -375,7 +410,7 @@ Program vDef
                         PetscCallA(VecRestoreArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
                         PetscCallA(VecRestoreArrayReadF90(damageUB,damageUBArray,ierr))
                         PetscCallA(VecRestoreArrayReadF90(damageLB,damageLBArray,ierr))
-                        PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr))
+                        PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,MEF90Ctx%comm,ierr))
                         PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
                      Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
                         !!! PROJECTED SOR
@@ -425,9 +460,9 @@ Program vDef
             PetscCallA(MEF90DefMechElasticEnergy(MEF90DefMechCtx,elasticEnergy,ierr))
             PetscCallA(MEF90DefMechSurfaceEnergy(MEF90DefMechCtx,surfaceEnergy,ierr))
 
-            PetscCallA(MEF90DefMechStress(MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr))
+
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
+            PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
@@ -435,12 +470,12 @@ Program vDef
                Write(IOBuffer,500) step,time(step),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
                PetscCallA(PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr))
                PetscCallA(PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr))
-               End Do
+            End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
 
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90FaceSetLabelName,setIS,ierr))
-            PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
+            PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
             PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,203) setID(set),boundaryForceWork(set)
@@ -448,6 +483,7 @@ Program vDef
             End Do
             PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
+
             Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
             PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             Write(IOBuffer,500) step,time(step),sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)
@@ -456,6 +492,9 @@ Program vDef
             PetscCallA(PetscLogStagePop(ierr))
 
             !!! Save results and boundary Values
+            If (MEF90DefMechGlobalOptions%stressExport) Then
+               PetscCallA(MEF90DefMechStress(MEF90DefMechCtx,MEF90DefMechCtx%stress,ierr))
+            End If
             PetscCallA(PetscLogStagePush(logStageIO,ierr))
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx,step,ierr))
             PetscCallA(PetscLogStagePop(ierr))
@@ -473,7 +512,7 @@ Program vDef
       End Do MainloopQS
    End If ! timeSteppingType
    Write(IOBuffer,*) 'Total number of alternate minimizations:',AltMinStep,'\n'
-   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+   PetscCallA(PetscPrintf(MEF90Ctx%comm,IOBuffer,ierr))
          
 100 Format("\nSolving steady state step ",I4,", t=",ES12.5,"\n")
 200 Format("\nSolving transient step ",I4,", t=",ES12.5,"\n")
@@ -489,6 +528,7 @@ Program vDef
 209 Format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5,"\n")
 
 400 Format(" [ERROR]: ",A," SNESSolve failed with SNESConvergedReason ",I2,". \n Check https://petsc.org/release/docs/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
+401 Format(" [ERROR]: ",A," TAOSolve failed with TAOConvergedReason ",I2,". \n Check https://petsc.org/release/docs/manualpages/TAO/TAOConvergedReason/ for error code meaning.\n")
 
    !!! Clean up and exit nicely
    Select case(MEF90DefMechGlobalOptions%timeSteppingType)
@@ -511,7 +551,12 @@ Program vDef
    Select Case(MEF90DefMechGlobalOptions%timeSteppingType)
    Case (MEF90DefMech_TimeSteppingTypeQuasiStatic)
       PetscCallA(SNESDestroy(displacementSNES,ierr))
-      PetscCallA(SNESDestroy(damageSNES,ierr))
+      Select Case(MEF90DefMechGlobalOptions%damageSolverType)
+      Case(MEF90DefMech_DamageSolverTypeSNES)
+         PetscCallA(SNESDestroy(damageSNES,ierr))
+      Case(MEF90DefMech_DamageSolverTypeTao)
+         PetscCallA(TAODestroy(damageTAO,ierr))
+      End Select ! MEF90DefMechGlobalOptions%damageSolverType
    End Select
    PetscCallA(VecDestroy(displacementResidual,ierr))
    PetscCallA(VecDestroy(displacement,ierr))

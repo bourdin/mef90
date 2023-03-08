@@ -13,7 +13,7 @@ Module m_MEF90_Ctx_Type
       Character(len=MEF90MXSTRLEN,kind=C_char)        :: geometryfile,resultfile
       PetscBag                                        :: GlobalOptionsBag
       type(tPetscViewer)                              :: resultViewer      
-      End Type MEF90Ctx_Type
+   End Type MEF90Ctx_Type
    
    Type MEF90CtxGlobalOptions_Type
       PetscInt                                        :: verbose

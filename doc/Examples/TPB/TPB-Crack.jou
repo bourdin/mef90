@@ -79,7 +79,7 @@ surface 3 sizing function type bias start curve 29 30 32 33 13 finish curve 3 5
 mesh surface 3
 smooth surface all
 
-{filename = Quote("TPB-Crack.gen")}
+#{filename = Quote("TPB-Crack.gen")}
 export mesh {filename} dimension 2 block all overwrite
 
 quality volume all shape global list verbose errors
