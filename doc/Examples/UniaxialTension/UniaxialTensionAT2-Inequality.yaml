@@ -2,7 +2,7 @@
 verbose: 1
 time:
     min: 0
-    max: 3
+    max: 5
     numstep: 21
 heatxfer:
     timestepping:
