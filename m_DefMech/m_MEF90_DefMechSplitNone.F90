@@ -90,15 +90,22 @@ Contains
 
       D2EEDPlus = HookesLaw
 
-      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+      
 #if MEF90_DIM==2
       D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
 #endif
-      D2EEDMinus%YoungsModulus = 0.0_Kr
-      D2EEDMinus%PoissonRatio  = 0.0_Kr
-      D2EEDMinus%lambda        = 0.0_Kr 
-      D2EEDMinus%mu            = 0.0_Kr
-      D2EEDMinus%BulkModulus   = 0.0_Kr
+      D2EEDMinus%type          = HookesLaw%type
+      Select Case(HookesLaw%type)
+      Case(MEF90HookesLawTypeIsotropic)
+         D2EEDMinus%YoungsModulus = 0.0_Kr * HookesLaw%YoungsModulus 
+         D2EEDMinus%PoissonRatio  = 0.0_Kr * HookesLaw%PoissonRatio
+         D2EEDMinus%lambda        = 0.0_Kr * HookesLaw%lambda
+         D2EEDMinus%mu            = 0.0_Kr * HookesLaw%mu
+         D2EEDMinus%BulkModulus   = 0.0_Kr * HookesLaw%BulkModulus
+      Case(MEF90HookesLawTypeFull)
+         D2EEDMinus%FullTensor   = 0.0_Kr * HookesLaw%FullTensor
+         D2EEDMinus%fullTensorLocal   = 0.0_Kr * HookesLaw%fullTensorLocal
+      End Select !HookesLaw%type
    End Subroutine D2EEDNone
 
 End Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
