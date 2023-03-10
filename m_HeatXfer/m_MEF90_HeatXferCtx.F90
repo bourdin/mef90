@@ -533,7 +533,7 @@ Contains
       PetscCall(PetscBagSetName(bag,trim(name),"HeatXferVertexSetOptions MEF90 Heat transfer Vertex Set options",ierr))
       PetscCall(PetscBagSetOptionsPrefix(bag,trim(prefix),ierr))
 
-      PetscCall(PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TempBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
+      PetscCall(PetscBagRegisterBool(bag,HeatXferVertexSetOptions%Has_BC,default%Has_BC,'TemperatureBC','Temperature has Dirichlet boundary Condition (Y/N)',ierr))
       PetscCall(PetscBagRegisterReal(bag,HeatXferVertexSetOptions%boundaryTemperature,default%boundaryTemperature,'boundaryTemperature','Temperature boundary value',ierr))
    End Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions
 
