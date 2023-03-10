@@ -19,34 +19,20 @@ create vertex x {L/2.} Y {epsc} z 0
 create surface vertex all
 
 block 1 surface 1
-block 20 curve 6
-block 30 curve 2
+sideset 20 curve 6
+sideset 30 curve 2
 nodeset 400 vertex 1
 
 draw block all nodeset all
 hardcopy "UnilateralContact2D.png" png
 
-surface 1 scheme tridelaunay size {2.*h}
-mesh surface 1
-surface 1  smooth scheme laplacian free 
-smooth surface 1
-
-block 1 to 9 element type tri6
-block 10 to 99 element type bar3
-#{filename = Quote("UnilateralContact2D-"//hstr//"-tri6.gen")}
-export mesh {filename} dimension 2 block all overwrite
-
-delete mesh
 surface 1 scheme tridelaunay size {h}
 mesh surface 1
 surface 1  smooth scheme laplacian free 
 smooth surface 1
 
-block 1 to 9 element type tri3
-block 10 to 99 element type bar2
-#{filename = Quote("UnilateralContact2D-"//hstr//"-tri3.gen")}
+#{filename = Quote("UnilateralContact2D-"//hstr//".gen")}
 export mesh {filename} dimension 2 block all overwrite
-
 
 #quit
 

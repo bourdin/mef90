@@ -63,8 +63,8 @@ Implicit NONE
                 PetscCallA(DMGetStratumIS(dm,MEF90SetLabelName(i),setID(set),setPointIS,ierr))
                 If (setPointIS /= PETSC_NULL_IS) Then
                     PetscCallA(ISGetIndicesF90(setPointIS,pointID,ierr))
-                    Write(IOBuffer,*) '   points', pointID,'\n'
-                    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+                    Write(*,*) '   points'
+                    Write(*,*) pointID
                     PetscCallA(ISRestoreIndicesF90(setPointIS,pointID,ierr))
                 End If ! setPointIS
                 PetscCallA(ISDestroy(setPointIS,ierr))
@@ -73,9 +73,7 @@ Implicit NONE
         End If ! setIS
         PetscCallA(ISDestroy(setIS,ierr))
     End Do
-    PetscCallA(DMDestroy(dm,ierr))
-
-    
+    PetscCallA(DMDestroy(dm,ierr))    
     
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)

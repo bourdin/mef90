@@ -153,6 +153,10 @@ viewDAG: viewDAG.o
 	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
 	-@${RM} -f viewDAG.o
 
+viewSets: viewSets.o
+	-@${CLINKER} -o viewSets viewSets.o ${PETSC_LIB}
+	-@${RM} -f viewSets.o
+
 YAMLValidator.o: ${MEF90_DIR}/Tests/YAMLValidator.F90 
 	${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 

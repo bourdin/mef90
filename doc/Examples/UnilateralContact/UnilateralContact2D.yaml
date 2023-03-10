@@ -12,12 +12,12 @@ defmech:
     damage:
         atol: 1.0e-3
     sor:
-        omega: 1.4
-    pclag: 5
+        omega: 1.
+    pclag: 1
     irrevthres: 0.
 temperature:
-    offset: 0
-disp:
+    export: 0
+displacement:
     snes:
         linesearch:
             type: cp
@@ -25,7 +25,7 @@ disp:
         atol: 1.e-6
         rtol: 1.e-6
     pc:
-        type: ml
+        type: gamg
 damage:
     atol: 1.e-3
 time:
@@ -38,8 +38,8 @@ cs0001:
         YoungsModulus: 1.
         PoissonRatio: 0.
     FractureToughness: 1.e-2
-    internallength: 0.15
-    residualstiffness: 0.
+    internallength: 0.1
+    residualstiffness: 1.e-4
     damage:
         type: AT1
     plasticity:
@@ -48,12 +48,12 @@ cs0001:
         type: hydrostaticdeviatoric
     displacementbc: no,no,no
     damageBC: no
-cs0020:
+fs0020:
     displacementbc: yes,yes,yes
     boundaryDisplacement: .5,.125,0
     damageBC: yes
     boundaryDamage: 0.
-cs0030:
+fs0030:
     displacementbc: yes,yes,yes
     boundaryDisplacement: -.5,-.125,0
     damageBC: yes

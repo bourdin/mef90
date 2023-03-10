@@ -14,7 +14,7 @@ defmech:
     pclag: 5
     irrevthres: 0.
 temperature:
-    offset: 0
+    export: 0
 time:
     min: 0
     max: 1
@@ -35,20 +35,12 @@ cs0001:
         type: HydrostaticDeviatoric
     displacementbc: no,no,no
     damageBC: no
-cs0020:
-    damage:
-        type: AT1Elastic
-    plasticity:
-        type: NONE
+fs0020:
     displacementbc: yes,yes,yes
     boundaryDisplacement: .5,.125,0
     damageBC: yes
     boundaryDamage: 0.
-cs0030:
-    damage:
-        type: AT1Elastic
-    plasticity:
-        type: NONE
+fs0030:
     displacementbc: yes,yes,yes
     boundaryDisplacement: -.5,-.125,0
     damageBC: yes
