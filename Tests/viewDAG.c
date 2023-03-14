@@ -150,17 +150,17 @@ int main(int argc,char **argv)
 {
   DM             dm,dmDist;
   char           filename[2048],outfilename[2048];
-  PetscBool      interpolate=PETSC_FALSE;
+  PetscBool      interpolate=PETSC_FALSE,flg=PETSC_FALSE;
   PetscMPIInt    rank;
   PetscViewer    viewer;
-  PetscSection   sectionCoord; 
-  Vec            coordLoc;
+  // PetscSection   sectionCoord; 
+  // Vec            coordLoc;
 
   PetscCall(PetscInitialize(&argc,&argv,NULL,help));
   MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
   PetscOptionsBegin(PETSC_COMM_WORLD,"","viewDAG options","none");
   PetscCall(PetscOptionsString("-i","filename to read","",filename,filename,sizeof(filename),NULL));
-  PetscCall(PetscOptionsString("-o","filename to write","",outfilename,outfilename,sizeof(outfilename),NULL));
+  PetscCall(PetscOptionsString("-o","filename to write","",outfilename,outfilename,sizeof(outfilename),&flg));
   PetscCall(PetscOptionsBool("-interpolate","Generate intermediate mesh elements","",interpolate,&interpolate,NULL));
   PetscOptionsEnd();
 
@@ -172,17 +172,19 @@ int main(int argc,char **argv)
     dm   = dmDist;
   }
   //PetscCall(DMSetFromOptions(dm));
-  PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
-  PetscCall(PetscViewerASCIIOpen(PETSC_COMM_SELF,outfilename,&viewer));
+  viewer = PETSC_VIEWER_STDOUT_WORLD;
+  if (flg) {
+    PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
+    PetscCall(PetscViewerASCIIOpen(PETSC_COMM_SELF,outfilename,&viewer));
+  }
   PetscCall(dmViewSets(dm,viewer));
   PetscCall(dmViewDAG(dm,viewer));
-  PetscCall(PetscViewerDestroy(&viewer));
 
-  PetscCall(DMGetCoordinateSection(dm,&sectionCoord));
-  PetscCall(DMGetCoordinatesLocal(dm,&coordLoc));
-  PetscCall(VecView(coordLoc,PETSC_VIEWER_STDOUT_WORLD));
+  // PetscCall(DMGetCoordinateSection(dm,&sectionCoord));
+  // PetscCall(DMGetCoordinatesLocal(dm,&coordLoc));
+  // PetscCall(VecView(coordLoc,PETSC_VIEWER_STDOUT_WORLD));
 
-  PetscCall(DMDestroy(&dm));
+  if (flg) PetscCall(PetscViewerDestroy(&viewer));
   PetscCall(PetscFinalize());
   return 0;
 }

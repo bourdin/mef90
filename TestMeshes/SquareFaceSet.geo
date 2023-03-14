@@ -1,7 +1,7 @@
 SetFactory("OpenCASCADE");
 Mesh.Algorithm = 5;
-Mesh.Format=1;
-Mesh.MshFileVersion=2;
+//Mesh.Format=1;
+//Mesh.MshFileVersion=2;
 
 L = 1;
 h = 0.5;

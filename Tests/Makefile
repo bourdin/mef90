@@ -14,6 +14,15 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90 m_HeatXfer
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestOrientation: TestOrientation.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 TestDotProduct.o: ${MEF90_DIR}/Tests/TestDotProduct.F90 MEF90 m_HeatXfer
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
