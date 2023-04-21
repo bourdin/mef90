@@ -21,6 +21,9 @@ create surface vertex all
 block 1 surface 1
 sideset 20 curve 6
 sideset 30 curve 2
+sideset 40 curve 5
+sideset 50 curve 3
+
 nodeset 400 vertex 1
 
 draw block all nodeset all
@@ -35,6 +38,7 @@ smooth surface 1
 export mesh {filename} dimension 2 block all overwrite
 
 #quit
+
 
 
 
