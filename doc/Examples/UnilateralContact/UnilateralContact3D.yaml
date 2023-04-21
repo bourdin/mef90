@@ -7,46 +7,62 @@ heatxfer:
 defmech:
     timestepping:
         type: quasistatic
+    solver:
+        type: AltMin
     damage:
         atol: 1.0e-3
     sor:
-        omega: 1.4
+        omega: 1.5
     pclag: 5
     irrevthres: 0.
 temperature:
     export: 0
+displacement:
+    snes:
+        type: newtonls
+        # linesearch:
+        #     type: cp
+        max_it: 1000
+        atol: 1.e-6
+        rtol: 1.e-6
+    pc:
+        type: gamg
+        gamg:
+            reuse_interpolation: 0
+        # This is important since gamg will fail with this option
+damage:
+    atol: 1.e-3
 time:
-    min: 0
-    max: 1
-    numstep: 41
+    min: 0.5
+    max: 2
+    numstep: 151
 cs0001:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
-        PoissonRatio: 0.
+        PoissonRatio: 0.3
     FractureToughness: 1.e-2
-    internallength: .3
-    residualstiffness: 0.
+    internallength: 0.3
+    residualstiffness: 1.e-6
     damage:
         type: AT1
     plasticity:
         type: none
     unilateralContact:
-        type: HydrostaticDeviatoric
+        type: hydrostaticdeviatoric
     displacementbc: no,no,no
     damageBC: no
-fs0020:
+fs0040:
     displacementbc: yes,yes,yes
-    boundaryDisplacement: .5,.125,0
+    boundaryDisplacement: .5,0,0
     damageBC: yes
     boundaryDamage: 0.
-fs0030:
+fs0050:
     displacementbc: yes,yes,yes
-    boundaryDisplacement: -.5,-.125,0
+    boundaryDisplacement: -.5,0,0
     damageBC: yes
     boundaryDamage: 0.
 vs0400:
     displacementbc: no,no,no
     damageBC: yes
     boundaryDamage: 1.
-

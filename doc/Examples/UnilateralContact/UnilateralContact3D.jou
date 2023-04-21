@@ -3,7 +3,7 @@ reset
 #{T=2}
 #{lc=2}
 #{epsc=.01}
-#{h=.2}
+#{h=.1}
 #{hstr = tostring(h)}
 
 tridelaunay point placement gq
@@ -23,6 +23,8 @@ sweep surface 1 perpendicular distance {T}
 block 1 volume 1
 sideset 20 surface 3
 sideset 30 surface 7
+sideset 40 surface 4
+sideset 50 surface 6
 nodeset 400 curve 10
 
 draw block all nodeset all
@@ -36,6 +38,7 @@ smooth volume 1
 export mesh {filename} dimension 3 block all overwrite
 
 #quit
+
 
 
 
