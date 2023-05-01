@@ -1,0 +1,79 @@
+### Build: 
+###    docker build -t ubuntumpichpetsc -f Dockerfile.ubuntu-petsc-mpich --target ubuntumpichpetsc .
+
+### publish to dockerhub:
+### docker tag ubuntumpichbase:latest bourdin/ubuntumpichbase:latest
+### docker push bourdin/ubuntumpichbase:latest
+### docker tag ubuntumpichpetsc:latest bourdin/ubuntumpichpetsc:<tag>
+### get tag:
+###    cd $PETSC_DIR; git describe --dirty --always --tag
+###    docker run -w /opt/HPC/petsc-main ubuntumpichpetsc:latest git describe --dirty --always --tags
+
+### Start from a basic ubuntu system with mpich-3.2
+# Use an official Python runtime as a parent image
+FROM ubuntu AS ubuntumpichpetsc
+
+### install development packages
+RUN apt-get update;\
+    apt upgrade;\
+    apt-get install -y mpich cmake libblas-dev libblas64-dev python3 valgrind valgrind-mpi git ;\
+    apt-get install -y liblapack-dev liblapack64-dev gmsh libgmsh-dev autoconf automake libtool
+
+ENV PETSC_DIR /opt/HPC/petsc-main
+ENV PATH $PETSC_DIR/bin:$PATH
+
+RUN mkdir -p /opt/HPC
+RUN git clone --single-branch --branch main https://gitlab.com/petsc/petsc.git ${PETSC_DIR} ;
+
+ENV PETSC_ARCH ubuntu-mpich-g 
+RUN cd ${PETSC_DIR} ;                 \
+    ./configure                       \
+    --CFLAGS='-Wimplicit-function-declaration -Wunused -Wuninitialized' \
+    --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch -Wunused -Wuninitialized' \
+    --download-chaco=1                \
+    --download-ctetgen=1              \
+    --download-exodusii=1             \
+    --download-hdf5=1                 \
+    --download-hypre=1                \
+    --download-metis=1                \
+    --download-netcdf=1               \
+    --download-ml=1                   \
+    --download-parmetis=1             \
+    --download-pnetcdf=1              \
+    --download-scalapack              \
+    --download-superlu=1              \
+    --download-triangle=1             \
+    --download-zlib=1                 \
+    --with-debugging=1                \
+    --with-exodusii-fortran-bindings  \
+    --with-shared-libraries=1         \
+    --with-x11=1;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=ubuntu-mpich-g all
+
+ENV PETSC_ARCH ubuntu-mpich-O 
+RUN cd ${PETSC_DIR} ;                 \
+    ./configure                       \
+    --CFLAGS='-Wimplicit-function-declaration -Wunused -Wuninitialized' \
+    --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch -Wunused -Wuninitialized' \
+    --COPTFLAGS='-O3 -mcpu=native'    \
+    --CXXOPTFLAGS='-O3 -mcpu=native'  \
+    --FOPTFLAGS='-O3 -mcpu=native'    \
+    --download-chaco=1                \
+    --download-ctetgen=1              \
+    --download-exodusii=1             \
+    --download-hdf5=1                 \
+    --download-hypre=1                \
+    --download-metis=1                \
+    --download-netcdf=1               \
+    --download-ml=1                   \
+    --download-parmetis=1             \
+    --download-pnetcdf=1              \
+    --download-scalapack              \
+    --download-superlu=1              \
+    --download-triangle=1             \
+    --download-zlib=1                 \
+    --with-debugging=0                \
+    --with-exodusii-fortran-bindings  \
+    --with-shared-libraries=1         \
+    --with-x11=1;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=ubuntu-mpich-O all
