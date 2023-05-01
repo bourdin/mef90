@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 if sys.version_info.major == 3:
     import exodus3 as exo
@@ -84,6 +84,8 @@ def scalingBC(e,t,Xc,cslist,vslist,E,nu):
 
 def main():
     import numpy as np
+    import os
+    import pymef90
     options = parse()
     
     if  os.path.exists(options.outputfile):
@@ -112,7 +114,7 @@ def main():
     dim = exoout.num_dimensions()
     step = 0
     for t in np.linspace(options.time_min,options.time_max,options.time_numstep):
-        print "writing step",step+1,t
+        print ("writing step",step+1,t)
         exoout.put_time(step+1,t)
         U = scalingBC(exoout,t,options.initialpos,options.cs,options.vs,options.E,options.nu)
         X,Y,Z=exoout.get_coords()

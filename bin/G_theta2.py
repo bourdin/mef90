@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 
 def Data_processing_python(data_name,R_int,R_out,W,X0):
