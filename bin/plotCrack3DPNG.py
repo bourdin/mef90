@@ -321,7 +321,7 @@ def plot(options):
             if os.path.exists(enerfile):
                 laststep = getlaststep(enerfile)
             else:
-                print "unable to find step to plot."
+                print ("unable to find step to plot.")
                 return -1
         step = laststep
     else:

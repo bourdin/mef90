@@ -194,7 +194,7 @@ def plot(options):
             if os.path.exists(enerfile):
                 laststep = getlaststep(enerfile)
             else:
-                print "unable to find step to plot."
+                print ("unable to find step to plot.")
                 return -1
         stepmax = laststep
     else:
@@ -206,10 +206,10 @@ def plot(options):
     ##
     MyDatabase = os.path.join(options.inputfile)
       
-    print 'Trying to load {0}'.format(MyDatabase)
+    print ('Trying to load {0}'.format(MyDatabase))
     status = OpenDatabase(MyDatabase, step_min-1)       
     if not status:
-        print "unable to open database %s"%MyDatabase
+        print ("unable to open database %s"%MyDatabase)
         return -1
 
     BB = drawCrack(options)
