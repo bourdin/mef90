@@ -1068,7 +1068,7 @@ Contains
                numDofDamage = size(elemScal(1)%BF(:,1))
                numGauss = size(elemVect(1)%Gauss_C)
 
-               Allocate(stressDof((dim*(dim+1_Ki))/2_Ki))
+               Allocate(stressDof(SIZEOFMEF90_MATS))
 
                Do cell = 1,size(setPointID)
                   PetscCall(DMPlexVecGetClosure(dmDamage,PETSC_NULL_SECTION,MEF90DefMechCtx%damageLocal,setPointID(cell),damageDof,ierr))
