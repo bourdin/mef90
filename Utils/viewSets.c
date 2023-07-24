@@ -7,10 +7,9 @@ static char help[] = "Trying to understand DMPlex labels\n\n";
 int dmViewSets(DM dm,PetscViewer viewer)
 {
   PetscInt       pStart,pEnd,cStart,cEnd,vStart,vEnd,eStart,eEnd;
-  IS             setIS,pointsIS;
-  const PetscInt *setIDs;
+  IS             setIS;
   PetscInt       numSets;
-  PetscInt       set,dim;
+  PetscInt       dim;
 
   PetscCall(PetscViewerASCIIPrintf(viewer,"=== SETS ===\n"));
   PetscCall(DMGetDimension(dm,&dim));

@@ -1,0 +1,215 @@
+import argparse
+from paraview.simple import *
+
+def parse(args=None):
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--step',type=int,default=0)
+    parser.add_argument('--displacementScaling',type=float,default=0.)
+    parser.add_argument('--damageThreshold',type=float,default=.99)
+    parser.add_argument('--output',default=None)
+    parser.add_argument('inputfile',help='input file')
+    return parser.parse_args()
+
+def VTKJSExport2D(options):
+    #### disable automatic camera reset on 'Show'
+    paraview.simple._DisableFirstRenderCameraReset()
+
+    # create a new 'IOSS Reader'
+    basename = os.path.basename(options.inputfile)
+    prefix,ext = os.path.splitext(options.inputfile)
+    data = IOSSReader(registrationName=basename, FileName=[options.inputfile,])
+    data.GroupNumericVectorFieldComponents = 1
+    data.ElementBlocks = ['block_1']
+    data.NodeBlockFields = ['Damage', 'Displacement']
+    data.ElementBlockFields = ['Stress', 'attribute', 'extra_attribute_1']
+    data.SideSets = []
+    if not options.displacementScaling == 0.
+        data.ApplyDisplacements = 1
+        data.DisplacementMagnitude = options.displacementScaling
+
+    # get animation scene
+    animationScene1 = GetAnimationScene()
+
+    # get the time-keeper
+    timeKeeper1 = GetTimeKeeper()
+
+    # update animation scene based on data timesteps
+    animationScene1.UpdateAnimationUsingDataTimeSteps()
+
+    # get active view
+    renderView1 = GetActiveViewOrCreate('RenderView')
+
+    # show data in view
+    dataDisplay = Show(data, renderView1, 'UnstructuredGridRepresentation')
+
+    # trace defaults for the display properties.
+    dataDisplay.Representation = 'Surface'
+    dataDisplay.ColorArrayName = [None, '']
+    dataDisplay.SelectTCoordArray = 'None'
+    dataDisplay.SelectNormalArray = 'None'
+    dataDisplay.SelectTangentArray = 'None'
+    dataDisplay.OSPRayScaleArray = 'Damage'
+    dataDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
+    dataDisplay.SelectOrientationVectors = 'None'
+    dataDisplay.SelectScaleArray = 'Damage'
+    dataDisplay.GlyphType = 'Arrow'
+    dataDisplay.GlyphTableIndexArray = 'Damage'
+    dataDisplay.GaussianRadius = 0.05
+    dataDisplay.SetScaleArray = ['POINTS', 'Damage']
+    dataDisplay.ScaleTransferFunction = 'PiecewiseFunction'
+    dataDisplay.OpacityArray = ['POINTS', 'Damage']
+    dataDisplay.OpacityTransferFunction = 'PiecewiseFunction'
+    dataDisplay.DataAxesGrid = 'GridAxesRepresentation'
+    dataDisplay.PolarAxes = 'PolarAxesRepresentation'
+    dataDisplay.ScalarOpacityUnitDistance = 1.1889083412248398
+    dataDisplay.OpacityArrayName = ['POINTS', 'Damage']
+    dataDisplay.SelectInputVectors = [None, '']
+    dataDisplay.WriteLog = ''
+
+    # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
+    dataDisplay.ScaleTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 1.1757813367477812e-38, 1.0, 0.5, 0.0]
+
+    # init the 'PiecewiseFunction' selected for 'OpacityTransferFunction'
+    dataDisplay.OpacityTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 1.1757813367477812e-38, 1.0, 0.5, 0.0]
+
+    # reset view to fit data
+    renderView1.ResetCamera(False)
+
+    #changing interaction mode based on data extents
+    renderView1.CameraPosition = [0.0, 0.0, 33.5]
+    renderView1.CameraFocalPoint = [0.0, 0.0, 0.0]
+
+    # get the material library
+    materialLibrary1 = GetMaterialLibrary()
+
+    # update the view to ensure updated data information
+    renderView1.Update()
+
+    # set scalar coloring
+    ColorBy(dataDisplay, ('POINTS', 'Damage'))
+
+    # rescale color and/or opacity maps used to include current data range
+    dataDisplay.RescaleTransferFunctionToDataRange(True, False)
+
+    # show color bar/color legend
+    dataDisplay.SetScalarBarVisibility(renderView1, True)
+
+    # get color transfer function/color map for 'Damage'
+    damageLUT = GetColorTransferFunction('Damage')
+
+    # get opacity transfer function/opacity map for 'Damage'
+    damagePWF = GetOpacityTransferFunction('Damage')
+
+    # get 2D transfer function for 'Damage'
+    damageTF2D = GetTransferFunction2D('Damage')
+
+    # # Properties modified on animationScene1
+    # animationScene1.AnimationTime = 1.05
+
+    # Apply a preset using its name. Note this may not work as expected when presets have duplicate names.
+    damageLUT.ApplyPreset('Rainbow Uniform', True)
+
+    # create a new 'Threshold'
+    threshold1 = Threshold(registrationName='Threshold1', Input=data)
+    threshold1.Scalars = ['POINTS', 'Damage']
+    threshold1.UpperThreshold = 1.0
+
+    # Properties modified on threshold1
+    threshold1.UpperThreshold = options.damageThreshold
+
+    # show data in view
+    threshold1Display = Show(threshold1, renderView1, 'UnstructuredGridRepresentation')
+
+    # trace defaults for the display properties.
+    threshold1Display.Representation = 'Surface'
+    threshold1Display.ColorArrayName = ['POINTS', 'Damage']
+    threshold1Display.LookupTable = damageLUT
+    threshold1Display.SelectTCoordArray = 'None'
+    threshold1Display.SelectNormalArray = 'None'
+    threshold1Display.SelectTangentArray = 'None'
+    threshold1Display.OSPRayScaleArray = 'Damage'
+    threshold1Display.OSPRayScaleFunction = 'PiecewiseFunction'
+    threshold1Display.SelectOrientationVectors = 'None'
+    threshold1Display.ScaleFactor = 1.1296225
+    threshold1Display.SelectScaleArray = 'Damage'
+    threshold1Display.GlyphType = 'Arrow'
+    threshold1Display.GlyphTableIndexArray = 'Damage'
+    threshold1Display.GaussianRadius = 0.056481125
+    threshold1Display.SetScaleArray = ['POINTS', 'Damage']
+    threshold1Display.ScaleTransferFunction = 'PiecewiseFunction'
+    threshold1Display.OpacityArray = ['POINTS', 'Damage']
+    threshold1Display.OpacityTransferFunction = 'PiecewiseFunction'
+    threshold1Display.DataAxesGrid = 'GridAxesRepresentation'
+    threshold1Display.PolarAxes = 'PolarAxesRepresentation'
+    threshold1Display.ScalarOpacityFunction = damagePWF
+    threshold1Display.ScalarOpacityUnitDistance = 1.3742875675064552
+    threshold1Display.OpacityArrayName = ['POINTS', 'Damage']
+    threshold1Display.SelectInputVectors = [None, '']
+    threshold1Display.WriteLog = ''
+
+    # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
+    threshold1Display.ScaleTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 0.7548385729495971, 1.0, 0.5, 0.0]
+
+    # init the 'PiecewiseFunction' selected for 'OpacityTransferFunction'
+    threshold1Display.OpacityTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 0.7548385729495971, 1.0, 0.5, 0.0]
+
+    # hide data in view
+    Hide(data, renderView1)
+
+    # show color bar/color legend
+    threshold1Display.SetScalarBarVisibility(renderView1, True)
+
+    # update the view to ensure updated data information
+    renderView1.Update()
+
+    for i in range(options.step):
+        animationScene1.GoToNext()
+
+    #================================================================
+    # addendum: following script captures some of the application
+    # state to faithfully reproduce the visualization during playback
+    #================================================================
+
+    # get layout
+    layout1 = GetLayout()
+
+    #--------------------------------
+    # saving layout sizes for layouts
+
+    # layout/tab size in pixels
+    layout1.SetSize(1744, 1382)
+
+    #-----------------------------------
+    # saving camera placements for views
+
+    # current camera placement for renderView1
+    renderView1.InteractionMode = '2D'
+    renderView1.CameraPosition = [0.0, 0.0, 33.5]
+    renderView1.CameraParallelScale = 5.024937810560445
+
+    #--------------------------------------------
+    # uncomment the following to render all views
+    # RenderAllViews()
+    # alternatively, if you want to write images, you can use SaveScreenshot(...).
+
+    # export view
+    if not options.output:
+        ExportView(prefix+'.vtkjs', view=renderView1, ParaViewGlanceHTML='')
+    else:
+        ExportView(options.output, view=renderView1, ParaViewGlanceHTML='')
+    SaveScreenshot(prefix+'.png', renderView1, ImageResolution=[1744, 1382])
+
+if __name__ == "__main__":
+    import sys  
+    import os.path
+
+    options = parse()
+    if os.path.exists(options.inputfile):   
+        print('processing {0}'.format(options.inputfile)) 
+        VTKJSExport2D(options)   
+        sys.exit(0)
+    else:
+        print('Unable to find input file {0}'.format(options.inputfile))
+        sys.exit(-1)
+

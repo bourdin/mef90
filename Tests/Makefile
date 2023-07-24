@@ -157,47 +157,6 @@ TestVonMises3D: TestVonMises3D.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
-### Tools
-viewDAG: viewDAG.o
-	-@${CLINKER} -o viewDAG viewDAG.o ${PETSC_LIB}
-	-@${RM} -f viewDAG.o
-
-viewSets: viewSets.o
-	-@${CLINKER} -o viewSets viewSets.o ${PETSC_LIB}
-	-@${RM} -f viewSets.o
-
-YAMLValidator.o: ${MEF90_DIR}/Tests/YAMLValidator.F90 
-	${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
-
-YAMLValidator:${MEF90_DIR}/${PETSC_ARCH}/bin/YAMLValidator
-	-@echo "      $@"
-
-${MEF90_DIR}/${PETSC_ARCH}/bin/YAMLValidator: YAMLValidator.o
-	-@echo "      $@"
-	-@${FLINKER} -o $@ YAMLValidator.o ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
-
-HookeLaws.o: ${MEF90_DIR}/Tests/HookeLaws.F90 MEF90
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-HookeLaws: HookeLaws.o
-	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-	-@${RM} $<
-
-ExodusBuild: ExodusBuild.o  chkopts
-	${CLINKER} -o ExodusBuild ExodusBuild.o ${PETSC_LIB}
-	${RM} ExodusBuild.o
-
-### Not tested
-TestHookeLaws.o: ${MEF90_DIR}/Tests/TestHookeLaws.F90 MEF90
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-TestHookeLaws: TestHookeLaws.o
-	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
-	-@${RM} $<
-
-
 ### Old stuff
 # TestDofOrdering was used to figure out petsc dof ordering. It is not needed on a regular basis
 TestDofOrdering.o: ${MEF90_DIR}/Tests/TestDofOrdering.F90 MEF90 m_HeatXfer
