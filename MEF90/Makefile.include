@@ -4,6 +4,9 @@ MEF90_OBJS = ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_MPI.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Parameters.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Materials.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements_Type.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements_Scal.o \
+             ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements_Vect.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Elements.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_DMPlex.o \
              ${MEF90_DIR}/${PETSC_ARCH}/objs/m_MEF90_Utils.o \
