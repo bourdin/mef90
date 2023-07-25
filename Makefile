@@ -1,4 +1,4 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef WorkControlled
+all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef Utils
 
 mef90version.h: chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
@@ -49,10 +49,10 @@ vDef: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef
 #	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT vDefHF
 
-YAMLValidator: MEF90 m_DefMech m_HeatXfer
+Utils: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../Tests/Makefile YAMLValidator
+	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile all
 
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
@@ -67,7 +67,6 @@ ${PETSC_ARCH}/objs:
 	-@mkdir -p ${PETSC_ARCH}/objs
 ${PETSC_ARCH}/bin:
 	-@mkdir -p ${PETSC_ARCH}/bin
-
 
 doc: doc/vDef.pdf doc/vDef.tex
 	-@echo "Building documentation"
