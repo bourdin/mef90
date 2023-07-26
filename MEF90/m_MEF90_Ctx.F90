@@ -243,9 +243,9 @@ Contains
       MEF90Ctx%resultViewer = PETSC_NULL_VIEWER
 
       !!! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
-      ! If (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') Then
-      !    PetscCallA(PetscOptionsInsertString(PETSC_NULL_OPTIONS,"-dm_plex_gmsh_mark_vertices",ierr))
-      ! End If
+      If (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') Then
+         PetscCallA(PetscOptionsInsertString(PETSC_NULL_OPTIONS,"-dm_plex_gmsh_mark_vertices",ierr))
+      End If
    End Subroutine MEF90CtxCreate
 
 #undef __FUNCT__
