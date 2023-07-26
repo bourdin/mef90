@@ -1,19 +1,31 @@
 verbose: 1
 time:
     interpolation: exo
-defmech:
-    irrevthres: 0.
-    timestepping:
-        type: quasistatic
 heatxfer:
     timestepping:
         type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    solver:
+        type: altmin
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.
+    pclag: 5
+    irrevthres: 0.
+displacement:
+    snes:
+        type: ksponly
+    pc:
+        type: gamg
+damage:
+    snes:
+        atol: 1e-6
+        rtol: 1e-5
 boundaryDisplacement:
   scaling: file
-temperature:
-  offset: 0
-plasticStrain:
-  offset: 0
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -27,12 +39,25 @@ cs0001:
         type: AT1
     plasticity:
         type: NONE
-cs0030:
-    displacementBC: no,no,no
-    damageBC: yes
-    boundaryDamage: 1.
-cs0040:
+cs0002:
+    hookesLaw:  
+        type: isotropic
+        YoungsModulus: 1.
+        PoissonRatio: 0.
+    linearThermalExpansion: 0,0,0
+    fracturetoughness: 1.
+    residualstiffness: 0.
+    internalLength: .02
+    damage:
+        type: AT1Elastic
+    plasticity:
+        type: NONE
+fs0030:
     displacementBC: 1,1,1
     boundaryDisplacement: 1.,1.,1.
     damageBC: 1
     boundaryDamage: 0.
+fs0040:
+    displacementBC: no,no,no
+    damageBC: yes
+    boundaryDamage: 1.

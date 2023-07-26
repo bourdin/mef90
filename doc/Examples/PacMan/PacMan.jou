@@ -1,0 +1,45 @@
+reset
+echo off
+journal off
+#{R=1}
+#{Rf = .25}
+#{w=PI/8}
+#{hf = 0.01}
+#{hc = 0.1}
+
+
+create surface circle radius 1 zplane
+create surface circle radius {Rf} zplane
+webcut Body 1 tool Body 2 
+delete body 3
+
+create vertex 0 0 0
+create vertex {-2*cos(w)} {2*sin(w)} 0
+create vertex {-2*cos(w)} {-2*sin(w)} 0
+create surface vertex 5 6 7
+
+subtract surface 5 from surface 2 3
+
+imprint all
+merge all
+
+surface 6 size {hf}
+curve 14 size {hc}
+surface 7 sizing function type bias start curve 9 finish curve 14
+
+surface all scheme tridelaunay
+tridelaunay point placement gq
+mesh surface all
+
+block 1 surface 6
+block 2 surface 7
+
+sideset 30 curve 14
+sideset 40 curve 8 10
+
+export mesh "Pacman.gen" dimension 2 block all overwrite
+
+quality volume all shape global list verbose errors
+
+
+#quit
