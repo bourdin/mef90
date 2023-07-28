@@ -12,7 +12,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)              :: IOBuffer
 
     PetscInt                                  :: dim,pStart,pEnd
-    PetscInt                                  :: cStart,cEnd,c
+    PetscInt                                  :: cStart,cEnd,c,nFlip = 0
     PetscReal,Dimension(:),Pointer            :: v0,BB,BBinv
     PetscReal                                 :: detBBinv
 
@@ -63,6 +63,7 @@ Implicit NONE
         PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,c,v0,BB,BBinv,detBBinv,ierr))
         If (detBBinv <= 0.0_Kr) Then
             reversedCells = PETSC_TRUE
+            nFlip = nFlip + 1
             If (MEF90GlobalOptions%verbose > 0) Then
                 Write(IOBuffer,'("Reversed cell: ",I0," Jacobian : ",ES12.5,"\n")') c,detBBinv
                 PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
@@ -70,7 +71,7 @@ Implicit NONE
         End If
     End Do
     If (reversedCells) Then
-        Write(IOBuffer,*) "WARNING: this mesh has cells with negative Jacobian. \nRun with -verbose 1 to see a list of flipped cells\n"
+        Write(IOBuffer,'("WARNING: this mesh has ",I0," cells with negative Jacobian out of a total ",I0," cells. \nRun with -verbose 1 to see a list of flipped cells\n")') nFlip,pEnd - pStart
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     Else
         Write(IOBuffer,*) "No reversed cells\n"
