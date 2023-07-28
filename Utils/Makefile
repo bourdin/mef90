@@ -33,6 +33,17 @@ ${MEF90_DIR}/${PETSC_ARCH}/bin/gmsh2exo: gmsh2exo.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
+TestOrientation:${MEF90_DIR}/${PETSC_ARCH}/bin/TestOrientation
+	-@echo "      $@"
+
+TestOrientation.o: ${MEF90_DIR}/Utils/TestOrientation.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+${MEF90_DIR}/${PETSC_ARCH}/bin/TestOrientation: TestOrientation.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 YAMLValidator.o: ${MEF90_DIR}/Utils/YAMLValidator.F90 
 	${FC} ${FC_FLAGS} ${FCPPFLAGS} -c -o $@ $<
 

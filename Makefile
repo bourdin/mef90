@@ -52,7 +52,7 @@ vDef: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 Utils: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile all
+	-@make -C ${PETSC_ARCH}/objs -f ../../Utils/Makefile all
 
 test: MEF90 chkpaths
 	-@make -s -C HeatXfer test
