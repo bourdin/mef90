@@ -14,6 +14,7 @@ ${MEF90_DIR}/${PETSC_ARCH}/bin/viewDAG: viewDAG.o
 
 viewDAG:${MEF90_DIR}/${PETSC_ARCH}/bin/viewDAG
 	-@echo "      $@"
+	-@cp viewDAG ${MEF90_DIR}/${PETSC_ARCH}/bin/viewDAG
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/viewSets: viewSets.o
 	-@${CLINKER} -o viewSets viewSets.o ${PETSC_LIB}
@@ -21,6 +22,9 @@ ${MEF90_DIR}/${PETSC_ARCH}/bin/viewSets: viewSets.o
 
 viewSets:${MEF90_DIR}/${PETSC_ARCH}/bin/viewSets
 	-@echo "      $@"
+	-@cp viewSets ${MEF90_DIR}/${PETSC_ARCH}/bin/viewSets
+
+${MEF90_DIR}/${PETSC_ARCH}/bin/viewSets: viewSets.o
 
 gmsh2exo:${MEF90_DIR}/${PETSC_ARCH}/bin/gmsh2exo
 	-@echo "      $@"
