@@ -79,6 +79,7 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
     
     csoffset = [e.elem_blk_info(set)[1] for set in cslist]        
     for set in cslist:
+        #print("processing cell set {}".format(set))
         connect = e.get_elem_connectivity(set)
         for cid in range(connect[1]):
             vertices = [connect[0][cid*connect[2]+c] for c in range(connect[2])]
@@ -90,6 +91,7 @@ def surfingBC(e,t,Xc,cslist,vslist,E,nu,ampl):
                 U[2,v-1] = 0.0
         
     for set in vslist:
+        #print("processing vertex set {}".format(set))
         for v in e.get_node_set_nodes(set):
             r,theta = cart2polar(X[v-1]-Xc[0]-t,Y[v-1]-Xc[1])
             z = Z[v-1]
