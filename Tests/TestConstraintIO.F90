@@ -66,6 +66,7 @@ Implicit NONE
     PetscBool                                           :: interpolate = PETSC_TRUE
 
     PetscInt                                            :: numNodalVar = 3, numCellVar = 3, numGVar = 0, numSideVar = 3
+    PetscInt                                            :: numFS
     Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
     Character(len=MEF90MXSTRLEN)                        :: name
     type(tIS)                                           :: cellIS,csIS,faceIS,ssIS
@@ -199,7 +200,8 @@ Implicit NONE
     PetscCallA(DMGetCoordinateSection(dmSigma0, coordSection0,ierr))
     PetscCallA(DMGetLabelIdIS(dmSigma0, "Face Sets", ssIS,ierr))
     PetscCallA(ISGetIndicesF90(ssIS, ssID,ierr))
-    Do set = 1, size(ssID)
+    numFS = size(ssID)
+    Do set = 1, numFS
         PetscCallA(DMGetStratumIS(dmSigma0, "Face Sets", ssID(set), faceIS,ierr))
         If (faceIS /= PETSC_NULL_IS) Then
             PetscCallA(ISGetIndicesF90(faceIS, faceID,ierr))
@@ -265,8 +267,10 @@ Implicit NONE
     PetscCallA(MEF90EXOVecView(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
 
     ! Reorder and write ioS0
-    PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
-    PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
+    If (numFS > 0) Then
+        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
+        PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
+    End If
 
     ! Test read ioVecRead and ioSRead
     PetscCallA(VecSet(locVecU,1000.0_kr,ierr))
@@ -276,9 +280,11 @@ Implicit NONE
     PetscCallA(MEF90EXOVecLoad(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
     PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
     PetscCallA(VecSet(locVecSigma0,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
-    PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
-
+    If (numFS > 0) Then
+        PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
+        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
+    End If
+    
     ! Cleanup Vec
     PetscCallA(VecDestroy(locVecU,ierr))
     PetscCallA(VecDestroy(locVecU0,ierr))

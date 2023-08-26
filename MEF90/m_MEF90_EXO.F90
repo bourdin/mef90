@@ -111,13 +111,13 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,nameS,time,ierr)
           Call expvan(exoid,"n",numV,nameV,ierr)
        End If
        numS = size(nameS)
-       If (numS > 0) Then
+       If ((numS > 0) .AND. (numSS > 0)) Then
           PetscCall(expvp(exoid,"s",numS,ierr))
           PetscCall(expvan(exoid,"s",numS,nameS,ierr))
        End If
 
        !!! Write truth tables
-       If (numS > 0) Then
+       If ((numS > 0) .AND. (numSS > 0)) Then
           Allocate(truthtable(numSS,numS))
           truthtable = .true.
           PetscCall(expsstt(exoid, numSS, numS, truthtable, ierr))
