@@ -427,7 +427,7 @@ End Subroutine MEF90EXOFormat
       PetscMPIInt                      :: rank
    
       csxs = 0_Ki
-      PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
+      PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
       numCS = exinqi(exoid,EX_INQ_ELEM_BLK)
       Allocate(csID(numCS))
       Allocate(csSize(numCS))
@@ -487,7 +487,7 @@ Subroutine MEF90EXOVecViewSide_Private(v,exoid,step,offset,ierr)
 
    ssxs = 0_Ki
    sscs = 0_Ki
-   PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
+   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
    numSS = exinqi(exoid,EX_INQ_SIDE_SETS)
    Allocate(ssID(numSS))
    Allocate(ssSize(numSS))
@@ -542,7 +542,7 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
 
    ssxs = 0_Ki
    sscs = 0_Ki
-   PetscCallMPIA(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
+   PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
    numSS = exinqi(exoid,EX_INQ_SIDE_SETS)
    Allocate(ssID(numSS))
    Allocate(ssSize(numSS))
@@ -558,17 +558,17 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
       !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
       ssLocalSize = max(0, min(xe/bs, ssxs+ssSize(set)) - max(xs/bs, ssxs))
       If (bs == 1) Then
-         PetscCall(VecGetArrayReadF90(v,varray,ierr))
+         PetscCall(VecGetArrayF90(v,varray,ierr))
          PetscCall(exgssv(exoid,step,offset,ssID(set),ssLocalSize,varray,ierr))
-         PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+         PetscCall(VecRestoreArrayF90(v,varray,ierr))
       Else
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,ssLocalSize,xs+sscs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecGetArrayF90(vComp,varray,ierr))
             Call exgpv(exoid,step,EX_SIDE_SET,offset+c,ssID(set),max(xs/bs-ssxs,0)+1,ssLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecRestoreArrayF90(vComp,varray,ierr))
             PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
             PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do
