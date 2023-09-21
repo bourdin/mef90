@@ -228,7 +228,9 @@ End Subroutine MEF90EXOFormat
       Integer                                            :: exoid 
       PetscInt                                           :: offsetN,offsetZ,offsetS
       Type(tVec)                                         :: iov
-      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
+      type(tDM)                                          :: locDM
+      Type(tVec)                                         :: vGlob
+   Character(len=PETSC_MAX_PATH_LEN)                     :: vecname,IOBuffer
 
       offsetN = -1
       offsetZ = -1
@@ -254,6 +256,15 @@ End Subroutine MEF90EXOFormat
       End If
       PetscCall(MEF90VecCopySF(iov,v,invSF,ierr))
       PetscCall(VecDestroy(iov,ierr))
+
+      !!! Make sure that the halo values in the local vector are updated by doing a L2G followed by a G2L
+      !!! This is probably only needed for nodal vectors, unless we have distributed the esh with an overlap.
+      PetscCall(VecGetDM(V,locDM,ierr))
+      PetscCall(DMGetGlobalVector(locDM,vGlob,ierr))
+      PetscCall(DMLocalToGlobal(locDM,v,INSERT_VALUES,vGlob,ierr))
+      PetscCall(DMGlobalToLocal(locDM,vGlob,INSERT_VALUES,v,ierr))
+      PetscCall(DMRestoreGlobalVector(locDM,vGlob,ierr))
+
    End Subroutine MEF90EXOVecLoad
 
 #undef __FUNCT__
@@ -334,7 +345,7 @@ End Subroutine MEF90EXOFormat
       PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
       PetscCall(VecGetBlockSize(v,bs,ierr))
       If (bs == 1) Then
-         PetscCall(VecGetArrayReadF90(v,varray,ierr));
+         PetscCall(VecGetArrayReadF90(v,varray,ierr))
          Call exgnnv(exoid,step,offset,xs+1,xe-xs,varray,ierr)
          PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
       Else 

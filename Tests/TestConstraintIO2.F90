@@ -74,7 +74,7 @@ Implicit NONE
     Type(tVec)                                          :: locCoord, locVecU, locVecU0, U, U0, locVecV, V
     PetscReal,Dimension(:),Pointer                      :: time
     PetscInt                                            :: step = 1_Ki
-    PetscReal                                           :: err
+    PetscReal                                           :: myerr,err
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     PetscCallA(MEF90Initialize(ierr))
@@ -174,8 +174,15 @@ Implicit NONE
     PetscCallA(VecDuplicate(U,V,ierr))
     PetscCallA(VecSet(locVecV,-1000.0_kr,ierr))
     PetscCallA(PetscObjectSetName(locVecV,"U",ierr))
+    PetscCallA(VecSet(locVecV,0.0_Kr,ierr))
     PetscCallA(MEF90EXOVecLoad(locVecV,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
+
+    PetscCallA(MEF90VecCopySF(locVecV,locVecU0,lcSF,ierr))
+    PetscCallA(VecViewFromOptions(locVecU0,PETSC_NULL_OPTIONS,"-U0loc_view",ierr))
+
+    PetscCallA(MEF90VecCopySF(locVecU0,locVecV,clSF,ierr))
     PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
+
 
     PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-Vloc_view",ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
@@ -183,19 +190,20 @@ Implicit NONE
     ! Save it again 
     PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step+1,dim,ierr))
 
-
-
     ! Compute the difference between the LOCAL vector we wrote and the one we read
     PetscCallA(VecAXPY(locVecV,-1.0_Kr,locVecU,ierr))
     PetscCallA(VecNorm(locVecV,NORM_INFINITY,err,ierr))
-    Write(IOBuffer,'("Local vector L^infty error: ",ES12.5,"\n")') err
+    Write(IOBuffer,'("Local vector L^infty error:  ",ES12.5,"\n")') err
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-diffloc_view",ierr))
 
     ! Compute the difference between the LOCAL vector we wrote and the one we read
     PetscCallA(VecAXPY(V,-1.0_Kr,U,ierr))
-    PetscCallA(VecNorm(V,NORM_INFINITY,err,ierr))
+    PetscCallA(VecNorm(V,NORM_INFINITY,myerr,ierr))
+    PetscCallMPIA(MPI_AllReduce(myerr,err,1,MPIU_SCALAR,MPI_MAX,PETSC_COMM_WORLD,ierr))
     Write(IOBuffer,'("Global vector L^infty error: ",ES12.5,"\n")') err
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-diff_view",ierr))
 
 
     
