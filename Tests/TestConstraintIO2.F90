@@ -51,7 +51,7 @@ contains
 
 End Module localFunctions
 
-Program  TestConstraintIO
+Program  TestConstraintIO2
 #include <petsc/finclude/petsc.h>
 Use m_MEF90
 Use petsc
@@ -62,22 +62,19 @@ Implicit NONE
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions_default
     Type(MEF90CtxGlobalOptions_Type),Pointer            :: MEF90GlobalOptions
-    Type(tDM),target                                    :: dm,dmU,dmU0,dmSigma,dmSigma0
+    Type(tDM),target                                    :: dm,dmU,dmU0
     PetscBool                                           :: interpolate = PETSC_TRUE
 
-    PetscInt                                            :: numNodalVar = 3, numCellVar = 3, numGVar = 0, numSideVar = 3
-    PetscInt                                            :: numFS
+    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0, numSideVar = 0
     Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
-    Character(len=MEF90MXSTRLEN)                        :: name
-    type(tIS)                                           :: cellIS,csIS,faceIS,ssIS
-    PetscInt,Dimension(:),Pointer                       :: cellID,csID,faceID,ssID
-    PetscInt                                            :: dim,pStart,pEnd,size,cell,c,set,face
-    Type(tPetscSection)                                 :: sectionU, sectionU0, sectionSigma, sectionSigma0, coordSection,coordSection0
+    Character(len=MEF90MXSTRLEN)                        :: name,IOBuffer
+    PetscInt                                            :: dim,pStart,pEnd
+    Type(tPetscSection)                                 :: sectionU, sectionU0
     Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lcSSF, clSSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF, lioBSSF, iolBSSF
-    Type(tVec)                                          :: locCoord, locVecU, locVecU0, locVecSigma, locVecSigma0
-    PetscReal,Dimension(:),Pointer                      :: cval,xyz
+    Type(tVec)                                          :: locCoord, locVecU, locVecU0, U, U0, locVecV, V
     PetscReal,Dimension(:),Pointer                      :: time
     PetscInt                                            :: step = 1_Ki
+    PetscReal                                           :: err
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     PetscCallA(MEF90Initialize(ierr))
@@ -102,8 +99,6 @@ Implicit NONE
     Allocate(gVarName(numGVar))
     Allocate(sideVarName(numSideVar))
     nodalVarName = ["U_X","U_Y","U_Z"]
-    cellVarName  = ["Sigma_11","Sigma_22","Sigma_33"]
-    sideVarName = ["Sigma0_11","Sigma0_22","Sigma0_33"]
     
     ! Create DM from file
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
@@ -145,30 +140,14 @@ Implicit NONE
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU,ierr))
     PetscCallA(VecGetDM(locVecU,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
+    PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
 
     ! Create nodal local Vec holding constraints
     name = "U0"
     PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
     PetscCallA(VecGetDM(locVecU0,dmU0,ierr))
     PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
-
-    ! create cell Vec holding sigma
-    name = "Sigma"
-    PetscCallA(MEF90CreateCellVector(dm,3_Ki,name,locVecSigma,ierr))
-    PetscCallA(VecGetDM(locVecSigma,dmSigma,ierr))
-    PetscCallA(DMGetLocalSection(dmSigma,sectionSigma,ierr))
-
-    ! create cell Vec holding sigma
-    name = "Sigma0"
-    PetscCallA(MEF90CreateBoundaryCellVector(dm,3_Ki,name,locVecSigma0,ierr))
-    PetscCallA(VecGetDM(locVecSigma0,dmSigma0,ierr))
-    PetscCallA(DMGetLocalSection(dmSigma0,sectionSigma0,ierr))
-
-    ! View all sections
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionSigma,PETSC_NULL_OPTIONS,"-sectionSigma_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionSigma0,PETSC_NULL_OPTIONS,"-sectionSigma0_view",ierr))
+    PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
 
     ! Create SFs for copying from/into IO coordinates Vec
     PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU,lioSF,iolSF,ierr))
@@ -176,120 +155,58 @@ Implicit NONE
     PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU0,lioBSF,iolBSF,ierr))
     ! Create SFs for copying constrained dofs from/into Constraint Vec
     PetscCallA(MEF90ConstraintSFCreate(MEF90Ctx,locVecU,locVecU0,lcSF,clSF,ierr))
-    ! Create SFs for copying from/into IO cell Vec
-    PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecSigma,lioSSF,iolSSF,ierr))
-    ! Create SFs for copying from/into IO cell Vec
-    PetscCallA(MEF90FaceSetIOSFCreate(MEF90Ctx,locVecSigma0,lioBSSF,iolBSSF,ierr))
-    ! Create SFs for copying constrained dofs from/into Constraint Vec
-    PetscCallA(MEF90ConstraintSFCreate(MEF90Ctx,locVecSigma,locVecSigma0,lcSSF,clSSF,ierr))
 
     ! Fill locVecU holding coordinates and copy constraint values = 10 from locVecU0
     PetscCallA(VecSet(locVecU0,10.0_kr,ierr))
-    ! locCoord is obtained from dmSigma but all DMs have the same coordinates
-    PetscCallA(DMGetCoordinatesLocal(dmSigma,locCoord,ierr))
+    PetscCallA(DMGetCoordinatesLocal(dmU0,locCoord,ierr))
+
     ! Fill locVecU with coordinates
     PetscCallA(project(locVecU,sectionU,ierr))
-    PetscCallA(MEF90VecCopySF(locVecU0,locVecU,clSF,ierr))
+    PetscCallA(DMLocalToGlobal(dmU,locVecU,INSERT_VALUES,U,ierr))
+    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-Uloc_view",ierr))
+    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-U_view",ierr))
 
-    ! Reorder locVecU into ioVec and write ioVec
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
+    ! Save locVecU in exo file
     PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
-    ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
-    ! (iii) y geometric center
-    PetscCallA(DMGetCoordinateSection(dmSigma0, coordSection0,ierr))
-    PetscCallA(DMGetLabelIdIS(dmSigma0, "Face Sets", ssIS,ierr))
-    PetscCallA(ISGetIndicesF90(ssIS, ssID,ierr))
-    numFS = size(ssID)
-    Do set = 1, numFS
-        PetscCallA(DMGetStratumIS(dmSigma0, "Face Sets", ssID(set), faceIS,ierr))
-        If (faceIS /= PETSC_NULL_IS) Then
-            PetscCallA(ISGetIndicesF90(faceIS, faceID,ierr))
-            Do face = 1,size(faceID)
-                PetscCallA(DMPlexVecGetClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval,ierr))
-                PetscCallA(DMPlexVecGetClosure(dmSigma0, coordSection0, locCoord, faceID(face), xyz,ierr))
-                cval(1) = MEF90Ctx%rank
-                cval(2) = 0.0_Kr
-                Do c = 1, size(xyz),dim
-                    cval(2) = cval(2) + xyz(c)
-                End Do
-                cval(2) = cval(2) * dim / size(xyz)
-                cval(3) = 0.0_Kr
-                Do c = 0, size(xyz),dim
-                    cval(3) = cval(3) + xyz(c)
-                End Do
-                cval(3) = cval(3) * dim / size(xyz)
-                !write(*,*) 'RANK = ',MEF90Ctx%rank,' set = ',set,' set ID = ',ssID(set),' face = ',face,' faceID = ',faceID(face),' x = ',cval(2),' y = ',cval(3)
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma0, coordSection0, locCoord, faceID(face), xyz,ierr))
-                PetscCallA(DMPlexVecSetClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval, INSERT_VALUES, ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval,ierr))
-            End Do
-            PetscCallA(ISRestoreIndicesF90(faceIS, faceID,ierr))
-        End If ! cellIS
-        PetscCallA(ISDestroy(faceIS,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(ssIS, ssID,ierr))
-    PetscCallA(ISDestroy(ssIS,ierr))
-    PetscCallA(DMGetCoordinateSection(dmSigma, coordSection,ierr))
-    PetscCallA(DMGetLabelIdIS(dmSigma, "Cell Sets", csIS,ierr))
-    PetscCallA(ISGetIndicesF90(csIS, csID,ierr))
-    Do set = 1, size(csID)
-        PetscCallA(DMGetStratumIS(dmSigma, "Cell Sets", csID(set), cellIS,ierr))
-        If (cellIS /= PETSC_NULL_IS) Then
-            PetscCallA(ISGetIndicesF90(cellIS, cellID,ierr))
-            Do cell = 1,size(cellID)
-                PetscCallA(DMPlexVecGetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
-                PetscCallA(DMPlexVecGetClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-                cval(1) = MEF90Ctx%rank
-                cval(2) = 0.0_Kr
-                Do c = 1, size(xyz),dim-1
-                    cval(2) = cval(2) + xyz(c)
-                End Do
-                cval(2) = cval(2) * dim / size(xyz)
-                cval(3) = 0.0_Kr
-                Do c = 1, size(xyz),dim
-                    cval(3) = cval(3) + xyz(c)
-                End Do
-                cval(3) = cval(3) * dim / size(xyz)
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
-                PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_ALL_VALUES, ierr))
-                PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
-            End Do
-            PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
-        End If ! cellIS
-        PetscCallA(ISDestroy(cellIS,ierr))
-    End Do
-    PetscCallA(ISRestoreIndicesF90(csIS, csID,ierr))
-    PetscCallA(ISDestroy(csIS,ierr))
+    ! Create new vectors and read them from the file
+    PetscCallA(VecDuplicate(locVecU,locVecV,ierr))
+    PetscCallA(VecDuplicate(U,V,ierr))
+    PetscCallA(VecSet(locVecV,-1000.0_kr,ierr))
+    PetscCallA(PetscObjectSetName(locVecV,"U",ierr))
+    PetscCallA(MEF90EXOVecLoad(locVecV,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
+    PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
 
-    ! Reorder and write ioS
-    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(MEF90EXOVecView(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
+    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-Vloc_view",ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
 
-    ! Reorder and write ioS0
-    If (numFS > 0) Then
-        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
-        PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
-    End If
+    ! Save it again 
+    PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step+1,dim,ierr))
 
-    ! Test read ioVecRead and ioSRead
-    PetscCallA(VecSet(locVecU,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
-    PetscCallA(VecSet(locVecSigma,1000.0_kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
-    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
-    PetscCallA(VecSet(locVecSigma0,1000.0_kr,ierr))
-    If (numFS > 0) Then
-        PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
-        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
-    End If
+
+
+    ! Compute the difference between the LOCAL vector we wrote and the one we read
+    PetscCallA(VecAXPY(locVecV,-1.0_Kr,locVecU,ierr))
+    PetscCallA(VecNorm(locVecV,NORM_INFINITY,err,ierr))
+    Write(IOBuffer,'("Local vector L^infty error: ",ES12.5,"\n")') err
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+
+    ! Compute the difference between the LOCAL vector we wrote and the one we read
+    PetscCallA(VecAXPY(V,-1.0_Kr,U,ierr))
+    PetscCallA(VecNorm(V,NORM_INFINITY,err,ierr))
+    Write(IOBuffer,'("Global vector L^infty error: ",ES12.5,"\n")') err
+    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+
+
     
     ! Cleanup Vec
     PetscCallA(VecDestroy(locVecU,ierr))
     PetscCallA(VecDestroy(locVecU0,ierr))
-    PetscCallA(VecDestroy(locVecSigma,ierr))
-    PetscCallA(VecDestroy(locVecSigma0,ierr))
+    PetscCallA(VecDestroy(locVecV,ierr))
+
+    PetscCallA(VecDestroy(U,ierr))
+    PetscCallA(VecDestroy(U0,ierr))
+    PetscCallA(VecDestroy(V,ierr))
 
     ! Cleanup SF
     PetscCallA(PetscSFDestroy(lcSF,ierr))
@@ -314,4 +231,4 @@ Implicit NONE
     PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
     PetscCallA(MEF90Finalize(ierr))
     PetscCallA(PetscFinalize(ierr))
-End Program  TestConstraintIO
+End Program  TestConstraintIO2

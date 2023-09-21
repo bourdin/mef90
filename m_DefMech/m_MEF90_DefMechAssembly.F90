@@ -363,7 +363,6 @@ Contains
       PetscCall(DMLocalToGlobalBegin(dmDisplacement,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMLocalToGlobalEnd(dmDisplacement,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMRestoreLocalVector(dmDisplacement,locResidual,ierr))
-      !PetscCall(DMRestoreLocalVector(dmDisplacement,locDisplacement,ierr))
    End Subroutine MEF90DefMechOperatorDisplacement
 
 #undef __FUNCT__

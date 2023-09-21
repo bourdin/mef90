@@ -1,0 +1,21 @@
+reset             
+#{Lx=1}
+#{Ly=2}
+#{h=.25}
+#{hstr = tostring(h)}
+
+create surface rectangle width {Lx} height {Ly} zplane 
+
+surface all scheme tridelaunay size {h}
+tridelaunay point placement gq
+mesh surface all
+
+block 1 surface 1 
+sidese 10 curve 3
+sideset 11 curve 1
+nodeset 100 curve 3
+nodeset 101 curve 1
+
+block all element type tri3
+#{filename = Quote("TallRectangle-"//hstr//".gen")}
+export mesh {filename} dimension 2 block all overwrite

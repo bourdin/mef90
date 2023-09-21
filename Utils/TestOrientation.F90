@@ -75,6 +75,7 @@ Implicit NONE
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     Else
         Write(IOBuffer,*) "No reversed cells\n"
+        PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     End If
     PetscCallA(DMDestroy(dm,ierr))
     DeAllocate(v0)
