@@ -72,7 +72,8 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%externalTemperatureLocal,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))    
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"External temperature from file not implemented yet "//__FUNCT__)
+         ! PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%externalTemperatureLocal,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))    
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
@@ -81,7 +82,8 @@ Contains
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%fluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"Flux from file not implemented yet "//__FUNCT__)
+         ! PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%fluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,time,ierr))
       Case (MEF90Scaling_CST)

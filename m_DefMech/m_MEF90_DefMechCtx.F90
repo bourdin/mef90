@@ -603,8 +603,8 @@ Contains
 
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%temperatureLocal,DefMechCtx%temperatureToIOSF,DefMechCtx%IOTotemperatureSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%bodyForce,DefMechCtx%bodyForceToIOSF,DefMechCtx%IOTobodyForceSF,ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%boundaryForce,DefMechCtx%boundaryForceToIOSF,DefMechCtx%IOToboundaryForceSF,ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%pressureForce,DefMechCtx%pressureForceToIOSF,DefMechCtx%IOTopressureForceSF,ierr))
+      ! PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%boundaryForce,DefMechCtx%boundaryForceToIOSF,DefMechCtx%IOToboundaryForceSF,ierr))
+      ! PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%pressureForce,DefMechCtx%pressureForceToIOSF,DefMechCtx%IOTopressureForceSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%stress,DefMechCtx%stressToIOSF,DefMechCtx%IOToStressSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%plasticStrain,DefMechCtx%plasticStrainToIOSF,DefMechCtx%IOToplasticStrainSF,ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMechCtx%cumulatedPlasticDissipation,DefMechCtx%cumulatedPlasticDissToIOSF,DefMechCtx%IOToCumulatedPlasticDissSF,ierr))

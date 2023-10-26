@@ -167,7 +167,8 @@ Contains
 
       Select case (MEF90DefMechGlobalOptions%boundaryForceScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%boundaryForce,MEF90DefMechCtx%boundaryForceToIOSF,MEF90DefMechCtx%IOToBoundaryForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,MEF90DefMechCtx%dim,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"Boundary force from file not implemented yet "//__FUNCT__)
+         ! PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%boundaryForce,MEF90DefMechCtx%boundaryForceToIOSF,MEF90DefMechCtx%IOToBoundaryForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,MEF90DefMechCtx%dim,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce,time,ierr))
       Case (MEF90Scaling_CST)
@@ -176,13 +177,13 @@ Contains
 
       Select case (MEF90DefMechGlobalOptions%pressureForceScaling)
       Case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%pressureForceToIOSF,MEF90DefMechCtx%IOToPressureForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
+         SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_LIB,"Pressure force from file not implemented yet "//__FUNCT__)
+         ! PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%pressureForceToIOSF,MEF90DefMechCtx%IOToPressureForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       Case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,1.0_Kr,ierr))
       End Select
-
    End Subroutine MEF90DefMechSetTransients
 
 #undef __FUNCT__
