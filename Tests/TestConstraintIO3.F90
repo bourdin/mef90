@@ -1,8 +1,8 @@
 Module localFunctions
 #include <petsc/finclude/petsc.h>
-use petsc
 use m_MEF90
 use m_MEF90_DefMech
+use m_vDefDefault
 implicit none
     
 contains
@@ -63,19 +63,22 @@ Implicit NONE
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions_default
     Type(MEF90CtxGlobalOptions_Type),Pointer            :: MEF90GlobalOptions
-    Type(tDM),target                                    :: dm,dmU,dmU0
+    Type(tDM),target                                    :: dm,dmU
     PetscBool                                           :: interpolate = PETSC_TRUE
+
+   !!! Defect mechanics contexts
+    Type(MEF90DefMechCtx_Type)                          :: MEF90DefMechCtx
+    Type(MEF90DefMechGlobalOptions_Type),pointer        :: MEF90DefMechGlobalOptions
 
     PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0, numSideVar = 0
     Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
-    Character(len=MEF90MXSTRLEN)                        :: name,IOBuffer
-    PetscInt                                            :: dim,pStart,pEnd
-    Type(tPetscSection)                                 :: sectionU, sectionU0
-    Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lcSSF, clSSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF, lioBSSF, iolBSSF
-    Type(tVec)                                          :: locCoord, locVecU, locVecU0, U, U0, locVecV, V
+    ! Character(len=MEF90MXSTRLEN)                        :: IOBuffer
+    PetscInt                                            :: dim
+    Type(tPetscSection)                                 :: sectionU
+    Type(tVec)                                          :: U,V,locVecV
     PetscReal,Dimension(:),Pointer                      :: time
     PetscInt                                            :: step = 1_Ki
-    PetscReal                                           :: myerr,err
+    ! PetscReal                                           :: myerr,err
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     PetscCallA(MEF90Initialize(ierr))
@@ -94,12 +97,6 @@ Implicit NONE
     PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
     PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-
-    Allocate(nodalVarName(numNodalVar))
-    Allocate(cellVarName(numCellVar))
-    Allocate(gVarName(numGVar))
-    Allocate(sideVarName(numSideVar))
-    nodalVarName = ["U_X","U_Y","U_Z"]
     
     ! Create DM from file
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
@@ -107,8 +104,25 @@ Implicit NONE
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
-    
+
+    PetscCallA(DMGetDimension(dm,dim,ierr))
+
     ! Open exodus file + write geometry + format the file
+    numNodalVar = dim
+    numCellVar  = 0
+    numGVar     = 0
+    numSideVar  = 0
+
+    Allocate(nodalVarName(numNodalVar))
+    Allocate(cellVarName(numCellVar))
+    Allocate(gVarName(numGVar))
+    Allocate(sideVarName(numSideVar))
+    If (dim == 2) Then
+        nodalVarName = ["Displacement_X","Displacement_Y"]
+    Else
+        nodalVarName = ["Displacement_X","Displacement_Y","Displacement_Z"]
+    End If
+
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
     PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,sideVarName,time,ierr))
@@ -122,6 +136,7 @@ Implicit NONE
     distribute: Block 
         Type(tDM),target                    :: dmDist
         PetscInt                            :: ovlp = 0
+        Type(tPetscSF)                      :: naturalPointSF
         If (MEF90Ctx%NumProcs > 1) Then
             PetscCallA(DMPlexDistribute(dm,ovlp,naturalPointSF,dmDist,ierr))
             PetscCallA(DMPlexSetMigrationSF(dmDist,naturalPointSF, ierr))
@@ -133,104 +148,127 @@ Implicit NONE
     End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
 
-    PetscCallA(DMGetDimension(dm,dim,ierr))
-    PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
+    PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
+    PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))
+    PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
 
-    ! Create nodal local Vec holding coordinates
-    name = "U"
-    PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU,ierr))
-    PetscCallA(VecGetDM(locVecU,dmU,ierr))
+    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
+    PetscCallA(DMCreateGlobalVector(dmU,V,ierr))
 
+    ! Initialize boundary values of MEF90DefMechCtx%displacementLocal with values from the command line
+    PetscCallA(VecSet(MEF90DefMechCtx%displacementLocal,-1.23456789_Kr,ierr))
+    PetscCallA(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
 
-    ! Create nodal local Vec holding constraints
-    name = "U0"
-    PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
-    PetscCallA(VecGetDM(locVecU0,dmU0,ierr))
-    PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
-    PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
+    ! PetscCallA(VecView(MEF90DefMechCtx%displacementLocal,PETSC_VIEWER_STDOUT_WORLD,ierr))
 
-    ! Create SFs for copying from/into IO coordinates Vec
-    PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU,lioSF,iolSF,ierr))
-    ! Create SFs for copying from/into IO Constraint Vec
-    PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU0,lioBSF,iolBSF,ierr))
-    ! Create SFs for copying constrained dofs from/into Constraint Vec
-    PetscCallA(MEF90ConstraintSFCreate(MEF90Ctx,locVecU,locVecU0,lcSF,clSF,ierr))
+    ! Save MEF90DefMechCtx%displacementLocal in exo file
+    PetscCallA(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOTodisplacementSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
-    ! Fill locVecU holding coordinates and copy constraint values = 10 from locVecU0
-    PetscCallA(VecSet(locVecU0,10.0_kr,ierr))
-    PetscCallA(DMGetCoordinatesLocal(dmU0,locCoord,ierr))
-
-    ! Fill locVecU with coordinates
-    PetscCallA(project(locVecU,sectionU,ierr))
-    PetscCallA(DMLocalToGlobal(dmU,locVecU,INSERT_VALUES,U,ierr))
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-Uloc_view",ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-U_view",ierr))
-
-    ! Save locVecU in exo file
-    PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
-
-    ! Create new vectors and read them from the file
-    PetscCallA(VecDuplicate(locVecU,locVecV,ierr))
-    PetscCallA(VecDuplicate(U,V,ierr))
+    ! ! Create new vectors and read them from the file
+    PetscCallA(VecDuplicate(MEF90DefMechCtx%displacementLocal,locVecV,ierr))
     PetscCallA(VecSet(locVecV,-1000.0_kr,ierr))
-    PetscCallA(PetscObjectSetName(locVecV,"U",ierr))
-    PetscCallA(VecSet(locVecV,0.0_Kr,ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecV,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
+    PetscCallA(PetscObjectSetName(locVecV,"Displacement",ierr))
+    PetscCallA(MEF90EXOVecLoad(locVecV,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOTodisplacementSF,MEF90Ctx%resultViewer,step,dim,ierr))
+    PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,U,ierr))
+    PetscCallA(DMGlobalToLocal(dmU,U,INSERT_VALUES,locVecV,ierr))
+debug1: block
+    PetscReal,Dimension(:),Pointer  :: DisplacementArray, locVecVArray
+    Integer                         :: i
+    Character(len=MEF90MXSTRLEN)    :: filename
+    Type(tPetscSF)                  :: lcgSF,cglSF,llSF
+    Type(tDM)                       :: odm
+    Type(tVec)                      :: displacementOutput
 
-    PetscCallA(MEF90VecCopySF(locVecV,locVecU0,lcSF,ierr))
-    PetscCallA(VecViewFromOptions(locVecU0,PETSC_NULL_OPTIONS,"-U0loc_view",ierr))
+    ! PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
+    ! PetscCallA(DMLocalToGlobal(dmU,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,U,ierr))
 
-    PetscCallA(MEF90VecCopySF(locVecU0,locVecV,clSF,ierr))
-    PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
+    write(filename,'("out-",I4.4,".txt")') MEF90Ctx%rank
+    Open(file=filename,unit=99)
+    Write(*,*) 'Opening ', filename
+
+    ! PetscCallA(VecGetArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    ! PetscCallA(VecGetArrayF90(locVecV,locVecVArray,ierr))
+
+    ! write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
+    ! Do i = 1, size(locVecVArray)
+    !     write(99,*) i, DisplacementArray(i), locVecVArray(i)
+    ! End Do
+    ! PetscCallA(VecRestoreArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    ! PetscCallA(VecRestoreArrayF90(locVecV,locVecVArray,ierr))
+
+    ! PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
+    ! PetscCallA(DMLocalToGlobal(dmU,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,U,ierr))
+
+    ! PetscCallA(VecGetArrayF90(U,DisplacementArray,ierr))
+    ! PetscCallA(VecGetArrayF90(V,locVecVArray,ierr))
+
+    ! write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
+    ! Do i = 1, size(locVecVArray)
+    !     write(99,*) i, DisplacementArray(i), locVecVArray(i)
+    ! End Do
+
+    ! PetscCallA(VecRestoreArrayF90(U,DisplacementArray,ierr))
+    ! PetscCallA(VecRestoreArrayF90(V,locVecVArray,ierr))
+ 
+    ! PetscCallA(CreateLocalToCGlobalSF_Private(MEF90Ctx,dmU,lcgSF,ierr))
+    ! PetscCallA(CreateCGlobalToLocalSF_Private(MEF90Ctx,dmU,cglSF,ierr))
+    ! PetscCallA(PetscSFCompose(lcgSF,cglSF,llSF,ierr))
+    ! PetscCallA(PetscSFView(lcgSF,PETSC_VIEWER_STDOUT_WORLD,ierr))
+    ! PetscCallA(PetscSFView(cglSF,PETSC_VIEWER_STDOUT_WORLD,ierr))
+    ! PetscCallA(MEF90VecCopySF(locVecV,locVecV,llSF,ierr))
+
+    ! PetscCallA(VecGetArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    ! PetscCallA(VecGetArrayF90(locVecV,locVecVArray,ierr))
+
+    ! write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
+    ! Do i = 1, size(locVecVArray)
+    !     write(99,*) i, DisplacementArray(i), locVecVArray(i)
+    ! End Do
+    ! PetscCallA(VecRestoreArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    ! PetscCallA(VecRestoreArrayF90(locVecV,locVecVArray,ierr))
+
+    PetscCallA(DMGetOutputDM(dmU,oDM,ierr))
+    PetscCallA(DMGetGlobalVector(oDM,displacementOutput,ierr))
+    PetscCallA(DMLocalToGlobal(oDM,locVecV,INSERT_VALUES,displacementOutput,ierr))
+    PetscCallA(DMLocalToGlobal(oDM,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,locVecV,ierr))
+    PetscCallA(DMRestoreGlobalVector(oDM,displacementOutput,ierr))
+
+    PetscCallA(VecGetArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    PetscCallA(VecGetArrayF90(locVecV,locVecVArray,ierr))
+
+    write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
+    Do i = 1, size(locVecVArray)
+        write(99,*) i, DisplacementArray(i), locVecVArray(i)
+    End Do
+    PetscCallA(VecRestoreArrayF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    PetscCallA(VecRestoreArrayF90(locVecV,locVecVArray,ierr))
+
+    Close(99)
+end block debug1
 
 
-    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-Vloc_view",ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
 
-    ! Save it again 
-    PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step+1,dim,ierr))
+! ! Compute the difference between the LOCAL vector we wrote and the one we read
+    ! PetscCallA(VecAXPY(locVecV,-1.0_Kr,locVecU,ierr))
+    ! PetscCallA(VecNorm(locVecV,NORM_INFINITY,err,ierr))
+    ! Write(IOBuffer,'("Local vector L^infty error:  ",ES12.5,"\n")') err
+    ! PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+    ! PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-diffloc_view",ierr))
 
-    ! Compute the difference between the LOCAL vector we wrote and the one we read
-    PetscCallA(VecAXPY(locVecV,-1.0_Kr,locVecU,ierr))
-    PetscCallA(VecNorm(locVecV,NORM_INFINITY,err,ierr))
-    Write(IOBuffer,'("Local vector L^infty error:  ",ES12.5,"\n")') err
-    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-diffloc_view",ierr))
-
-    ! Compute the difference between the LOCAL vector we wrote and the one we read
-    PetscCallA(VecAXPY(V,-1.0_Kr,U,ierr))
-    PetscCallA(VecNorm(V,NORM_INFINITY,myerr,ierr))
-    PetscCallMPIA(MPI_AllReduce(myerr,err,1,MPIU_SCALAR,MPI_MAX,PETSC_COMM_WORLD,ierr))
-    Write(IOBuffer,'("Global vector L^infty error: ",ES12.5,"\n")') err
-    PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-diff_view",ierr))
+    ! ! Compute the difference between the LOCAL vector we wrote and the one we read
+    ! PetscCallA(VecAXPY(V,-1.0_Kr,U,ierr))
+    ! PetscCallA(VecNorm(V,NORM_INFINITY,myerr,ierr))
+    ! PetscCallMPIA(MPI_AllReduce(myerr,err,1,MPIU_SCALAR,MPI_MAX,PETSC_COMM_WORLD,ierr))
+    ! Write(IOBuffer,'("Global vector L^infty error: ",ES12.5,"\n")') err
+    ! PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+    ! PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-diff_view",ierr))
 
 
-    
     ! Cleanup Vec
-    PetscCallA(VecDestroy(locVecU,ierr))
-    PetscCallA(VecDestroy(locVecU0,ierr))
-    PetscCallA(VecDestroy(locVecV,ierr))
-
     PetscCallA(VecDestroy(U,ierr))
-    PetscCallA(VecDestroy(U0,ierr))
     PetscCallA(VecDestroy(V,ierr))
-
-    ! Cleanup SF
-    PetscCallA(PetscSFDestroy(lcSF,ierr))
-    PetscCallA(PetscSFDestroy(clSF,ierr))
-    PetscCallA(PetscSFDestroy(lcSSF,ierr))
-    PetscCallA(PetscSFDestroy(clSSF,ierr))
-    PetscCallA(PetscSFDestroy(lioSF,ierr))
-    PetscCallA(PetscSFDestroy(iolSF,ierr))
-    PetscCallA(PetscSFDestroy(lioBSF,ierr))
-    PetscCallA(PetscSFDestroy(iolBSF,ierr))
-    PetscCallA(PetscSFDestroy(lioSSF,ierr))
-    PetscCallA(PetscSFDestroy(iolSSF,ierr))
-    PetscCallA(PetscSFDestroy(lioBSSF,ierr))
-    PetscCallA(PetscSFDestroy(iolBSSF,ierr))
 
     ! Cleanup DMs
     DeAllocate(time)
