@@ -228,7 +228,7 @@ End Subroutine MEF90EXOFormat
       Integer                                            :: exoid 
       PetscInt                                           :: offsetN,offsetZ,offsetS
       Type(tVec)                                         :: iov
-      type(tDM)                                          :: locDM
+      type(tDM)                                          :: locDM,oDM
       Type(tVec)                                         :: vGlob
    Character(len=PETSC_MAX_PATH_LEN)                     :: vecname,IOBuffer
 
@@ -258,12 +258,13 @@ End Subroutine MEF90EXOFormat
       PetscCall(VecDestroy(iov,ierr))
 
       !!! Make sure that the halo values in the local vector are updated by doing a L2G followed by a G2L
-      !!! This is probably only needed for nodal vectors, unless we have distributed the esh with an overlap.
+      !!! This is probably only needed for nodal vectors, unless we have distributed the mesh with an overlap.
       PetscCall(VecGetDM(V,locDM,ierr))
-      PetscCall(DMGetGlobalVector(locDM,vGlob,ierr))
-      PetscCall(DMLocalToGlobal(locDM,v,INSERT_VALUES,vGlob,ierr))
-      PetscCall(DMGlobalToLocal(locDM,vGlob,INSERT_VALUES,v,ierr))
-      PetscCall(DMRestoreGlobalVector(locDM,vGlob,ierr))
+      PetscCall(DMGetOutputDM(locDM,oDM,ierr))
+      PetscCall(DMGetGlobalVector(oDM,vGlob,ierr))
+      PetscCall(DMLocalToGlobal(oDM,v,INSERT_ALL_VALUES,vGlob,ierr))
+      PetscCall(DMGlobalToLocal(oDM,vGlob,INSERT_ALL_VALUES,v,ierr))
+      PetscCall(DMRestoreGlobalVector(oDM,vGlob,ierr))
 
    End Subroutine MEF90EXOVecLoad
 

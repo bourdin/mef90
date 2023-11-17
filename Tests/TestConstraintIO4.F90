@@ -1,62 +1,11 @@
-Module localFunctions
-#include <petsc/finclude/petsc.h>
-use m_MEF90
-use m_MEF90_DefMech
-use m_vDefDefault
-implicit none
-    
-contains
-
-#undef __FUNCT__
-#define __FUNCT__ "project"
-
-    subroutine project(v,s,ierr)
-        Type(tVec),intent(IN)              :: v
-        Type(tPetscSection),intent(IN)     :: s
-        PetscErrorCode,intent(INOUT)       :: ierr
-
-        PetscInt                           :: pStart,pEnd,p,numDof,i
-        Type(tDM)                          :: dm
-        Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec
-        PetscScalar,dimension(:),Pointer   :: coordArray,vArray
-        PetscScalar,dimension(3)           :: xyz
-        PetscInt                           :: dim,pOffset
-
-        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArrayF90(v,vArray,ierr))
-
-        Do p = pStart,pEnd-1
-            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
-            If (numDof > 0) Then
-                !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
-                Do i = 1,dim
-                    xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
-                End Do
-                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
-
-                PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
-                Do i = 1,numDof
-                    vArray(pOffset+i) = xyz(i)
-                End Do
-            End If
-        End Do
-        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
-        !!! Of course, this does not use informations from the section, so it does over-write constrained values
-    End subroutine project
-
-End Module localFunctions
+! mpirun -np 6 ./TestConstraintIO3 -geometry ../TestMeshes/TallRectangle-0.1.gen -result out.exo -options_file ~/Desktop/Debug/TensionInternalBC_FS.yaml
 
 Program  TestConstraintIO3
 #include <petsc/finclude/petsc.h>
 Use m_MEF90
+use m_MEF90_DefMech
+use m_vDefDefault
 Use petsc
-Use localFunctions
 Implicit NONE   
     
     PetscErrorCode                                      :: ierr
@@ -75,7 +24,7 @@ Implicit NONE
     Character(len=MEF90MXSTRLEN)                        :: filename
     PetscInt                                            :: dim
     Type(tPetscSection)                                 :: sectionU
-    Type(tVec)                                          :: U,V,locVecV
+    Type(tVec)                                          :: U,V,locVecV,tmpVec
     PetscReal,Dimension(:),Pointer                      :: time
     PetscInt                                            :: i,step = 1_Ki
     PetscReal,Dimension(:),Pointer                      :: DisplacementArray, locVecVArray
@@ -159,22 +108,33 @@ Implicit NONE
     PetscCallA(DMGetGlobalVector(dmU,U,ierr))
     PetscCallA(DMGetGlobalVector(dmU,V,ierr))
 
-    ! ! Initialize boundary values of MEF90DefMechCtx%displacementLocal with values from the command line
-    ! PetscCallA(VecSet(MEF90DefMechCtx%displacementLocal,-1.23456789_Kr,ierr))
-    ! PetscCallA(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
-
-    ! project a field onto a local vector
-    PetscCallA(project(MEF90DefMechCtx%displacementLocal,sectionU,ierr))
-
+    ! Initialize boundary values of MEF90DefMechCtx%displacementLocal with values from the command line
+    PetscCallA(VecSet(MEF90DefMechCtx%displacementLocal,0.0_Kr,ierr))
+    PetscCallA(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
 
     ! Save MEF90DefMechCtx%displacementLocal in exo file
     PetscCallA(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOTodisplacementSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
     ! ! Create new vectors and read them from the file
     PetscCallA(VecDuplicate(MEF90DefMechCtx%displacementLocal,locVecV,ierr))
-    PetscCallA(VecSet(locVecV,-1000.0_kr,ierr))
+    PetscCallA(VecSet(locVecV,0.0_kr,ierr))
     PetscCallA(PetscObjectSetName(locVecV,"Displacement",ierr))
-    PetscCallA(MEF90EXOVecLoad(locVecV,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOTodisplacementSF,MEF90Ctx%resultViewer,step,dim,ierr))
+
+    ! PetscCallA(DMGetLocalVector(dmDisplacement,tmpVec,ierr))
+    PetscCallA(VecDuplicate(MEF90DefMechCtx%displacementLocal,tmpVec,ierr))
+    PetscCallA(PetscObjectSetName(tmpVec,"Displacement",ierr))
+    PetscCallA(MEF90EXOVecLoad(tmpVec,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOToDisplacementSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,MEF90DefMechCtx%dim,ierr))
+
+    ! PetscCallA(MEF90VecCopySF(tmpVec,locVecV,MEF90DefMechCtx%displacementConstraintsSF,ierr))
+    PetscCallA(VecCopy(tmpVec,locVecV,ierr))
+        !!! VecCopy and MEF90VecCopySF give the same error so the problem is in the reading
+        !!! I assume that the issue is in copying from IO to local?
+
+
+    PetscCallA(VecDestroy(tmpVec,ierr))
+
+
+    ! PetscCallA(MEF90EXOVecLoad(locVecV,MEF90DefMechCtx%displacementToIOSF,MEF90DefMechCtx%IOTodisplacementSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
     write(filename,'("out-",I4.4,".txt")') MEF90Ctx%rank
     Open(file=filename,unit=99)

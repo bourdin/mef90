@@ -94,7 +94,15 @@ TestConstraintIO3.o: ${MEF90_DIR}/Tests/TestConstraintIO3.F90 MEF90
 
 TestConstraintIO3: TestConstraintIO3.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
+TestConstraintIO4.o: ${MEF90_DIR}/Tests/TestConstraintIO4.F90 MEF90
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestConstraintIO4: TestConstraintIO4.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
 # TestMaterials is a false positive	
