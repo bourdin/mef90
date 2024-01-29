@@ -8,14 +8,28 @@ defmech:
 heatxfer:
     timestepping:
         type: null
+defmech:
+    timestepping:
+        type: quasistatic
+    solver:
+        type: altmin
+    damage:
+        atol: 1.0e-3
+    sor:
+        omega: 1.
+    pclag: 5
+    irrevthres: 0.
+displacement:
+    snes:
+        type: ksponly
+    pc:
+        type: gamg
+damage:
+    snes:
+        atol: 1e-6
+        rtol: 1e-5
 boundaryDisplacement:
   scaling: file
-temperature:
-  offset: 0
-plasticStrain:
-  offset: 0
-cumulatedPlasticDissipation:
-  offset: 0
 cs0001:
     hookesLaw:  
         type: isotropic
@@ -29,7 +43,7 @@ cs0001:
         type: AT1
     plasticity:
         type: NONE
-cs0020:
+vs0020:
     displacementBC: 1,1,1
     damageBC: 1
     boundaryDamage: 0.
