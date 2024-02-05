@@ -9,14 +9,14 @@ def parse(args=None):
     parser.add_argument("--E",type=float,help="Youngs modulus",default=1.)
     parser.add_argument("--nu",type=float,help="Poisson Ratio",default=0.)
     parser.add_argument('--bb',type=float,nargs=4,default=[-1,-1,2,2],help='bounding box of the layered area (xmin ymin lx ly)')
-    parser.add_argument('--nint',type=int,nargs=2,default=[10,10],help='Number of grid points along axes of the opts.bb')
+    parser.add_argument('--nint',type=int,nargs=2,default=[101,101],help='Number of grid points along axes of the opts.bb')
 
     return parser.parse_args()
 
 
 def mytrapz(xy):
     trapz = 0
-    for i in range(len(xy)/2-1):
+    for i in range(len(xy)//2-1):
         trapz += (xy[2*i+2]-xy[2*i])*(xy[2*i+1]+xy[2*i+3])
     trapz = trapz*.5
     return trapz
@@ -32,7 +32,7 @@ def plot(opts):
     ## Open the database
     ##
     MyDatabase = opts.inputfile
-    print "Trying to open database %s"%MyDatabase
+    print("Trying to open database {}".format(MyDatabase))
     
     status = OpenDatabase(MyDatabase,0)       
     
@@ -82,12 +82,13 @@ def plot(opts):
     Jint   = []
     load   = []
 
-    print "Computing J integral on 4 edges of a box:"
+    print ("Computing J integral on 4 edges of a box:")
     ### -C e1 . n left edge
     ChangeActivePlotsVar("C11")
     DrawPlots()
     Lineout(start_point = (BB[0],BB[1]+BB[3],0), 
-            end_point   = (BB[0],BB[1],      0)) 
+            end_point   = (BB[0],BB[1],      0),
+            use_sampling=1, num_samples=ninty) 
     SetActiveWindow(2)
     firststep = opts.stepmin
     if opts.stepmax == None:
@@ -105,12 +106,13 @@ def plot(opts):
         sys.stdout.write("-")
         sys.stdout.flush()
     DeleteActivePlots()
-    print "Done with left edge"
+    print ("Done with left edge")
 
     ### C e1 . n right edge
     SetActiveWindow(1)
     Lineout(start_point = (BB[0]+BB[2],BB[1],      0), 
-            end_point   = (BB[0]+BB[2],BB[1]+BB[3],0)) 
+            end_point   = (BB[0]+BB[2],BB[1]+BB[3],0),
+            use_sampling=1, num_samples=ninty) 
     SetActiveWindow(2)
     for s in range(firststep,laststep):
         SetTimeSliderState(s)
@@ -121,14 +123,15 @@ def plot(opts):
         sys.stdout.write("-")
         sys.stdout.flush()
     DeleteActivePlots()
-    print "Done with right edge"
+    print ("Done with right edge")
 
     ### C e1 . n top edge
     SetActiveWindow(1)
     ### -C e1 . n left edge
     ChangeActivePlotsVar("C21")
     Lineout(start_point = (BB[0]+BB[2],BB[1]+BB[3],0), 
-            end_point   = (BB[0]      ,BB[1]+BB[3],0))
+            end_point   = (BB[0]      ,BB[1]+BB[3],0),
+            use_sampling=1, num_samples=nintx)
     SetActiveWindow(2)
     for s in range(firststep,laststep):
         SetTimeSliderState(s)
@@ -137,12 +140,13 @@ def plot(opts):
         sys.stdout.write("-")
         sys.stdout.flush()
     DeleteActivePlots()
-    print "Done with top edge"
+    print ("Done with top edge")
 
     ### C e1 . n bottom edge
     SetActiveWindow(1)
     Lineout(start_point = (BB[0]      ,BB[1],0), 
-            end_point   = (BB[0]+BB[2],BB[1],0)) 
+            end_point   = (BB[0]+BB[2],BB[1],0),
+            use_sampling=1, num_samples=nintx) 
     SetActiveWindow(2)
     for s in range(firststep,laststep):
         SetTimeSliderState(s)
@@ -151,11 +155,11 @@ def plot(opts):
         sys.stdout.write("-")
         sys.stdout.flush()
     DeleteActivePlots()
-    print "Done with bottom edge"
+    print ("Done with bottom edge")
 
     for s in range(firststep,laststep):
         Jint.append(Cleft[s]+Cright[s]+Ctop[s]+Cbot[s])
-        print "****** step {0:d} load = {1:e}, Jint = {2:e}  ( = {3:e} + {4:e} + {5:e} + {6:e})".format(s,load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s])
+        print ("****** step {0:d} load = {1:e}, Jint = {2:e}  ( = {3:e} + {4:e} + {5:e} + {6:e})".format(s,load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s]))
         f.write("{0:e}\t {1:e} \t{2:e} \t{3:e} \t{4:e} \t{5:e}\n".format(load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s]))
     os.fsync(f)
     f.close()
