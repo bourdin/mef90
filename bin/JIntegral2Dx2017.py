@@ -94,7 +94,7 @@ def plot(opts):
     if opts.stepmax == None:
         laststep = TimeSliderGetNStates()
     else:
-        laststep = opts.stepmin+opts.stepmax+1
+        laststep = opts.stepmax+1
     
     for s in range(firststep,laststep):
         SetTimeSliderState(s)
@@ -157,9 +157,9 @@ def plot(opts):
     DeleteActivePlots()
     print ("Done with bottom edge")
 
-    for s in range(firststep,laststep):
+    for s in range(laststep-firststep):
         Jint.append(Cleft[s]+Cright[s]+Ctop[s]+Cbot[s])
-        print ("****** step {0:d} load = {1:e}, Jint = {2:e}  ( = {3:e} + {4:e} + {5:e} + {6:e})".format(s,load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s]))
+        print ("****** step {0:d} load = {1:e}, Jint = {2:e}  ( = {3:e} + {4:e} + {5:e} + {6:e})".format(s+firststep,load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s]))
         f.write("{0:e}\t {1:e} \t{2:e} \t{3:e} \t{4:e} \t{5:e}\n".format(load[s],Jint[s],Cleft[s],Ctop[s],Cright[s],Cbot[s]))
     os.fsync(f)
     f.close()
