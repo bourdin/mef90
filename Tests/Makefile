@@ -14,6 +14,24 @@ include ${MEF90_DIR}/MEF90/Makefile.include
 include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
+${MEF90_DIR}/${PETSC_ARCH}/bin/testPetscSFCreateRemoteOffsets: testPetscSFCreateRemoteOffsets.o
+	-@${CLINKER} -o testPetscSFCreateRemoteOffsets testPetscSFCreateRemoteOffsets.o ${PETSC_LIB}
+	-@${RM} -f testPetscSFCreateRemoteOffsets.o
+
+testPetscSFCreateRemoteOffsets:${MEF90_DIR}/${PETSC_ARCH}/bin/testPetscSFCreateRemoteOffsets
+	-@echo "      $@"
+	-@cp testPetscSFCreateRemoteOffsets ${MEF90_DIR}/${PETSC_ARCH}/bin/testPetscSFCreateRemoteOffsets
+
+
+TestLog.o: ${MEF90_DIR}/Tests/TestLog.F90 MEF90 m_HeatXfer
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestLog: TestLog.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
 TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90 m_HeatXfer
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<

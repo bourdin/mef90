@@ -1226,7 +1226,7 @@ Contains
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
-        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
+        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
         PetscCall(PetscSectionGetChart(locSection,pStart,pEnd,ierr))
         n = pEnd-pStart
         Allocate(remote(n))
@@ -1274,7 +1274,7 @@ Contains
     
         PetscCall(DMGetLocalSection(dm,locSection,ierr))
         PetscCall(DMGetPointSF(dm,overlapSF,ierr))
-        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
+        PetscCall(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
         PetscCall(PetscSectionGetChart(locSection,pStart,pEnd,ierr))
         n = pEnd-pStart
         Allocate(remote(n))
