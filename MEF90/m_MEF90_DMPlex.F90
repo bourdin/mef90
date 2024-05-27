@@ -187,7 +187,9 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            PetscCall(PetscSFDestroy(naturalSF, ierr))
+        End If
         PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateLocalVector
 
@@ -276,7 +278,9 @@ Contains
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(DMDestroy(dmV,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            PetscCall(PetscSFDestroy(naturalSF, ierr))
+        End If
     End Subroutine MEF90CreateCellVector
 
 #undef __FUNCT__
@@ -399,7 +403,9 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            PetscCall(PetscSFDestroy(naturalSF, ierr))
+        End If
         PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryLocalVector
     
@@ -486,7 +492,9 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        PetscCall(PetscSFDestroy(naturalSF, ierr))
+        If (naturalSF /= PETSC_NULL_SF) Then
+            PetscCall(PetscSFDestroy(naturalSF, ierr))
+        End If
         PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryCellVector
         

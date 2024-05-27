@@ -284,14 +284,14 @@ Contains
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%bodyForce,bodyForceArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmDisplacement,MEF90FaceSetLabelName,setIS,ierr))
@@ -352,14 +352,14 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%boundaryForce,boundaryForceArray,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%pressureForce,pressureForceArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmDisplacement,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMLocalToGlobalEnd(dmDisplacement,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMRestoreLocalVector(dmDisplacement,locResidual,ierr))
@@ -547,13 +547,13 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
       PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatCopy(A,M,SAME_NONZERO_PATTERN,ierr))
@@ -646,14 +646,14 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myWork,bodyForceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%bodyForce,bodyForceArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmDisplacement,MEF90FaceSetLabelName,setIS,ierr))
@@ -710,14 +710,14 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myWork,boundaryForceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%boundaryForce,boundaryForceArray,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%pressureForce,pressureForceArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
    End Subroutine MEF90DefMechWork
 
@@ -803,13 +803,13 @@ Contains
                End If ! cohesiveDisplacement
 
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myCohesiveEnergy,cohesiveEnergy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
    
    End Subroutine MEF90DefMechCohesiveEnergy
 
@@ -969,14 +969,14 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))   
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))   
    End Subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
@@ -1126,13 +1126,13 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90DefMechStress
 
 #undef __FUNCT__
@@ -1321,13 +1321,13 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmDamage,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMLocalToGlobalEnd(dmDamage,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMRestoreLocalVector(dmDamage,locResidual,ierr))
@@ -1517,8 +1517,8 @@ Contains
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90DefMechCtx%plasticStrain,plasticStrainArray,ierr))
@@ -1683,8 +1683,8 @@ Contains
       numSet = 0
       If (setIS /= PETSC_NULL_IS) Then
          PetscCall(ISGetSize(setIS,numSet,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If
-      PetscCall(ISDestroy(setIS,ierr))
 
       Allocate(surfaceEnergy(numSet))
       Allocate(elasticEnergy(numSet))
@@ -1797,12 +1797,12 @@ Contains
 
                PetscCall(MEF90ElementDestroy(elemScal,ierr))
                PetscCall(MEF90ElementDestroy(elemVect,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! setPointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myCrackVolume,CrackVolume(set),1,MPIU_SCALAR,MPI_SUM,MEF90DefMechCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90DefMechCrackVolume
 End Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D

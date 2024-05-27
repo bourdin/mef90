@@ -99,7 +99,7 @@ Program vDef
       If (MEF90GlobalOptions%verbose > 1) Then
          PetscCallA(PetscPrintf(MEF90Ctx%comm,"Creating result file\n",ierr))
       End If
-      PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
+      ! PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
       PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
       EXONeedsFormatting = PETSC_TRUE

@@ -139,13 +139,13 @@ Contains
                DeAllocate(residualDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
@@ -211,14 +211,14 @@ Contains
                   PetscCall(MEF90ElementDestroy(elem,ierr))
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
       PetscCall(DMLocalToGlobalEnd(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
       !PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
@@ -319,12 +319,12 @@ Contains
                DeAllocate(matDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
@@ -364,12 +364,12 @@ Contains
                   PetscCall(MEF90ElementDestroy(elem,ierr))
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))   
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))   
       PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatCopy(A,M,SAME_NONZERO_PATTERN,ierr))
@@ -475,15 +475,15 @@ Contains
                End If ! cellSetOptions%flux
                PetscCall(MEF90ElementDestroy(elem,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
             PetscCallMPI(MPI_AllReduce(myBodyWork,bodyWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
@@ -521,14 +521,14 @@ Contains
                   PetscCall(MEF90ElementDestroy(elem,ierr))
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%boundaryFlux
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
             PetscCallMPI(MPI_AllReduce(mySurfaceWork,surfaceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90HeatXFerEnergy
 
 
@@ -679,13 +679,13 @@ Contains
                DeAllocate(residualDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
@@ -751,14 +751,14 @@ Contains
                   PetscCall(MEF90ElementDestroy(elem,ierr))
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMLocalToGlobalBegin(dmTemperature,locF,ADD_VALUES,F,ierr))
       PetscCall(DMLocalToGlobalEnd(dmTemperature,locF,ADD_VALUES,F,ierr))
       PetscCall(DMRestoreLocalVector(dmTemperature,locTemperature,ierr))
@@ -876,12 +876,12 @@ Contains
                DeAllocate(matDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
                PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))
 
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
@@ -921,12 +921,12 @@ Contains
                   PetscCall(MEF90ElementDestroy(elem,ierr))
                   PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
+               PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
-            PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
          PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISDestroy(setIS,ierr))   
       End If ! setIS
-      PetscCall(ISDestroy(setIS,ierr))   
       PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr))
       PetscCall(MatCopy(A,M,SAME_NONZERO_PATTERN,ierr))
