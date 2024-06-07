@@ -171,7 +171,8 @@ int main(int argc,char **argv)
     DMDestroy(&dm);
     dm   = dmDist;
   }
-  //PetscCall(DMSetFromOptions(dm));
+  PetscCall(DMSetFromOptions(dm));
+  PetscCall(DMViewFromOptions(dm,NULL,"-dm_view"));
   viewer = PETSC_VIEWER_STDOUT_WORLD;
   if (flg) {
     PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
