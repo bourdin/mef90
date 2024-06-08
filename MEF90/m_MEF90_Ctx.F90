@@ -240,7 +240,6 @@ Contains
          PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag,PETSC_VIEWER_STDOUT_WORLD,ierr))
          PetscCall(PetscPrintf(comm,"\n",ierr))
       End If
-      MEF90Ctx%resultViewer = PETSC_NULL_VIEWER
 
       !!! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
       If (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') Then
@@ -269,7 +268,7 @@ Contains
          PetscCall(PetscOptionsLeft(PETSC_NULL_OPTIONS,ierr))
       End If
       PetscCall(PetscBagDestroy(MEF90Ctx%GlobalOptionsBag,ierr))
-      If (MEF90Ctx%resultViewer /= PETSC_NULL_VIEWER) Then
+      If (.NOT. PetscObjectIsNull(MEF90Ctx%resultViewer)) Then 
          PetscCall(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
       End If
    End Subroutine MEF90CtxDestroy
@@ -336,7 +335,7 @@ Contains
 
       Case (MEF90TimeInterpolation_exo)
          PetscCall(PetscViewerExodusIIGetId(MEF90Ctx%resultViewer,exoUnit,ierr))
-         If (MEF90Ctx%resultViewer /= PETSC_NULL_VIEWER) Then
+         If (.NOT. PetscObjectIsNull(MEF90Ctx%resultViewer)) Then 
             Call EXINQ(exoUnit,EXTIMS,GlobalOptions%timeNumStep,dummyR,dummyS,exoErr)
             Allocate(t(GlobalOptions%timeNumStep))
             Call EXGATM(exoUnit,t,exoErr)
