@@ -105,7 +105,7 @@ Contains
         PetscInt                                :: numBC
         PetscBool                               :: flg
         Character(len=MEF90MXSTRLEN)            :: BCOptionName
-        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
+        Type(tPetscSF)                          :: naturalPointSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -125,13 +125,13 @@ Contains
         PetscCall(DMGetLabelIdIS(dmV,MEF90CellSetLabelName,setIS,ierr))
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 !!! Get cell type in order to pick the proper element type.
                 !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
                 PetscCall(DMGetStratumIS(dmV,MEF90CellSetLabelName,setID(set),pointIS,ierr))
-                If (pointIS /= PETSC_NULL_IS) Then
+                If (.NOT. PetscObjectIsNull(pointIS)) Then
                     PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                     PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
                     PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
@@ -151,7 +151,7 @@ Contains
         Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            If (setIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setIS)) Then
                 PetscCall(ISGetIndicesF90(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setConstraints = .FALSE.
@@ -172,14 +172,16 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
 
         PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
+            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        End If
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
         PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
+        If (.NOT. PetscObjectIsNull(naturalSF)) Then    
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
             PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
         End If
@@ -187,7 +189,7 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
+        If (.NOT. PetscObjectIsNull(naturalSF)) Then
             PetscCall(PetscSFDestroy(naturalSF, ierr))
         End If
         PetscCall(DMDestroy(dmV,ierr))
@@ -246,7 +248,7 @@ Contains
         PetscCall(DMGetLabelIdIS(dmV,MEF90CellSetLabelName,setIS,ierr))
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90CellSetType,setID(set),elemType,sdim,sectionV,ierr))
@@ -259,16 +261,18 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
 
         PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
+            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        End If
 
 #ifdef PETSC_USE_DEBUG
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
             PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-            If (naturalSF /= PETSC_NULL_SF) Then
+            If (.NOT. PetscObjectIsNull(naturalSF)) Then
                 write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
                 PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
             End If
@@ -278,7 +282,7 @@ Contains
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(DMDestroy(dmV,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
+        If (.NOT. PetscObjectIsNull(naturalSF)) Then
             PetscCall(PetscSFDestroy(naturalSF, ierr))
         End If
     End Subroutine MEF90CreateCellVector
@@ -338,13 +342,13 @@ Contains
         PetscCall(DMGetLabelIdIS(dmV,MEF90FaceSetLabelName,setIS,ierr))
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 !!! Get cell type in order to pick the proper element type.
                 !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
                 PetscCall(DMGetStratumIS(dmV,MEF90FaceSetLabelName,setID(set),pointIS,ierr))
-                If (pointIS /= PETSC_NULL_IS) Then
+                If (.NOT. PetscObjectIsNull(pointIS)) Then
                     PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                     PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
                     PetscCall(MEF90ElementGetTypeBoundary(elemFamily,elemOrder,cellType,elemType,ierr))
@@ -364,7 +368,7 @@ Contains
         Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            If (setIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setIS)) Then
                 PetscCall(ISGetIndicesF90(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setConstraints = .FALSE.
@@ -385,16 +389,17 @@ Contains
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
 
         PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
-
+        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
+            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        End If
 #ifdef PETSC_USE_DEBUG
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
             PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-            If (naturalSF /= PETSC_NULL_SF) Then
+            If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
                 write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
                 PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
             End If
@@ -403,7 +408,7 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
+        If (.NOT. PetscObjectIsNull(naturalSF)) Then
             PetscCall(PetscSFDestroy(naturalSF, ierr))
         End If
         PetscCall(DMDestroy(dmV,ierr))
@@ -462,7 +467,7 @@ Contains
         PetscCall(DMGetLabelIdIS(dmV,MEF90FaceSetLabelName,setIS,ierr))
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
@@ -474,16 +479,17 @@ Contains
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
         PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-        PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-        PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
-
+        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
+            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
+            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
+            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
+        End If
 #ifdef PETSC_USE_DEBUG
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
             PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-            If (naturalSF /= PETSC_NULL_SF) Then
+            If (.NOT. PetscObjectIsNull(naturalSF)) Then
                 write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
                 PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
             End If
@@ -492,7 +498,7 @@ Contains
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (naturalSF /= PETSC_NULL_SF) Then
+        If (.NOT. PetscObjectIsNull(naturalSF)) Then
             PetscCall(PetscSFDestroy(naturalSF, ierr))
         End If
         PetscCall(DMDestroy(dmV,ierr))
@@ -555,7 +561,7 @@ Contains
         PetscInt                           :: set
 
         PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
@@ -592,7 +598,7 @@ Contains
 
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-        If (setPointIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setPointIS)) Then
             PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
@@ -636,11 +642,11 @@ Contains
 
         PetscCall(DMGetDimension(dm,dim,ierr))
         PetscCall(DMGetLabelIdIS(dm,'Cell Sets',setIS,ierr))
-        If (setIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setIS)) Then
             PetscCall(ISGetIndicesF90(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(DMGetStratumIS(dm,'Cell Sets',setID(set),setPointIS,ierr))
-                If (setPointIS /= PETSC_NULL_IS) Then
+                If (.NOT. PetscObjectIsNull(setPointIS)) Then
                     PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
                     !!! This can probably be optimized by allocating closure outside of the loop
                     !!! But I can't figure out how it is done at the moment.
@@ -690,7 +696,7 @@ Contains
         PetscInt                           :: p
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-        If (setPointIS /= PETSC_NULL_IS) Then
+        If (.NOT. PetscObjectIsNull(setPOintIS)) Then
             PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
@@ -964,7 +970,7 @@ Contains
 
         PetscCall(VecGetDM(g,dm,ierr))
         PetscCall(DMGlobalToLocal(dm,g,INSERT_VALUES,l,ierr))
-        If (c /= PETSC_NULL_VEC) Then
+        If (.NOT. PetscObjectIsNull(c)) Then
             PetscCall(DMGetLocalSection(dm,s,ierr))
             PetscCall(PetscSectionGetChart(s,pStart,pEnd,ierr))
             Do p = pStart,pEnd-1
@@ -1047,7 +1053,7 @@ Contains
         Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            If (setIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setIS)) Then
                 PetscCall(ISGetIndicesF90(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     write(ValueKey,'("-",a2,I4.4,"_",a)') MEF90SetPrefix(setType),setID(set),trim(name)
@@ -1056,7 +1062,7 @@ Contains
                     If (numOpt > 0) Then
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the values on the closure of the current point
-                        If (pointIS /= PETSC_NULL_IS) Then
+                        If (.NOT. PetscObjectIsNull(pointIS)) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
                                 PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
@@ -1117,7 +1123,7 @@ Contains
         Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
-            If (setIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setIS)) Then
                 PetscCall(ISGetIndicesF90(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setBC = .FALSE.
@@ -1132,7 +1138,7 @@ Contains
                         PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the boundary values on the closure of the current point
-                        If (pointIS /= PETSC_NULL_IS) Then
+                        If (.NOT. PetscObjectIsNull(pointIS)) Then
                             PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
                                 PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
@@ -1203,7 +1209,7 @@ Contains
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
         ! PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
         PetscCall(PetscSFSetFromOptions(sf,ierr))
-        PetscCall(PetscSFSetGraph(sf,nroots,nleaves,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetGraph(sf,nroots,nleaves,PETSC_NULL_INTEGER_ARRAY,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
         ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-naturaltoio_sf_view",ierr))
         PetscCall(VecDestroy(vio,ierr))
@@ -1244,7 +1250,7 @@ Contains
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,idSF,ierr))
         PetscCall(PetscSFSetFromOptions(idSF,ierr))
-        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER_ARRAY,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(idSF,ierr))
         PetscCall(PetscSFCreateRemoteOffsetsF90(idSF,locSection,gSection,remoteOffsets,ierr))
         PetscCall(PetscSFCreateSectionSFF90(idSF,locSection,remoteOffsets,gSection,sf,ierr))
@@ -1292,7 +1298,7 @@ Contains
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,idSF,ierr))
         PetscCall(PetscSFSetFromOptions(idSF,ierr))
-        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER_ARRAY,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(idSF,ierr))
         PetscCall(PetscSFCreateRemoteOffsetsF90(idSF,locSection,gSection,remoteOffsets,ierr))
         PetscCall(PetscSFCreateSectionSFF90(idSF,locSection,remoteOffsets,gSection,tempSF,ierr))
@@ -1400,7 +1406,7 @@ Contains
         End Do
         Do set = 1, numSS
             PetscCall(DMGetStratumIS(dm, "Face Sets", procSSID(set), faceIS,ierr))
-            If (faceIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(faceIS)) Then
                 PetscCall(ISGetIndicesF90(faceIS, faceID,ierr))
             Else
                 Allocate(faceID(0))
@@ -1428,7 +1434,7 @@ Contains
             PetscCall(PetscSFSetUp(sf,ierr))
             DeAllocate(ilocal)
             DeAllocate(iremote)
-            If (faceIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(faceIS)) Then
                 PetscCall(ISRestoreIndicesF90(faceIS,faceID,ierr))
             Else
                 DeAllocate(faceID)

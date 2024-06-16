@@ -230,7 +230,7 @@ End Subroutine MEF90EXOFormat
       Type(tVec)                                         :: iov
       type(tDM)                                          :: locDM,oDM
       Type(tVec)                                         :: vGlob
-   Character(len=PETSC_MAX_PATH_LEN)                     :: vecname,IOBuffer
+      Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
       offsetN = -1
       offsetZ = -1

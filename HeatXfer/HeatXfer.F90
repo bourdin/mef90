@@ -22,7 +22,7 @@ Program HeatXfer
 
    PetscBool                                          :: flg
    Character(len=MEF90MXSTRLEN)                       :: IOBuffer
-   Type(tPetscViewer)                                 :: logViewer
+   ! Type(tPetscViewer)                                 :: logViewer
    
    Type(tSNES)                                        :: temperatureSNES
    Type(tTS)                                          :: temperatureTS
@@ -222,10 +222,10 @@ Program HeatXfer
    DeAllocate(energy)
    DeAllocate(cellWork)
    DeAllocate(faceWork)
-   PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-   PetscCallA(PetscLogView(logViewer,ierr))
-   PetscCallA(PetscViewerFlush(logViewer,ierr))
-   PetscCallA(PetscViewerDestroy(logViewer,ierr))
+   ! PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+   ! PetscCallA(PetscLogView(logViewer,ierr))
+   ! PetscCallA(PetscViewerFlush(logViewer,ierr))
+   ! PetscCallA(PetscViewerDestroy(logViewer,ierr))
 
    !!! Clean up and exit nicely
    If (MEF90HeatXferGlobalOptions%timeSteppingType == MEF90HeatXFer_timeSteppingTypeSteadyState) Then

@@ -69,12 +69,12 @@ Contains
       !!! cell-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
@@ -150,13 +150,13 @@ Contains
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
@@ -268,11 +268,11 @@ Contains
       !!! cell-based gradient contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
@@ -329,11 +329,11 @@ Contains
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
@@ -425,12 +425,12 @@ Contains
       !!! cell-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
@@ -488,12 +488,12 @@ Contains
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
                mySurfaceWork    = 0.0_Kr
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
@@ -593,12 +593,12 @@ Contains
       !!! cell-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
@@ -690,13 +690,13 @@ Contains
       !!! face-based contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          PetscCall(VecGetArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
@@ -811,11 +811,11 @@ Contains
       !!! cell-based gradient contributions
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
@@ -886,11 +886,11 @@ Contains
       !!! face-based energies
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      If (setIS /= PETSC_NULL_IS) Then
+      If (.NOT. PetscObjectIsNull(setIS)) Then
          PetscCall(ISGetIndicesF90(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
-            If (setPointIS /= PETSC_NULL_IS) Then
+            If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then

@@ -283,7 +283,7 @@ Contains
       PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC,nspTemp,ierr))
+         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_Ki,PETSC_NULL_VEC_ARRAY,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
          PetscCall(MatNullSpaceDestroy(nspTemp,ierr))
       End If
@@ -345,7 +345,7 @@ Contains
       PetscCall(MatSetOption(matTemp,MAT_SYMMETRY_ETERNAL,PETSC_TRUE,ierr))
       PetscCall(MatSetOption(matTemp,MAT_KEEP_NONZERO_PATTERN,PETSC_TRUE,ierr))
       If (MEF90HeatXferGlobalOptions%addNullSpace) Then
-         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_kI,PETSC_NULL_VEC,nspTemp,ierr))
+         PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm,PETSC_TRUE,0_kI,PETSC_NULL_VEC_ARRAY,nspTemp,ierr))
          PetscCall(MatSetNullSpace(matTemp,nspTemp,ierr))
       End If
       PetscCall(MatSetFromOptions(matTemp,ierr))
