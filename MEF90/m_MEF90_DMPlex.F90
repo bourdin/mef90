@@ -322,7 +322,6 @@ Contains
         PetscInt                                :: numBC
         PetscBool                               :: flg
         Character(len=MEF90MXSTRLEN)            :: BCOptionName
-        Type(tPetscSF)                          :: naturalPOintSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -387,30 +386,16 @@ Contains
         DeAllocate(setConstraints)
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-
-        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
-            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
-        End If
 #ifdef PETSC_USE_DEBUG
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
             PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-            If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
-                write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
-            End If
         end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (.NOT. PetscObjectIsNull(naturalSF)) Then
-            PetscCall(PetscSFDestroy(naturalSF, ierr))
-        End If
         PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryLocalVector
     
@@ -440,7 +425,6 @@ Contains
         Type(tIS)                               :: setIS
         Type(MEF90ElementType)                  :: elemType
         PetscBool                               :: flg
-        Type(tPetscSF)                          :: naturalPointSF,naturalSF
 
         PetscCall(DMClone(dm,dmV,ierr))
         PetscCall(PetscObjectSetName(dmv,name,ierr))
@@ -478,29 +462,16 @@ Contains
         PetscCall(PetscSectionSetup(sectionV,ierr))
     
         PetscCall(DMSetLocalSection(dmV,sectionV,ierr))
-        PetscCall(DMPlexGetMigrationSF(dm,naturalPointSF,ierr))
-        If (.NOT. PetscObjectIsNull(naturalPointSF)) Then
-            PetscCall(DMPlexSetMigrationSF(dmV,naturalPointSF,ierr))
-            PetscCall(DMPlexCreateGlobalToNaturalSF(dmV,PETSC_NULL_SECTION,naturalPointSF,naturalSF,ierr))
-            PetscCall(DMSetNaturalSF(dmV,naturalSF,ierr))
-        End If
 #ifdef PETSC_USE_DEBUG
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
             PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
-            If (.NOT. PetscObjectIsNull(naturalSF)) Then
-                write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
-            End If
         end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
         PetscCall(PetscObjectSetName(V,name,ierr))
         PetscCall(PetscSectionDestroy(sectionV,ierr))
-        If (.NOT. PetscObjectIsNull(naturalSF)) Then
-            PetscCall(PetscSFDestroy(naturalSF, ierr))
-        End If
         PetscCall(DMDestroy(dmV,ierr))
     End Subroutine MEF90CreateBoundaryCellVector
         
