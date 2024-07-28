@@ -63,7 +63,6 @@ module m_vDefDefault
                                                          1.0e-5,                                            & ! unilateralContactHydrostaticDeviatoricGamma
                                                          PETSC_FALSE,                                       & ! unilateralContactHybrid
                                                          1.0_Kr,                                            & ! damageATLinSoftk
-                                                         1.25_Kr,                                           & ! damageAT1expb
                                                          MEF90DefMech_drivingForceTypeNone,                 & ! drivingForceType
                                                          [0.0_Kr,0.0_Kr,0.0_Kr],                            & ! cohesiveDisplacement
                                                          [PETSC_FALSE,PETSC_FALSE,PETSC_FALSE],             & ! hasDisplacementBC

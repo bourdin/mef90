@@ -56,7 +56,7 @@ Contains
 !!!
    PetscReal function aLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       aLinSoft = (1.0_Kr - alpha)**2 / (self%k + (1.0_Kr - self%k) * (1.0_Kr * alpha)**2)
    End function aLinSoft
@@ -70,7 +70,7 @@ Contains
 !!!
    PetscReal function DaLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       DaLinSoft = -2.0_Kr*alpha*(1.0_Kr - alpha)**2 * (self%k - 1.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**2 &
                 + (2.0_Kr*alpha - 2.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)
@@ -85,7 +85,7 @@ Contains
 !!!
    PetscReal function D2aLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       D2aLinSoft = 8.0_Kr*alpha**2 * (1.0_Kr - alpha)**2 * (self%k - 1.0_Kr)**2 / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**3 &
                   - 4.0_Kr*alpha * (2.0_Kr*alpha - 2.0_Kr) * (self%k - 1.0_Kr) / (alpha**2 * (self%k - 1.0_Kr) + 1.0_Kr)**2   &
@@ -102,7 +102,7 @@ Contains
 !!!
    PetscReal function wLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       wLinSoft = alpha * (2.0_Kr - alpha)
 
@@ -117,7 +117,7 @@ Contains
 !!!
    PetscReal function DwLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       DwLinSoft = 2.0_Kr * (1.0_Kr - alpha)
 
@@ -132,7 +132,7 @@ Contains
 !!!
    PetscReal function D2wLinSoft(self,alpha)
       Class(MEF90DefMechATLinSoft_Type),Intent(IN)     :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       D2wLinSoft = -2.0_Kr
    End function D2wLinSoft

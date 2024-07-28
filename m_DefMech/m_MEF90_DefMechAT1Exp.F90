@@ -59,7 +59,7 @@ Contains
 !!!
    PetscReal function aAT1exp(self,alpha)
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       If (self%b == 0.0_Kr) Then
          aAT1exp = 1.0_Kr - alpha
@@ -77,7 +77,7 @@ Contains
 !!!
    PetscReal function DaAT1exp(self,alpha)
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       If (self%b == 0.0_Kr) Then
          DaAT1exp = -1.0_Kr
@@ -95,7 +95,7 @@ Contains
 !!!
    PetscReal function D2aAT1exp(self,alpha)
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       If (self%b == 0.0_Kr) Then
          D2aAT1exp = 0.0_Kr
@@ -112,8 +112,8 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)         :: self
-      PetscReal                                        :: alpha
+      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+      PetscReal,intent(in)                             :: alpha
 
       wAT1exp = alpha
    End function wAT1exp
@@ -127,7 +127,7 @@ Contains
 !!!
    PetscReal function DwAT1exp(self,alpha)
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       DwAT1exp = 1.0_Kr
    End function DwAT1exp
@@ -141,7 +141,7 @@ Contains
 !!!
    PetscReal function D2wAT1exp(self,alpha)
       Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
-      PetscReal                                        :: alpha
+      PetscReal,intent(in)                             :: alpha
 
       D2wAT1exp = 0.0_Kr
    End function D2wAT1exp
