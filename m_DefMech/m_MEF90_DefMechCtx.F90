@@ -97,6 +97,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscReal                              :: unilateralContactHydrostaticDeviatoricGamma
       PetscBool                              :: unilateralContactHybrid
       PetscReal                              :: DamageATLinSoftk
+      PetscReal                              :: DamageAT1expb
       PetscEnum                              :: drivingForceType
       PetscReal,Dimension(3)                 :: cohesiveDisplacement
       PetscBool,Dimension(3)                 :: Has_displacementBC
@@ -856,6 +857,7 @@ Contains
       PetscCall(PetscBagRegisterRealArray(bag,DefMechCellSetOptions%bodyForce,3_Ki,'bodyForce','[N.m^(-3) / N.m^(-2)] (f): body force',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%CrackPressure,default%CrackPressure,'CrackPressure','without unit: internal crack pressure',ierr))
       PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageATLinSoftk,default%DamageATLinSoftk,'damage_LinSoft_k','[unit-less] (k): k parameter in the Linear Softening damage model',ierr))
+      PetscCall(PetscBagRegisterReal(bag,DefMechCellSetOptions%DamageAT1expb,default%DamageAT1expb,'damage_AT1exp_b','[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechCellSetOptions%damageType,MEF90DefMech_damageTypeList,default%damageType,'damage_type','Type of damage law',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechCellSetOptions%plasticityType,MEF90DefMech_plasticityTypeList,default%plasticityType,'plasticity_type','Type of plasticity law',ierr))
       PetscCall(PetscBagRegisterEnum(bag,DefMechCellSetOptions%unilateralContactType,MEF90DefMech_unilateralContactTypeList,default%unilateralContactType,'unilateralContact_type','Type of handling of unilateral contact',ierr))
