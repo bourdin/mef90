@@ -1154,7 +1154,7 @@ Contains
         PetscErrorCode,intent(INOUT)            :: ierr
     
         Type(tVec)                              :: vnat,vio
-        Type(PetscLayout)                       :: ioMap,natMap
+        Type(tPetscLayout)                       :: ioMap,natMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: ioRange
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
@@ -1170,7 +1170,7 @@ Contains
         PetscCall(VecGetLayout(vnat, natMap, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
-        PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
+        PetscCall(PetscLayoutGetRanges(ioMap, ioRange, ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
             globalIndex = ioRange(MEF90Ctx%rank+1) + i
