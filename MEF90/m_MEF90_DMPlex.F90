@@ -1154,7 +1154,7 @@ Contains
         PetscErrorCode,intent(INOUT)            :: ierr
     
         Type(tVec)                              :: vnat,vio
-        Type(PetscLayout)                       :: ioMap,natMap
+        Type(tPetscLayout)                       :: ioMap,natMap
         Type(PetscSFNode),dimension(:),Pointer  :: remote
         PetscInt,dimension(:),Pointer           :: ioRange
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
