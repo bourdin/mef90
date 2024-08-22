@@ -523,13 +523,12 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: time
       PetscErrorCode,Intent(OUT)                         :: ierr
 
-      Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameN,nameC,nameF
+      Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameN,nameC
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       PetscInt                                           :: numFields,offset
 
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       Allocate(nameG(0))
-      Allocate(nameF(0))
 
       numFields = 0
       If (MEF90DefMechGlobalOptions%displacementExport) Then
@@ -620,11 +619,10 @@ Contains
             nameC(offset+5) = "CumulatedPlasticDissipation_XY"
          End If
       End If
-      PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,nameF,time,ierr))
+      PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,time,ierr))
       DeAllocate(nameG)
       DeAllocate(nameN)
       DeAllocate(nameC)
-      DeAllocate(nameF)
    End Subroutine MEF90DefMechFormatEXO
    
 #undef __FUNCT__

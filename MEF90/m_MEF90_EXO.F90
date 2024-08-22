@@ -94,7 +94,7 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,time,ierr)
 
    PetscCall(PetscViewerExodusIISetZonalVariable(Viewer, size(nameC), ierr))
    Do i = 1, size(nameC)
-      PetscCall(PetscViewerExodusIISetNodalVariableName(Viewer, i-1, nameC(i), ierr))
+      PetscCall(PetscViewerExodusIISetZonalVariableName(Viewer, i-1, nameC(i), ierr))
    End Do
 
    If (.NOT. associated(time)) Then
