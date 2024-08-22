@@ -1170,7 +1170,7 @@ Contains
         PetscCall(VecGetLayout(vnat, natMap, ierr))
         PetscCall(PetscLayoutGetLocalSize(natMap, nroots, ierr))
         PetscCall(PetscLayoutGetLocalSize(ioMap, nleaves, ierr))
-        PetscCall(PetscLayoutGetRanges(ioMap, ioRange, ierr))
+        PetscCall(PetscLayoutGetRangesF90(ioMap, ioRange, ierr))
         Allocate(remote(nleaves))
         Do i = 0,nleaves-1          
             globalIndex = ioRange(MEF90Ctx%rank+1) + i
