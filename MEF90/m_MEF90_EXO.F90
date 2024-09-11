@@ -79,8 +79,8 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,time,ierr)
    PetscReal,Dimension(:),Pointer                        :: time
    PetscErrorCode,Intent(INOUT)                          :: ierr
    
-   PetscInt                                              :: i, numCS, numC
-   Integer                                               :: exoid
+   PetscInt                                              :: numCS, numC
+   Integer                                               :: i, exoid
    PetscInt                                              :: step
    Character(len=MXSTLN)                                 :: sJunk
    PetscReal                                             :: rJunk
@@ -134,13 +134,15 @@ End Subroutine MEF90EXOFormat
       PetscInt,Intent(IN)                                :: order
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
+      Integer                                            :: iOrder
       Character(len=PETSC_MAX_PATH_LEN)                  :: IOBuffer
 
-      if ((order > 2) .or. (order < 1)) then
-          write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') order
+      iOrder = order
+      if ((iOrder > 2) .or. (iOrder < 1)) then
+          write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') iOrder
           SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
       end if
-      PetscCall(PetscViewerExodusIISetOrder(Viewer,order,ierr))
+      PetscCall(PetscViewerExodusIISetOrder(Viewer,iOrder,ierr))
       PetscCall(DMView(dm,Viewer,ierr))
    End Subroutine MEF90EXODMView
 
