@@ -87,16 +87,19 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,time,ierr)
    Logical,Dimension(:,:),Pointer                        :: truthtable
 
 
-   PetscCall(PetscViewerExodusIISetNodalVariable(Viewer, size(nameV), ierr))
-   Do i = 1, size(nameV)
-      PetscCall(PetscViewerExodusIISetNodalVariableName(Viewer, i-1, nameV(i), ierr))
-   End Do
-
-   PetscCall(PetscViewerExodusIISetZonalVariable(Viewer, size(nameC), ierr))
-   Do i = 1, size(nameC)
-      PetscCall(PetscViewerExodusIISetZonalVariableName(Viewer, i-1, nameC(i), ierr))
-   End Do
-
+   If (size(nameV) > 0) Then
+      PetscCall(PetscViewerExodusIISetNodalVariable(Viewer, size(nameV), ierr))
+      Do i = 1, size(nameV)
+         PetscCall(PetscViewerExodusIISetNodalVariableName(Viewer, i-1, nameV(i), ierr))
+      End Do
+   End If
+   If (size(nameC) > 0) Then
+      PetscCall(PetscViewerExodusIISetZonalVariable(Viewer, size(nameC), ierr))
+      Do i = 1, size(nameC)
+         PetscCall(PetscViewerExodusIISetZonalVariableName(Viewer, i-1, nameC(i), ierr))
+      End Do
+   End If
+   
    If (.NOT. associated(time)) Then
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_POINTER,"Time value must be allocated prior to calling MEF90EXOFormat")
       STOP

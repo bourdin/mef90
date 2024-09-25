@@ -70,8 +70,8 @@ Implicit NONE
     Type(MEF90DefMechCtx_Type)                          :: MEF90DefMechCtx
     Type(MEF90DefMechGlobalOptions_Type),pointer        :: MEF90DefMechGlobalOptions
 
-    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0, numSideVar = 0
-    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
+    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0
+    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
     Character(len=MEF90MXSTRLEN)                        :: filename
     PetscInt                                            :: dim
     Type(tPetscSection)                                 :: sectionU
@@ -112,12 +112,10 @@ Implicit NONE
     numNodalVar = dim
     numCellVar  = 0
     numGVar     = 0
-    numSideVar  = 0
 
     Allocate(nodalVarName(numNodalVar))
     Allocate(cellVarName(numCellVar))
     Allocate(gVarName(numGVar))
-    Allocate(sideVarName(numSideVar))
     If (dim == 2) Then
         nodalVarName = ["Displacement_X","Displacement_Y"]
     Else
@@ -126,12 +124,11 @@ Implicit NONE
 
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,sideVarName,time,ierr))
+    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
 
     DeAllocate(nodalVarName)
     DeAllocate(cellVarName)
     DeAllocate(gVarName)
-    DeAllocate(sideVarName)
 
     ! Distribute DM
     distribute: Block 

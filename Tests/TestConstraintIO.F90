@@ -65,9 +65,9 @@ Implicit NONE
     Type(tDM),target                                    :: dm,dmU,dmU0,dmSigma,dmSigma0
     PetscBool                                           :: interpolate = PETSC_TRUE
 
-    PetscInt                                            :: numNodalVar = 3, numCellVar = 3, numGVar = 0, numSideVar = 3
+    PetscInt                                            :: numNodalVar = 3, numCellVar = 3, numGVar = 0
     PetscInt                                            :: numFS
-    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
+    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
     Character(len=MEF90MXSTRLEN)                        :: name
     type(tIS)                                           :: cellIS,csIS,faceIS,ssIS
     PetscInt,Dimension(:),Pointer                       :: cellID,csID,faceID,ssID
@@ -100,10 +100,8 @@ Implicit NONE
     Allocate(nodalVarName(numNodalVar))
     Allocate(cellVarName(numCellVar))
     Allocate(gVarName(numGVar))
-    Allocate(sideVarName(numSideVar))
     nodalVarName = ["U_X","U_Y","U_Z"]
     cellVarName  = ["Sigma_11","Sigma_22","Sigma_33"]
-    sideVarName = ["Sigma0_11","Sigma0_22","Sigma0_33"]
     
     ! Create DM from file
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
@@ -115,12 +113,11 @@ Implicit NONE
     ! Open exodus file + write geometry + format the file
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,sideVarName,time,ierr))
+    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
 
     DeAllocate(nodalVarName)
     DeAllocate(cellVarName)
     DeAllocate(gVarName)
-    DeAllocate(sideVarName)
 
     ! Distribute DM
     distribute: Block 

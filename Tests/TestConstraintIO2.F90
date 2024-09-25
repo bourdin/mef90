@@ -62,16 +62,16 @@ Implicit NONE
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx
     Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions_default
     Type(MEF90CtxGlobalOptions_Type),Pointer            :: MEF90GlobalOptions
-    Type(tDM),target                                    :: dm,dmU,dmU0
+    Type(tDM),target                                    :: dm,dmU
     PetscBool                                           :: interpolate = PETSC_TRUE
 
-    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0, numSideVar = 0
-    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName, sideVarName
+    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0
+    Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
     Character(len=MEF90MXSTRLEN)                        :: name,IOBuffer
     PetscInt                                            :: dim,pStart,pEnd
-    Type(tPetscSection)                                 :: sectionU, sectionU0
+    Type(tPetscSection)                                 :: sectionU
     Type(tPetscSF)                                      :: naturalPointSF,lcSF, clSF, lcSSF, clSSF, lioSF, iolSF, lioBSF, iolBSF, lioSSF, iolSSF, lioBSSF, iolBSSF
-    Type(tVec)                                          :: locCoord, locVecU, locVecU0, U, U0, locVecV, V
+    Type(tVec)                                          :: locVecU, U, U0, locVecV, V
     PetscReal,Dimension(:),Pointer                      :: time
     PetscInt                                            :: step = 1_Ki
     PetscReal                                           :: myerr,err
@@ -97,7 +97,6 @@ Implicit NONE
     Allocate(nodalVarName(numNodalVar))
     Allocate(cellVarName(numCellVar))
     Allocate(gVarName(numGVar))
-    Allocate(sideVarName(numSideVar))
     nodalVarName = ["U_X","U_Y","U_Z"]
     
     ! Create DM from file
@@ -110,12 +109,11 @@ Implicit NONE
     ! Open exodus file + write geometry + format the file
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
     PetscCallA(MEF90EXODMView(dm,MEF90Ctx%resultViewer,MEF90GlobalOptions%elementOrder,ierr))
-    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,sideVarName,time,ierr))
+    PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer,gVarName,cellVarName,nodalVarName,time,ierr))
 
     DeAllocate(nodalVarName)
     DeAllocate(cellVarName)
     DeAllocate(gVarName)
-    DeAllocate(sideVarName)
 
     ! Distribute DM
     distribute: Block 
@@ -142,24 +140,6 @@ Implicit NONE
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
     PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
 
-    ! Create nodal local Vec holding constraints
-    name = "U0"
-    PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,dim,name,locVecU0,ierr))
-    PetscCallA(VecGetDM(locVecU0,dmU0,ierr))
-    PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
-    PetscCallA(DMCreateGlobalVector(dmU0,U0,ierr))
-
-    ! Create SFs for copying from/into IO coordinates Vec
-    PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU,lioSF,iolSF,ierr))
-    ! Create SFs for copying from/into IO Constraint Vec
-    PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU0,lioBSF,iolBSF,ierr))
-    ! Create SFs for copying constrained dofs from/into Constraint Vec
-    PetscCallA(MEF90ConstraintSFCreate(MEF90Ctx,locVecU,locVecU0,lcSF,clSF,ierr))
-
-    ! Fill locVecU holding coordinates and copy constraint values = 10 from locVecU0
-    PetscCallA(VecSet(locVecU0,10.0_kr,ierr))
-    PetscCallA(DMGetCoordinatesLocal(dmU0,locCoord,ierr))
-
     ! Fill locVecU with coordinates
     PetscCallA(project(locVecU,sectionU,ierr))
     PetscCallA(DMLocalToGlobal(dmU,locVecU,INSERT_VALUES,U,ierr))
@@ -176,13 +156,6 @@ Implicit NONE
     PetscCallA(PetscObjectSetName(locVecV,"U",ierr))
     PetscCallA(VecSet(locVecV,0.0_Kr,ierr))
     PetscCallA(MEF90EXOVecLoad(locVecV,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
-
-    PetscCallA(MEF90VecCopySF(locVecV,locVecU0,lcSF,ierr))
-    PetscCallA(VecViewFromOptions(locVecU0,PETSC_NULL_OPTIONS,"-U0loc_view",ierr))
-
-    PetscCallA(MEF90VecCopySF(locVecU0,locVecV,clSF,ierr))
-    PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
-
 
     PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-Vloc_view",ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
@@ -209,7 +182,6 @@ Implicit NONE
     
     ! Cleanup Vec
     PetscCallA(VecDestroy(locVecU,ierr))
-    PetscCallA(VecDestroy(locVecU0,ierr))
     PetscCallA(VecDestroy(locVecV,ierr))
 
     PetscCallA(VecDestroy(U,ierr))
