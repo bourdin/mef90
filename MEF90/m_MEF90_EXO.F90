@@ -134,15 +134,13 @@ End Subroutine MEF90EXOFormat
       PetscInt,Intent(IN)                                :: order
       PetscErrorCode,Intent(INOUT)                       :: ierr
       
-      Integer                                            :: iOrder
       Character(len=PETSC_MAX_PATH_LEN)                  :: IOBuffer
 
-      iOrder = order
-      if ((iOrder > 2) .or. (iOrder < 1)) then
-          write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') iOrder
+      if ((order > 2) .or. (order < 1)) then
+          write(IOBuffer,'("Unsupported polynomial order ", I2, " not in [1,2]")') order
           SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,IOBuffer)
       end if
-      PetscCall(PetscViewerExodusIISetOrder(Viewer,iOrder,ierr))
+      PetscCall(PetscViewerExodusIISetOrder(Viewer,order,ierr))
       PetscCall(DMView(dm,Viewer,ierr))
    End Subroutine MEF90EXODMView
 
