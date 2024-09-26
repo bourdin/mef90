@@ -46,7 +46,7 @@ Program  TestHeatXferCtx
       ! we need to create the output file
       EXOFormat: block
          PetscInt                                            :: numNodalVar = 1, numCellVar = 1, numGVar = 0
-         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: faceVarName, nodalVarName, gVarName
+         Character(len=MEF90MXSTRLEN),Dimension(:),Pointer   :: nodalVarName, cellVarName, gVarName
 
          Allocate(nodalVarName(numNodalVar))
          Allocate(cellVarName(numCellVar))
