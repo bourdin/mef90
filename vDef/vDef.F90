@@ -137,18 +137,6 @@ Program vDef
    DeAllocate(MEF90DefMechCtx%temperatureLocal)
    MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
 
-   PetscCallA(DMGetDimension(dm,MEF90DefMechCtx%dim,ierr))
-   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
-   If (EXONeedsFormatting) Then
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Formatting result file\n",ierr))
-      End If
-      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
-      If (MEF90GlobalOptions%verbose > 1) Then
-         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Done Formatting result file\n",ierr))
-      End If
-   End If
-
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
    PetscCallA(DMDestroy(dm,ierr))
 
@@ -219,6 +207,24 @@ Program vDef
    Allocate(cohesiveEnergy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(surfaceEnergy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
    Allocate(boundaryForceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
+
+   !!!
+   !!! Format Exodus file if needed
+   !!!
+   PetscCallA(DMGetDimension(MEF90DefMechCtx%megaDM,MEF90DefMechCtx%dim,ierr))
+   PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
+   If (EXONeedsFormatting) Then
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Formatting result file\n",ierr))
+      End If
+      PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx,time,ierr))
+      If (MEF90GlobalOptions%verbose > 1) Then
+         PetscCallA(PetscPrintf(MEF90Ctx%comm,"Done Formatting result file\n",ierr))
+      End If
+   End If
+   If (MEF90GlobalOptions%verbose > 1) Then
+      PetscCallA(PetscViewerView(MEF90Ctx%resultViewer,PETSC_VIEWER_STDOUT_WORLD,ierr))
+   End If
 
    !!!
    !!! Actual computations / time stepping
