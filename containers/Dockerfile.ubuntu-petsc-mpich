@@ -62,3 +62,6 @@ ENV PATH=${MEF90_DIR}/bin:${MEF90_DIR}/${PETSC_ARCH}/bin:${PETSC_DIR}/bin:${PETS
 RUN git clone --single-branch --branch dmplex https://github.com/bourdin/mef90 ${MEF90_DIR}
 RUN cd ${MEF90_DIR} ; make vDef; \
     cd Utils;  make all
+
+ENV PYTHONPATH=${MEF90_DIR}/python
+RUN apt install -y python3-pip python3-pyaml-env python3-matplotlib

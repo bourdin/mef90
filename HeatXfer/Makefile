@@ -2,34 +2,32 @@ NP=2
 all:
 	-@make -C ${MEF90_DIR} HeatXfer
 test: test2D test3D testTransient2D testTransient3D
+test1:
+	-@for OPTIONSFILE in test1.yaml; do \
+	make -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE}; done
 test2D:
 	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
-	make -s testHeatXfer PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=SquareNG_Y.gen OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D:
 	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
-	make -s testHeatXfer PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Y-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Z-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=CubeNG_X.msh  OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=CubeNG_Y.msh  OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=CubeNG_Z.msh  OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 testTransient2D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE} ORDER=1;\
-	make -s testHeatXfer PREFIX=Beam1x10-tri OPTIONSFILE=$${OPTIONSFILE} ORDER=2;\
+	make -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=1;\
+	make -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=2;\
 	done
 
 testTransient3D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam1x10-tet OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=Beam1x10-tet OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
+	make -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -55,8 +53,8 @@ m_HeatXferDefault.o: ${BASE_DIR}/m_HeatXferDefault.F90 ${MEF90_HEATXFER_OBJS}
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 testHeatXfer:
-	@echo ;echo "Testing HeatXfer with $${GEOMETRY} $${OPTIONSFILE}"
-	@ARGS="-geometry $${GEOMETRY} -result $${RESULT} -options_file_yaml data/$${OPTIONSFILE}";\
+	@echo ;echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"
+	ARGS="-geometry $${MEF90_DIR}/TestMeshes/${PREFIX} -result $${PREFIX}-$${OPTIONSFILE}.exo -options_file data/$${OPTIONSFILE}";\
 	${MPIEXEC} -n ${NP} ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer $${ARGS}| grep -v -e ' \#' > $${PREFIX}-$${OPTIONSFILE}.out 2>&1;\
 	if (${DIFF} -B ${MEF90_DIR}/HeatXfer/results/${PREFIX}-$${OPTIONSFILE}.out ${PREFIX}-$${OPTIONSFILE}.out) then echo "Passed";\
 	else echo "Possible problem. Diffs above"; fi

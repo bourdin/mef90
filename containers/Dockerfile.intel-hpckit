@@ -12,10 +12,11 @@
 ### Start from a basic ubuntu system and install intel HPC stack
 
 FROM ubuntu:22.04 AS intelpetsc
-RUN apt-get update && apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get install -y --no-install-recommends \
     curl ca-certificates gpg-agent software-properties-common && \
-  rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*
 # repository to install Intel(R) oneAPI Libraries
 RUN curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB | gpg --dearmor > /usr/share/keyrings/intel-oneapi-archive-keyring.gpg
 

@@ -1,0 +1,19 @@
+ 
+ 
+ 
+ MEF90 Global Context:  
+  geometry file:       /Users/blaise/Development/mef90/mef90-dmplex/TestMeshes/CubeNG_Y.gen 
+  result file:         CubeNG_Y.gen-test1.yaml.exo 
+  log file:            CubeNG_Y.gen-test1.yaml.log 
+PetscBag Object:  MEF90Ctx () MEF90 Global options object
+  verbose = 1 ; Verbosity: level
+  dryrun =  FALSE; Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck
+  time_interpolation = linear; (MEF90TimeInterpolation) Time: interpolation type
+  time_min = 0. ; Time: min
+  time_max = 1. ; Time: max
+  time_numstep = 3 ; Time: number of time steps
+  time_skip = 0 ; Time: number of time steps
+  time_numCycle = 1 ; Time: number of cycles
+  element_family = Lagrange; (MEF90ElementFamily) Element family (possibly overridden in application contexts)
+  element_order = 1 ; Element order (possibly overridden in application contexts)
+ 

@@ -18,7 +18,7 @@ In all that follows, it is assumed that the environment variable MEF90_DIR point
 The actual content of the $MEF90_DIR folder may be somewhat different from the one shown here.
 
 ## Building PETSc:
-  * As of 2023-01-19, vDef uses teh development branch of petsc ("main" branch).
+  * Numbered releases of vDef use the release branch of petsc ("release" branch). The current version typically requires the developmnet branch ("main" branch)
   * More instructions are provided at https://petsc.org/release/install
   * Clone petsc:
     ```bash
@@ -29,7 +29,7 @@ The actual content of the $MEF90_DIR folder may be somewhat different from the o
        [bourdin@bbserv petsc]$ echo $PETSC_DIR
        /opt/HPC/petsc
     ```
-   * Set the PETSC_ARCH environment variable to a meaningful value. This value will be used by mef90 in order to allow out-of-tree build. THis way, several installation of PETSc and vDef (with various optimisation or debugging informations, for instance) can co-exist on a system.
+   * Set the PETSC_ARCH environment variable to a meaningful value. This value will be used by mef90 in order to allow out-of-tree build. This way, several installation of PETSc and vDef (with various optimisation level or debugging informations, for instance) can co-exist on a system.
 
     
 ### Configure petsc. 
@@ -64,13 +64,13 @@ ctetgen ['git://https://bitbucket.org/petsc/ctetgen', 'https://bitbucket.org/pet
 
 
 #### Linux system
-   * On a RHEL linux system with the GNU compiler suite, the following configuration is a good starting point for a build with optimization
+   * On a RHEL linux system with the GNU compiler suite, assuming that MPI is installed in $MPI_HOME, the following configuration is a good starting point for a build with optimization
      ```bash
        ./configure                         \
     --COPTFLAGS='-O3 -mcpu=native'   \
     --CXXOPTFLAGS='-O3 -mcpu=native' \
     --FOPTFLAGS='-O3 -mcpu=native'   \
-    --CFLAGS='-Wimplicit-function-declaration -Wunused'\
+    --CFLAGS='-Wunused'\
     --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch -Wunused'        \
     --download-exodusii=1             \
     --download-fblaslapack=1          \
@@ -79,6 +79,7 @@ ctetgen ['git://https://bitbucket.org/petsc/ctetgen', 'https://bitbucket.org/pet
     --download-netcdf=1               \
     --download-parmetis=1             \
     --download-pnetcdf=1              \
+    --download-yaml=1                 \
     --download-zlib=1                 \
     --with-debugging=0                \
     --with-exodusii-fortran-bindings  \
@@ -87,8 +88,8 @@ ctetgen ['git://https://bitbucket.org/petsc/ctetgen', 'https://bitbucket.org/pet
     --with-x11=0
      ```
 
-#### On a macOS system with gcc 12.2
-A version of MPI (both `mpich` and `open-mpi` installed from `homebrew` are tested) must be installed and their binaries, headers, and libraries must be in the standard search paths (or use the `--with-mpi-dir` optiona):
+#### On a macOS system with MPI and gcc from homebrew
+A version of MPI (both `mpich` and `open-mpi` installed from `homebrew` are tested) must be installed and their binaries, headers, and libraries must be in the standard search paths (or use the `--with-mpi-dir` option):
   
 Once these are installed, configure petsc (with debugging) with
 ```bash
@@ -122,11 +123,12 @@ In case of problems with X11, try `--with-x=0`
      [bourdin@bbserv ~]$ export PYTHONPATH=$PYTHONPATH:$PETSC_DIR/$PETSC_ARCH/lib
   ```
 
-### Recommended: snlp (required for plasticity)
+### Optional: snlp (required for plasticity)
 
 Set $SNLP_DIR to the location where snlp will be installed. Remark that SNLP relies on PETSc for its makefile system, so using multiple builds of PETSc will require using multiple builds of SNLP. Then clone, build, and install snlp
  ```bash
  [bourdin@bbserv ~]$ git clone https://github.com/bourdin/snlp.git
+ [bourdin@bbserv ~]$ cd snlp
  [bourdin@bbserv ~]$ make
  [bourdin@bbserv ~]$ make install
  ```
@@ -134,15 +136,16 @@ Set $SNLP_DIR to the location where snlp will be installed. Remark that SNLP rel
 ## Building vDef
 From there, it should be as simple as 
    ```bash
-      [bourdin@bbserv ~]$ cd $MEF90_DIR; make
+      [bourdin@bbserv ~]$ cd $MEF90_DIR; make vDef
+      [bourdin@bbserv ~]$ cd Utils; make all
    ```
 Note that the default setting is to link with shared libraries, and set their path using rpath (so that `$LD_LIBRARY_PATH` or equivalent does not have to be set).
 This means that `$PETSC_DIR/$PETSC_ARCH/lib` needs to be readable from the compute nodes. If PETSc libraries are moved, use chrpath to change the search path after building vDef
 
 ## Testing:
-  run `make test` in `$MEF90_DIR/HeatXfer`, `$MEF90_DIR/ThermoElasticity`, and `$MEF90_DIR/vDef`
+  run `make test` in `$MEF90_DIR/HeatXfer` and `$MEF90_DIR/vDef`
   Differences in number of iterations, or round-off error are acceptable
   
   Note that make test will try to run mpi jobs directly. It may be necessary to run make tests in an interactive MPI job session.
-  The MPI job launcher can be changed by setting the MPIEXEC environment variable, and the number of processors by setting NP
+  The MPI job launcher can be changed by setting the MPIEXEC environment variable, and the number of processors NP
 
