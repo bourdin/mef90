@@ -95,6 +95,7 @@ int main(int argc,char **argv)
   PetscCall(PetscOptionsBool("-interpolate","Generate intermediate mesh elements","",interpolate,&interpolate,NULL));
   PetscCall(PetscOptionsBool("-verbose","Print sets content","",verbose,&verbose,NULL));
   PetscOptionsEnd();
+  PetscCall(PetscOptionsInsertString(NULL,"-dm_plex_gmsh_mark_vertices"));
 
   PetscCall(PetscPrintf(PETSC_COMM_WORLD," filename %s\n",filename));
   PetscCall(DMPlexCreateFromFile(PETSC_COMM_WORLD, filename, NULL, interpolate, &dm));
@@ -103,7 +104,7 @@ int main(int argc,char **argv)
     DMDestroy(&dm);
     dm   = dmDist;
   }
-  //PetscCall(DMSetFromOptions(dm));
+  PetscCall(DMSetFromOptions(dm));
   viewer = PETSC_VIEWER_STDOUT_WORLD;
   if (flg) {
     PetscCall(PetscSNPrintf(outfilename,sizeof(outfilename),outfilename,rank));
