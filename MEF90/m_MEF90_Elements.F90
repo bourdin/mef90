@@ -417,7 +417,7 @@ Contains
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(4)*0.5_Kr
-                  detBBinv = 4.0_Kr * detBBinv
+                  detBBinv = 4.0_Kr * abs(detBBinv)
                   Call ElementPLagrange2DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do
                DeAllocate(BBinv)
@@ -482,7 +482,7 @@ Contains
                   !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(3)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(4)*0.5_Kr
-                  detBBinv = 4.0_Kr * detBBinv
+                  detBBinv = 4.0_Kr * abs(detBBinv)
                   Call ElementPLagrange2DVectInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
@@ -548,7 +548,7 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
-                  detBBinv = 8.0_Kr * detBBinv
+                  detBBinv = 8.0_Kr * abs(detBBinv)
                   Call ElementPLagrange3DScalInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
@@ -614,7 +614,7 @@ Contains
                   Bt%XX = BBinv(1)*0.5_Kr; Bt%XY = BBinv(4)*0.5_Kr; Bt%XZ = BBinv(7)*0.5_Kr
                   Bt%YX = BBinv(2)*0.5_Kr; Bt%YY = BBinv(5)*0.5_Kr; Bt%YZ = BBinv(8)*0.5_Kr
                   Bt%ZX = BBinv(3)*0.5_Kr; Bt%ZY = BBinv(6)*0.5_Kr; Bt%ZZ = BBinv(9)*0.5_Kr
-                  detBBinv = 8.0_Kr * detBBinv
+                  detBBinv = 8.0_Kr * abs(detBBinv)
                   Call ElementPLagrange3DVectInit(dElem(iELoc),Bt,detBBinv,elemType%order,dQuadratureOrder,ierr)
                End Do Do_Elem_iE
                DeAllocate(BBinv)
