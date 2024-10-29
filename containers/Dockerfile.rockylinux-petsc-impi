@@ -1,0 +1,108 @@
+### Build: 
+###    docker buildx build --platform=linux/x86_64,linux/arm64 -t ubuntumpichpetsc -f Dockerfile.ubuntu-petsc-mpich --target ubuntumpichpetsc .
+
+### publish to dockerhub:
+### docker tag ubuntumpichbase:latest bourdin/ubuntumpichbase:latest
+### docker push bourdin/ubuntumpichbase:latest
+### docker tag ubuntumpichpetsc:latest bourdin/ubuntumpichpetsc:<tag>
+### get tag:
+###    cd $PETSC_DIR; git describe --dirty --always --tag
+###    docker run -w /opt/HPC/petsc-main ubuntumpichpetsc:latest git describe --dirty --always --tags
+
+
+
+FROM rockylinux:9 AS rockyimpipetsc
+# repository to install Intel(R) oneAPI Libraries
+RUN echo $'\
+[oneAPI]\n\
+name=Intel(R) oneAPI repository\n\
+baseurl=https://yum.repos.intel.com/oneapi\n\
+enabled=1\n\
+gpgcheck=1\n\
+repo_gpgcheck=1\n\
+gpgkey=https://yum.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB' \
+> /etc/yum.repos.d/oneAPI.repo
+
+
+RUN yum update -y && yum install -y cmake procps make gcc gcc-c++ kernel-devel pkgconfig which bzip2 openssh-server openssh-clients wget net-tools git diffutils cmake  intel-hpckit 
+
+ENV LANG=C.UTF-8
+ENV ADVISOR_2024_DIR='/opt/intel/oneapi/advisor/2024.2'
+ENV APM='/opt/intel/oneapi/advisor/2024.2/perfmodels'
+ENV CCL_CONFIGURATION='cpu_gpu_dpcpp'
+ENV CCL_CONFIGURATION_PATH=''
+ENV CCL_ROOT='/opt/intel/oneapi/ccl/2021.13'
+ENV CLASSPATH='/opt/intel/oneapi/mpi/2021.13/share/java/mpi.jar'
+ENV CMAKE_PREFIX_PATH='/opt/intel/oneapi/tbb/2021.13/env/..:/opt/intel/oneapi/mkl/2024.2/lib/cmake:/opt/intel/oneapi/ipp/2021.12/lib/cmake/ipp:/opt/intel/oneapi/dpl/2022.6/lib/cmake/oneDPL:/opt/intel/oneapi/dnnl/2024.2/lib/cmake:/opt/intel/oneapi/dal/2024.6:/opt/intel/oneapi/compiler/2024.2'
+ENV CMPLR_ROOT='/opt/intel/oneapi/compiler/2024.2'
+ENV CPATH='/opt/intel/oneapi/tbb/2021.13/env/../include:/opt/intel/oneapi/mpi/2021.13/include:/opt/intel/oneapi/mkl/2024.2/include:/opt/intel/oneapi/ippcp/2021.12/include:/opt/intel/oneapi/ipp/2021.12/include:/opt/intel/oneapi/dpl/2022.6/include:/opt/intel/oneapi/dpcpp-ct/2024.2/include:/opt/intel/oneapi/dnnl/2024.2/include:/opt/intel/oneapi/dev-utilities/2024.2/include:/opt/intel/oneapi/dal/2024.6/include/dal:/opt/intel/oneapi/ccl/2021.13/include'
+ENV DALROOT='/opt/intel/oneapi/dal/2024.6'
+ENV DAL_MAJOR_BINARY='2'
+ENV DAL_MINOR_BINARY='0'
+ENV DIAGUTIL_PATH='/opt/intel/oneapi/dpcpp-ct/2024.2/etc/dpct/sys_check/sys_check.sh:/opt/intel/oneapi/debugger/2024.2/etc/debugger/sys_check/sys_check.py:/opt/intel/oneapi/compiler/2024.2/etc/compiler/sys_check/sys_check.sh'
+ENV DNNLROOT='/opt/intel/oneapi/dnnl/2024.2'
+ENV DPL_ROOT='/opt/intel/oneapi/dpl/2022.6'
+ENV FI_PROVIDER_PATH='/opt/intel/oneapi/mpi/2021.13/opt/mpi/libfabric/lib/prov:/usr/lib64/libfabric'
+ENV GDB_INFO='/opt/intel/oneapi/debugger/2024.2/share/info/'
+ENV INFOPATH='/opt/intel/oneapi/debugger/2024.2/share/info'
+ENV INTEL_PYTHONHOME='/opt/intel/oneapi/debugger/2024.2/opt/debugger'
+ENV IPPCP_TARGET_ARCH='intel64'
+ENV IPPCRYPTOROOT='/opt/intel/oneapi/ippcp/2021.12'
+ENV IPPROOT='/opt/intel/oneapi/ipp/2021.12'
+ENV IPP_TARGET_ARCH='intel64'
+ENV I_MPI_ROOT='/opt/intel/oneapi/mpi/2021.13'
+ENV LD_LIBRARY_PATH='/opt/intel/oneapi/tbb/2021.13/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.13/opt/mpi/libfabric/lib:/opt/intel/oneapi/mpi/2021.13/lib:/opt/intel/oneapi/mkl/2024.2/lib:/opt/intel/oneapi/ippcp/2021.12/lib/:/opt/intel/oneapi/ipp/2021.12/lib:/opt/intel/oneapi/dpl/2022.6/lib:/opt/intel/oneapi/dnnl/2024.2/lib:/opt/intel/oneapi/debugger/2024.2/opt/debugger/lib:/opt/intel/oneapi/dal/2024.6/lib:/opt/intel/oneapi/compiler/2024.2/opt/compiler/lib:/opt/intel/oneapi/compiler/2024.2/lib:/opt/intel/oneapi/ccl/2021.13/lib/'
+ENV LIBRARY_PATH='/opt/intel/oneapi/tbb/2021.13/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.13/lib:/opt/intel/oneapi/mkl/2024.2/lib/:/opt/intel/oneapi/ippcp/2021.12/lib/:/opt/intel/oneapi/ipp/2021.12/lib:/opt/intel/oneapi/dpl/2022.6/lib:/opt/intel/oneapi/dnnl/2024.2/lib:/opt/intel/oneapi/dal/2024.6/lib:/opt/intel/oneapi/compiler/2024.2/lib:/opt/intel/oneapi/ccl/2021.13/lib/'
+ENV MANPATH='/opt/intel/oneapi/mpi/2021.13/share/man:/opt/intel/oneapi/debugger/2024.2/share/man:/opt/intel/oneapi/compiler/2024.2/share/man:'
+ENV MKLROOT='/opt/intel/oneapi/mkl/2024.2'
+ENV NLSPATH='/opt/intel/oneapi/mkl/2024.2/share/locale/%l_%t/%N:/opt/intel/oneapi/compiler/2024.2/lib/compiler/locale/%l_%t/%N'
+ENV OCL_ICD_FILENAMES='/opt/intel/oneapi/compiler/2024.2/lib/libintelocl.so'
+ENV ONEAPI_ROOT='/opt/intel/oneapi'
+ENV PATH='/opt/intel/oneapi/vtune/2024.2/bin64:/opt/intel/oneapi/mpi/2021.13/bin:/opt/intel/oneapi/mkl/2024.2/bin/:/opt/intel/oneapi/dpcpp-ct/2024.2/bin:/opt/intel/oneapi/dev-utilities/2024.2/bin:/opt/intel/oneapi/debugger/2024.2/opt/debugger/bin:/opt/intel/oneapi/compiler/2024.2/bin:/opt/intel/oneapi/advisor/2024.2/bin64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+ENV PKG_CONFIG_PATH='/opt/intel/oneapi/vtune/2024.2/include/pkgconfig/lib64:/opt/intel/oneapi/tbb/2021.13/env/../lib/pkgconfig:/opt/intel/oneapi/mpi/2021.13/lib/pkgconfig:/opt/intel/oneapi/mkl/2024.2/lib/pkgconfig:/opt/intel/oneapi/ippcp/2021.12/lib/pkgconfig:/opt/intel/oneapi/dpl/2022.6/lib/pkgconfig:/opt/intel/oneapi/dnnl/2024.2/lib/pkgconfig:/opt/intel/oneapi/dal/2024.6/lib/pkgconfig:/opt/intel/oneapi/compiler/2024.2/lib/pkgconfig:/opt/intel/oneapi/ccl/2021.13/lib/pkgconfig/:/opt/intel/oneapi/advisor/2024.2/include/pkgconfig/lib64:'
+ENV PYTHONPATH='/opt/intel/oneapi/advisor/2024.2/pythonapi'
+ENV SETVARS_COMPLETED='1'
+ENV TBBROOT='/opt/intel/oneapi/tbb/2021.13/env/..'
+ENV VTUNE_PROFILER_2024_DIR='/opt/intel/oneapi/vtune/2024.2'
+ENV VTUNE_PROFILER_DIR='/opt/intel/oneapi/vtune/2024.2'
+
+
+ENV PETSC_DIR='/opt/HPC/petsc-main'
+ENV PATH=$PETSC_DIR/bin:$PATH
+
+RUN mkdir -p /opt/HPC
+RUN git clone --single-branch --branch main https://gitlab.com/petsc/petsc.git ${PETSC_DIR}
+
+RUN yum install -y libtool automake autoconf
+
+ENV PETSC_ARCH=arch-rocky-impi-g 
+RUN cd ${PETSC_DIR} ;                 \
+    ./configure                       \
+    --COPTFLAGS='-g -O0'                  \
+    --CXXOPTFLAGS='-g -O0'                \
+    --FOPTFLAGS='-g -O0'                  \
+    --download-exodusii=1             \
+    --download-hdf5=1                 \
+    --download-metis=1                \
+    --download-ml=1                   \
+    --download-netcdf=1               \
+    --download-parmetis=1             \
+    --download-pnetcdf=1              \
+    --download-yaml=1                 \
+    --download-zlib=1                 \
+    --with-blaslapack-dir=$MKLROOT    \
+    --with-debugging=1                \
+    --with-exodusii-fortran-bindings  \
+    --with-mpi-dir=$I_MPI_ROOT        \
+    --with-shared-libraries=1         \
+    --with-x11=1;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
+
+#FROM ubuntumpichpetsc AS mef90ubuntu
+#RUN apt install -y gmsh
+
+#ENV MEF90_DIR=/opt/HPC/mef90
+#ENV PATH=${MEF90_DIR}/bin:${MEF90_DIR}/${PETSC_ARCH}/bin:${PETSC_DIR}/bin:${PETSC_DIR}/${PETSC_ARCH}/bin:$PATH
+#RUN git clone --single-branch --branch dmplex https://github.com/bourdin/mef90 ${MEF90_DIR}
+#RUN cd ${MEF90_DIR} ; make vDef; \
+#    cd Utils;  make all
