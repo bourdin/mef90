@@ -120,6 +120,7 @@ Subroutine MEF90EXOFormat(Viewer,nameG,nameC,nameV,time,ierr)
    Do step = 1,size(time)
       Call exptim(exoid,step,time(step),ierr)
    End Do
+   PetscCall(PetscViewerFlush(Viewer,ierr))
 End Subroutine MEF90EXOFormat
 
 #undef __FUNCT__
@@ -166,26 +167,23 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid
-      PetscInt                                           :: offsetN = -1,offsetZ = -1, offsetS = -1
+      PetscInt                                           :: offsetN = -1,offsetZ = -1
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
-      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
       PetscCall(PetscObjectSetName(iov,vecname,ierr))
       PetscCall(MEF90VecCopySF(v,iov,sf,ierr))
 
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"s",vecname,offsetS,ierr))
-      If (offsetN > 0) Then
-         PetscCall(MEF90EXOVecViewNodal_Private(iov,exoid,step,offsetN,ierr))
-      Else If (offsetZ > 0) Then
-         PetscCall(MEF90EXOVecViewZonal_Private(iov,exoid,step,offsetZ,ierr))
-      Else If (offsetS > 0) Then
-         PetscCall(MEF90EXOVecViewSide_Private(iov,exoid,step,offsetS,ierr))
+      PetscCall(PetscViewerExodusIIGetNodalVariableIndex(Viewer,vecname,offsetN,ierr))
+      PetscCall(PetscViewerExodusIIGetZonalVariableIndex(Viewer,vecname,offsetZ,ierr))
+      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      If (offsetN >= 0) Then
+         PetscCall(MEF90EXOVecViewNodal_Private(iov,exoid,step,offsetN+1,ierr))
+      Else If (offsetZ >= 0) Then
+         PetscCall(MEF90EXOVecViewZonal_Private(iov,exoid,step,offsetZ+1,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
@@ -211,7 +209,7 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid 
-      PetscInt                                           :: offsetN,offsetZ,offsetS
+      PetscInt                                           :: offsetN,offsetZ
       Type(tVec)                                         :: iov
       type(tDM)                                          :: locDM,oDM
       Type(tVec)                                         :: vGlob
@@ -219,22 +217,18 @@ End Subroutine MEF90EXOFormat
 
       offsetN = -1
       offsetZ = -1
-      offsetS = -1
-      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))
       PetscCall(PetscObjectSetName(iov,vecname,ierr))
 
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"n",vecname,offsetN,ierr))
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"e",vecname,offsetZ,ierr))
-      PetscCall(MEF90EXOGetVarIndex_Private(exoid,"s",vecname,offsetS,ierr))
-      If (offsetN > 0) Then
-         PetscCall(MEF90EXOVecLoadNodal_Private(iov,exoid,step,offsetN,ierr))
-      Else If (offsetZ > 0) Then
-         PetscCall(MEF90EXOVecLoadZonal_Private(iov,exoid,step,offsetZ,ierr))
-      Else If (offsetS > 0) Then
-         PetscCall(MEF90EXOVecLoadSide_Private(iov,exoid,step,offsetS,ierr))
+      PetscCall(PetscViewerExodusIIGetNodalVariableIndex(Viewer,vecname,offsetN,ierr))
+      PetscCall(PetscViewerExodusIIGetZonalVariableIndex(Viewer,vecname,offsetZ,ierr))
+      PetscCall(PetscViewerExodusIIGetId(Viewer,exoid,ierr))
+      If (offsetN >= 0) Then
+         PetscCall(MEF90EXOVecLoadNodal_Private(iov,exoid,step,offsetN+1,ierr))
+      Else If (offsetZ >= 0) Then
+         PetscCall(MEF90EXOVecLoadZonal_Private(iov,exoid,step,offsetZ+1,ierr))
       Else
          write(IOBuffer,'("Could not find nodal or zonal variable ", A, " in exodus file. ")') trim(vecname)
          SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,IOBuffer)
@@ -252,34 +246,6 @@ End Subroutine MEF90EXOFormat
       PetscCall(DMRestoreGlobalVector(oDM,vGlob,ierr))
 
    End Subroutine MEF90EXOVecLoad
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90EXOGetVarIndex_Private"
-   Subroutine MEF90EXOGetVarIndex_Private(exoid,obj_type,name,varIndex,ierr)
-      Integer,Intent(IN)               :: exoid
-      Character(len=MXSTLN),Intent(IN) :: name
-      Character(len=1),Intent(IN)      :: obj_type
-      PetscInt,Intent(OUT)             :: varIndex
-      PetscErrorCode,Intent(INOUT)     :: ierr
-   
-      Integer                          :: i,j,num_suffix,num_vars
-      Character(len=MXSTLN)            :: var_name,ext_name,suffix(5)
-   
-      suffix = ["   ","_X ","_XX","_1 ","_11"]
-      num_suffix = size(suffix)
-
-      varIndex = -1
-      Call exgvp(exoid,obj_type,num_vars,ierr)
-      Do i=1,num_vars
-         Call exgvnm(exoid,obj_type,i,var_name,ierr)
-         Do j=1,num_suffix
-            ext_name = trim(name)//trim(suffix(j))
-            If (ext_name == var_name) Then
-               varIndex = i
-            End If
-         End Do
-      End Do
-   End Subroutine MEF90EXOGetVarIndex_Private
    
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewNodal_Private"

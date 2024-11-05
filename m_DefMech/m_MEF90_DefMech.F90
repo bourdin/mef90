@@ -526,7 +526,7 @@ Contains
       Character(len=MXSTLN),Dimension(:),Pointer         :: nameG,nameN,nameC
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
       PetscInt                                           :: numFields,offset
-
+   
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag,MEF90DefMechGlobalOptions,ierr))
       Allocate(nameG(0))
 
@@ -619,7 +619,7 @@ Contains
             nameC(offset+5) = "CumulatedPlasticDissipation_XY"
          End If
       End If
-      PetscCallA(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,time,ierr))
+      PetscCall(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer,nameG,nameC,nameN,time,ierr))
       DeAllocate(nameG)
       DeAllocate(nameN)
       DeAllocate(nameC)
