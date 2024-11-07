@@ -167,7 +167,7 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid
-      PetscInt                                           :: offsetN = -1,offsetZ = -1
+      Integer                                            :: offsetN = -1,offsetZ = -1
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
@@ -209,7 +209,7 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid 
-      PetscInt                                           :: offsetN,offsetZ
+      Integer                                            :: offsetN,offsetZ
       Type(tVec)                                         :: iov
       type(tDM)                                          :: locDM,oDM
       Type(tVec)                                         :: vGlob
@@ -251,11 +251,13 @@ End Subroutine MEF90EXOFormat
 #define __FUNCT__ "MEF90EXOVecViewNodal_Private"
    Subroutine MEF90EXOVecViewNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
-      PetscInt,Intent(IN)              :: step,offset
+      PetscInt,Intent(IN)              :: step
+      Integer,Intent(IN)               :: offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c
+      PetscInt                         :: xs,xe,bs
+      Integer                          :: c
       PetscScalar,Dimension(:),Pointer :: varray
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
@@ -285,11 +287,13 @@ End Subroutine MEF90EXOFormat
 #define __FUNCT__ "MEF90EXOVecLoadNodal_Private"
    Subroutine MEF90EXOVecLoadNodal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
-      PetscInt,Intent(IN)              :: step, offset
+      PetscInt,Intent(IN)              :: step
+      Integer,Intent(IN)               :: offset
       Type(tVec),Intent(INOUT)         :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c
+      PetscInt                         :: xs,xe,bs
+      Integer                          :: c
       PetscScalar,Dimension(:),Pointer :: varray
       Type(tVec)                       :: vComp
       Type(tIS)                        :: compIS
@@ -319,11 +323,13 @@ End Subroutine MEF90EXOFormat
 #define __FUNCT__ "MEF90EXOVecViewZonal_Private"
    Subroutine MEF90EXOVecViewZonal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
-      PetscInt,Intent(IN)              :: step, offset
+      PetscInt,Intent(IN)              :: step
+      Integer,Intent(IN)               :: offset
       Type(tVec),Intent(IN)            :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs
+      PetscInt                         :: xs,xe,bs,numCS,set,csLocalSize,csxs
+      Integer                          :: c
       PetscScalar,Dimension(:),Pointer :: varray
       PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
@@ -377,11 +383,13 @@ End Subroutine MEF90EXOFormat
 #define __FUNCT__ "MEF90EXOVecLoadZonal_Private"
    Subroutine MEF90EXOVecLoadZonal_Private(v,exoid,step,offset,ierr)
       Integer,Intent(IN)               :: exoid
-      PetscInt,Intent(IN)              :: step, offset
+      PetscInt,Intent(IN)              :: step
+      Integer,Intent(IN)               :: offset
       Type(tVec),Intent(INOUT)         :: v
       PetscErrorCode,Intent(INOUT)     :: ierr
    
-      PetscInt                         :: xs,xe,bs,c,numCS,set,csLocalSize,csxs
+      PetscInt                         :: xs,xe,bs,numCS,set,csLocalSize,csxs
+      Integer                          :: c
       PetscScalar,Dimension(:),Pointer :: varray
       PetscInt,Dimension(:),Pointer    :: csID,csSize
       Type(tVec)                       :: vComp
