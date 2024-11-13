@@ -497,7 +497,7 @@ Contains
 
         clSize = 0
         PetscCall(VecGetDM(v,dm,ierr))
-        PetscCall(DMGetSection(dm,section,ierr))
+        PetscCall(DMGetLocalSection(dm,section,ierr))
 
         PetscCall(DMPlexGetTransitiveClosure(dm,p,PETSC_TRUE,closure,ierr))
         If (size(closure) > 0) Then
