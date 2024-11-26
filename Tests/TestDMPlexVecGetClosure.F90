@@ -113,7 +113,7 @@ Implicit NONE
     PetscCallA(VecViewFromOptions(v,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
 
     Do p = pStart,pEnd-1
-        PetscCall(MEF90VecGetClosureSize(v,p,numDofClosure,ierr))
+        PetscCallA(MEF90VecGetClosureSize(v,p,numDofClosure,ierr))
     End Do
     PetscCallA(MyVecView(v,ierr))
 

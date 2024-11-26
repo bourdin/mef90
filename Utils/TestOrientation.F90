@@ -60,7 +60,7 @@ Implicit NONE
     Allocate(BB(4))
     Allocate(BBinv(4))
     Do c = cStart,cEnd-1
-        PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,c,v0,BB,BBinv,detBBinv,ierr))
+        PetscCallA(DMPlexComputeCellGeometryAffineFEM(dm,c,v0,BB,BBinv,detBBinv,ierr))
         If (detBBinv <= 0.0_Kr) Then
             reversedCells = PETSC_TRUE
             nFlip = nFlip + 1

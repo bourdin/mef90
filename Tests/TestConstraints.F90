@@ -418,8 +418,8 @@ Implicit NONE
     !!! In this process, we should have lost the constrained values
     PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
 
-    PetscCall(VecSet(Uloc2,-33.33_Kr,ierr))
-    PetscCall(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
+    PetscCallA(VecSet(Uloc2,-33.33_Kr,ierr))
+    PetscCallA(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
     PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
 
 
