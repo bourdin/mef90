@@ -1,5 +1,6 @@
 Module m_MEF90_DMPlex
 #include "petsc/finclude/petsc.h"
+#include "petsc/finclude/petscsf.h"
     Use m_MEF90_Elements
     Use m_MEF90_Ctx
     Use petsc
@@ -157,7 +158,7 @@ Contains
                     setConstraints = .FALSE.
                     write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = sDim
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
                     PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
                 End Do
                 PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -180,10 +181,10 @@ Contains
 
 #ifdef PETSC_USE_DEBUG
         write(BCOptionName,'("-",a,"_section_view")') trim(name)
-        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+        PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,BCOptionName,ierr))
         If (.NOT. PetscObjectIsNull(naturalSF)) Then    
             write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+            PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OBJECT,BCOptionName,ierr))    
         End If
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
@@ -271,10 +272,10 @@ Contains
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
-            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,BCOptionName,ierr))
             If (.NOT. PetscObjectIsNull(naturalSF)) Then
                 write(BCOptionName,'("-",a,"_naturalSF_view")') trim(name)
-                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OPTIONS,BCOptionName,ierr))    
+                PetscCall(PetscSFViewFromOptions(naturalSF,PETSC_NULL_OBJECT,BCOptionName,ierr))    
             End If
         end block debugBlock
 #endif
@@ -373,7 +374,7 @@ Contains
                     setConstraints = .FALSE.
                     write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = sDim
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
                     PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
                 End Do
                 PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
@@ -390,7 +391,7 @@ Contains
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
-            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,BCOptionName,ierr))
         end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
@@ -466,7 +467,7 @@ Contains
         debugBlock: block
             Character(len=MEF90MXSTRLEN)            :: BCoptionName
             write(BCOptionName,'("-",a,"_section_view")') trim(name)
-            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,BCOptionName,ierr))
+            PetscCall(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,BCOptionName,ierr))
         end block debugBlock
 #endif
         PetscCall(DMCreateLocalVector(dmV,V,ierr))
@@ -493,20 +494,20 @@ Contains
         Type(tDM)                          :: dm
         Type(tPetscSection)                :: section
         PetscInt,Dimension(:),Pointer      :: closure
-        PetscInt                           :: point,numDof
+        PetscInt                           :: point,numDof,numClosure
 
         clSize = 0
         PetscCall(VecGetDM(v,dm,ierr))
         PetscCall(DMGetLocalSection(dm,section,ierr))
 
-        PetscCall(DMPlexGetTransitiveClosure(dm,p,PETSC_TRUE,closure,ierr))
+        PetscCall(DMPlexGetTransitiveClosure(dm,p,PETSC_TRUE,numClosure,closure,ierr))
         If (size(closure) > 0) Then
             Do point = 1, size(closure), 2
                 PetscCall(PetscSectionGetDof(section,closure(point),numDof,ierr))
                 clSize = clSize + numDof
             End Do
         End If
-        PetscCall(DMPlexRestoreTransitiveClosure(dm,p,PETSC_TRUE,closure,ierr))
+        PetscCall(DMPlexRestoreTransitiveClosure(dm,p,PETSC_TRUE,numClosure,closure,ierr))
     End Subroutine MEF90VecGetClosureSize
 
 
@@ -870,11 +871,11 @@ Contains
         Type(tPetscSF),intent(OUT)              :: sf,invSF
         Type(MEF90Ctx_type),Intent(IN)          :: MEF90Ctx
         PetscErrorCode,intent(INOUT)            :: ierr
-
+ 
         Type(tDM)                               :: dm,dmB
         Type(tPetscSection)                     :: locSection,locBSection
-        Type(PetscSFNode),dimension(:),Pointer  :: remote
-        Type(PetscInt),dimension(:),Pointer     :: local,cindices
+        type(sPetscSFNode),dimension(:),Pointer :: remote
+        PetscInt,dimension(:),Pointer           :: local,cindices
         PetscInt                                :: pStart,pEnd,p,d,nleaves,ldof,loff,cdof,coff,nsize,nroots
 
         nleaves = 0
@@ -972,7 +973,7 @@ Contains
 
         MPI_Comm                                :: comm
         PetscInt                                :: nroots, nleaves
-        Type(PetscSFNode),Dimension(:),Pointer  :: iremote
+        Type(sPetscSFNode),Dimension(:),Pointer :: iremote
         PetscInt,Dimension(:),Pointer           :: ilocal
 
         PetscCall(PetscSFGetGraph(sf,nroots,nleaves,ilocal,iremote,ierr))
@@ -1029,7 +1030,7 @@ Contains
                 Do set = 1,size(setID)
                     write(ValueKey,'("-",a2,I4.4,"_",a)') MEF90SetPrefix(setType),setID(set),trim(name)
                     numOpt = bs
-                    PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(ValueKey),Val,numOpt,flg,ierr))
+                    PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(ValueKey),Val,numOpt,flg,ierr))
                     If (numOpt > 0) Then
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the values on the closure of the current point
@@ -1100,13 +1101,13 @@ Contains
                     setBC = .FALSE.
                     write(BCOptionKey,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = bs
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionKey),setBC,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionKey),setBC,numBC,flg,ierr))
                     If (any(setBC)) Then
                         !!! At least 1 dof has a boundary condition
                         !!! Get the unit BC value on the set
                         write(BCValueKey,'("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType),setID(set),trim(name)
                         numBC = bs
-                        PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
+                        PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the boundary values on the closure of the current point
                         If (.NOT. PetscObjectIsNull(pointIS)) Then
@@ -1154,8 +1155,8 @@ Contains
         PetscErrorCode,intent(INOUT)            :: ierr
     
         Type(tVec)                              :: vnat,vio
-        Type(tPetscLayout)                       :: ioMap,natMap
-        Type(PetscSFNode),dimension(:),Pointer  :: remote
+        Type(tPetscLayout)                      :: ioMap,natMap
+        Type(sPetscSFNode),dimension(:),Pointer :: remote
         PetscInt,dimension(:),Pointer           :: ioRange
         PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
     
@@ -1182,7 +1183,7 @@ Contains
         PetscCall(PetscSFSetFromOptions(sf,ierr))
         PetscCall(PetscSFSetGraph(sf,nroots,nleaves,PETSC_NULL_INTEGER_ARRAY,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
         PetscCall(PetscSFSetUp(sf,ierr))
-        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-naturaltoio_sf_view",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OBJECT,"-naturaltoio_sf_view",ierr))
         PetscCall(VecDestroy(vio,ierr))
         PetscCall(VecDestroy(vnat,ierr))
         DeAllocate(remote)
@@ -1205,7 +1206,7 @@ Contains
     
         Type(tPetscSection)                     :: locSection,gSection
         Type(tPetscSF)                          :: overlapSF,idSF
-        Type(PetscSFNode),dimension(:),Pointer  :: remote
+        Type(sPetscSFNode),dimension(:),Pointer        :: remote
         PetscInt,dimension(:),Pointer           :: remoteOffsets
         PetscInt                                :: pStart,pEnd,p,n
     
@@ -1229,7 +1230,7 @@ Contains
         PetscCall(PetscSFSetUp(sf,ierr))
         ! PetscCall(PetscObjectSetName(sf,"Local-To-CGlobal SF",ierr))
         PetscCall(PetscSFSetFromOptions(sf,ierr))
-        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-localtocglobal_sf_view",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OBJECT,"-localtocglobal_sf_view",ierr))
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
         DeAllocate(remote)
@@ -1253,7 +1254,7 @@ Contains
     
         Type(tPetscSection)                     :: locSection,gSection
         Type(tPetscSF)                          :: overlapSF,idSF,tempSF,ttempSF
-        Type(PetscSFNode),dimension(:),Pointer  :: remote,tempRemote,lgRemote,glRemote
+        Type(sPetscSFNode),dimension(:),Pointer :: remote,tempRemote,lgRemote,glRemote
         PetscInt,dimension(:),Pointer           :: tempLocal,lgLocal,glLocal,remoteOffsets
         PetscInt                                :: pStart,pEnd,p,n,lgNRoots,lgNLeaves,tempNRoots,tempNLeaves,glNRoots,glNLeaves
     
@@ -1328,7 +1329,7 @@ Contains
         PetscCall(PetscSectionDestroy(gSection,ierr))
         PetscCall(PetscSFDestroy(idSF,ierr))
         ! PetscCall(PetscObjectSetName(sf,"CGlobal-To-Local SF",ierr))
-        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OPTIONS,"-cglobaltolocal_sf_view",ierr))
+        ! PetscCall(PetscSFViewFromOptions(sf,PETSC_NULL_OBJECT,"-cglobaltolocal_sf_view",ierr))
         DeAllocate(remote)
     End subroutine CreateCGlobalToLocalSF_Private
     
@@ -1352,7 +1353,7 @@ Contains
         Type(tPetscSF)                          :: migrationSF,tempSF
         Type(tVec)                              :: localVec
         PetscInt                                :: set,face,nroots,nleaves,i,totalleaves,numComponent,uNumComponent,j,numSS,key,numFaces
-        Type(PetscSFNode),dimension(:),Pointer  :: iremote
+        Type(sPetscSFNode),dimension(:),Pointer :: iremote
         Type(tIS),dimension(:),Pointer          :: locfacesIS
         PetscInt,dimension(:),Pointer           :: ilocal,permIndices,emptyInd,facesID,procSSID
 

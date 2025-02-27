@@ -11,7 +11,7 @@ Module m_MEF90_Ctx_Type
       MPI_Comm                                        :: comm
       PetscMPIInt                                     :: rank,numProcs
       Character(len=MEF90MXSTRLEN,kind=C_char)        :: geometryfile,resultfile
-      PetscBag                                        :: GlobalOptionsBag
+      Type(tPetscBag)                                 :: GlobalOptionsBag
       type(tPetscViewer)                              :: resultViewer      
    End Type MEF90Ctx_Type
    
@@ -70,7 +70,8 @@ Module m_MEF90_Ctx
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_Ctx_Type
-         PetscBag                                     :: bag
+         Use petscbag
+         type(tPetscBag)                              :: bag
          Type(MEF90CtxGlobalOptions_Type),pointer     :: data
          PetscErrorCode,Intent(OUT)                   :: ierr
       End subroutine PetscBagGetData
