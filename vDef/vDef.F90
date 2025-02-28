@@ -401,10 +401,10 @@ Program vDef
                         mySOROmega = MEF90DefMechGlobalOptions%SOROmega
                         !!! LIMITED SOR
                         PetscCallA(SNESVIGetVariableBounds(damageSNES,damageLB,damageUB,ierr))
-                        PetscCallA(VecGetArrayReadF90(damageLB,damageLBArray,ierr))
-                        PetscCallA(VecGetArrayReadF90(damageUB,damageUBArray,ierr))
-                        PetscCallA(VecGetArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
-                        PetscCallA(VecGetArrayReadF90(damage,damageArray,ierr))
+                        PetscCallA(VecGetArrayRead(damageLB,damageLBArray,ierr))
+                        PetscCallA(VecGetArrayRead(damageUB,damageUBArray,ierr))
+                        PetscCallA(VecGetArrayRead(damageAltMinOld,damageAltMinOldArray,ierr))
+                        PetscCallA(VecGetArrayRead(damage,damageArray,ierr))
                         Do iDof = 1, size(damageArray)
                            If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
                               mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
@@ -412,10 +412,10 @@ Program vDef
                               mySOROmega = min(mySOROmega,(damageLBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
                            End If
                         End Do
-                        PetscCallA(VecRestoreArrayReadF90(damage,damageArray,ierr))
-                        PetscCallA(VecRestoreArrayReadF90(damageAltMinOld,damageAltMinOldArray,ierr))
-                        PetscCallA(VecRestoreArrayReadF90(damageUB,damageUBArray,ierr))
-                        PetscCallA(VecRestoreArrayReadF90(damageLB,damageLBArray,ierr))
+                        PetscCallA(VecRestoreArrayRead(damage,damageArray,ierr))
+                        PetscCallA(VecRestoreArrayRead(damageAltMinOld,damageAltMinOldArray,ierr))
+                        PetscCallA(VecRestoreArrayRead(damageUB,damageUBArray,ierr))
+                        PetscCallA(VecRestoreArrayRead(damageLB,damageLBArray,ierr))
                         PetscCallA(MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,MEF90Ctx%comm,ierr))
                         PetscCallA(VecAXPBY(damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr))
                      Else If (MEF90DefMechGlobalOptions%SOROmega < 0.0_Kr) Then
