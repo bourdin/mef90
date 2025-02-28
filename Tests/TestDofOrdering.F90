@@ -62,10 +62,10 @@ Implicit NONE
 
     PetscCallA(VecGetLocalSize(U,nVal,ierr))
     Do i = 1, nVal
-        PetscCallA(VecGetArrayF90(U,UArray,ierr))
+        PetscCallA(VecGetArray(U,UArray,ierr))
         UArray    = 0.0_Kr
         UArray(i) = 1.0_Kr
-        PetscCallA(VecRestoreArrayF90(U,UArray,ierr))
+        PetscCallA(VecRestoreArray(U,UArray,ierr))
         PetscCallA(DMPlexVecGetClosure(dmU,sectionU,U,0_Ki,UArray,ierr))
         Write(*,*) i, UArray
         PetscCallA(DMPlexVecRestoreClosure(dmU,sectionU,U,0_Ki,UArray,ierr))

@@ -991,7 +991,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Cell set ',I4)") setID(set)
          Write(setprefix,"('cs',I4.4,'_')") setID(set)
@@ -1003,7 +1003,7 @@ Contains
             PetscCall(PetscPrintf(DefMechCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
 
       !!!
@@ -1011,7 +1011,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Face set ',I4)") setID(set)
          Write(setprefix,"('fs',I4.4,'_')") setID(set)
@@ -1023,7 +1023,7 @@ Contains
             PetscCall(PetscPrintf(DefMechCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!!
@@ -1031,7 +1031,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90VertexSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Vertex set ',I4)") setID(set)
          Write(setprefix,"('vs',I4.4,'_')") setID(set)
@@ -1043,7 +1043,7 @@ Contains
             PetscCall(PetscPrintf(DefMechCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!! Identify if any of the displacement bounds are set
@@ -1051,23 +1051,23 @@ Contains
 
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          DefMechCtx%hasDisplacementBounds = any(cellSetOptions%displacementLowerBound /= MEF90NINFINITY) .OR. DefMechCtx%hasDisplacementBounds
          DefMechCtx%hasDisplacementBounds = any(cellSetOptions%displacementUpperBound /= MEF90INFINITY)  .OR. DefMechCtx%hasDisplacementBounds
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       PetscCall(DMGetLabelIdIS(DefMechCtx%megaDM,MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(DefMechCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          PetscCall(PetscBagGetDataMEF90DefMechCtxFaceSetOptions(DefMechCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
          DefMechCtx%hasDisplacementBounds = any(faceSetOptions%displacementLowerBound /= MEF90NINFINITY) .OR. DefMechCtx%hasDisplacementBounds
          DefMechCtx%hasDisplacementBounds = any(faceSetOptions%displacementUpperBound /= MEF90INFINITY)  .OR. DefMechCtx%hasDisplacementBounds
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90DefMechCtxSetFromOptions
 End Module m_MEF90_DefMechCtx

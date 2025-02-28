@@ -169,10 +169,10 @@ Program  TestMassMatrix
     PetscCallA(DMGetLabelIdIS(dmU,MEF90SetLabelName(setType),setIS,ierr))
     PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%Comm,setIS,ierr))
     If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISGetIndices(setIS,setID,ierr))
         Do set = 1,size(setID)
             PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
-            PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISGetIndices(setPointIS,setPointID,ierr))
             PetscCallA(DMPlexGetCellType(dmU,setPointID(1),cellType,ierr))
             PetscCallA(MEF90ElementGetType(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,cellType,elementType,ierr))
             If (dim == 2) Then
@@ -184,10 +184,10 @@ Program  TestMassMatrix
                 PetscCallA(MEF90_MassMatrixAssembleSet(M,dmU,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
-            PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISRestoreIndices(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(setIS,setID,ierr))
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
@@ -197,11 +197,11 @@ Program  TestMassMatrix
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
     If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISGetIndices(setIS,setID,ierr))
         QuadratureOrder = elementType%order * 2
         Do set = 1,size(setID)
             PetscCallA(DMGetStratumIS(dmU0,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
-            PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISGetIndices(setPointIS,setPointID,ierr))
             PetscCall(DMPlexGetCellType(dmU0,setPointID(1),faceType,ierr))
             PetscCall(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,faceType,elementType,ierr))
                 If (dim == 2) Then
@@ -213,10 +213,10 @@ Program  TestMassMatrix
                 PetscCallA(MEF90_MassMatrixAssembleSet(M0,dmU0,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
-            PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISRestoreIndices(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(setIS,setID,ierr))
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M0,MAT_FINAL_ASSEMBLY,ierr))

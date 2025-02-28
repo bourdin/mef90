@@ -70,15 +70,15 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                QuadratureOrder = elementType%order * 2
@@ -138,12 +138,12 @@ Contains
 
                DeAllocate(residualDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
 
@@ -151,16 +151,16 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -180,11 +180,11 @@ Contains
                   End Do ! cell
                   DeAllocate(residualDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%boundaryFlux
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -209,14 +209,14 @@ Contains
                   End Do ! cell
                   DeAllocate(residualDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
       PetscCall(DMLocalToGlobalBegin(dmTemperature,locResidual,ADD_VALUES,residual,ierr))
@@ -269,14 +269,14 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                QuadratureOrder = elementType%order * 2
@@ -318,11 +318,11 @@ Contains
 
                DeAllocate(matDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
 
@@ -330,14 +330,14 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -362,12 +362,12 @@ Contains
 
                   DeAllocate(matDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
          PetscCall(ISDestroy(setIS,ierr))   
       End If ! setIS
       PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr))
@@ -426,15 +426,15 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                QuadratureOrder = elementType%order * 2
@@ -474,14 +474,14 @@ Contains
                   End Do ! cell
                End If ! cellSetOptions%flux
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
             PetscCallMPI(MPI_AllReduce(myEnergy,energy(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
             PetscCallMPI(MPI_AllReduce(myBodyWork,bodyWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
 
@@ -489,15 +489,15 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
                mySurfaceWork    = 0.0_Kr
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -519,14 +519,14 @@ Contains
                   End Do ! cell
 
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%boundaryFlux
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
             PetscCallMPI(MPI_AllReduce(mySurfaceWork,surfaceWork(set),1,MPIU_SCALAR,MPI_SUM,MEF90HeatXferCtx%MEF90Ctx%comm,ierr))
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
    End Subroutine MEF90HeatXFerEnergy
@@ -594,15 +594,15 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                QuadratureOrder = elementType%order * 2
@@ -678,12 +678,12 @@ Contains
 
                DeAllocate(residualDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%fluxLocal,fluxArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
 
@@ -691,16 +691,16 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
-         PetscCall(VecGetArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(VecGetArray(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%boundaryFlux /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -720,11 +720,11 @@ Contains
                   End Do ! cell
                   DeAllocate(residualDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%boundaryFlux
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -749,14 +749,14 @@ Contains
                   End Do ! cell
                   DeAllocate(residualDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
-         PetscCall(VecRestoreArrayF90(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%boundaryFluxLocal,boundaryFluxArray,ierr))
+         PetscCall(VecRestoreArray(MEF90HeatXferCtx%externalTemperatureLocal,externalTemperatureArray,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
       PetscCall(DMLocalToGlobalBegin(dmTemperature,locF,ADD_VALUES,F,ierr))
@@ -812,14 +812,14 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
                PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set),matpropSet,ierr))
                PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                QuadratureOrder = elementType%order * 2
@@ -875,11 +875,11 @@ Contains
 
                DeAllocate(matDof)
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
          PetscCall(ISDestroy(setIS,ierr))
       End If ! setIS
 
@@ -887,14 +887,14 @@ Contains
       PetscCall(DMGetLabelIdIS(dmTemperature,MEF90FaceSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
       If (.NOT. PetscObjectIsNull(setIS)) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dmTemperature,MEF90FaceSetLabelName,setID(set),setPointIS,ierr))
             If (.NOT. PetscObjectIsNull(setPointIS)) Then
               PetscCall(PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(MEF90HeatXferCtx%FaceSetOptionsBag(set),faceSetOptions,ierr))
 
                If (faceSetOptions%surfaceThermalConductivity /= 0.0_Kr) Then
-                  PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                   PetscCall(DMPlexGetCellType(dmTemperature,setPointID(1),cellType,ierr))
                   PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                   QuadratureOrder = elementType%order * 2
@@ -919,12 +919,12 @@ Contains
 
                   DeAllocate(matDof)
                   PetscCall(MEF90ElementDestroy(elem,ierr))
-                  PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                  PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                End If ! faceSetOptions%surfaceThermalConductivity
                PetscCall(ISDestroy(setPointIS,ierr))
             End If ! pointIS
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
          PetscCall(ISDestroy(setIS,ierr))   
       End If ! setIS
       PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr))

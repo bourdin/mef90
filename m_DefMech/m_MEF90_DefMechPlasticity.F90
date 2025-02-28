@@ -113,7 +113,7 @@ contains
 !       Call DMMeshGetDimension(MEF90DefMechCtx%DM,dim,ierr);CHKERRQ(ierr)
 !       Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
 !       Call MEF90ISAllGatherMerge(PETSC_COMM_WORLD,CellSetGlobalIS,ierr);CHKERRQ(ierr)
-!       Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+!       Call ISGetIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
 !       Do set = 1,size(setID)
 !          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
@@ -125,7 +125,7 @@ contains
 !             elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)
 
 !             Call DMMeshGetStratumIS(MEF90DefMechCtx%DM,'Cell Sets',setID(set),setIS,ierr);CHKERRQ(ierr)
-!             Call ISGetIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+!             Call ISGetIndices(setIS,cellID,ierr);CHKERRQ(ierr)
 !             If ((Size(cellID) > 0) .AND. (elemDisplacementType%coDim == 0)) Then
 !                !!! Call proper local assembly depending on the type of damage law
 !                Select Case (cellSetOptions%plasticityType)
@@ -387,11 +387,11 @@ contains
 !                Call SNLPDelete(s)
 !                DeAllocate(damageLoc)
 !             End If ! set
-!             Call ISRestoreIndicesF90(setIS,cellID,ierr);CHKERRQ(ierr)
+!             Call ISRestoreIndices(setIS,cellID,ierr);CHKERRQ(ierr)
 !             Call ISDestroy(setIS,ierr);CHKERRQ(ierr)
 !          End If !damageType /= NONE
 !       End Do !! set
-!       Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+!       Call ISRestoreIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 !       Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
 
 !       !!! forward data plasticStrain & cumulatedDissipatedPlasticEnergy

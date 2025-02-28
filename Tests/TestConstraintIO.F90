@@ -27,7 +27,7 @@ contains
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArrayF90(v,vArray,ierr))
+        PetscCallA(VecGetArray(v,vArray,ierr))
 
         Do p = pStart,pEnd-1
             PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
@@ -45,7 +45,7 @@ contains
                 End Do
             End If
         End Do
-        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+        PetscCallA(VecRestoreArray(v,vArray,ierr))
         !!! Of course, this does not use informations from the section, so it does over-write constrained values
     End subroutine project
 
@@ -196,12 +196,12 @@ Implicit NONE
     ! (iii) y geometric center
     PetscCallA(DMGetCoordinateSection(dmSigma0, coordSection0,ierr))
     PetscCallA(DMGetLabelIdIS(dmSigma0, "Face Sets", ssIS,ierr))
-    PetscCallA(ISGetIndicesF90(ssIS, ssID,ierr))
+    PetscCallA(ISGetIndices(ssIS, ssID,ierr))
     numFS = size(ssID)
     Do set = 1, numFS
         PetscCallA(DMGetStratumIS(dmSigma0, "Face Sets", ssID(set), faceIS,ierr))
         If (faceIS /= PETSC_NULL_IS) Then
-            PetscCallA(ISGetIndicesF90(faceIS, faceID,ierr))
+            PetscCallA(ISGetIndices(faceIS, faceID,ierr))
             Do face = 1,size(faceID)
                 PetscCallA(DMPlexVecGetClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval,ierr))
                 PetscCallA(DMPlexVecGetClosure(dmSigma0, coordSection0, locCoord, faceID(face), xyz,ierr))
@@ -221,19 +221,19 @@ Implicit NONE
                 PetscCallA(DMPlexVecSetClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval, INSERT_VALUES, ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma0, PETSC_NULL_SECTION, locVecSigma0, faceID(face), cval,ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(faceIS, faceID,ierr))
+            PetscCallA(ISRestoreIndices(faceIS, faceID,ierr))
         End If ! cellIS
         PetscCallA(ISDestroy(faceIS,ierr))
     End Do
-    PetscCallA(ISRestoreIndicesF90(ssIS, ssID,ierr))
+    PetscCallA(ISRestoreIndices(ssIS, ssID,ierr))
     PetscCallA(ISDestroy(ssIS,ierr))
     PetscCallA(DMGetCoordinateSection(dmSigma, coordSection,ierr))
     PetscCallA(DMGetLabelIdIS(dmSigma, "Cell Sets", csIS,ierr))
-    PetscCallA(ISGetIndicesF90(csIS, csID,ierr))
+    PetscCallA(ISGetIndices(csIS, csID,ierr))
     Do set = 1, size(csID)
         PetscCallA(DMGetStratumIS(dmSigma, "Cell Sets", csID(set), cellIS,ierr))
         If (cellIS /= PETSC_NULL_IS) Then
-            PetscCallA(ISGetIndicesF90(cellIS, cellID,ierr))
+            PetscCallA(ISGetIndices(cellIS, cellID,ierr))
             Do cell = 1,size(cellID)
                 PetscCallA(DMPlexVecGetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
                 PetscCallA(DMPlexVecGetClosure(dmSigma, coordSection, locCoord, cellID(cell), xyz,ierr))
@@ -252,11 +252,11 @@ Implicit NONE
                 PetscCallA(DMPlexVecSetClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval, INSERT_ALL_VALUES, ierr))
                 PetscCallA(DMPlexVecRestoreClosure(dmSigma, PETSC_NULL_SECTION, locVecSigma, cellID(cell), cval,ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(cellIS, cellID,ierr))
+            PetscCallA(ISRestoreIndices(cellIS, cellID,ierr))
         End If ! cellIS
         PetscCallA(ISDestroy(cellIS,ierr))
     End Do
-    PetscCallA(ISRestoreIndicesF90(csIS, csID,ierr))
+    PetscCallA(ISRestoreIndices(csIS, csID,ierr))
     PetscCallA(ISDestroy(csIS,ierr))
 
     ! Reorder and write ioS

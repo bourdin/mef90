@@ -150,7 +150,7 @@ contains
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArrayF90(v,vArray,ierr))
+        PetscCallA(VecGetArray(v,vArray,ierr))
 
         Do p = pStart,pEnd-1
             PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
@@ -168,7 +168,7 @@ contains
                 End Do
             End If
         End Do
-        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+        PetscCallA(VecRestoreArray(v,vArray,ierr))
         !!! Of course, this does not use informations from the section, so it does over-write constrained values
     End subroutine project3    
 
@@ -332,7 +332,7 @@ Implicit NONE
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     If (SetIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        PetscCallA(ISGetIndices(SetIS,setID,ierr))
         Do set = 1,size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
@@ -341,14 +341,14 @@ Implicit NONE
             PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
             PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(SetIS,setID,ierr))
     End If
     PetscCallA(ISDestroy(SetIS,ierr))
 
     setType = MEF90VertexSetType
     PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
     If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(SetIS,setID,ierr))
+        PetscCallA(ISGetIndices(SetIS,setID,ierr))
         Do set = 1,size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
@@ -357,7 +357,7 @@ Implicit NONE
             PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
             PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
         End Do
-        PetscCallA(ISRestoreIndicesF90(SetIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(SetIS,setID,ierr))
     End If
     PetscCallA(ISDestroy(SetIS,ierr))
     DeAllocate(constraints)

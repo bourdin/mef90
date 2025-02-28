@@ -690,7 +690,7 @@ Contains
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
          Write(setName,100) setID(set)
@@ -706,7 +706,7 @@ Contains
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n",ierr))
          End If
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')
@@ -738,7 +738,7 @@ Contains
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr))
       PetscCall(ISGetLocalSize(setIS,numSet,ierr))
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Allocate(MEF90MatPropBag(numSet))
       Do set = 1,numSet
          Write(setName,100) setID(set)
@@ -754,7 +754,7 @@ Contains
             PetscCall(PetscPrintf(PETSC_COMM_WORLD,"\n",ierr))
          End If
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
 100 Format('Cell set ',I4)
 101 Format('cs',I4.4,'_')

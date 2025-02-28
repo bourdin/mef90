@@ -186,22 +186,22 @@ Program HeatXfer
       PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,energy,cellWork,faceWork,ierr))
       PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
       PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(IOBuffer,101) setID(set),energy(set),cellWork(set),energy(set)-cellWork(set)
          PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
       End Do
-      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISRestoreIndices(setIS,setID,ierr))
       PetscCallA(ISDestroy(setIS,ierr))
 
       PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
       PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-      PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(IOBuffer,103) setID(set),faceWork(set)
          PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
       End Do
-      PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCallA(ISRestoreIndices(setIS,setID,ierr))
       PetscCallA(ISDestroy(setIS,ierr))
 
       Write(IOBuffer,102) sum(energy),sum(cellWork)+sum(faceWork),sum(energy)-sum(cellWork)-sum(faceWork)

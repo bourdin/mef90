@@ -237,13 +237,13 @@ Program vDef
             Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,thermalEnergySet,heatFluxWorkSet,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISGetIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nThermal energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
                Write(IOBuffer,101) setID(set),thermalEnergySet(set),heatFluxWorkSet(set),thermalEnergySet(set)-heatFluxWorkSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
-            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISRestoreIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -283,13 +283,13 @@ Program vDef
             Call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature,time(step),MEF90HeatXferCtx,thermalEnergySet,heatFluxWorkSet,ierr);CHKERRQ(ierr)
             Call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-            Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISGetIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call PetscPrintf(MEF90Ctx%Comm,"\nThermal energies: \n",ierr);CHKERRQ(ierr)
             Do set = 1, size(setID)
                Write(IOBuffer,101) setID(set),thermalEnergySet(set),heatFluxWorkSet(set),thermalEnergySet(set)-heatFluxWorkSet(set)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
             End Do
-            Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+            Call ISRestoreIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
             Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
             Write(IOBuffer,102) sum(thermalEnergySet),sum(heatFluxWorkSet),sum(thermalEnergySet)-sum(heatFluxWorkSet)
             Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)
@@ -372,10 +372,10 @@ Program vDef
                      mySOROmega = MEF90DefMechGlobalOptions%SOROmega
                      !!! LIMITED SOR
                      Call SNESVIGetVariableBounds(MEF90DefMechCtx%snesDamage,damageLB,damageUB,ierr);CHKERRQ(ierr)
-                     Call VecGetArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
-                     Call VecGetArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                     Call VecGetArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                     Call VecGetArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArray(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArray(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArray(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                     Call VecGetArray(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
                      Do iDof = 1, size(damageArray)
                         If (damageArray(iDof) > damageAltMinOldArray(iDof)) Then
                            mySOROmega = min(mySOROmega,(damageUBArray(iDof)-damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
@@ -384,10 +384,10 @@ Program vDef
                         End If
                      End Do
                      Call MPI_AllReduce(mySOROmega,SOROmega,1,MPIU_SCALAR,MPI_MIN,PETSC_COMM_WORLD,ierr);CHKERRQ(ierr)
-                     Call VecRestoreArrayF90(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
-                     Call VecRestoreArrayF90(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
-                     Call VecRestoreArrayF90(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
-                     Call VecRestoreArrayF90(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArray(MEF90DefMechCtx%damage,damageArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArray(damageAltMinOld,damageAltMinOldArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArray(damageUB,damageUBArray,ierr);CHKERRQ(ierr)
+                     Call VecRestoreArray(damageLB,damageLBArray,ierr);CHKERRQ(ierr)
                      Call VecAXPBY(MEF90DefMechCtx%damage,1.0_Kr - SOROmega,SOROmega,damageAltMinOld,ierr);CHKERRQ(ierr)
                   Else If (MEF90DefMechGlobalOptions%SOROmega < -1.0_Kr) Then
                      !!! PROJECTED SOR
@@ -497,7 +497,7 @@ Program vDef
                !!!
                Call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect,'Cell Sets',CellSetGlobalIS,ierr);CHKERRQ(ierr)
                Call MEF90ISAllGatherMerge(MEF90Ctx%Comm,CellSetGlobalIS,ierr);CHKERRQ(ierr) 
-               Call ISGetIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+               Call ISGetIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
                Call PetscPrintf(MEF90Ctx%Comm,"\nMechanical energies: \n",ierr);CHKERRQ(ierr)
                Do set = 1, size(setID)
                   Write(IOBuffer,201) setID(set),elasticEnergySet(set),forceWorkSet(set),cohesiveEnergySet(set),surfaceEnergySet(set),elasticEnergySet(set) - forceWorkSet(set) + cohesiveEnergySet(set) + surfaceEnergySet(set)
@@ -506,7 +506,7 @@ Program vDef
                   Call PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr);CHKERRQ(ierr)
                   Call PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr);CHKERRQ(ierr)
                End Do
-               Call ISRestoreIndicesF90(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
+               Call ISRestoreIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
                Call ISDestroy(CellSetGlobalIS,ierr);CHKERRQ(ierr)
                Write(IOBuffer,202) elasticEnergy(step),forceWork(step),cohesiveEnergy(step),surfaceEnergy(step),totalMechanicalEnergy(step)
                Call PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr);CHKERRQ(ierr)

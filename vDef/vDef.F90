@@ -298,22 +298,22 @@ Program vDef
             PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx,elasticEnergy,bodyForceWork,boundaryForceWork,ierr))
             PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90CellSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISGetIndices(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,101) setID(set),elasticEnergy(set),bodyForceWork(set),elasticEnergy(set)-bodyForceWork(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISRestoreIndices(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
       
             PetscCallA(DMGetLabelIdIS(temperatureDM,MEF90FaceSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(MEF90HeatXferCtx%MEF90Ctx%comm,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISGetIndices(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,103) setID(set),boundaryForceWork(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISRestoreIndices(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
       
             Write(IOBuffer,102) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)
@@ -469,7 +469,7 @@ Program vDef
 
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90CellSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISGetIndices(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,201) setID(set),elasticEnergy(set),bodyForceWork(set),cohesiveEnergy(set),surfaceEnergy(set),elasticEnergy(set)-bodyForceWork(set)+cohesiveEnergy(set)+surfaceEnergy(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
@@ -477,17 +477,17 @@ Program vDef
                PetscCallA(PetscViewerASCIIPrintf(MEF90DefMechCtx%setEnergyViewer(set),IOBuffer,ierr))
                PetscCallA(PetscViewerFlush(MEF90DefMechCtx%setEnergyViewer(set),ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISRestoreIndices(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
 
             PetscCallA(DMGetLabelIdIS(displacementDM,MEF90FaceSetLabelName,setIS,ierr))
             PetscCallA(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
-            PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISGetIndices(setIS,setID,ierr))
             Do set = 1, size(setID)
                Write(IOBuffer,203) setID(set),boundaryForceWork(set)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End Do
-            PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCallA(ISRestoreIndices(setIS,setID,ierr))
             PetscCallA(ISDestroy(setIS,ierr))
 
             Write(IOBuffer,202) sum(elasticEnergy),sum(bodyForceWork)+sum(boundaryForceWork),sum(cohesiveEnergy),sum(surfaceEnergy),sum(elasticEnergy)-sum(bodyForceWork)-sum(boundaryForceWork)+sum(cohesiveEnergy)+sum(surfaceEnergy)

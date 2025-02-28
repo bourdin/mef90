@@ -92,7 +92,7 @@ Contains
 
         Type(tPetscSection)                     :: sectionV
         Type(tDM)                               :: dmV
-        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: fieldV = 0
         PetscInt                                :: pStart,pEnd
         MPI_Comm                                :: comm
         PetscInt                                :: set
@@ -127,21 +127,21 @@ Contains
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 !!! Get cell type in order to pick the proper element type.
                 !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
                 PetscCall(DMGetStratumIS(dmV,MEF90CellSetLabelName,setID(set),pointIS,ierr))
                 If (.NOT. PetscObjectIsNull(pointIS)) Then
-                    PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                    PetscCall(ISGetIndices(pointIS,pointID,ierr))
                     PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
                     PetscCall(MEF90ElementGetType(elemFamily,elemOrder,cellType,elemType,ierr))
                     PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90CellSetType,setID(set),elemType,sdim,sectionV,ierr))
-                    PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                    PetscCall(ISRestoreIndices(pointIS,pointID,ierr))
                 End If ! pointIS
                 PetscCall(ISDestroy(pointIS,ierr))
             End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
 
@@ -153,15 +153,15 @@ Contains
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
             If (.NOT. PetscObjectIsNull(setIS)) Then
-                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                PetscCall(ISGetIndices(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setConstraints = .FALSE.
                     write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = sDim
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
                     PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
                 End Do
-                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+                PetscCall(ISRestoreIndices(setIS,setID,ierr))
             End If ! setIS
             PetscCall(ISDestroy(setIS,ierr))
          End Do ! setType
@@ -214,7 +214,7 @@ Contains
         PetscInt                                :: dim
         Type(tPetscSection)                     :: sectionV
         Type(tDM)                               :: dmV
-        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: fieldV = 0
         PetscInt                                :: pStart,pEnd
         MPI_Comm                                :: comm
         PetscInt                                :: set
@@ -250,11 +250,11 @@ Contains
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90CellSetType,setID(set),elemType,sdim,sectionV,ierr))
             End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
         PetscCall(PetscSectionSetup(sectionV,ierr))
@@ -309,7 +309,7 @@ Contains
 
         Type(tPetscSection)                     :: sectionV
         Type(tDM)                               :: dmV
-        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: fieldV = 0
         PetscInt                                :: pStart,pEnd
         MPI_Comm                                :: comm
         PetscInt                                :: set
@@ -343,21 +343,21 @@ Contains
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 !!! Get cell type in order to pick the proper element type.
                 !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
                 PetscCall(DMGetStratumIS(dmV,MEF90FaceSetLabelName,setID(set),pointIS,ierr))
                 If (.NOT. PetscObjectIsNull(pointIS)) Then
-                    PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                    PetscCall(ISGetIndices(pointIS,pointID,ierr))
                     PetscCall(DMPlexGetCellType(dmV,pointID(1),cellType,ierr))
                     PetscCall(MEF90ElementGetTypeBoundary(elemFamily,elemOrder,cellType,elemType,ierr))
                     PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
-                    PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                    PetscCall(ISRestoreIndices(pointIS,pointID,ierr))
                 End If ! pointIS
                 PetscCall(ISDestroy(pointIS,ierr))
             End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
 
@@ -369,15 +369,15 @@ Contains
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
             If (.NOT. PetscObjectIsNull(setIS)) Then
-                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                PetscCall(ISGetIndices(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setConstraints = .FALSE.
                     write(BCOptionName,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = sDim
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionName),setConstraints,numBC,flg,ierr))
                     PetscCall(MEF90SetupConstraintTableSet(dmV,sectionV,MEF90SetType(setType),setID(set),setConstraints,ConstraintTruthTable,ierr))
                 End Do
-                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+                PetscCall(ISRestoreIndices(setIS,setID,ierr))
             End If ! setIS
             PetscCall(ISDestroy(setIS,ierr))
             End Do ! setType
@@ -418,7 +418,7 @@ Contains
         PetscInt                                :: dim
         Type(tPetscSection)                     :: sectionV
         Type(tDM)                               :: dmV
-        PetscInt,Dimension(1)                   :: fieldV = 0
+        PetscInt                                :: fieldV = 0
         PetscInt                                :: pStart,pEnd
         MPI_Comm                                :: comm
         PetscInt                                :: set
@@ -453,11 +453,11 @@ Contains
         !!! Get a GLOBAL cell set IS
         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dmV,MEF90FaceSetType,setID(set),elemType,sdim,sectionV,ierr))
             End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
         PetscCall(PetscSectionSetup(sectionV,ierr))
@@ -534,11 +534,11 @@ Contains
 
         PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(MEF90SectionAllocateDofSet(dm,setType,setID(set),elemType,numComponents,Section,ierr))
             End Do
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
     End Subroutine MEF90SectionAllocateDof
@@ -571,12 +571,12 @@ Contains
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
         If (.NOT. PetscObjectIsNull(setPointIS)) Then
-            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
             Do point = 1,size(setPointID)
-                PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
                 Do p = 1,size(closure),2
                     PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
                     If (elemType%numDofs(depth+1) > 0) Then
@@ -584,9 +584,9 @@ Contains
                         PetscCall(PetscSectionSetFieldDof(section,closure(p),field,elemType%numDofs(depth+1)*numComponents,ierr))
                     End If
                 End Do! p
-                PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
             End Do! cell
-            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
         End If ! setPointIS
         PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SectionAllocateDofSet
@@ -615,29 +615,29 @@ Contains
         PetscCall(DMGetDimension(dm,dim,ierr))
         PetscCall(DMGetLabelIdIS(dm,'Cell Sets',setIS,ierr))
         If (.NOT. PetscObjectIsNull(setIS)) Then
-            PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+            PetscCall(ISGetIndices(setIS,setID,ierr))
             Do set = 1,size(setID)
                 PetscCall(DMGetStratumIS(dm,'Cell Sets',setID(set),setPointIS,ierr))
                 If (.NOT. PetscObjectIsNull(setPointIS)) Then
-                    PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+                    PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                     !!! This can probably be optimized by allocating closure outside of the loop
                     !!! But I can't figure out how it is done at the moment.
                     Nullify(closure)
                     Do point = 1,size(setPointID)
-                        PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                        PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
                         Do p = 1,size(closure),2
                             PetscCall(DMPlexGetPointDepth(dm,closure(p),depth,ierr))
                             If (depth == dim) Then
                                 PetscCall(PetscSectionSetDof(section,closure(p),numComponents,ierr))
                             End If
                         End Do! p
-                        PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                        PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
                     End Do! cell
-                    PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+                    PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
                 End If ! setPointIS
             PetscCall(ISDestroy(setPointIS,ierr))
             End Do ! set
-            PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+            PetscCall(ISRestoreIndices(setIS,setID,ierr))
         End If ! setIS
         PetscCall(ISDestroy(setIS,ierr))
         PetscCall(PetscSectionSetup(section,ierr))
@@ -669,21 +669,21 @@ Contains
 
         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
         If (.NOT. PetscObjectIsNull(setPOintIS)) Then
-            PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
             !!! This can probably be optimized by allocating closure outside of the loop
             !!! But I can't figure out how it is done at the moment.
             Nullify(closure)
             Do point = 1,size(setPointID)
-                PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                PetscCall(DMPlexGetTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
                 Do p = 1,size(closure),2
                     PetscCall(PetscSectionGetDoF(section,closure(p),numDof,ierr))
                     If (numDof > 0) Then
                         table(closure(p)+1,:) = table(closure(p)+1,:) .OR. constraints
                     End If ! numDof
                 End Do! p
-                PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,closure,ierr))
+                PetscCall(DMPlexRestoreTransitiveClosure(dm,setPointID(point),PETSC_TRUE,PETSC_NULL_INTEGER,closure,ierr))
             End Do! cell
-            PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
         End If ! setPointIS
         PetscCall(ISDestroy(setPointIS,ierr))
     End Subroutine MEF90SetupConstraintTableSet
@@ -724,8 +724,8 @@ Contains
             If (numConstraints > 0) Then
                 Allocate(constraints(numConstraints))
                 constraints = pack([ (i-1,i = 1,numComponents) ],table(p,:))
-                PetscCall(PetscSectionSetConstraintIndicesF90(section,p-1,constraints,ierr))
-                PetscCall(PetscSectionSetFieldConstraintIndicesF90(section,p-1,field,constraints,ierr))
+                PetscCall(PetscSectionSetConstraintIndices(section,p-1,constraints,ierr))
+                PetscCall(PetscSectionSetFieldConstraintIndices(section,p-1,field,constraints,ierr))
                 DeAllocate(constraints)
             End If
         End Do
@@ -749,11 +749,11 @@ Contains
         PetscScalar,dimension(:),Pointer   :: arrayin,arrayout
 
         PetscCall(VecGetArrayReadF90(vin,arrayin,ierr))
-        PetscCall(VecGetArrayF90(vout,arrayout,ierr))
+        PetscCall(VecGetArray(vout,arrayout,ierr))
         PetscCall(PetscSFBcastBegin(sf,MPIU_SCALAR,arrayin,arrayout,MPI_REPLACE,ierr))
         PetscCall(PetscSFBcastEnd(sf,MPIU_SCALAR,arrayin,arrayout,MPI_REPLACE,ierr))
         PetscCall(VecRestoreArrayReadF90(vin,arrayin,ierr))
-        PetscCall(VecRestoreArrayF90(vout,arrayout,ierr))
+        PetscCall(VecRestoreArray(vout,arrayout,ierr))
     End subroutine MEF90VecCopySF
 
 #undef __FUNCT__
@@ -897,7 +897,7 @@ Contains
             PetscCall(PetscSectionGetOffset(locSection,p,loff,ierr))
             PetscCall(PetscSectionGetConstraintDof(locBSection,p,cdof,ierr))
             If (cdof > 0) Then
-                PetscCall(PetscSectionGetConstraintIndicesF90(locBSection,p,cindices,ierr))
+                PetscCall(PetscSectionGetConstraintIndices(locBSection,p,cindices,ierr))
                 PetscCall(PetscSectionGetOffset(locBSection,p,coff,ierr))
                 If (coff >= 0) Then
                     Do d=1,cdof
@@ -907,7 +907,7 @@ Contains
                         nsize = nsize + 1
                     End Do ! d
                 End If ! coff
-                PetscCall(PetscSectionRestoreConstraintIndicesF90(locBSection,p,cindices,ierr))
+                PetscCall(PetscSectionRestoreConstraintIndices(locBSection,p,cindices,ierr))
             End If ! cdof
         End Do
         PetscCall(PetscSFCreate(MEF90Ctx%Comm,sf,ierr))
@@ -1026,31 +1026,31 @@ Contains
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
             If (.NOT. PetscObjectIsNull(setIS)) Then
-                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                PetscCall(ISGetIndices(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     write(ValueKey,'("-",a2,I4.4,"_",a)') MEF90SetPrefix(setType),setID(set),trim(name)
                     numOpt = bs
-                    PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(ValueKey),Val,numOpt,flg,ierr))
+                    PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(ValueKey),Val,numOpt,flg,ierr))
                     If (numOpt > 0) Then
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the values on the closure of the current point
                         If (.NOT. PetscObjectIsNull(pointIS)) Then
-                            PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                            PetscCall(ISGetIndices(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
                                 PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
                                 If (numDofClosure > 0) Then
-                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
                                     vArray = scalingFactor * Val
                                     PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
-                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
                                 End If ! numDofClosure
                             End Do ! point
-                            PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                            PetscCall(ISRestoreIndices(pointIS,pointID,ierr))
                         End If ! pointIS
                         PetscCall(ISDestroy(pointIS,ierr))
                     End If ! numOpt
                 End Do ! set
-                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+                PetscCall(ISRestoreIndices(setIS,setID,ierr))
             End If ! setIS
             PetscCall(ISDestroy(setIS,ierr))
         End Do ! setType
@@ -1096,41 +1096,41 @@ Contains
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
             If (.NOT. PetscObjectIsNull(setIS)) Then
-                PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+                PetscCall(ISGetIndices(setIS,setID,ierr))
                 Do set = 1,size(setID)
                     setBC = .FALSE.
                     write(BCOptionKey,'("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType),setID(set),trim(name)
                     numBC = bs
-                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCOptionKey),setBC,numBC,flg,ierr))
+                    PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCOptionKey),setBC,numBC,flg,ierr))
                     If (any(setBC)) Then
                         !!! At least 1 dof has a boundary condition
                         !!! Get the unit BC value on the set
                         write(BCValueKey,'("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType),setID(set),trim(name)
                         numBC = bs
-                        PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
+                        PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(BCValueKey),BCVal,numBC,flg,ierr))
                         PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID(set),pointIS,ierr))
                         !!! Set the boundary values on the closure of the current point
                         If (.NOT. PetscObjectIsNull(pointIS)) Then
-                            PetscCall(ISGetIndicesF90(pointIS,pointID,ierr))
+                            PetscCall(ISGetIndices(pointIS,pointID,ierr))
                             Do point = 1, size(pointID)
                                 PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
                                 If (numDofClosure > 0) Then
-                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
                                     Do c = 1, bs
                                         If (setBC(c)) Then
                                             vArray(c::bs) = scalingFactor * BCVal(c)
                                         End If ! setBC
                                     End Do ! c
                                     PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
-                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),vArray,ierr))
+                                    PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
                                 End If
                             End Do ! point
-                            PetscCall(ISRestoreIndicesF90(pointIS,pointID,ierr))
+                            PetscCall(ISRestoreIndices(pointIS,pointID,ierr))
                         End If ! pointIS
                         PetscCall(ISDestroy(pointIS,ierr))
                     End If ! setBC
                 End Do ! set
-                PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+                PetscCall(ISRestoreIndices(setIS,setID,ierr))
             End If ! setIS
             PetscCall(ISDestroy(setIS,ierr))
         End Do ! setType
@@ -1364,7 +1364,7 @@ Contains
         PetscCall(ISGetSize(gssIS,numSS,ierr))
         PetscCall(DMGetLabelIdIS(dm, "Face Sets", ssIS,ierr))
         PetscCall(DMPlexGetMigrationSF(dm,migrationSF,ierr))
-        PetscCall(ISGetIndicesF90(ssIS, ssID,ierr))
+        PetscCall(ISGetIndices(ssIS, ssID,ierr))
         Allocate(locfacesIS(numSS))
         Allocate(procSSID(numSS))
         Do set=1,numSS
@@ -1379,7 +1379,7 @@ Contains
         Do set = 1, numSS
             PetscCall(DMGetStratumIS(dm, "Face Sets", procSSID(set), faceIS,ierr))
             If (.NOT. PetscObjectIsNull(faceIS)) Then
-                PetscCall(ISGetIndicesF90(faceIS, faceID,ierr))
+                PetscCall(ISGetIndices(faceIS, faceID,ierr))
             Else
                 Allocate(faceID(0))
             End If
@@ -1407,7 +1407,7 @@ Contains
             DeAllocate(ilocal)
             DeAllocate(iremote)
             If (.NOT. PetscObjectIsNull(faceIS)) Then
-                PetscCall(ISRestoreIndicesF90(faceIS,faceID,ierr))
+                PetscCall(ISRestoreIndices(faceIS,faceID,ierr))
             Else
                 DeAllocate(faceID)
             End If
@@ -1431,7 +1431,7 @@ Contains
             PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,locfacesIS(set),ierr))
         End Do
         PetscCall(ISConcatenate(MEF90Ctx%comm,numSS,locfacesIS,facesIS,ierr))
-        PetscCall(ISGetIndicesF90(facesIS, faceID,ierr))
+        PetscCall(ISGetIndices(facesIS, faceID,ierr))
         If (MEF90Ctx%rank == 0) Then
             totalleaves = size(faceID)
         End If
@@ -1441,8 +1441,8 @@ Contains
             permIndices(i) = i-1
             facesID(i) = faceID(i)
         End Do
-        PetscCall(ISRestoreIndicesF90(facesIS, faceID,ierr))
-        PetscCall(ISRestoreIndicesF90(ssIS, ssID,ierr))
+        PetscCall(ISRestoreIndices(facesIS, faceID,ierr))
+        PetscCall(ISRestoreIndices(ssIS, ssID,ierr))
         PetscCall(PetscSortIntWithPermutation(totalleaves,facesID,permIndices,ierr))
         PetscCall(DMGetLocalVector(dm,localVec,ierr))
         PetscCall(VecGetBlockSize(localVec,numComponent,ierr))

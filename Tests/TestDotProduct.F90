@@ -166,13 +166,13 @@ Program  TestMassMatrix
     L2Norm    = 0.0_Kr
     H1Norm    = 0.0_Kr
     If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISGetIndices(setIS,setID,ierr))
         Do set = 1,size(setID)
             myL1NormSet = 0.0_Kr
             myL2NormSet = 0.0_Kr
             myH1NormSet = 0.0_Kr
             PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
-            PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISGetIndices(setPointIS,setPointID,ierr))
             PetscCallA(DMPlexGetCellType(dmU,setPointID(1),cellType,ierr))
             PetscCallA(MEF90ElementGetType(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,cellType,elementType,ierr))
             quadratureOrder = elementType%order * 2
@@ -189,7 +189,7 @@ Program  TestMassMatrix
                 PetscCallA(MEF90H1DotProductSet(myH1NormSet,U,U,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
-            PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISRestoreIndices(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
             Call MPI_AllReduce(myL1NormSet,L1NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
             Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
@@ -198,7 +198,7 @@ Program  TestMassMatrix
             L2Norm = L2Norm + L2NormSet
             H1Norm = H1Norm + H1NormSet
         End Do
-        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(setIS,setID,ierr))
         Write(IOBuffer,'("Cell sets: \n")')
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         Write(IOBuffer,'("   L1 norm          ", ES12.5,"\n")') L1Norm
@@ -215,12 +215,12 @@ Program  TestMassMatrix
     L1Norm = 0.0_Kr
     L2Norm = 0.0_Kr
     If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISGetIndices(setIS,setID,ierr))
         Do set = 1,size(setID)
             myL1NormSet = 0.0_Kr
             myL2NormSet = 0.0_Kr
             PetscCallA(DMGetStratumIS(dmU,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
-            PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISGetIndices(setPointIS,setPointID,ierr))
             PetscCallA(DMPlexGetCellType(dmU,setPointID(1),faceType,ierr))
             PetscCallA(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,faceType,elementType,ierr))
             quadratureOrder = elementType%order * 2
@@ -235,14 +235,14 @@ Program  TestMassMatrix
                 PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
                 PetscCallA(MEF90ElementDestroy(elem3D,ierr))
             End If
-            PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+            PetscCallA(ISRestoreIndices(setPointIS,setPointID,ierr))
             PetscCallA(ISDestroy(setPointIS,ierr))
             Call MPI_AllReduce(myL1NormSet,L1NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
             Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
             L1Norm = L1Norm + L1NormSet
             L2Norm = L2Norm + L2NormSet
         End Do
-        PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+        PetscCallA(ISRestoreIndices(setIS,setID,ierr))
         Write(IOBuffer,'("Face sets: \n")')
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
         Write(IOBuffer,'("   L1 norm          ", ES12.5,"\n")') L1Norm
@@ -252,12 +252,12 @@ Program  TestMassMatrix
     End If ! setIS
     PetscCallA(ISDestroy(setIS,ierr))
     ! If (setIS /= PETSC_NULL_IS) Then
-    !     PetscCallA(ISGetIndicesF90(setIS,setID,ierr))
+    !     PetscCallA(ISGetIndices(setIS,setID,ierr))
     !     QuadratureOrder = elementType%order * 2
     !     Do set = 1,size(setID)
     !         myL2NormSet = 0.0_Kr
     !         PetscCallA(DMGetStratumIS(dmU0,MEF90SetLabelName(setType),setID(set),setPointIS,ierr))
-    !         PetscCallA(ISGetIndicesF90(setPointIS,setPointID,ierr))
+    !         PetscCallA(ISGetIndices(setPointIS,setPointID,ierr))
     !         PetscCall(DMPlexGetCellType(dmU0,setPointID(1),faceType,ierr))
     !         PetscCall(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,faceType,elementType,ierr))
     !             If (dim == 2) Then
@@ -271,14 +271,14 @@ Program  TestMassMatrix
     !             PetscCallA(MEF90L2NormSet(myL2NormSet,U,setType,setID(set),elem3D,elementType,ierr))
     !             PetscCallA(MEF90ElementDestroy(elem3D,ierr))
     !         End If
-    !         PetscCallA(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+    !         PetscCallA(ISRestoreIndices(setPointIS,setPointID,ierr))
     !         PetscCallA(ISDestroy(setPointIS,ierr))
     !         Call MPI_AllReduce(myL2NormSet,L2NormSet,1,MPIU_SCALAR,MPI_SUM,PETSC_COMM_WORLD,ierr)
     !         L2Norm = L2Norm + L2NormSet
     !         Write(IOBuffer,'("set ",I4," L2 norm ", ES12.5,"\n")') setID(set), L2NormSet
     !         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
     !     End Do
-    !     PetscCallA(ISRestoreIndicesF90(setIS,setID,ierr))
+    !     PetscCallA(ISRestoreIndices(setIS,setID,ierr))
     ! End If ! setIS
     ! PetscCallA(ISDestroy(setIS,ierr))
     ! PetscCallA(MatAssemblyBegin(M0,MAT_FINAL_ASSEMBLY,ierr))

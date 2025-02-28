@@ -41,7 +41,7 @@ Contains
       PetscInt                                        :: iGauss,numGauss
 
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-      PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
          !!! This is really misleading: elemType doesn't know the number of component since we now use the 
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
@@ -63,7 +63,7 @@ Contains
          End Do ! point
          DeAllocate(MatElem,stat=ierr)
       End If 
-      PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
    End Subroutine MEF90_MassMatrixAssembleSet   
 End Module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)

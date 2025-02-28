@@ -405,7 +405,7 @@ Contains
 
       Select Case (elemType%name)
          Case (MEF90P1Lagrange2D%name,MEF90P2Lagrange2D%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(2))
@@ -424,9 +424,9 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          Case (MEF90P1Lagrange2DBoundary%name,MEF90P2Lagrange2DBoundary%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(2))
@@ -439,7 +439,7 @@ Contains
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          !Case (MEF90Q1Lagrange2D%name,MEF90Q2Lagrange2D%name,MEF90Q1Lagrange2DBoundary%name,MEF90Q2Lagrange2DBoundary%name)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -470,7 +470,7 @@ Contains
 
       Select Case (elemType%name)
          Case (MEF90P1Lagrange2D%name,MEF90P2Lagrange2D%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(2))
@@ -489,9 +489,9 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          Case (MEF90P1Lagrange2DBoundary%name,MEF90P2Lagrange2DBoundary%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(2))
@@ -504,7 +504,7 @@ Contains
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          !Case (MEF90Q1Lagrange2D%name,MEF90Q2Lagrange2D%name,MEF90Q1Lagrange2DBoundary%name,MEF90Q2Lagrange2DBoundary%name)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -535,7 +535,7 @@ Contains
 
       Select Case (elemType%name)
          Case (MEF90P1Lagrange3D%name,MEF90P2Lagrange3D%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(3))
@@ -555,9 +555,9 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          Case (MEF90P1Lagrange3DBoundary%name,MEF90P2Lagrange3DBoundary%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(3))
@@ -570,7 +570,7 @@ Contains
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          !Case (MEF90Q1Lagrange3D%name,MEF90Q2Lagrange3D%name,MEF90Q1Lagrange3DBoundary%name,MEF90Q2Lagrange3DBoundary%name)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
@@ -601,7 +601,7 @@ Contains
 
       Select Case (elemType%name)
          Case (MEF90P1Lagrange3D%name,MEF90P2Lagrange3D%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                Allocate(v0(3))
@@ -621,9 +621,9 @@ Contains
                DeAllocate(BB)
                DeAllocate(v0)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          Case (MEF90P1Lagrange3DBoundary%name,MEF90P2Lagrange3DBoundary%name)
-            PetscCall(ISGetIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISGetIndices(CellIS,CellID,ierr))
             Allocate(dElem(size(cellID)),stat=ierr)
             If (size(CellID) > 0) Then
                allocate(centroid(3))
@@ -636,7 +636,7 @@ Contains
                DeAllocate(innerNormal)
                DeAllocate(centroid)
             End If
-            PetscCall(ISRestoreIndicesF90(CellIS,CellID,ierr))
+            PetscCall(ISRestoreIndices(CellIS,CellID,ierr))
          !Case (MEF90Q1Lagrange3D%name,MEF90Q2Lagrange3D%name,MEF90Q1Lagrange3DBoundary%name,MEF90Q2Lagrange3DBoundary%name)
          !   !!! Get quadrature points for the current element using DMPlexComputeCellGeometryFEM
          !   !!! Initialize element
