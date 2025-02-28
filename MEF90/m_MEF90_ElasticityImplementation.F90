@@ -104,7 +104,7 @@ Contains
       Type(SectionReal)                                  :: defaultSection
      
       Call DMMeshGetSectionReal(mesh,'default',defaultSection,ierr);CHKERRQ(ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(MatElem(elemType%numDof,elemType%numDof))
          Do cell = 1,size(cellID)   
@@ -121,7 +121,7 @@ Contains
          End Do
          DeAllocate(MatElem)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       Call SectionRealDestroy(defaultSection,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityBilinearFormSet
 
@@ -150,7 +150,7 @@ Contains
       Type(MEF90_MATS)                                   :: GradSUelem
       PetscInt                                           :: iDoF1,iGauss
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(Uloc(elemType%numDof))
          Allocate(Gloc(elemType%numDof))
@@ -172,7 +172,7 @@ Contains
          DeAllocate(Gloc)
          DeAllocate(Uloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityOperatorSet
 
 #undef __FUNCT__
@@ -199,7 +199,7 @@ Contains
       Type(MEF90_VECT)                                   :: xelem
       PetscInt                                           :: iDoF1,iGauss
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Allocate(Gloc(elemType%numDof))
@@ -223,7 +223,7 @@ Contains
          DeAllocate(xloc)
          DeAllocate(Gloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityOperatorAddTransientTermSet
 
 #undef __FUNCT__
@@ -251,7 +251,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -267,7 +267,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCst
 
 #undef __FUNCT__
@@ -296,7 +296,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: RHSloc
       PetscInt                                           :: iDoF1,iGauss,i
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -315,7 +315,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCell
 
 #undef __FUNCT__
@@ -344,7 +344,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -362,7 +362,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetCell2
 
 #undef __FUNCT__
@@ -391,7 +391,7 @@ Contains
       PetscReal                                          :: e0elem
       PetscInt                                           :: iDoF1,iGauss
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(e0loc(elemScalType%numDof))
          Allocate(RHSloc(elemType%numDof))
@@ -414,7 +414,7 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(e0loc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityInelasticStrainRHSSetVertex2
 
 #undef __FUNCT__
@@ -441,7 +441,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -457,7 +457,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityForceRHSSetCst
 
 #undef __FUNCT__
@@ -483,7 +483,7 @@ Contains
       Type(MEF90_VECT)                                   :: fVect
       PetscInt                                           :: iDoF1,iGauss
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -502,7 +502,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityForceRHSSetCell
 
 #undef __FUNCT__
@@ -530,7 +530,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(Floc(elemType%numDof))
          Allocate(RHSloc(elemType%numDof))
@@ -553,7 +553,7 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(Floc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityForceRHSSetVertex
 
 #undef __FUNCT__
@@ -578,7 +578,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Call DMMeshGetStratumSize(mesh,"height",0,numCell,ierr);CHKERRQ(ierr)
          Allocate(RHSloc(elemType%numDof))
@@ -595,7 +595,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityPressureForceRHSSetCst
 
 #undef __FUNCT__
@@ -618,7 +618,7 @@ Contains
       PetscReal,Dimension(:),Pointer                     :: pressureloc,RHSloc
       PetscInt                                           :: iDoF1,iGauss,c,numCell
            
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(RHSloc(elemType%numDof))
          Do cell = 1,size(cellID)      
@@ -636,7 +636,7 @@ Contains
       
          DeAllocate(RHSloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityPressureForceRHSSetCell
 
 
@@ -665,7 +665,7 @@ Contains
            
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(pressureloc(elemPressureType%numDof))
          Allocate(RHSloc(elemDisplacementType%numDof))
@@ -688,7 +688,7 @@ Contains
          DeAllocate(RHSloc)
          DeAllocate(pressureloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityPressureForceRHSSetVertex
 
 #undef __FUNCT__
@@ -717,7 +717,7 @@ Contains
      
       Call PetscPrintf(PETSC_COMM_WORLD,"Function not tested yet: "//__FUNCT__//"\n",ierr)
       SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Function not tested yet: "//__FUNCT__,ierr)
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Do cell = 1,size(cellID)   
@@ -733,7 +733,7 @@ Contains
       
          DeAllocate(xloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityWorkSetCst
 
 #undef __FUNCT__
@@ -762,7 +762,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Do cell = 1,size(cellID)   
@@ -781,7 +781,7 @@ Contains
       
          DeAllocate(xloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityWorkSetCell
 
 #undef __FUNCT__
@@ -809,7 +809,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Allocate(floc(elemType%numDof))
@@ -830,7 +830,7 @@ Contains
          DeAllocate(xloc)
          DeAllocate(floc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityWorkSetVertex
 
 #undef __FUNCT__
@@ -858,7 +858,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Allocate(x0loc(elemType%numDof))
@@ -877,7 +877,7 @@ Contains
          DeAllocate(xloc)
          DeAllocate(x0loc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityCohesiveEnergySet
 
 #undef __FUNCT__
@@ -905,7 +905,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemType%numDof))
          Do cell = 1,size(cellID)   
@@ -923,7 +923,7 @@ Contains
       
          DeAllocate(xloc)
       End If
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticitypressureWorkSetCell
 
 #undef __FUNCT__
@@ -956,7 +956,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemTemperatureType%numDof))
@@ -1004,7 +1004,7 @@ Contains
          DeAllocate(xloc)
          DeAllocate(temperatureloc)
       End If   
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityEnergySet
    
 #undef __FUNCT__
@@ -1037,7 +1037,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
       
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemScalType%numDof))
@@ -1113,7 +1113,7 @@ Contains
          DeAllocate(damageloc)
          DeAllocate(stressPtr)
       End If   
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine ElasticityStressSet
 
 
@@ -1153,7 +1153,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
       
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
          Allocate(xloc(elemDisplacementType%numDof))
          Allocate(temperatureloc(elemTemperatureType%numDof))
@@ -1200,7 +1200,7 @@ Contains
          DeAllocate(temperatureloc)
          DeAllocate(InelasticStrainPtr)
       End If   
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine InelasticStrainSet
 
 #undef __FUNCT__
@@ -1239,7 +1239,7 @@ Contains
       PetscInt                                           :: cell
       PetscInt                                           :: iDoF1,iGauss
      
-      Call ISGetIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISGetIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
       If (Size(cellID) > 0) Then
 
          Allocate(xloc(elemDisplacementType%numDof))
@@ -1285,7 +1285,7 @@ Contains
          DeAllocate(xloc)
          DeAllocate(damageloc)
       End If   
-      Call ISRestoreIndicesF90(cellIS,cellID,ierr);CHKERRQ(ierr)
+      Call ISRestoreIndices(cellIS,cellID,ierr);CHKERRQ(ierr)
    End Subroutine PlasticityEnergySet
 
 

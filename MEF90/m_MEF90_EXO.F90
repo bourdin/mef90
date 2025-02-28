@@ -33,7 +33,7 @@ Contains
    Subroutine MEF90CtxOpenEXO(MEF90Ctx,Viewer,mode,ierr)
       Type(MEF90Ctx_Type),Intent(IN)                  :: MEF90Ctx
       Type(tPetscViewer), Intent(INOUT)               :: Viewer
-      PetscEnum,Intent(IN)                            :: mode
+      Type(ePetscFileMode),Intent(IN)                 :: mode
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
       Integer                                         :: opts
@@ -417,17 +417,17 @@ End Subroutine MEF90EXOFormat
          !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
          csLocalSize = max(0, min(xe/bs, csxs+csSize(set)) - max(xs/bs, csxs))
          If (bs == 1) Then
-            PetscCall(VecGetArrayF90(v,varray,ierr))
+            PetscCall(VecGetArray(v,varray,ierr))
             Call exgnev(exoid,step,offset,csID(set),csSize(set),max(xs-csxs,0)+1,csLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayF90(v,varray,ierr))
+            PetscCall(VecRestoreArray(v,varray,ierr))
          Else
             Do c = 0,bs-1
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-               PetscCall(VecGetArrayF90(vComp,varray,ierr))
+               PetscCall(VecGetArray(vComp,varray,ierr))
                Call exgnev(exoid,step,offset+c,csID(set),0_Ki,max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
                ! the 5th argument of exgnev is unused
-               PetscCall(VecRestoreArrayF90(vComp,varray,ierr))
+               PetscCall(VecRestoreArray(vComp,varray,ierr))
                PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
             End Do
@@ -529,17 +529,17 @@ Subroutine MEF90EXOVecLoadSide_Private(v,exoid,step,offset,ierr)
       !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
       ssLocalSize = max(0, min(xe/bs, ssxs+ssSize(set)) - max(xs/bs, ssxs))
       If (bs == 1) Then
-         PetscCall(VecGetArrayF90(v,varray,ierr))
+         PetscCall(VecGetArray(v,varray,ierr))
          PetscCall(exgssv(exoid,step,offset,ssID(set),ssLocalSize,varray,ierr))
-         PetscCall(VecRestoreArrayF90(v,varray,ierr))
+         PetscCall(VecRestoreArray(v,varray,ierr))
       Else
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,ssLocalSize,xs+sscs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-            PetscCall(VecGetArrayF90(vComp,varray,ierr))
+            PetscCall(VecGetArray(vComp,varray,ierr))
             Call exgpv(exoid,step,EX_SIDE_SET,offset+c,ssID(set),max(xs/bs-ssxs,0)+1,ssLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayF90(vComp,varray,ierr))
+            PetscCall(VecRestoreArray(vComp,varray,ierr))
             PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
             PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do

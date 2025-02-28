@@ -52,7 +52,7 @@ Contains
 
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-      PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
          !!! This is really misleading: elemType doesn't know the number of component since we now use the 
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
@@ -62,8 +62,8 @@ Contains
          Allocate(Uloc(numDof),source = 0.0_Kr)
          Allocate(Vloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
 
             Do iGauss = 1,size(elem(point)%Gauss_C)
                UGauss = 0.0_Kr
@@ -74,14 +74,14 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (UGauss * VGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
          End Do ! point
          ! Flop computation is different for scalar and Vec
          DeAllocate(Vloc,stat=ierr)
          DeAllocate(Uloc,stat=ierr)
       End If 
-      PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
    End Subroutine MEF90L2DotProductSet   
 
@@ -119,7 +119,7 @@ Contains
 
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-      PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
          !!! This is really misleading: elemType doesn't know the number of component since we now use the 
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
@@ -128,8 +128,8 @@ Contains
          numGauss = size(elem(1)%Gauss_C)
          Allocate(Uloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
             Do iGauss = 1,size(elem(point)%Gauss_C)
                GradUGauss = 0.0_Kr
                GradVGauss = 0.0_Kr
@@ -139,13 +139,13 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (GradUGauss .DotP. GradVGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
          End Do ! point
          ! Flop computation is different for scalar and Vec
          DeAllocate(Uloc,stat=ierr)
       End If 
-      PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
    End Subroutine MEF90H1DotProductSet   
    
@@ -180,7 +180,7 @@ Contains
 
       PetscCall(VecGetDM(U,dm,ierr))
       PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-      PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
       If (size(setPointID) > 0) Then
          !!! This is really misleading: elemType doesn't know the number of component since we now use the 
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
@@ -189,8 +189,8 @@ Contains
          numGauss = size(elem(1)%Gauss_C)
          Allocate(Uloc(numDof),source = 0.0_Kr)
          Do point = 1,size(setPointID)
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
             Do iGauss = 1,size(elem(point)%Gauss_C)
                GradSUGauss = 0.0_Kr
                GradSVGauss = 0.0_Kr
@@ -200,13 +200,13 @@ Contains
                End Do ! iDoF1
                myDotProductSet = myDotProductSet + (GradSUGauss .DotP. GradSVGauss) * elem(point)%Gauss_C(iGauss)
             End Do ! iGauss
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),Vloc,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,V,setPointID(point),PETSC_NULL_INTEGER,Vloc,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
          End Do ! point
          ! Flop computation is different for scalar and Vec
          DeAllocate(Uloc,stat=ierr)
       End If 
-      PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+      PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
       PetscCall(ISDestroy(setPointIS,ierr))
    End Subroutine MEF90H1SymDotProductSet   
 #endif
@@ -244,7 +244,7 @@ Contains
    
          PetscCall(VecGetDM(U,dm,ierr))
          PetscCall(DMGetStratumIS(dm,MEF90SetLabelName(setType),setID,setPointIS,ierr))
-         PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+         PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
          If (size(setPointID) > 0) Then
             !!! This is really misleading: elemType doesn't know the number of component since we now use the 
             !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
@@ -253,7 +253,7 @@ Contains
             numGauss = size(elem(1)%Gauss_C)
             Allocate(Uloc(numDof),source = 0.0_Kr)
             Do point = 1,size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+               PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
                Do iGauss = 1,size(elem(point)%Gauss_C)
                   UGauss = 0.0_Kr
                   Do iDoF1 = 1,numDof
@@ -261,12 +261,11 @@ Contains
                   End Do ! iDoF1
                   myNormSet = myNormSet + (UGauss*UGauss) * elem(point)%Gauss_C(iGauss)
                End Do ! iGauss
-               PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),Uloc,ierr))
+               PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,U,setPointID(point),PETSC_NULL_INTEGER,Uloc,ierr))
             End Do ! point
-            ! Flop computation is different for scalar and Vec
             DeAllocate(Uloc,stat=ierr)
          End If 
-         PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+         PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
          PetscCall(ISDestroy(setPointIS,ierr))
       End Subroutine MEF90L2NormSet   
 End Module MEF90_APPEND(m_MEF90_NormsImplementation_,MEF90_ELEMENTTYPE)

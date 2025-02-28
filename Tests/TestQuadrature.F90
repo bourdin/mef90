@@ -114,7 +114,7 @@ Contains
       PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
       PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
       PetscCallA(DMGetDimension(dm,dim,ierr))
-      PetscCallA(VecGetArrayF90(v,vArray,ierr))
+      PetscCallA(VecGetArray(v,vArray,ierr))
 
       Do p = pStart,pEnd-1
          PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
@@ -132,7 +132,7 @@ Contains
             End Do
          End If
       End Do
-      PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+      PetscCallA(VecRestoreArray(v,vArray,ierr))
       !!! Of course, this does not use informations from the section, so it does over-write constrained values
    End Subroutine project
 
@@ -164,12 +164,12 @@ Contains
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
       If (setIS /= PETSC_NULL_IS) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dm,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (setPointIS /= PETSC_NULL_IS) Then
 
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dm,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                PetscCall(MEF90ElementCreate(dm,setPointIS,elem,QuadratureOrder,elementType,ierr))
@@ -191,11 +191,11 @@ Contains
                End Do ! cell
 
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
             End If ! pointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
    End Subroutine Integrate3D_Scal
@@ -228,12 +228,12 @@ Contains
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr))
       If (setIS /= PETSC_NULL_IS) Then
-         PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+         PetscCall(ISGetIndices(setIS,setID,ierr))
          Do set = 1,size(setID)
             PetscCall(DMGetStratumIS(dm,MEF90CellSetLabelName,setID(set),setPointIS,ierr))
             If (setPointIS /= PETSC_NULL_IS) Then
 
-               PetscCall(ISGetIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
                PetscCall(DMPlexGetCellType(dm,setPointID(1),cellType,ierr))
                PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellType,elementType,ierr))
                PetscCall(MEF90ElementCreate(dm,setPointIS,elem,QuadratureOrder,elementType,ierr))
@@ -253,11 +253,11 @@ Contains
                End Do ! cell
 
                PetscCall(MEF90ElementDestroy(elem,ierr))
-               PetscCall(ISRestoreIndicesF90(setPointIS,setPointID,ierr))
+               PetscCall(ISRestoreIndices(setPointIS,setPointID,ierr))
             End If ! pointIS
             PetscCall(ISDestroy(setPointIS,ierr))
          End Do ! set
-         PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+         PetscCall(ISRestoreIndices(setIS,setID,ierr))
       End If ! setIS
       PetscCall(ISDestroy(setIS,ierr))
    End Subroutine Integrate2D_Scal

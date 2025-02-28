@@ -35,7 +35,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -57,8 +57,8 @@ Implicit NONE
 
         PetscCallA(VecGetDM(V,dmV,ierr))
         PetscCallA(DMGetLocalSection(dmV,sectionV,ierr))
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
-        PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-mef90vec_view",ierr))
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,"-mef90section_view",ierr))
+        PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-mef90vec_view",ierr))
     end block ViewSec
 
     PetscCallA(VecDestroy(v,ierr))

@@ -896,13 +896,13 @@ Contains
       PetscCall(VecSet(UB,1.0_Kr,ierr))
       PetscCall(VecCopy(alpha,LB,ierr))
       If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
-         PetscCall(VecGetArrayF90(LB,LBPtr,ierr))
+         PetscCall(VecGetArray(LB,LBPtr,ierr))
          Do i = 1, size(LBPtr)
             If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
                LBPtr(i) = 0.0_Kr
             End If
          End Do
-         PetscCall(VecRestoreArrayF90(LB,LBPtr,ierr))
+         PetscCall(VecRestoreArray(LB,LBPtr,ierr))
       End If
       PetscCall(SNESVISetVariableBounds(snesDamage,LB,UB,ierr))
       PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
@@ -939,13 +939,13 @@ Contains
       PetscCall(VecSet(UB,1.0_Kr,ierr))
       PetscCall(VecCopy(alpha,LB,ierr))
       If (MEF90DefMechGlobalOptions%irrevthres > 0.0_Kr) Then
-         PetscCall(VecGetArrayF90(LB,LBPtr,ierr))
+         PetscCall(VecGetArray(LB,LBPtr,ierr))
          Do i = 1, size(LBPtr)
             If (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) Then
                LBPtr(i) = 0.0_Kr
             End If
          End Do
-         PetscCall(VecRestoreArrayF90(LB,LBPtr,ierr))
+         PetscCall(VecRestoreArray(LB,LBPtr,ierr))
       End If
       PetscCall(TAOSetVariableBounds(taoDamage,LB,UB,ierr))
       PetscCall(DMRestoreGlobalVector(dm,LB,ierr))
@@ -1000,7 +1000,7 @@ Contains
       PetscCall(DMGetDimension(dm,dim,ierr))
 
       PetscCall(DMGetLocalVector(dm,locV,ierr))
-      PetscCall(VecGetArrayF90(locV,vArray,ierr))
+      PetscCall(VecGetArray(locV,vArray,ierr))
 
       Do p = pStart,pEnd-1
          PetscCall(PetscSectionGetDof(s,p,numDof,ierr))
@@ -1019,7 +1019,7 @@ Contains
             End Do
          End If
       End Do
-      PetscCall(VecRestoreArrayF90(locV,vArray,ierr))
+      PetscCall(VecRestoreArray(locV,vArray,ierr))
       PetscCall(DMLocalToGlobalBegin(dm,locV,INSERT_VALUES,v,ierr))
       PetscCall(DMLocalToGlobalEnd(dm,locV,INSERT_VALUES,v,ierr))
       PetscCall(DMRestoreLocalVector(dm,locV,ierr))

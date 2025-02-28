@@ -8,6 +8,7 @@
 _minted*
 mef90version.h
 .vscode
+.venv
 
 Tests/TestConstraints
 Tests/TestSection
@@ -25,4 +26,4 @@ Tests/TestConstraintIO
 Tests/TestDofOrdering
 Tests/TestDotProduct
 Tests/TestSNLP
-
+arch-*

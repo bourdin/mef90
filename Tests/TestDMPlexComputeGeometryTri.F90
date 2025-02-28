@@ -58,12 +58,12 @@ Program  TestDMPlexComputeGeometry
    allocate(B(dim**2))
    allocate(Binv(dim**2))
    PetscCall(DMGetLabelIdIS(dm, "Cell Sets", CSIS, ierr))
-   PetscCall(ISGetIndicesF90(CSIS,setID,ierr))
+   PetscCall(ISGetIndices(CSIS,setID,ierr))
    do set = 1, size(setID)
       write(IOBuffer,*) 'Cell Set', setID(set),'\n'
       PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
       PetscCall(DMGetStratumIS(dm, "Cell Sets", setID(set), cellIS, ierr))
-      PetscCall(ISGetIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISGetIndices(cellIS,cellID,ierr))
       do cell = 1, size(cellID)
          PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr))
          write(*,*) 'cell ',cellID(cell)
@@ -77,10 +77,10 @@ Program  TestDMPlexComputeGeometry
          !write(*,*) '   normal   ', normal
       end do
       PetscCall(PetscPrintf(PETSC_COMM_SELF,"\n",ierr))
-      PetscCall(ISRestoreIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISRestoreIndices(cellIS,cellID,ierr))
       PetscCall(ISDestroy(cellIS,ierr))
    end do
-   PetscCall(ISRestoreIndicesF90(CSIS,setID,ierr))
+   PetscCall(ISRestoreIndices(CSIS,setID,ierr))
    PetscCall(ISDestroy(CSIS,ierr))
    deAllocate(Binv)
    deAllocate(B)
@@ -90,12 +90,12 @@ Program  TestDMPlexComputeGeometry
    allocate(normal(dim))
    PetscCall(DMGetLabelIdIS(dm, "Face Sets", fsIS, ierr))
 
-   PetscCall(ISGetIndicesF90(FSIS,setID,ierr))
+   PetscCall(ISGetIndices(FSIS,setID,ierr))
    do set = 1, size(setID)
       write(IOBuffer,*) 'Face Set', setID(set),'\n'
       PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
       PetscCall(DMGetStratumIS(dm, "Face Sets", setID(set), cellIS, ierr))
-      PetscCall(ISGetIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISGetIndices(cellIS,cellID,ierr))
       do cell = 1, size(cellID)
          !PetscCall(DMPlexComputeCellGeometryAffineFEM(dm,cellID(cell),v0,B,Binv,detB,ierr))
          !write(*,*) 'cell ',cellID(cell)
@@ -108,10 +108,10 @@ Program  TestDMPlexComputeGeometry
          write(*,*) '   centroid    ', centroid
          write(*,*) '   normal      ', normal
       end do
-      PetscCall(ISRestoreIndicesF90(cellIS,cellID,ierr))
+      PetscCall(ISRestoreIndices(cellIS,cellID,ierr))
       PetscCall(ISDestroy(cellIS,ierr))
    end do
-   PetscCall(ISRestoreIndicesF90(FSIS,setID,ierr))
+   PetscCall(ISRestoreIndices(FSIS,setID,ierr))
    PetscCall(ISDestroy(FSIS,ierr))
 
    Call MEF90CtxDestroy(MEF90Ctx,ierr)   

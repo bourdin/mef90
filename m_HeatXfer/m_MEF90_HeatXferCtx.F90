@@ -577,7 +577,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Cell set ',I4)") setID(set)
          Write(setprefix,"('cs',I4.4,'_')") setID(set)
@@ -589,7 +589,7 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!!
@@ -597,7 +597,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Face set ',I4)") setID(set)
          Write(setprefix,"('fs',I4.4,'_')") setID(set)
@@ -609,7 +609,7 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
       
       !!!
@@ -617,7 +617,7 @@ Contains
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM,MEF90VertexSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,setIS,ierr)) 
-      PetscCall(ISGetIndicesF90(setIS,setID,ierr))
+      PetscCall(ISGetIndices(setIS,setID,ierr))
       Do set = 1, size(setID)
          Write(setName,"('Vertex set ',I4)") setID(set)
          Write(setprefix,"('vs',I4.4,'_')") setID(set)
@@ -629,7 +629,7 @@ Contains
             PetscCall(PetscPrintf(heatXferCtx%MEF90Ctx%comm,"\n",ierr))
          End if
       End Do
-      PetscCall(ISRestoreIndicesF90(setIS,setID,ierr))
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
    End Subroutine MEF90HeatXferCtxSetFromOptions
 End Module m_MEF90_HeatXferCtx

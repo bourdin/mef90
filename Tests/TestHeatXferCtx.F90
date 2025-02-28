@@ -94,12 +94,12 @@ Program  TestHeatXferCtx
    PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM,MEF90CellSetLabelName,cellSetIS,ierr))
    PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,cellSetIS,ierr))
    PetscCallA(IsGetSize(cellSetIS,numCellSet,ierr))
-   PetscCallA(ISGetIndicesF90(cellSetIS,cellSetID,ierr))
+   PetscCallA(ISGetIndices(cellSetIS,cellSetID,ierr))
 
    PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM,MEF90FaceSetLabelName,faceSetIS,ierr))
    PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD,faceSetIS,ierr))
    PetscCallA(IsGetSize(faceSetIS,numFaceSet,ierr))
-   PetscCallA(ISGetIndicesF90(faceSetIS,faceSetID,ierr))
+   PetscCallA(ISGetIndices(faceSetIS,faceSetID,ierr))
 
    Allocate(energy(numCellSet))
    Allocate(bodyWork(numCellSet))
@@ -123,9 +123,9 @@ Program  TestHeatXferCtx
    DeAllocate(energy)
    DeAllocate(bodyWork)
    DeAllocate(surfaceWork)
-   PetscCallA(ISGetIndicesF90(faceSetIS,faceSetID,ierr))
+   PetscCallA(ISGetIndices(faceSetIS,faceSetID,ierr))
    PetscCallA(ISDestroy(faceSetIS,ierr))
-   PetscCallA(ISGetIndicesF90(cellSetIS,cellSetID,ierr))
+   PetscCallA(ISGetIndices(cellSetIS,cellSetID,ierr))
    PetscCallA(ISDestroy(cellSetIS,ierr))
 
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))

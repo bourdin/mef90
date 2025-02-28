@@ -27,7 +27,7 @@ contains
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
         PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArrayF90(v,vArray,ierr))
+        PetscCallA(VecGetArray(v,vArray,ierr))
 
         Do p = pStart,pEnd-1
             PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
@@ -45,7 +45,7 @@ contains
                 End Do
             End If
         End Do
-        PetscCallA(VecRestoreArrayF90(v,vArray,ierr))
+        PetscCallA(VecRestoreArray(v,vArray,ierr))
         !!! Of course, this does not use informations from the section, so it does over-write constrained values
     End subroutine project
 
