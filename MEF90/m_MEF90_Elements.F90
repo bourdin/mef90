@@ -251,8 +251,8 @@ Contains
       elemType = MEF90_NULL_ELEMENT
       Select Case(elemFamily)
       Case(MEF90ElementFamilyLagrange)
-         Select Case(cellType%v)
-         Case(DM_POLYTOPE_TRIANGLE%v)
+         Select PetscEnumCase(cellType)
+         PetscEnumCase(DM_POLYTOPE_TRIANGLE)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange2D
@@ -264,7 +264,7 @@ Contains
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case(DM_POLYTOPE_TETRAHEDRON%v)
+         PetscEnumCase(DM_POLYTOPE_TETRAHEDRON)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange3D
@@ -276,7 +276,7 @@ Contains
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case(DM_POLYTOPE_QUADRILATERAL%v)
+         PetscEnumCase(DM_POLYTOPE_QUADRILATERAL)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange2D
@@ -288,7 +288,7 @@ Contains
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case(DM_POLYTOPE_HEXAHEDRON%v)
+         PetscEnumCase(DM_POLYTOPE_HEXAHEDRON)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange3D
@@ -329,8 +329,8 @@ Contains
       elemType = MEF90_NULL_ELEMENT
       Select Case(elemFamily)
       Case(MEF90ElementFamilyLagrange)
-         Select Case(cellType%v)
-         Case(DM_POLYTOPE_SEGMENT%v)
+         Select PetscEnumCase(cellType)
+         PetscEnumCase(DM_POLYTOPE_SEGMENT)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange2DBoundary
@@ -342,7 +342,7 @@ Contains
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case(DM_POLYTOPE_TRIANGLE%v)
+         PetscEnumCase(DM_POLYTOPE_TRIANGLE)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange3DBoundary
@@ -354,7 +354,7 @@ Contains
             !    Write(*,*) __FUNCT__,': Unimplemented order',order
             !    ierr = PETSC_ERR_SUP
             End Select ! order
-         Case(DM_POLYTOPE_QUADRILATERAL%v)
+         PetscEnumCase(DM_POLYTOPE_QUADRILATERAL)
             Select Case(order)
             Case(0)
                elemType = MEF90P0Lagrange3DBoundary

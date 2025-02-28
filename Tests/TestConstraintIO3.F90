@@ -177,8 +177,8 @@ Implicit NONE
     Open(file=filename,unit=99)
     Write(*,*) 'Opening ', filename
 
-    PetscCallA(VecGetArrayReadF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
-    PetscCallA(VecGetArrayReadF90(locVecV,locVecVArray,ierr))
+    PetscCallA(VecGetArrayRead(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    PetscCallA(VecGetArrayRead(locVecV,locVecVArray,ierr))
 
     write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
     Do i = 1, size(locVecVArray)
@@ -186,15 +186,15 @@ Implicit NONE
             write(99,*) i, DisplacementArray(i), locVecVArray(i)
         end if
     End Do
-    PetscCallA(VecRestoreArrayReadF90(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
-    PetscCallA(VecRestoreArrayReadF90(locVecV,locVecVArray,ierr))
+    PetscCallA(VecRestoreArrayRead(MEF90DefMechCtx%displacementLocal,DisplacementArray,ierr))
+    PetscCallA(VecRestoreArrayRead(locVecV,locVecVArray,ierr))
 
     PetscCallA(VecSet(U,-1.0_Kr,ierr))
     PetscCallA(VecSet(V,1.0_Kr,ierr))
     PetscCallA(DMLocalToGlobal(dmU,MEF90DefMechCtx%displacementLocal,INSERT_VALUES,U,ierr))
     PetscCallA(DMLocalToGlobal(dmU,locVecV,INSERT_VALUES,V,ierr))
-    PetscCallA(VecGetArrayReadF90(U,DisplacementArray,ierr))
-    PetscCallA(VecGetArrayReadF90(V,locVecVArray,ierr))
+    PetscCallA(VecGetArrayRead(U,DisplacementArray,ierr))
+    PetscCallA(VecGetArrayRead(V,locVecVArray,ierr))
 
     write(99,*) 'Max diff', maxval(DisplacementArray - locVecVArray), maxloc(DisplacementArray - locVecVArray)
     Do i = 1, size(locVecVArray)
@@ -202,8 +202,8 @@ Implicit NONE
             write(99,*) i, DisplacementArray(i), locVecVArray(i)
         end if
     End Do
-    PetscCallA(VecRestoreArrayReadF90(U,DisplacementArray,ierr))
-    PetscCallA(VecRestoreArrayReadF90(V,locVecVArray,ierr))
+    PetscCallA(VecRestoreArrayRead(U,DisplacementArray,ierr))
+    PetscCallA(VecRestoreArrayRead(V,locVecVArray,ierr))
     Close(99)
 
     ! Cleanup Vec

@@ -121,7 +121,7 @@ contains
                 Do i = 1,numDof
                     vArray(i) = f(xyz(1),xyz(2)) * 10**i
                 End Do
-                PetscCallA(VecSetValuesSectionF90(v,s,p,vArray,INSERT_ALL_VALUES,ierr))
+                PetscCallA(VecSetValuesSection(v,s,p,vArray,INSERT_ALL_VALUES,ierr))
                 !!! As before, this call silently drops the constrained values
                 DeAllocate(vArray)
             End If

@@ -266,17 +266,17 @@ End Subroutine MEF90EXOFormat
       PetscCall(VecGetBlockSize(v,bs,ierr))
 
       If (bs == 1) Then
-         PetscCall(VecGetArrayReadF90(v,varray,ierr))
+         PetscCall(VecGetArrayRead(v,varray,ierr))
          Call expnvs(exoid,step,offset,xs+1,xe-xs,varray,ierr)
-         PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+         PetscCall(VecRestoreArrayRead(v,varray,ierr))
       Else 
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecGetArrayRead(vComp,varray,ierr))
             Call expnvs(exoid,step,offset+c,xs/bs+1,(xe-xs)/bs,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecRestoreArrayRead(vComp,varray,ierr))
             PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do ! c
          PetscCall(ISDestroy(compIS,ierr))
@@ -301,17 +301,17 @@ End Subroutine MEF90EXOFormat
       PetscCall(VecGetOwnershipRange(v,xs,xe,ierr))
       PetscCall(VecGetBlockSize(v,bs,ierr))
       If (bs == 1) Then
-         PetscCall(VecGetArrayReadF90(v,varray,ierr))
+         PetscCall(VecGetArrayRead(v,varray,ierr))
          Call exgnnv(exoid,step,offset,xs+1,xe-xs,varray,ierr)
-         PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+         PetscCall(VecRestoreArrayRead(v,varray,ierr))
       Else 
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,(xe-xs)/bs,xs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecGetArrayRead(vComp,varray,ierr))
             Call exgnnv(exoid,step,offset+c,xs/bs+1,(xe-xs)/bs,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecRestoreArrayRead(vComp,varray,ierr))
             PetscCall(VecISCopy(v,compIS,SCATTER_FORWARD,vComp,ierr))
             PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do
@@ -357,16 +357,16 @@ End Subroutine MEF90EXOFormat
          !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
          csLocalSize = max(0, min(xe/bs, csxs+csSize(set)) - max(xs/bs, csxs))
          If (bs == 1) Then
-            PetscCall(VecGetArrayReadF90(v,varray,ierr))
+            PetscCall(VecGetArrayRead(v,varray,ierr))
             Call expevs(exoid,step,offset,csID(set),max(xs-csxs,0)+1,csLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+            PetscCall(VecRestoreArrayRead(v,varray,ierr))
          Else
             Do c = 0,bs-1
                PetscCall(ISStrideSetStride(compIS,(xe-xs)/bs,xs+c,bs,ierr))
                PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-               PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
+               PetscCall(VecGetArrayRead(vComp,varray,ierr))
                Call expevs(exoid,step,offset+c,csID(set),max(xs/bs-csxs,0)+1,csLocalSize,varray(max(0,csxs-xs/bs)+1:max(0,csxs-xs/bs)+csLocalSize),ierr)
-               PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+               PetscCall(VecRestoreArrayRead(vComp,varray,ierr))
                PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
             End Do
          End If
@@ -474,17 +474,17 @@ Subroutine MEF90EXOVecViewSide_Private(v,exoid,step,offset,ierr)
       !  intersection:                        max(xs/bs,csxs),min(xm/bs-1,csxs + csSize[set]-1)
       ssLocalSize = max(0, min(xe/bs, ssxs+ssSize(set)) - max(xs/bs, ssxs))
       If (bs == 1) Then
-         PetscCall(VecGetArrayReadF90(v,varray,ierr))
+         PetscCall(VecGetArrayRead(v,varray,ierr))
          Call expssv(exoid,step,offset,ssID(set),ssLocalSize,varray,ierr)
-         PetscCall(VecRestoreArrayReadF90(v,varray,ierr))
+         PetscCall(VecRestoreArrayRead(v,varray,ierr))
       Else
          PetscCall(ISCreateStride(PETSC_COMM_WORLD,ssLocalSize,xs+sscs,bs,compIS,ierr))
          Do c = 0,bs-1
             PetscCall(ISStrideSetStride(compIS,ssLocalSize,xs+sscs+c,bs,ierr))
             PetscCall(VecGetSubVector(v,compIS,vComp,ierr))
-            PetscCall(VecGetArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecGetArrayRead(vComp,varray,ierr))
             Call exppv(exoid,step,EX_SIDE_SET,offset+c,ssID(set),max(xs/bs-ssxs,0)+1,ssLocalSize,varray,ierr)
-            PetscCall(VecRestoreArrayReadF90(vComp,varray,ierr))
+            PetscCall(VecRestoreArrayRead(vComp,varray,ierr))
             PetscCall(VecRestoreSubVector(v,compIS,vComp,ierr))
          End Do
          PetscCall(ISDestroy(compIS,ierr))
