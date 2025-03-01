@@ -31,8 +31,8 @@ Program vDef
 
    Type(tSNES)                                        :: displacementSNES,damageSNES
    Type(tTao)                                         :: damageTAO
-   SNESConvergedReason                                :: displacementSNESConvergedReason,damageSNESConvergedReason
-   TaoConvergedReason                                 :: damageTAOConvergedReason
+   Type(eSNESConvergedReason)                         :: displacementSNESConvergedReason,damageSNESConvergedReason
+   Type(eTaoConvergedReason)                          :: damageTAOConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual,damage,damageResidual
    Type(tVec)                                         :: damageAltMinOld
    Type(tVec)                                         :: damageLB,damageUB
@@ -41,7 +41,7 @@ Program vDef
    PetscReal                                          :: SOROmega,mySOROmega
 
    Type(tSNES)                                        :: temperatureSNES
-   SNESConvergedReason                                :: temperatureSNESConvergedReason
+   Type(eSNESConvergedReason)                         :: temperatureSNESConvergedReason
    Type(tTS)                                          :: temperatureTS
    Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
@@ -79,7 +79,7 @@ Program vDef
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90_dm_view",ierr))
 
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
@@ -269,7 +269,7 @@ Program vDef
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
             PetscCallA(SNESGetConvergedReason(temperatureSNES,temperatureSNESConvergedReason,ierr))
-            If (temperatureSNESConvergedReason < 0) Then  
+            If (temperatureSNESConvergedReason < SNES_CONVERGED_ITERATING) Then  
                Write(IOBuffer,400) "temperature",temperatureSNESConvergedReason
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End If
@@ -361,7 +361,7 @@ Program vDef
                   PetscCallA(PetscLogStagePush(logStageDisplacement,ierr))
                   PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
                   PetscCallA(SNESGetConvergedReason(displacementSNES,displacementSNESConvergedReason,ierr))
-                  If (displacementSNESConvergedReason < 0) Then  
+                  If (displacementSNESConvergedReason < SNES_CONVERGED_ITERATING) Then  
                      Write(IOBuffer,400) "displacement",displacementSNESConvergedReason
                      PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
                   End If
@@ -380,14 +380,14 @@ Program vDef
                   Case(MEF90DefMech_DamageSolverTypeSNES)
                      PetscCallA(SNESSolve(damageSNES,PETSC_NULL_VEC,damage,ierr))
                      PetscCallA(SNESGetConvergedReason(damageSNES,damageSNESConvergedReason,ierr))
-                     If (damageSNESConvergedReason < 0) Then  
+                     If (damageSNESConvergedReason < SNES_CONVERGED_ITERATING) Then  
                         Write(IOBuffer,400) "damage",damageSNESConvergedReason
                         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
                      End If
                   Case(MEF90DefMech_DamageSolverTypeTao)
                      PetscCallA(TAOSolve(damageTAO,ierr))
                      PetscCallA(TAOGetConvergedReason(damageTAO,damageTAOConvergedReason,ierr))
-                     If (damageTAOConvergedReason < 0) Then  
+                     If (damageTAOConvergedReason < TAO_CONTINUE_ITERATING) Then  
                         Write(IOBuffer,401) "damage",damageTAOConvergedReason
                         PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
                      End If

@@ -1007,11 +1007,11 @@ Contains
          PetscCall(PetscSectionGetConstraintDof(s,p,cNumDof,ierr))
          If ((numDof > 0) .AND. (cNumDof == 0)) Then
             !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-            PetscCall(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            PetscCall(DMPlexVecGetClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
             Do i = 1,dim
                xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
             End Do
-            PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            PetscCall(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
 
             PetscCall(PetscSectionGetOffset(s,p,pOffset,ierr))
             Do i = 1,numDof

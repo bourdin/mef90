@@ -1,37 +1,37 @@
 Module m_MEF90_HeatXferCtx_Type
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
-   Use,Intrinsic :: iso_c_binding
+   ! Use,Intrinsic :: iso_c_binding
    Implicit none
-   Private  
-   Public :: MEF90HeatXferCtx_Type
-   Public :: MEF90HeatXferGlobalOptions_Type
-   Public :: MEF90HeatXferCellSetOptions_Type
-   Public :: MEF90HeatXferFaceSetOptions_Type
-   Public :: MEF90HeatXferVertexSetOptions_Type
+   ! Private  
+   ! Public :: MEF90HeatXferCtx_Type
+   ! Public :: MEF90HeatXferGlobalOptions_Type
+   ! Public :: MEF90HeatXferCellSetOptions_Type
+   ! Public :: MEF90HeatXferFaceSetOptions_Type
+   ! Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
-      Type(MEF90Ctx_Type),pointer      :: MEF90Ctx
-      Type(tDM)                        :: megaDM
-      PetscInt                         :: dim
+      Type(MEF90Ctx_Type),pointer          :: MEF90Ctx
+      Type(tDM)                            :: megaDM
+      PetscInt                             :: dim
 
-      Type(tVec),pointer               :: temperatureLocal
-      Type(tVec),pointer               :: externalTemperatureLocal
-      Type(tVec),pointer               :: fluxLocal
-      Type(tVec),pointer               :: boundaryFluxLocal
+      Type(tVec),pointer                   :: temperatureLocal
+      Type(tVec),pointer                   :: externalTemperatureLocal
+      Type(tVec),pointer                   :: fluxLocal
+      Type(tVec),pointer                   :: boundaryFluxLocal
 
-      Type(tPetscViewer)               :: viewer
-      Type(tPetscSF)                   :: temperatureToIOSF,IOToTemperatureSF
-      Type(tPetscSF)                   :: boundaryToTemperatureSF
-      Type(tPetscSF)                   :: externalTemperatureToIOSF,IOToexternalTemperatureSF
-      Type(tPetscSF)                   :: fluxToIOSF,IOTofluxSF
-      Type(tPetscSF)                   :: boundaryFluxToIOSF,IOToboundaryFluxSF
+      Type(tPetscViewer)                   :: viewer
+      Type(tPetscSF)                       :: temperatureToIOSF,IOToTemperatureSF
+      Type(tPetscSF)                       :: boundaryToTemperatureSF
+      Type(tPetscSF)                       :: externalTemperatureToIOSF,IOToexternalTemperatureSF
+      Type(tPetscSF)                       :: fluxToIOSF,IOTofluxSF
+      Type(tPetscSF)                       :: boundaryFluxToIOSF,IOToboundaryFluxSF
 
-      PetscBag                         :: GlobalOptionsBag
-      PetscBag,Dimension(:),Pointer    :: CellSetOptionsBag
-      PetscBag,Dimension(:),Pointer    :: FaceSetOptionsBag
-      PetscBag,Dimension(:),Pointer    :: VertexSetOptionsBag
-      PetscBag,Dimension(:),Pointer    :: MaterialPropertiesBag
+      Type(tPetscBag)                      :: GlobalOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer :: CellSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer :: FaceSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer :: VertexSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer :: MaterialPropertiesBag
    End Type MEF90HeatXferCtx_Type
    
    Type MEF90HeatXferGlobalOptions_Type
@@ -79,7 +79,7 @@ Module m_MEF90HeatXferGlobalOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
-         PetscBag                                           :: bag
+         Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferGlobalOptions_Type),pointer      :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
@@ -93,7 +93,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag,data,ierr)
-      PetscBag                                        :: bag
+      Type(tPetscBag)                                    :: bag
       Type(MEF90HeatXferGlobalOptions_Type),pointer   :: data
       PetscErrorCode                                  :: ierr
       
@@ -113,7 +113,7 @@ Module m_MEF90HeatXferCellSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
-         PetscBag                                           :: bag
+         Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferCellSetOptions_Type),pointer     :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
@@ -127,7 +127,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90HeatXferCtxCellSetOptions(bag,data,ierr)
-      PetscBag                                        :: bag
+      Type(tPetscBag)                                    :: bag
       Type(MEF90HeatXferCellSetOptions_Type),pointer  :: data
       PetscErrorCode                                  :: ierr
       
@@ -147,7 +147,7 @@ Module m_MEF90HeatXferFaceSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
-         PetscBag                                           :: bag
+         Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferFaceSetOptions_Type),pointer     :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
@@ -161,7 +161,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(bag,data,ierr)
-      PetscBag                                        :: bag
+      Type(tPetscBag)                                 :: bag
       Type(MEF90HeatXferFaceSetOptions_Type),pointer  :: data
       PetscErrorCode                                  :: ierr
       
@@ -180,7 +180,7 @@ Module m_MEF90HeatXferVertexSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_HeatXferCtx_Type
-         PetscBag                                           :: bag
+         Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: data
          PetscErrorCode                                     :: ierr
       End subroutine PetscBagGetData
@@ -194,7 +194,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90HeatXferCtxVertexSetOptions(bag,data,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: data
       PetscErrorCode                                     :: ierr
       
@@ -336,7 +336,7 @@ Contains
       PetscCall(VecGetDM(HeatXferCtx%externalTemperatureLocal,dmList(2),ierr))
       PetscCall(VecGetDM(HeatXferCtx%fluxLocal,dmList(3),ierr))
       PetscCall(VecGetDM(HeatXferCtx%boundaryFluxLocal,dmList(4),ierr))
-      PetscCall(DMCreateSuperDM(dmList,4_kI,PETSC_NULL_IS,HeatXferCtx%megaDM,ierr))
+      PetscCall(DMCreateSuperDM(dmList,4_kI,PETSC_NULL_IS_POINTER,HeatXferCtx%megaDM,ierr))
       DeAllocate(dmList)
 
       ! !!! Create the IO SF for all fields
@@ -434,7 +434,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90HeatXferCtxGlobalOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferGlobalOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -469,7 +469,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90HeatXferCtxCellSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferCellSetOptions_Type),Intent(IN)  :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -496,7 +496,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90HeatXferCtxFaceSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90HeatXferFaceSetOptions_Type),Intent(IN)  :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -523,7 +523,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90HeatXferCtxVertexSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                              :: bag
+      Type(tPetscBag)                                       :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90HeatXferVertexSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                          :: ierr
