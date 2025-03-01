@@ -38,11 +38,11 @@ Module m_MEF90_DefMechCtx_Type
       Type(tPetscSF)                          :: plasticStrainToIOSF,IOToPlasticStrainSF
       Type(tPetscSF)                          :: cumulatedPlasticDissToIOSF,IOToCumulatedPlasticDissSF
       
-      PetscBag                                :: GlobalOptionsBag
-      PetscBag,Dimension(:),Pointer           :: CellSetOptionsBag
-      PetscBag,Dimension(:),Pointer           :: FaceSetOptionsBag
-      PetscBag,Dimension(:),Pointer           :: VertexSetOptionsBag
-      PetscBag,Dimension(:),Pointer           :: MaterialPropertiesBag
+      Type(tPetscBag)                         :: GlobalOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer    :: CellSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer    :: FaceSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer    :: VertexSetOptionsBag
+      Type(tPetscBag),Dimension(:),Pointer    :: MaterialPropertiesBag
 
       Type(tPetscViewer)                      :: globalEnergyViewer
       Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer
@@ -142,7 +142,7 @@ Module m_MEF90DefMechGlobalOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
-         PetscBag                                              :: bag
+         Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
          PetscErrorCode                                        :: ierr
       End subroutine PetscBagGetData
@@ -156,7 +156,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,data,ierr)
-      PetscBag                                              :: bag
+      Type(tPetscBag)                                       :: bag
       Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
       PetscErrorCode                                        :: ierr
       
@@ -176,7 +176,7 @@ Module m_MEF90DefMechCellSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
-         PetscBag                                              :: bag
+         Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
          PetscErrorCode                                        :: ierr
       End subroutine PetscBagGetData
@@ -190,7 +190,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,data,ierr)
-      PetscBag                                              :: bag
+      Type(tPetscBag)                                       :: bag
       Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
       PetscErrorCode                                        :: ierr
       
@@ -210,7 +210,7 @@ Module m_MEF90DefMechFaceSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
-         PetscBag                                              :: bag
+         Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechFaceSetOptions_Type),pointer         :: data
          PetscErrorCode                                        :: ierr
       End subroutine PetscBagGetData
@@ -224,7 +224,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxFaceSetOptions(bag,data,ierr)
-      PetscBag                                              :: bag
+      Type(tPetscBag)                                       :: bag
       Type(MEF90DefMechFaceSetOptions_Type),pointer         :: data
       PetscErrorCode                                        :: ierr
       
@@ -244,7 +244,7 @@ Module m_MEF90DefMechVertexSetOptions_Private
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_DefMechCtx_Type
-         PetscBag                                                 :: bag
+         Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
          PetscErrorCode                                           :: ierr
       End subroutine PetscBagGetData
@@ -258,7 +258,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,data,ierr)
-      PetscBag                                                 :: bag
+      Type(tPetscBag)                                       :: bag
       Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
       PetscErrorCode                                           :: ierr
       
@@ -592,7 +592,7 @@ Contains
       PetscCall(VecGetDM(DefMechCtx%boundaryForce,dmList(5),ierr))
       PetscCall(VecGetDM(DefMechCtx%pressureForce,dmList(6),ierr))
       PetscCall(VecGetDM(DefMechCtx%plasticStrain,dmList(7),ierr))
-      PetscCall(DMCreateSuperDM(dmList,7_kI,PETSC_NULL_IS,DefMechCtx%megaDM,ierr))
+      PetscCall(DMCreateSuperDM(dmList,7_kI,PETSC_NULL_IS_POINTER,DefMechCtx%megaDM,ierr))
       DeAllocate(dmList)
 
       !!! Create the IO SF for all fields
@@ -776,7 +776,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
-      PetscBag                                                 :: bag
+      Type(tPetscBag)                                          :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
       PetscErrorCode,Intent(INOUT)                             :: ierr
@@ -837,7 +837,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -886,7 +886,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxFaceSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                           :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechFaceSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -923,7 +923,7 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
-      PetscBag                                              :: bag
+      Type(tPetscBag)                                    :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
       PetscErrorCode,Intent(INOUT)                          :: ierr

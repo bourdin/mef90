@@ -126,7 +126,7 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
-      PetscBag                                        :: bag
+      Type(tPetscBag)                                 :: bag
       Type(MEF90CtxGlobalOptions_Type),pointer        :: data
       PetscErrorCode,Intent(OUT)                      :: ierr
       
@@ -144,7 +144,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag,name,prefix,default,ierr)
-      PetscBag                                        :: bag
+      Type(tPetscBag)                                 :: bag
       Character(len=*),intent(IN)                     :: prefix,name
       Type(MEF90CtxGlobalOptions_Type),intent(IN)     :: default
       PetscErrorCode,intent(OUT)                      :: ierr
