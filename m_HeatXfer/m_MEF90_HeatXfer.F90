@@ -363,7 +363,9 @@ Contains
       PetscCall(TSSetProblemType(tsTemp,TS_LINEAR,ierr))
       PetscCall(VecSet(MEF90HeatXferCtx%temperatureLocal,MEF90HeatXferGlobalOptions%initialTemperature,ierr))
       PetscCall(TSSetSolution(tsTemp,MEF90HeatXferCtx%temperatureLocal,ierr))
-      PetscCall(TSSetInitialTimeStep(tsTemp,initialTime,initialStep,ierr))
+      PetscCall(TsSetTime(tsTemp,initialTime,ierr))
+      PetscCall(TSSetTimeStep(tsTemp,initialStep,ierr))
+      
       PetscCall(TSSetExactFinalTime(tsTemp,TS_EXACTFINALTIME_MATCHSTEP,ierr))
       PetscCall(TSSetFromOptions(tsTemp,ierr))
       !!! 
