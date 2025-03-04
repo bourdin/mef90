@@ -30,7 +30,7 @@ Program  TestMEF90Ctx
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
 
    distribute: Block 
       Type(tDM),target                    :: dmDist
@@ -41,7 +41,7 @@ Program  TestMEF90Ctx
          dm = dmDist
       End If
    End Block distribute
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
    ! PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,dm,ierr))
    ! PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))

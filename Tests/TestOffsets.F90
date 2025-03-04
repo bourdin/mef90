@@ -1,4 +1,4 @@
-Program  TestSection
+Program  TestOffsets
 #include <petsc/finclude/petsc.h>
 Use m_MEF90
 Use petsc
@@ -10,10 +10,10 @@ Implicit NONE
     Type(tDM)                           :: dm,dmU
     PetscBool                           :: interpolate = PETSC_TRUE
     Character(len=MEF90MXSTRLEN)        :: name
-
     PetscInt                            :: dim
+
     Type(tPetscSection)                 :: section
-    Type(tVec)                          :: U,U0,V,V0
+    Type(tVec)                          :: U
 
 
     MEF90GlobalOptions_default%verbose           = 1
@@ -46,50 +46,60 @@ Implicit NONE
         End If
     End Block distribute
     PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
-
     PetscCallA(DMGetDimension(dm,dim,ierr))
+
+
 
     name = "U"
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions_default%elementFamily,MEF90GlobalOptions_default%elementOrder,dim,name,U,ierr))
-    name = "U0"
-    PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions_default%elementFamily,MEF90GlobalOptions_default%elementOrder,dim,name,U0,ierr))
-
-    name = "V"
-    PetscCallA(MEF90CreateCellVector(dm,dim,name,V,ierr))
-    name = "V0"
-    PetscCallA(MEF90CreateBoundaryCellVector(dm,dim,name,V0,ierr))
 
     PetscCallA(VecGetDM(U,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,section,ierr))
     PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OBJECT,"-sectionU_view",ierr))
     PetscCallA(VecViewFromOptions(U,PETSC_NULL_OBJECT,"-U_view",ierr))
 
-    PetscCallA(VecGetDM(U0,dmU,ierr))
-    PetscCallA(DMGetLocalSection(dmU,section,ierr))
-    PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OBJECT,"-sectionU0_view",ierr))
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OBJECT,"-U0_view",ierr))
-    ! dmU and section were obtained by a "Get" without a matching "Restore" so they do not need to be destroyed
-
-    PetscCallA(VecGetDM(V,dmU,ierr))
-    PetscCallA(DMGetLocalSection(dmU,section,ierr))
-    PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OBJECT,"-sectionV_view",ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-V_view",ierr))
-
-    PetscCallA(VecGetDM(V0,dmU,ierr))
-    PetscCallA(DMGetLocalSection(dmU,section,ierr))
-    PetscCallA(PetscSectionViewFromOptions(section,PETSC_NULL_OBJECT,"-sectionV0_view",ierr))
-    PetscCallA(VecViewFromOptions(V0,PETSC_NULL_OBJECT,"-V0_view",ierr))
-
     PetscCallA(VecDestroy(U,ierr))
-    PetscCallA(VecDestroy(U0,ierr))
-    PetscCallA(VecDestroy(V,ierr))
-    PetscCallA(VecDestroy(V0,ierr))
+
+    testRemote: block
+        Type(tPetscSection)                     :: locsection, gsection
+        Type(tPetscSF)                          :: overlapSF, idSF, sf
+        PetscInt                                :: pStart,pEnd,n,p
+        Type(sPetscSFNode),dimension(:),Pointer :: remote
+        PetscInt,dimension(:),Pointer           :: remoteOffsets
+
+
+        PetscCallA(DMGetLocalSection(dm,locSection,ierr))
+        PetscCall(DMGetPointSF(dm,overlapSF,ierr))
+        PetscCallA(PetscSectionCreateGlobalSection(locSection,overlapSF,PETSC_TRUE,PETSC_TRUE,PETSC_TRUE,gSection,ierr))
+
+        PetscCall(PetscSectionGetChart(locSection,pStart,pEnd,ierr))
+        n = pEnd-pStart
+        Allocate(remote(n))
+        Do p = 1,n
+            remote(p)%rank  = MEF90Ctx%rank
+            remote(p)%index = p-1
+        End Do
+
+        PetscCall(PetscSFCreate(MEF90Ctx%Comm,idSF,ierr))
+        PetscCall(PetscSFSetFromOptions(idSF,ierr))
+        PetscCall(PetscSFSetGraph(idSF,n,n,PETSC_NULL_INTEGER_ARRAY,PETSC_COPY_VALUES,remote,PETSC_COPY_VALUES,ierr))
+        PetscCall(PetscSFSetUp(idSF,ierr))
+        PetscCall(PetscSFCreateRemoteOffsets(idSF,locSection,gSection,remoteOffsets,ierr))
+        PetscCallA(PetscSectionViewFromOptions(locsection,PETSC_NULL_OBJECT,"-locsection_view",ierr))
+        PetscCallA(PetscSectionViewFromOptions(gsection,PETSC_NULL_OBJECT,"-gsection_view",ierr))
+        if (associated(remoteOffsets)) then
+            PetscCall(PetscSFCreateSectionSF(idSF,locSection,remoteOffsets,gSection,sf,ierr))    
+            PetscCall(PetscSFDestroyRemoteOffsets(remoteOffsets,ierr))
+        end if
+    end block testRemote
+
+
     PetscCallA(DMDestroy(dm,ierr))
 
     Call MEF90CtxDestroy(MEF90Ctx,ierr)   
     Call MEF90Finalize(ierr)
     Call PetscFinalize(ierr)
-End Program  TestSection
+End Program  TestOffsets
  
        
-! mpirun -np 3 ./TestSection -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90dm_view -log_view
+! mpirun -np 3 ./TestOffsets -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90dm_view -log_view

@@ -108,7 +108,7 @@ Implicit NONE
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     ! Open exodus file + write geometry + format the file
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
@@ -132,7 +132,7 @@ Implicit NONE
             PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
@@ -162,10 +162,10 @@ Implicit NONE
     PetscCallA(DMGetLocalSection(dmSigma0,sectionSigma0,ierr))
 
     ! View all sections
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-sectionU_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-sectionU0_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionSigma,PETSC_NULL_OPTIONS,"-sectionSigma_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionSigma0,PETSC_NULL_OPTIONS,"-sectionSigma0_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OBJECT,"-sectionU_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OBJECT,"-sectionU0_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionSigma,PETSC_NULL_OBJECT,"-sectionSigma_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionSigma0,PETSC_NULL_OBJECT,"-sectionSigma0_view",ierr))
 
     ! Create SFs for copying from/into IO coordinates Vec
     PetscCallA(MEF90IOSFCreate(MEF90Ctx,locVecU,lioSF,iolSF,ierr))
@@ -189,7 +189,7 @@ Implicit NONE
     PetscCallA(MEF90VecCopySF(locVecU0,locVecU,clSF,ierr))
 
     ! Reorder locVecU into ioVec and write ioVec
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OBJECT,"-iovec_view",ierr))
     PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
     ! Create Vec with 3 components on each cell: (i) rank, (ii) x geometric center,
@@ -260,26 +260,26 @@ Implicit NONE
     PetscCallA(ISDestroy(csIS,ierr))
 
     ! Reorder and write ioS
-    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OBJECT,"-ios_view",ierr))
     PetscCallA(MEF90EXOVecView(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
 
     ! Reorder and write ioS0
     If (numFS > 0) Then
-        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
+        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OBJECT,"-ios0_view",ierr))
         PetscCallA(MEF90EXOVecView(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2,ierr))
     End If
 
     ! Test read ioVecRead and ioSRead
     PetscCallA(VecSet(locVecU,1000.0_kr,ierr))
     PetscCallA(MEF90EXOVecLoad(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-iovec_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OBJECT,"-iovec_view",ierr))
     PetscCallA(VecSet(locVecSigma,1000.0_kr,ierr))
     PetscCallA(MEF90EXOVecLoad(locVecSigma,lioSSF,iolSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
-    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OPTIONS,"-ios_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecSigma,PETSC_NULL_OBJECT,"-ios_view",ierr))
     PetscCallA(VecSet(locVecSigma0,1000.0_kr,ierr))
     If (numFS > 0) Then
         PetscCallA(MEF90EXOVecLoad(locVecSigma0,lioBSSF,iolBSSF,MEF90Ctx%resultViewer,step,dim*(dim+1)/2_Ki,ierr))
-        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OPTIONS,"-ios0_view",ierr))
+        PetscCallA(VecViewFromOptions(locVecSigma0,PETSC_NULL_OBJECT,"-ios0_view",ierr))
     End If
     
     ! Cleanup Vec

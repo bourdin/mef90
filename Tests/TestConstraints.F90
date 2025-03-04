@@ -252,7 +252,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -263,7 +263,7 @@ Implicit NONE
             dm = dmDist
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
@@ -367,8 +367,8 @@ Implicit NONE
 
     DeAllocate(ConstraintTruthTableU)
     DeAllocate(ConstraintTruthTableU0)
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OPTIONS,"-mef90section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OBJECT,"-mef90section_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OBJECT,"-mef90section_view",ierr))
 
     PetscCallA(DMClone(dm,dmU,ierr))
     PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
@@ -408,19 +408,19 @@ Implicit NONE
         PetscCallA(project3(U0,sectionU0,f1,ierr))
     End Select
 
-    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OPTIONS,"-uloc_view",ierr))
+    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OBJECT,"-uloc_view",ierr))
 
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-u0_view",ierr))
+    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OBJECT,"-u0_view",ierr))
 
     PetscCallA(DMLocalToGlobal(dmU,Uloc,INSERT_ALL_VALUES,U,ierr))
 
     PetscCallA(DMGlobalToLocal(dmU,U,INSERT_ALL_VALUES,Uloc2,ierr))
     !!! In this process, we should have lost the constrained values
-    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
+    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OBJECT,"-uloc2_view",ierr))
 
-    PetscCallA(VecSet(Uloc2,-33.33_Kr,ierr))
-    PetscCallA(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
-    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OPTIONS,"-uloc2_view",ierr))
+    PetscCall(VecSet(Uloc2,-33.33_Kr,ierr))
+    PetscCall(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
+    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OBJECT,"-uloc2_view",ierr))
 
 
     PetscCallA(VecDestroy(Uloc,ierr))

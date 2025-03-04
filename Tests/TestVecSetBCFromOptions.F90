@@ -36,7 +36,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -54,12 +54,12 @@ Implicit NONE
     PetscCallA(VecSet(v,-1.234_Kr,ierr))
     scalingFactor = 1.0_kI
     PetscCallA(MEF90VecSetBCValuesFromOptions(V,scalingFactor,ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-temperature_vec_view",ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 
     PetscCallA(VecSet(v,5.678_Kr,ierr))
     scalingFactor = 1.0_kI
     PetscCallA(MEF90VecSetValuesFromOptions(V,scalingFactor,ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-temperature_vec_view",ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 
     ViewSec: block
         Type(tPetscSection)     :: sectionV
@@ -67,7 +67,7 @@ Implicit NONE
 
         PetscCallA(VecGetDM(V,dmV,ierr))
         PetscCallA(DMGetLocalSection(dmV,sectionV,ierr))
-        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OPTIONS,"-temperature_section_view",ierr))
+        PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,"-temperature_section_view",ierr))
     end block ViewSec
 
 

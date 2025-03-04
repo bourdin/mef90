@@ -47,13 +47,13 @@ Program  TestDMPlexComputeGeometry
    PetscCall(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCall(DMSetFromOptions(dm,ierr))
    PetscCall(DMGetDimension(dm,dim,ierr))
-   PetscCall(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCall(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
   
    PetscCall(DMPlexDistribute(dm,0,PETSC_NULL_SF,dmDist,ierr))
    if (numProc == 1) then
       dmDist = dm
    end if
-   PetscCall(DMViewFromOptions(dmDist,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+   PetscCall(DMViewFromOptions(dmDist,PETSC_NULL_OBJECT,"-dm_view",ierr))
    PetscCall(DMGetDimension(dm,dim,ierr))
    nquad=2
 

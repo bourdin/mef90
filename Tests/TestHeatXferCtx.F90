@@ -34,7 +34,7 @@ Program  TestHeatXferCtx
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-heatXfer_dm_view",ierr))
 
    PetscCallA(MEF90CtxGetTime(MEF90Ctx,time,ierr))
 
@@ -74,7 +74,7 @@ Program  TestHeatXferCtx
            dm = dmDist
        End If
    End Block distribute
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-heatXfer_dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-heatXfer_dm_view",ierr))
 
    !!! Create HeatXfer context, get all HeatXfer options
    PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))

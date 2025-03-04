@@ -142,21 +142,21 @@ Program  TestMassMatrix
         End If
     End Block distribute
     PetscCallA(DMGetDimension(dm,dim,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     name = "U"
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,name,U,ierr))
     PetscCallA(VecGetDM(U,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
     PetscCallA(project(U,sectionU,f1,ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-mef90VecU_view",ierr))
+    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OBJECT,"-mef90VecU_view",ierr))
 
     name = "U0"
     PetscCallA(MEF90CreateBoundaryLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,name,U0,ierr))
     PetscCallA(VecGetDM(U0,dmU0,ierr))
     PetscCallA(DMGetLocalSection(dmU0,sectionU0,ierr))
     PetscCallA(project(U0,sectionU0,f1,ierr))
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OPTIONS,"-mef90VecU0_view",ierr))
+    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OBJECT,"-mef90VecU0_view",ierr))
 
     PetscCallA(DMCreateMatrix(dmU,M,iErr))
     PetscCallA(DMCreateMatrix(dmU0,M0,iErr))
@@ -192,7 +192,7 @@ Program  TestMassMatrix
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M,MAT_FINAL_ASSEMBLY,ierr))
-    PetscCallA(MatViewFromOptions(M,PETSC_NULL_OPTIONS,"-mef90matM_view",ierr))
+    PetscCallA(MatViewFromOptions(M,PETSC_NULL_OBJECT,"-mef90matM_view",ierr))
 
     setType = MEF90FaceSetType
     PetscCallA(DMGetLabelIdIS(dmU0,MEF90SetLabelName(setType),setIS,ierr))
@@ -221,7 +221,7 @@ Program  TestMassMatrix
     PetscCallA(ISDestroy(setIS,ierr))
     PetscCallA(MatAssemblyBegin(M0,MAT_FINAL_ASSEMBLY,ierr))
     PetscCallA(MatAssemblyEnd(M0,MAT_FINAL_ASSEMBLY,ierr))
-    PetscCallA(MatViewFromOptions(M0,PETSC_NULL_OPTIONS,"-mef90matM0_view",ierr))
+    PetscCallA(MatViewFromOptions(M0,PETSC_NULL_OBJECT,"-mef90matM0_view",ierr))
 
     PetscCallA(dmCreateGlobalVector(dmU,Uglob,ierr))
     PetscCallA(VecDuplicate(Uglob,MUglob,ierr))
@@ -231,8 +231,8 @@ Program  TestMassMatrix
     PetscCallA(VecDot(UGlob,MUGlob,mass,ierr))
     Write(IOBuffer,'("Total mass       ", ES12.5," \n")') mass
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer, ierr))
-    PetscCallA(VecViewFromOptions(Uglob,PETSC_NULL_OPTIONS,"-mef90VecUglob_view",ierr))
-    PetscCallA(VecViewFromOptions(MUglob,PETSC_NULL_OPTIONS,"-mef90VecMUglob_view",ierr))
+    PetscCallA(VecViewFromOptions(Uglob,PETSC_NULL_OBJECT,"-mef90VecUglob_view",ierr))
+    PetscCallA(VecViewFromOptions(MUglob,PETSC_NULL_OBJECT,"-mef90VecMUglob_view",ierr))
     PetscCallA(VecDestroy(Uglob,ierr))
     PetscCallA(VecDestroy(MUglob,ierr))
 
@@ -241,8 +241,8 @@ Program  TestMassMatrix
     !PetscCallA(VecSet(UGlob,1.0_Kr,ierr))
     PetscCallA(DMLocalToGlobal(dmU0,U0,INSERT_VALUES,U0glob,ierr))
     PetscCallA(MatMult(M0,U0glob,MU0glob,ierr))
-    PetscCallA(VecViewFromOptions(U0glob,PETSC_NULL_OPTIONS,"-mef90VecU0glob_view",ierr))
-    PetscCallA(VecViewFromOptions(MU0glob,PETSC_NULL_OPTIONS,"-mef90VecMU0glob_view",ierr))
+    PetscCallA(VecViewFromOptions(U0glob,PETSC_NULL_OBJECT,"-mef90VecU0glob_view",ierr))
+    PetscCallA(VecViewFromOptions(MU0glob,PETSC_NULL_OBJECT,"-mef90VecMU0glob_view",ierr))
 
     PetscCallA(VecDot(U0Glob,MU0Glob,mass,ierr))
     Write(IOBuffer,'("Boundary mass    ", ES12.5," \n")') mass
