@@ -104,7 +104,7 @@ Implicit NONE
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     ! Open exodus file + write geometry + format the file
     PetscCallA(MEF90CtxOpenEXO(MEF90Ctx,MEF90Ctx%resultViewer,FILE_MODE_WRITE,ierr))
@@ -128,7 +128,7 @@ Implicit NONE
             PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
     PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
@@ -143,8 +143,8 @@ Implicit NONE
     ! Fill locVecU with coordinates
     PetscCallA(project(locVecU,sectionU,ierr))
     PetscCallA(DMLocalToGlobal(dmU,locVecU,INSERT_VALUES,U,ierr))
-    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OPTIONS,"-Uloc_view",ierr))
-    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OPTIONS,"-U_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecU,PETSC_NULL_OBJECT,"-Uloc_view",ierr))
+    PetscCallA(VecViewFromOptions(U,PETSC_NULL_OBJECT,"-U_view",ierr))
 
     ! Save locVecU in exo file
     PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
@@ -157,8 +157,8 @@ Implicit NONE
     PetscCallA(VecSet(locVecV,0.0_Kr,ierr))
     PetscCallA(MEF90EXOVecLoad(locVecV,lioSF,iolSF,MEF90Ctx%resultViewer,step,dim,ierr))
 
-    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-Vloc_view",ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-V_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OBJECT,"-Vloc_view",ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-V_view",ierr))
 
     ! Save it again 
     PetscCallA(MEF90EXOVecView(locVecU,lioSF,iolSF,MEF90Ctx%resultViewer,step+1,dim,ierr))
@@ -168,7 +168,7 @@ Implicit NONE
     PetscCallA(VecNorm(locVecV,NORM_INFINITY,err,ierr))
     Write(IOBuffer,'("Local vector L^infty error:  ",ES12.5,"\n")') err
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OPTIONS,"-diffloc_view",ierr))
+    PetscCallA(VecViewFromOptions(locVecV,PETSC_NULL_OBJECT,"-diffloc_view",ierr))
 
     ! Compute the difference between the LOCAL vector we wrote and the one we read
     PetscCallA(VecAXPY(V,-1.0_Kr,U,ierr))
@@ -176,7 +176,7 @@ Implicit NONE
     PetscCallMPIA(MPI_AllReduce(myerr,err,1,MPIU_SCALAR,MPI_MAX,PETSC_COMM_WORLD,ierr))
     Write(IOBuffer,'("Global vector L^infty error: ",ES12.5,"\n")') err
     PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OPTIONS,"-diff_view",ierr))
+    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-diff_view",ierr))
 
 
     

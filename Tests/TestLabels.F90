@@ -36,7 +36,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
     
     distribute: Block 
         Type(tDM),target                    :: dmDist
@@ -47,7 +47,7 @@ Implicit NONE
             dm = dmDist
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
 
     Do i = 1, size(MEF90SetLabelName)
         PetscCallA(PetscPrintf(PETSC_COMM_WORLD,'=== '//trim(MEF90SetLabelName(i))//' ===\n',ierr))

@@ -34,11 +34,11 @@ contains
             PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
             If (numDof > 0) Then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
                 Do i = 1,dim
                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
                 End Do
-                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
 
                 PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
                 Do i = 1,numDof
@@ -104,7 +104,7 @@ Implicit NONE
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     PetscCallA(DMGetDimension(dm,dim,ierr))
 
@@ -144,7 +144,7 @@ Implicit NONE
             PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx,dm,MEF90Ctx,ierr))
     PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx,PETSC_NULL_CHARACTER,DefMechDefaultGlobalOptions,DefMechDefaultCellSetOptions,DefMechDefaultFaceSetOptions,DefMechDefaultVertexSetOptions,ierr))

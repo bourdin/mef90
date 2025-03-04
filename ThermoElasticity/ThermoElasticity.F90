@@ -61,7 +61,7 @@ Program ThermoElasticity
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
    PetscCallA(DMSetFromOptions(dm,ierr))
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90_dm_view",ierr))
 
    !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
@@ -104,7 +104,7 @@ Program ThermoElasticity
          dm = dmDist
       End If
    End Block distribute
-   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90_dm_view",ierr))
+   PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90_dm_view",ierr))
 
    !!! Create HeatXfer context, get all HeatXfer options
    PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))

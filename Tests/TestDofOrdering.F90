@@ -37,7 +37,7 @@ Implicit NONE
     PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
     PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
     PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
     PetscCallA(DMGetDimension(dm,dim,ierr))
     
     distribute: Block 
@@ -50,14 +50,14 @@ Implicit NONE
             PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
         End If
     End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OPTIONS,"-mef90dm_view",ierr))
+    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
 
     ! Create nodal local Vec holding coordinates
     name = "U"
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,1_Ki,name,U,ierr))
     PetscCallA(VecGetDM(U,dmU,ierr))
     PetscCallA(DMGetLocalSection(dmU,sectionU,ierr))
-    PetscCallA(PetscSectionViewFromOptions(sectionU,PETSC_NULL_OPTIONS,"-mef90sectionU_view",ierr))
+    PetscCallA(PetscSectionViewFromOptions(sectionU,PETSC_NULL_OBJECT,"-mef90sectionU_view",ierr))
     PetscCallA(VecSet(U,0.0_Kr,ierr))
 
     PetscCallA(VecGetLocalSize(U,nVal,ierr))
