@@ -28,7 +28,7 @@ Program TestSplit
    Class(MEF90_DEFMECHSPLIT),Allocatable :: Split
 
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
+   Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
    Call PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr);CHKERRQ(ierr)
    Call PetscRandomSetFromOptions(RdmCtx,ierr);CHKERRQ(ierr)
    Call PetscRandomSetInterval(RdmCtx,-1.0_Kr,1.0_Kr,ierr);CHKERRQ(ierr)

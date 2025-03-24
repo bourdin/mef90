@@ -13,7 +13,7 @@ Program YAMLValidator
       write(*,*) "there is probably a problem with the options file"
       end if
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(PetscOptionsView(PETSC_NULL_OBJECT,PETSC_VIEWER_STDOUT_WORLD,ierr))
+   PetscCallA(PetscOptionsView(PETSC_NULL_OPTIONS,PETSC_VIEWER_STDOUT_WORLD,ierr))
 
    PetscCallA(PetscFinalize(ierr))
 End Program YAMLValidator

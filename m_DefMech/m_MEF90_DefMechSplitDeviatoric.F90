@@ -4,9 +4,11 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
 #define MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric_Constructor,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-   Use m_MEF90
+   Use m_MEF90_Materials
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
    implicit none
+   private
+   public :: MEF90_DEFMECHSPLITDEVIATORIC
 
    Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITDEVIATORIC
    Contains

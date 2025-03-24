@@ -1,14 +1,13 @@
 Module m_MEF90_HeatXferCtx_Type
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
-   ! Use,Intrinsic :: iso_c_binding
+   Use m_MEF90_Ctx
    Implicit none
-   ! Private  
-   ! Public :: MEF90HeatXferCtx_Type
-   ! Public :: MEF90HeatXferGlobalOptions_Type
-   ! Public :: MEF90HeatXferCellSetOptions_Type
-   ! Public :: MEF90HeatXferFaceSetOptions_Type
-   ! Public :: MEF90HeatXferVertexSetOptions_Type
+   Private  
+   Public :: MEF90HeatXferCtx_Type
+   Public :: MEF90HeatXferGlobalOptions_Type
+   Public :: MEF90HeatXferCellSetOptions_Type
+   Public :: MEF90HeatXferFaceSetOptions_Type
+   Public :: MEF90HeatXferVertexSetOptions_Type
    
    Type MEF90HeatXferCtx_Type
       Type(MEF90Ctx_Type),pointer          :: MEF90Ctx
@@ -69,7 +68,7 @@ End Module m_MEF90_HeatXferCtx_Type
 
 Module m_MEF90HeatXferGlobalOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
 
@@ -78,6 +77,7 @@ Module m_MEF90HeatXferGlobalOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_HeatXferCtx_Type
          Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferGlobalOptions_Type),pointer      :: data
@@ -103,7 +103,7 @@ End Module m_MEF90HeatXferGlobalOptions_Private
 
 Module m_MEF90HeatXferCellSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
 
@@ -112,6 +112,7 @@ Module m_MEF90HeatXferCellSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_HeatXferCtx_Type
          Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferCellSetOptions_Type),pointer     :: data
@@ -137,7 +138,7 @@ End Module m_MEF90HeatXferCellSetOptions_Private
 
 Module m_MEF90HeatXferFaceSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
 
@@ -146,6 +147,7 @@ Module m_MEF90HeatXferFaceSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_HeatXferCtx_Type
          Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferFaceSetOptions_Type),pointer     :: data
@@ -168,9 +170,10 @@ Contains
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
 End Module m_MEF90HeatXferFaceSetOptions_Private
+
 Module m_MEF90HeatXferVertexSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_HeatXferCtx_Type
    Implicit None
 
@@ -179,6 +182,7 @@ Module m_MEF90HeatXferVertexSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_HeatXferCtx_Type
          Type(tPetscBag)                                    :: bag
          Type(MEF90HeatXferVertexSetOptions_Type),pointer   :: data
@@ -204,7 +208,9 @@ End Module m_MEF90HeatXferVertexSetOptions_Private
 
 Module m_MEF90_HeatXferCtx
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use m_MEF90_Ctx
+   Use m_MEF90_DMPlex
+   Use m_MEF90_Materials
    Use m_MEF90_HeatXferCtx_Type
    Use m_MEF90HeatXferGlobalOptions_Private
    Use m_MEF90HeatXferCellSetOptions_Private

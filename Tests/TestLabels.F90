@@ -29,7 +29,7 @@ Implicit NONE
  
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     
-    Call MEF90Initialize(ierr)
+    Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     
     PetscCallA(PetscPrintf(MEF90Ctx%Comm,MEF90Ctx%geometryfile//'\n',ierr))

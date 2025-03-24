@@ -2,12 +2,15 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT
 #include "petsc/finclude/petsc.h"
+   use m_MEF90_DefMechAT_class
    use m_MEF90_DefMechAT1
    use m_MEF90_DefMechAT1exp
    use m_MEF90_DefMechAT2
    use m_MEF90_DefMechATKKL
    use m_MEF90_DefMechATLinSoft
    use m_MEF90_DefMechCtx
+
+   implicit none
 
 Contains
 #undef __FUNCT__

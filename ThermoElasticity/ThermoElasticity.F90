@@ -7,7 +7,6 @@ Program ThermoElasticity
    Use m_MEF90_HeatXfer
    Use m_MEF90_HeatXferCtx
    Use m_vDefDefault
-   Use petsc
    Implicit NONE
 
    PetscErrorCode                                     :: ierr
@@ -28,11 +27,11 @@ Program ThermoElasticity
    PetscReal,Dimension(:),Pointer                     :: time,energy,bodyForceWork,boundaryForceWork
 
    Type(tSNES)                                        :: displacementSNES
-   SNESConvergedReason                                :: displacementSNESConvergedReason
+   Type(eSNESConvergedReason)                         :: displacementSNESConvergedReason
    Type(tVec)                                         :: displacement,displacementResidual
 
    Type(tSNES)                                        :: temperatureSNES
-   SNESConvergedReason                                :: temperatureSNESConvergedReason
+   Type(eSNESConvergedReason)                         :: temperatureSNESConvergedReason
    Type(tTS)                                          :: temperatureTS
    Type(tTSAdapt)                                     :: temperatureTSAdapt
    Type(tVec)                                         :: temperature,temperatureResidual
@@ -48,7 +47,7 @@ Program ThermoElasticity
 
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90CtxDefaultGlobalOptions,ierr))
@@ -199,7 +198,7 @@ Program ThermoElasticity
             !!! Solve SNES
             PetscCallA(SNESSolve(temperatureSNES,PETSC_NULL_VEC,temperature,ierr))
             PetscCallA(SNESGetConvergedReason(temperatureSNES,temperatureSNESConvergedReason,ierr))
-            If (temperatureSNESConvergedReason < 0) Then  
+            If (temperatureSNESConvergedReason%v < 0) Then  
                Write(IOBuffer,400) "temperature",temperatureSNESConvergedReason
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End If
@@ -258,7 +257,7 @@ Program ThermoElasticity
             !!! Solve SNES
             PetscCallA(SNESSolve(displacementSNES,PETSC_NULL_VEC,displacement,ierr))
             PetscCallA(SNESGetConvergedReason(displacementSNES,displacementSNESConvergedReason,ierr))
-            If (displacementSNESConvergedReason < 0) Then  
+            If (displacementSNESConvergedReason%v < 0) Then  
                Write(IOBuffer,400) "displacement",displacementSNESConvergedReason
                PetscCallA(PetscPrintf(MEF90Ctx%Comm,IOBuffer,ierr))
             End If

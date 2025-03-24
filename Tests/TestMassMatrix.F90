@@ -125,7 +125,7 @@ Program  TestMassMatrix
     MEF90GlobalOptions_default%elementOrder      = 1
  
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-    Call MEF90Initialize(ierr)
+    Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))    
 

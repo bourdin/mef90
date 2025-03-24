@@ -2,8 +2,6 @@
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-   use m_MEF90
-   use m_MEF90_DefMechCtx
    use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechPlasticityCap,MEF90_DIM)D
@@ -15,10 +13,9 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechPlasticityHill,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D
+   use m_MEF90_DefMechCtx
 
    implicit NONE
-   private
-   public MEF90DefMechPlasticStrainUpdate
 
 contains
 

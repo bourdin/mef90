@@ -3,7 +3,7 @@ Module m_MEF90_Parameters
 #include "../mef90version.h"
 
    Use petsc
-   Use petscbag
+   ! Use petscbag
    IMPLICIT NONE
 #include "exodusII.inc"  
 #include "../mef90version.h"

@@ -215,7 +215,7 @@ Program WorkControlled
 
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
+   Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
    Call PetscPrintf(PETSC_COMM_WORLD," # vDef: numerical implementation of variational models of Defect Mechanics\n",ierr);CHKERRQ(ierr)
 
 

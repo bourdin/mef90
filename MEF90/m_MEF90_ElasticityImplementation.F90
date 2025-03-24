@@ -6,7 +6,7 @@ Module MEF90_APPEND(m_MEF90_ElasticityImplementation_,MEF90_DIM)D
    Use m_MEF90_Elements
    Use m_MEF90_Utils
    Use m_MEF90_Materials
-   Use petsc
+   ! Use petsc
    IMPLICIT NONE
 
    Private   

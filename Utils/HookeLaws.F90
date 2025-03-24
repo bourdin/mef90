@@ -12,7 +12,7 @@ Program HookeLaw
    PetscErrorCode                   :: ierr
 
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    
    E = 1.0_Kr
    PetscCallA(PetscOptionsGetReal(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-E',E,flg,ierr))

@@ -5,7 +5,7 @@ Module m_MEF90_EXO
    Use m_MEF90_Ctx
    Use m_MEF90_Utils
    Use m_MEF90_Elements
-   Use petsc
+   ! Use petsc
    IMPLICIT NONE
 #include "../mef90version.h"
 

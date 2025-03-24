@@ -4,7 +4,6 @@ Program HeatXfer
    Use m_MEF90
    Use m_MEF90_HeatXfer
    Use m_MEF90_HeatXferDefault
-   Use petsc
    Implicit NONE   
 
    PetscErrorCode                                     :: ierr
@@ -38,7 +37,7 @@ Program HeatXfer
       
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr))

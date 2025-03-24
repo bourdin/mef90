@@ -3,7 +3,7 @@ Module m_MEF90_DMPlex
 #include "petsc/finclude/petscsf.h"
     Use m_MEF90_Elements
     Use m_MEF90_Ctx
-    Use petsc
+    ! Use petsc
     Use,intrinsic :: iso_c_binding
     IMPLICIT NONE
     

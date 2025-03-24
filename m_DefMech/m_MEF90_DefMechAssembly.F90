@@ -2,14 +2,13 @@
 #include "../m_DefMech/mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-#include "petsc/finclude/petsctao.h"
 #define MEF90_HDRegularization 0.01_Kr
 
-   Use m_MEF90
    Use m_MEF90_DefMechCtx
+   Use m_MEF90_Materials
    Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
+   Use m_MEF90_DefMechAT_class
    Use m_MEF90_DefMechAT
-   Use petsctao
    
    Implicit none
    Private
@@ -62,7 +61,7 @@ Contains
       Type(MEF90DefMechFaceSetOptions_Type),Pointer      :: faceSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry
+      Type(eDMPolytopeType)                              :: cellGeometry
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       PetscReal,Dimension(:),Pointer                     :: residualDof
       
@@ -398,7 +397,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry
+      Type(eDMPolytopeType)                              :: cellGeometry
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
       Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
@@ -584,7 +583,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90DefMechFaceSetOptions_Type),Pointer      :: faceSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
-      DMPolytopeType                                     :: cellGeometry
+      Type(eDMPolytopeType)                              :: cellGeometry
       Type(MEF90ElementType)                             :: elemVectType
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
@@ -745,7 +744,7 @@ Contains
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
-      DMPolytopeType                                     :: cellGeometry
+      Type(eDMPolytopeType)                              :: cellGeometry
       Type(MEF90ElementType)                             :: elemVectType
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
@@ -861,7 +860,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry
+      Type(eDMPolytopeType)                              :: cellGeometryVect,cellGeometryScal
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
@@ -899,9 +898,10 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometry,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemVectType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometryVect,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryVect,elemVectType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))
@@ -1006,7 +1006,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry,cellDamageType
+      Type(eDMPolytopeType)                              :: cellGeometryVect,cellGeometryScal
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       PetscReal,Dimension(:),Pointer                     :: stressDof
       
@@ -1046,10 +1046,10 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometry,ierr))
-               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemVectType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometryVect,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryVect,elemVectType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))
@@ -1165,7 +1165,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry,cellDamageType
+      Type(eDMPolytopeType)                              :: cellGeometryVect,cellGeometryScal
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       PetscReal,Dimension(:),Pointer                     :: residualDof
       
@@ -1211,10 +1211,10 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometry,ierr))
-               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemVectType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometryVect,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryVect,elemVectType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))
@@ -1388,7 +1388,7 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry,cellDamageType
+      Type(eDMPolytopeType)                              :: cellGeometryVect,cellGeometryScal
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       PetscReal,Dimension(:),Pointer                     :: matDof
       
@@ -1431,10 +1431,10 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometry,ierr))
-               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemVectType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometryVect,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryVect,elemVectType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))
@@ -1578,7 +1578,7 @@ Contains
       Type(MEF90_MATPROP),Pointer                        :: matpropSet
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellDamageType
+      Type(eDMPolytopeType)                              :: cellGeometryScal
       Type(MEF90ElementType)                             :: elemScalType
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
@@ -1611,8 +1611,8 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))
@@ -1721,7 +1721,8 @@ Contains
       Type(MEF90DefMechCellSetOptions_Type),Pointer      :: cellSetOptions
       Type(MEF90_ELEMENT_ELAST),Dimension(:),Pointer     :: elemVect
       Type(MEF90_ELEMENT_SCAL),Dimension(:),Pointer      :: elemScal
-      DMPolytopeType                                     :: cellGeometry,cellDamageType
+      Type(eDMPolytopeType)                              :: cellGeometryVect
+      Type(eDMPolytopeType)                              :: cellGeometryScal
       Type(MEF90ElementType)                             :: elemVectType,elemScalType
       
       Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90CtxGlobalOptions
@@ -1754,10 +1755,10 @@ Contains
                PetscCall(PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr))
          
                PetscCall(ISGetIndices(setPointIS,setPointID,ierr))
-               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometry,ierr))
-               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellDamageType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometry,elemVectType,ierr))
-               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellDamageType,elemScalType,ierr))
+               PetscCall(DMPlexGetCellType(dmDisplacement,setPointID(1),cellGeometryVect,ierr))
+               PetscCall(DMPlexGetCellType(dmDamage,setPointID(1),cellGeometryScal,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryVect,elemVectType,ierr))
+               PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily,MEF90CtxGlobalOptions%elementOrder,cellGeometryScal,elemScalType,ierr))
 
                !!! get the ATModel and split objects
                PetscCall(MEF90DefMechGetATModel(cellSetOptions,ATModel,cellIsElastic,ierr))

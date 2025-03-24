@@ -2,7 +2,8 @@
 Module m_MEF90_DefMechDrivingForce_class
 #include "petsc/finclude/petsc.h"
 
-   Use m_MEF90
+   Use m_MEF90_Parameters
+   Use petscsys
    Implicit none
 
 !!!

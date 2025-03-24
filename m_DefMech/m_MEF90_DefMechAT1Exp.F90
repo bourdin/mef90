@@ -2,10 +2,11 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1exp
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   ! Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
-
+   private
+   public :: MEF90DefMechAT1exp_Type
 
 !!! AT1exp, a variant of AT1 model with an exponential stiffness interpolation 
 !!! function:

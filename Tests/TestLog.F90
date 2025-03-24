@@ -9,7 +9,7 @@ program TestLog
     PetscErrorCode                       :: ierr
 
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-    PetscCallA(MEF90Initialize(ierr))
+    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
     PetscCallA(PetscLogDefaultBegin(ierr))
     PetscCallA(PetscViewerASCIIOpen(PETSC_COMM_WORLD,'test.log',logViewer, ierr))

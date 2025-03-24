@@ -1,6 +1,5 @@
 Program  TestVec
 #include <petsc/finclude/petsc.h>
-Use petsc
 Use m_MEF90
 Implicit NONE   
     
@@ -28,7 +27,7 @@ Implicit NONE
     
     PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
     
-    Call MEF90Initialize(ierr)
+    Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
     PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
     

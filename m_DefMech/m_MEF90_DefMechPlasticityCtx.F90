@@ -2,7 +2,7 @@
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-   use m_MEF90
+   use m_MEF90_Materials
 
    Type :: MEF90DefMechPlasticityCtx
       Type(MEF90_HOOKESLAW)       :: HookesLaw

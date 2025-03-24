@@ -37,7 +37,7 @@ Program  TestDMPlexComputeGeometry
    PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr))
    PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD,numProc,ierr))
 
-   Call MEF90Initialize(ierr)
+   Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
    Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)
 
    PetscCall(PetscPrintf(PETSC_COMM_WORLD,MEF90Ctx%geometryfile,ierr))

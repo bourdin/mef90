@@ -2,12 +2,13 @@
 #include "mef90DefMech.inc"
 module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
+   use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
    !use MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
-   Use m_MEF90_DefMechCtx
+   use m_MEF90_DefMechCtx
 
 Contains
 #undef __FUNCT__

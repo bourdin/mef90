@@ -4,10 +4,12 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
 #define MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic_Constructor,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-   Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
+   use m_MEF90_Materials
    implicit none
-
+   private
+   public :: MEF90_DEFMECHSPLITHYDROSTATIC
+   
    Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITHYDROSTATIC
       PetscReal                                        :: gamma
    Contains

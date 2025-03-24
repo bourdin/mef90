@@ -1,7 +1,6 @@
 Module m_MEF90
 #include "petsc/finclude/petsc.h"
 #include "../mef90version.h"
-   Use petsc
    Use m_MEF90_Ctx
    Use m_MEF90_LinAlg
    Use m_MEF90_Parameters
@@ -29,48 +28,49 @@ Contains
 !!!  (c) 2014-18 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Subroutine MEF90Initialize(ierr)
+   Subroutine MEF90Initialize(comm,ierr)
+      MPI_Comm, Intent(IN)                              :: comm
       PetscErrorCode,Intent(INOUT)                      :: ierr
 
       Character(len=MEF90MXSTRLEN)                      :: IOBuffer
        
       !Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: git changeset ",MEF90_GITVER,"\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# Copyright (c) 1998-2022 B. Bourdin <bourdin@mcmaster.ca> and co-authors\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# See CONTRIBUTORS.txt for a list of contributors\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# PETSC_ARCH=", PETSC_ARCH ,"\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# PETSC_DIR=", PETSC_DIR ,"\n\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
 
       Write(IOBuffer,*) "# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ""AS IS"" AND\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       
       Write(IOBuffer,*) "# This software is released under the 2-clause BSD license (aka ""Simplified BSD"" \n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# or ""FreeBSD"") license. See the LICENSE file in the root of the software distribution\n\n"
-      PetscCall(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))
+      PetscCall(PetscPrintf(comm,IOBuffer,ierr))
 
       !!! Individual modules runtime initialization should be called here
       PetscCall(MEF90MPIInitialize_Private(ierr))

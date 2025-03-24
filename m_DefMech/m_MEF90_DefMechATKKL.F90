@@ -9,10 +9,11 @@
 
 module m_MEF90_DefMechATKKL
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   ! Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
-
+   private
+   public :: MEF90DefMechATKKL_Type
    Type, extends(MEF90DefMechAT_Type)                 :: MEF90DefMechATKKL_Type
    Contains
       Procedure, pass(self)                            :: a   => aKKL

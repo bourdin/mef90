@@ -2,10 +2,11 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechATLinSoft
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   ! Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
-
+   private
+   public :: MEF90DefMechATLinSoft_Type
 
 !!! LinSoft, a model with linear softening phase
 !!! function:
@@ -13,7 +14,7 @@ module m_MEF90_DefMechATLinSoft
 !!! a_k(s) = (1-s)**2/(k+(1-k)(1-s)**2)
 !!! w(s)   = 1-(1-s)^2
 !!! cw = pi/4
-   Type, extends(MEF90DefMechAT_Type)                 :: MEF90DefMechATLinSoft_Type
+   Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechATLinSoft_Type
       PetscReal                                        :: k
    Contains
       Procedure, pass(self)                            :: a   => aLinSoft

@@ -27,7 +27,7 @@ Program TestQuadrature
 
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    MEF90GlobalOptions_default%verbose           = 1
    MEF90GlobalOptions_default%dryrun            = PETSC_FALSE

@@ -3,7 +3,7 @@
 module m_MEF90_DefMechDrivingForce
 #include "petsc/finclude/petsc.h"
    use m_MEF90_DefMechDrivingForceDruckerPrager
-   use m_MEF90_DefMechCtx
+   ! use m_MEF90_DefMechCtx
 
 Contains
 #undef __FUNCT__

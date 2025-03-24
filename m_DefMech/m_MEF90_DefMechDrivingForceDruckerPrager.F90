@@ -3,7 +3,7 @@
 module m_MEF90_DefMechDrivingForceDruckerPrager
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
-   Use m_MEF90_DefMechDrivingForceDruckerPrager_class
+   Use m_MEF90_DefMechDrivingForce_class
    implicit none
 
    Type, extends(MEF90_DefMechDrivingForce_Type)       :: MEF90_DefMechDrivingForceDruckerPrager_Type

@@ -2,10 +2,12 @@
 #include "mef90DefMech.inc"
 Module MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
+   Use m_MEF90_Materials
 #define MEF90_DEFMECHSPLITMASONBY_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitMasonry_Constructor,MEF90_DIM)D
    implicit none
+   private
+   public :: MEF90_DEFMECHSPLITMASONRY
 
    Type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITMASONRY
    Contains

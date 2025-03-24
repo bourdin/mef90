@@ -1,9 +1,9 @@
 Module m_MEF90_Materials_Types
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_LinAlg
-   Use m_MEF90_Ctx
-   Use m_MEF90_DMPlex
-   Use petsc
+   ! Use m_MEF90_Ctx
+   ! Use m_MEF90_DMPlex
+   ! Use petsc
    IMPLICIT NONE
 
    Type MEF90HookesLaw2D
@@ -270,7 +270,7 @@ End Module m_MEF90_Materials_Types
 
 Module m_MEF90_Materials_Interface2D
 #include "petsc/finclude/petsc.h"
-   Use petsc
+   ! Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
    Private
@@ -346,7 +346,7 @@ End Module m_MEF90_Materials_Interface2D
 
 Module m_MEF90_Materials_Interface3D
 #include "petsc/finclude/petsc.h"
-   Use petsc
+   ! Use petsc
    Use m_MEF90_Materials_Types
    Implicit NONE
    Private
@@ -408,10 +408,12 @@ End Module m_MEF90_Materials_Interface3D
 
 Module m_MEF90_Materials
 #include "petsc/finclude/petsc.h"
-   Use petsc
+   ! Use petsc
    Use m_MEF90_Materials_Types
    Use m_MEF90_Materials_Interface2D
    Use m_MEF90_Materials_Interface3D
+   Use m_MEF90_DMPlex
+   Use m_MEF90_Ctx
    Implicit NONE
 
    Interface PetscBagGetDataMEF90MatProp

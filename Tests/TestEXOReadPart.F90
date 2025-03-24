@@ -20,7 +20,7 @@ Program TestExoRead_Part
 
 
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   Call MEF90Initialize(ierr)
+   Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
 
    MEF90GlobalOptions_default%verbose           = 0
    MEF90GlobalOptions_default%dryrun            = PETSC_FALSE

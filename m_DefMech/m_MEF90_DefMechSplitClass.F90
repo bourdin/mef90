@@ -6,9 +6,13 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 #define DEEDINTERFACE  MEF90_APPEND(DEED,MEF90_DIM)D
 #define D2EEDINTERFACE MEF90_APPEND(D2EED,MEF90_DIM)D
 
-   Use m_MEF90
+   Use m_MEF90_Materials
    Implicit none
-
+   private
+   public :: MEF90_DEFMECHSPLIT
+   public :: MEF90_DefMechSplit_SmoothPositiveSquare
+   public :: MEF90_DefMechSplit_DSmoothPositiveSquare
+   public :: MEF90_DefMechSplit_D2SmoothPositiveSquare
 !!!
 !!!  
 !!!  MEF90_DefMechSplit_Type: The abstract class used to define an energy split for
@@ -18,7 +22,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 !!!
 
    Type, abstract :: MEF90_DEFMECHSPLIT
-      Character(len=MEF90MXSTRLEN)                     :: type
+      Character(len=MEF90MXSTRLEN)                      :: type
       Integer                                           :: damageOrder
       Integer                                           :: strainOrder
    Contains

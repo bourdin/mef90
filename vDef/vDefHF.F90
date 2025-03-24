@@ -78,7 +78,7 @@ Program vDefHF
 
    !!! Initialize MEF90
    Call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-   Call MEF90Initialize(ierr)
+   Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
    Call PetscPrintf(PETSC_COMM_WORLD," # vDefHF: numerical implementation of variational models of fracture for Hydraulic Fracturing\n",ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('HeatXfer    ',logStageHeat,ierr);CHKERRQ(ierr)
    Call PetscLogStageRegister('Damage      ',logStageDamage,ierr);CHKERRQ(ierr)

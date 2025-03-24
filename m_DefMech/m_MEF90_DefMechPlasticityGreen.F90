@@ -3,10 +3,10 @@
 Module MEF90_APPEND(m_MEF90_DefMechPlasticityGreen,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-use m_MEF90
-   use m_MEF90_DefMechCtx
    use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
    implicit NONE
+   private
+   public :: FHG_GREEN
 
 Contains
 #undef __FUNCT__
@@ -23,7 +23,6 @@ Contains
 
    subroutine FHG_GREEN(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
-      use m_MEF90
 
       real(kind=c_double)                       :: x(*)
       real(kind=c_double)                       :: f(*)

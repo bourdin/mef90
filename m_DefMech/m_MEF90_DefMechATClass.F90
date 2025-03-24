@@ -2,7 +2,8 @@
 Module m_MEF90_DefMechAT_class
 #include "petsc/finclude/petsc.h"
 
-   Use m_MEF90
+   Use petscsys
+   Use m_MEF90_Parameters
    Implicit none
 
 !!!

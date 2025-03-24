@@ -5,8 +5,8 @@ Program vDef
    Use m_MEF90
    Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMech
-   Use m_MEF90_HeatXfer
    Use m_MEF90_HeatXferCtx
+   Use m_MEF90_HeatXfer
    Use m_vDefDefault
    Use petsc
    Use petsctao
@@ -61,7 +61,7 @@ Program vDef
    
    !!! Initialize MEF90
    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
-   PetscCallA(MEF90Initialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    PetscCallA(PetscLogStageRegister('HeatXfer    ',logStageHeatXfer,ierr))
    PetscCallA(PetscLogStageRegister('Damage      ',logStageDamage,ierr))
    PetscCallA(PetscLogStageRegister('Displacement',logStageDisplacement,ierr))

@@ -1,11 +1,8 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMech
 #include "petsc/finclude/petsc.h"
-#include "petsc/finclude/petsctao.h"
-   Use m_MEF90
+   Use m_MEF90_EXO
    Use m_MEF90_DefMechCtx
-   Use m_MEF90_DefMechAT
-   Use petsctao
 
    Use m_MEF90_DefMechAssembly2D, &
       MEF90DefMechOperatorDisplacement2D     => MEF90DefMechOperatorDisplacement,      &
@@ -43,7 +40,6 @@ Module m_MEF90_DefMech
       MEF90DefMechPlasticStrainUpdate3D      => MEF90DefMechPlasticStrainUpdate
 
    Implicit none
-   !Private
    Public :: MEF90DefMechSetTransients
    Public :: MEF90DefMechOperatorDisplacement
    Public :: MEF90DefMechBilinearFormDisplacement

@@ -1,6 +1,6 @@
 Module m_MEF90_DefMechCtx_Type
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use m_MEF90_Ctx
    Implicit none
    
    Type MEF90DefMechCtx_Type
@@ -109,6 +109,7 @@ Module m_MEF90_DefMechCtx_Type
       PetscBool                              :: CrackVolumeControlled
       PetscBool                              :: WorkControlled
    End Type MEF90DefMechCellSetOptions_Type
+
    Type MEF90DefMechFaceSetOptions_Type
       PetscReal,Dimension(3)                 :: boundaryforce
       PetscReal                              :: pressureForce
@@ -132,7 +133,7 @@ End Module m_MEF90_DefMechCtx_Type
 
 Module m_MEF90DefMechGlobalOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_DefMechCtx_Type
    Implicit None
 
@@ -141,6 +142,7 @@ Module m_MEF90DefMechGlobalOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_DefMechCtx_Type
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
@@ -166,7 +168,7 @@ End Module m_MEF90DefMechGlobalOptions_Private
 
 Module m_MEF90DefMechCellSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_DefMechCtx_Type
    Implicit None
 
@@ -175,6 +177,7 @@ Module m_MEF90DefMechCellSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_DefMechCtx_Type
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
@@ -200,7 +203,7 @@ End Module m_MEF90DefMechCellSetOptions_Private
 
 Module m_MEF90DefMechFaceSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_DefMechCtx_Type
    Implicit None
 
@@ -209,6 +212,7 @@ Module m_MEF90DefMechFaceSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_DefMechCtx_Type
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechFaceSetOptions_Type),pointer         :: data
@@ -234,7 +238,7 @@ End Module m_MEF90DefMechFaceSetOptions_Private
    
 Module m_MEF90DefMechVertexSetOptions_Private
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use petscbag
    Use m_MEF90_DefMechCtx_Type
    Implicit None
 
@@ -243,6 +247,7 @@ Module m_MEF90DefMechVertexSetOptions_Private
    
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
+         Use petscbag
          Use m_MEF90_DefMechCtx_Type
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
@@ -268,7 +273,7 @@ End Module m_MEF90DefMechVertexSetOptions_Private
 
 Module m_MEF90_DefMechCtx
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   Use m_MEF90_DMPlex
    Use m_MEF90_DefMechCtx_Type
    Use m_MEF90DefMechGlobalOptions_Private
    Use m_MEF90DefMechCellSetOptions_Private

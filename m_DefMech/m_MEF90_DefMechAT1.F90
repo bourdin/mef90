@@ -2,9 +2,11 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90
+   ! Use m_MEF90
    Use m_MEF90_DefMechAT_class
    implicit none
+   private
+   public :: MEF90DefMechAT1_Type
 
    Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1_Type
    Contains

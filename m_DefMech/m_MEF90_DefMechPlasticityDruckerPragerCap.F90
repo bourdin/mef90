@@ -3,10 +3,10 @@
 Module MEF90_APPEND(m_MEF90_DefMechPlasticityDruckerPragerCap,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-   use m_MEF90
-   use m_MEF90_DefMechCtx
    use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
    implicit NONE
+   private
+   public :: FHG_DRUCKERPRAGERCAPMODEL
 
 Contains
 #undef __FUNCT__
@@ -21,7 +21,6 @@ Contains
 
    subroutine FHG_DRUCKERPRAGERCAPMODEL(x,f,h,g,myctx) bind(c)
       use,intrinsic :: iso_c_binding
-      use m_MEF90
 
       real(kind=c_double)                       :: x(*)
       real(kind=c_double)                       :: f(*)

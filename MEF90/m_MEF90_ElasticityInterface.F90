@@ -1,9 +1,9 @@
 Module m_MEF90_ElasticityInterface
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90_LinAlg
-   Use m_MEF90_Parameters
-   Use m_MEF90_Elements
-   Use m_MEF90_Utils
+   ! Use m_MEF90_LinAlg
+   ! Use m_MEF90_Parameters
+   ! Use m_MEF90_Elements
+   ! Use m_MEF90_Utils
    Use m_MEF90_ElasticityImplementation_2D, &
          ElasticityOperatorSet_2D => ElasticityOperatorSet, &
          ElasticityBilinearFormSet_2D => ElasticityBilinearFormSet, &
@@ -56,7 +56,7 @@ Module m_MEF90_ElasticityInterface
          ElasticityStressSet_3D => ElasticityStressSet, &
          InelasticStrainSet_3D => InelasticStrainSet, &
          PlasticityEnergySet_3D => PlasticityEnergySet
-   Use petsc
+   ! Use petsc
 
    IMPLICIT NONE
 

@@ -1,7 +1,7 @@
 Module m_MEF90_MPI
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
-   Use petsc
+   ! Use petsc
    Implicit None
 
    Private
