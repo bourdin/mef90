@@ -1,6 +1,10 @@
 Module m_MEF90_Ctx_Type
 #include "petsc/finclude/petsc.h"
+   Use petscbag
    Use m_MEF90_Parameters
+   Use m_MEF90_Utils
+   Use m_MEF90_LinAlg
+   Use m_MEF90_Elements
    Use,Intrinsic :: iso_c_binding
    Implicit none
    Private  
@@ -32,10 +36,12 @@ End Module m_MEF90_Ctx_Type
 Module m_MEF90_Ctx
 #include "petsc/finclude/petsc.h"
    Use, Intrinsic :: iso_c_binding
+   Use petscbag
    Use m_MEF90_Parameters
-   Use m_MEF90_Ctx_Type
    Use m_MEF90_Utils
+   Use m_MEF90_LinAlg
    Use m_MEF90_Elements
+   Use m_MEF90_Ctx_Type
    Implicit none
 
    Public :: MEF90Ctx_Type

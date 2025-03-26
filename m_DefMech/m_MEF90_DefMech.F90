@@ -1,6 +1,9 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_DefMech
 #include "petsc/finclude/petsc.h"
+   Use petscsnes
+   Use petsctao
+
    Use m_MEF90_EXO
    Use m_MEF90_DefMechCtx
 
@@ -40,6 +43,7 @@ Module m_MEF90_DefMech
       MEF90DefMechPlasticStrainUpdate3D      => MEF90DefMechPlasticStrainUpdate
 
    Implicit none
+   ! private
    Public :: MEF90DefMechSetTransients
    Public :: MEF90DefMechOperatorDisplacement
    Public :: MEF90DefMechBilinearFormDisplacement
@@ -65,6 +69,8 @@ Module m_MEF90_DefMech
    Public :: MEF90DefMechCrackVolume
    Public :: MEF90DefMechStress
    Public :: MEF90DefMechPlasticStrainUpdate
+
+   public :: MEF90DefMechFormatEXO
 
 Contains
 #undef __FUNCT__

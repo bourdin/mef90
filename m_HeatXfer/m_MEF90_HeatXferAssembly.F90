@@ -1,6 +1,8 @@
 #include "../MEF90/mef90.inc"
 Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
+   Use petscsnes
+   Use petsctao
    Use m_MEF90_HeatXferCtx
    Implicit none
    

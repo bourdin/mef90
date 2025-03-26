@@ -1,11 +1,10 @@
 Module m_MEF90_EXO
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90_DMPlex
    Use m_MEF90_Parameters
-   Use m_MEF90_Ctx
    Use m_MEF90_Utils
    Use m_MEF90_Elements
-   ! Use petsc
+   Use m_MEF90_Ctx
+   Use m_MEF90_DMPlex
    IMPLICIT NONE
 #include "../mef90version.h"
 

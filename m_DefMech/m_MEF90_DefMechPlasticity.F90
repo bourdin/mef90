@@ -16,6 +16,8 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
    use m_MEF90_DefMechCtx
 
    implicit NONE
+   ! private
+   public :: MEF90DefMechPlasticStrainUpdate
 
 contains
 

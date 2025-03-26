@@ -4,14 +4,15 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 #define MEF90_HDRegularization 0.01_Kr
 
+   Use petscsnes
+   Use petsctao
    Use m_MEF90_DefMechCtx
    Use m_MEF90_Materials
    Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
-   Use m_MEF90_DefMechAT_class
    Use m_MEF90_DefMechAT
    
    Implicit none
-   Private
+   ! Private
    Public MEF90DefMechOperatorDisplacement,     &
           MEF90DefMechBilinearFormDisplacement, &
           MEF90DefMechWork,                     &

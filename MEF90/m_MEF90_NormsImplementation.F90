@@ -2,12 +2,12 @@
 Module MEF90_APPEND(m_MEF90_NormsImplementation_,MEF90_ELEMENTTYPE)
 
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90_LinAlg
    Use m_MEF90_Parameters
+   Use m_MEF90_Utils
+   Use m_MEF90_LinAlg
    Use m_MEF90_Elements
-   ! Use m_MEF90_Utils
+   Use m_MEF90_Ctx
    Use m_MEF90_DMPlex
-   ! Use petsc
    IMPLICIT NONE
 
    Private   

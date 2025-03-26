@@ -26,7 +26,6 @@ Module m_MEF90_LinAlg
    Use m_MEF90_LinAlg_class
    Use m_MEF90_Parameters
    Use m_MEF90_Utils
-   ! Use petsc
    
    IMPLICIT NONE
  

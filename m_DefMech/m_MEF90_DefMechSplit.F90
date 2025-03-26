@@ -10,6 +10,16 @@ module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
    use m_MEF90_DefMechCtx
 
+   implicit none
+   ! private
+   public :: MEF90DefMechGetSplit
+   public :: MEF90_DEFMECHSPLIT
+   public :: MEF90_DEFMECHSPLITDEVIATORIC
+   public :: MEF90_DEFMECHSPLITHD
+   public :: MEF90_DEFMECHSPLITHYDROSTATIC
+   ! public :: MEF90_DEFMECHSPLITMASONRY
+   public :: MEF90_DEFMECHSPLITNONE
+
 Contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGetSplit"

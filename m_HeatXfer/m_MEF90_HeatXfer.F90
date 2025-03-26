@@ -1,6 +1,8 @@
 #include "../MEF90/mef90.inc"
 Module m_MEF90_HeatXfer
 #include "petsc/finclude/petsc.h"
+   Use petscsnes
+   USe petsctao
    Use m_MEF90_EXO
    Use m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXferAssembly2D, &

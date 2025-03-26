@@ -1,9 +1,9 @@
 Module m_MEF90_Elements
 #include "petsc/finclude/petsc.h"
-   Use m_MEF90_LinAlg
-   ! Use m_MEF90_Utils
    Use m_MEF90_Parameters
-   ! Use petsc
+   Use m_MEF90_Utils
+   Use m_MEF90_LinAlg
+   Use petscdmplex
    Use,intrinsic :: iso_c_binding
    IMPLICIT NONE
 
@@ -244,7 +244,7 @@ Contains
    Subroutine MEF90ElementGetType(elemFamily,order,cellType,elemType,ierr)
       PetscEnum,Intent(IN)                             :: elemFamily
       PetscInt,Intent(IN)                              :: order
-      DMPolytopeType,Intent(IN)                        :: cellType
+      Type(eDMPolytopeType),Intent(IN)                 :: cellType
       Type(MEF90ElementType),Intent(OUT)               :: elemType
       PetscErrorCode,Intent(INOUT)                     :: ierr
 
@@ -322,7 +322,7 @@ Contains
    Subroutine MEF90ElementGetTypeBoundary(elemFamily,order,cellType,elemType,ierr)
       PetscEnum,Intent(IN)                             :: elemFamily
       PetscInt,Intent(IN)                              :: order
-      DMPolytopeType,Intent(IN)                        :: cellType
+      Type(eDMPolytopeType),Intent(IN)                 :: cellType
       Type(MEF90ElementType),Intent(OUT)               :: elemType
       PetscErrorCode,Intent(INOUT)                     :: ierr
 

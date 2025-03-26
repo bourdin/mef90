@@ -11,6 +11,15 @@ module m_MEF90_DefMechAT
    use m_MEF90_DefMechCtx
 
    implicit none
+   ! private
+   public :: MEF90DefMechGetATModel
+   public :: MEF90DefMechAT_Type
+   public :: MEF90DefMechAT1_Type
+   public :: MEF90DefMechAT1exp_Type
+   public :: MEF90DefMechAT2_Type
+   public :: MEF90DefMechATKKL_Type
+   public :: MEF90DefMechATLinSoft_Type
+
 
 Contains
 #undef __FUNCT__
