@@ -475,6 +475,7 @@ Contains
       Type(MEF90CtxGlobalOptions_Type),pointer                 :: MEF90CtxGlobalOptions
       Type(tIS)                                                :: setIS
       PetscInt                                                 :: set,numSet
+      PetscInt,Dimension(:),Pointer                            :: setID
       Character(len=MEF90MXSTRLEN)                             :: filename,IOBuffer
       Character(len=MEF90MXSTRLEN)                             :: vecName
       Type(tDM),DImension(:),Pointer                           :: dmList
@@ -520,16 +521,19 @@ Contains
       
       PetscCall(DMGetLabelIdIS(dm,MEF90CellSetLabelName,setIS,ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm,setIS,ierr)) 
-      PetscCall(ISGetLocalSize(setIS,numSet,ierr))
-      Allocate(DefMechCtx%setEnergyViewer(numSet),stat=ierr)
-      Do set = 1, numSet
-         Write(filename,101) trim(MEF90FilePrefix(MEF90Ctx%resultFile)),set
+      PetscCall(ISGetIndices(setIS,setID,ierr))
+
+      ! PetscCall(ISGetLocalSize(setIS,numSet,ierr))
+      Allocate(DefMechCtx%setEnergyViewer(size(setID)),stat=ierr)
+      Do set = 1, size(setID)
+         Write(filename,101) trim(MEF90FilePrefix(MEF90Ctx%resultFile)),setID(set)
          PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm,filename,DefMechCtx%setEnergyViewer(set),ierr))
-         Write(IOBuffer,102) set
+         Write(IOBuffer,102) setID(set)
          PetscCall(PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),IOBuffer,ierr))
          PetscCall(PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set),"# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation\n",ierr))
          PetscCall(PetscViewerFlush(DefMechCtx%setEnergyViewer(set),ierr))
       End Do
+      PetscCall(ISRestoreIndices(setIS,setID,ierr))
       PetscCall(ISDestroy(setIS,ierr))
 101 Format(A,'-',I4.4,'.enerblk')
 102 Format("# cell set ",I4,"\n")
