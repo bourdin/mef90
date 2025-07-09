@@ -18,5 +18,11 @@ ifneq (${SNLP_DIR},)
 	SNLP_LIB:= -L${SNLP_DIR}/lib -lsnlp -lsnlpF90 -Wl,-rpath,${SNLP_DIR}/lib
 endif
 
+ifneq (${SYMENGINEF90_ROOT},)
+	FC_FLAGS+= -DMEF90_HAVE_SYMENGINEF90 -I${SYMENGINEF90_ROOT}/include
+	C_FLAGS+= -I${SYMENGINE_ROOT}/include
+	SYMENGINEF90_LIB:= -L${SYMENGINE_ROOT}/lib64 -lsymengine -Wl,-rpath,${SYMENGINE_ROOT}/lib64 -L${SYMENGINEF90_ROOT}/lib -lsymengine_f90 -Wl,-rpath,${SYMENGINE_ROOT}/lib
+endif
+
 PETSC_FORTRAN_LIB+= -L${PETSC_DIR}/${PETSC_ARCH}/lib -lexoIIv2for32
 

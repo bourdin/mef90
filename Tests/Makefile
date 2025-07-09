@@ -2,7 +2,7 @@ all: TestDotProduct TestMassMatrix TestHeatXferCtx TestMEF90Ctx TestSection \
      TestConstraints TestConstraintIO TestVec TestDMPlexVecGetClosure \
 	 TestVecSetBCFromOptions TestLabels TestATClass TestSNLP\
 	TestHookeLaws \
-	 viewDAG YAMLValidator HookeLaws 
+	 viewDAG YAMLValidator HookeLaws
 runall: runTestDotProduct runTestMassMatrix runTestHeatXferCtx runTestMEF90Ctx \
         runTestSection runTestConstraints runTestConstraintIO runTestVec runTestDMPlexVecGetClosure \
 		runTestVecSetBCFromOptions runTestLabels runTestATClass runTestSNLP
@@ -15,6 +15,16 @@ include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 
+TestParser.o: ${MEF90_DIR}/Tests/TestParser.F90 MEF90
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -I${FFP_DIR}/include -c -o $@ $<
+
+TestParser: TestParser.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -L${FFP_DIR}/lib -lfortran_function_parser
+	-@${RM} $<
+
+
 TestOffsets.o: ${MEF90_DIR}/Tests/TestOffsets.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
@@ -24,7 +34,7 @@ TestOffsets: TestOffsets.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
-TestLog.o: ${MEF90_DIR}/Tests/TestLog.F90 MEF90 
+TestLog.o: ${MEF90_DIR}/Tests/TestLog.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
@@ -33,7 +43,7 @@ TestLog: TestLog.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
-TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90 
+TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
@@ -42,7 +52,7 @@ TestOrientation: TestOrientation.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
-TestDotProduct.o: ${MEF90_DIR}/Tests/TestDotProduct.F90 MEF90 
+TestDotProduct.o: ${MEF90_DIR}/Tests/TestDotProduct.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
@@ -71,7 +81,7 @@ TestHeatXferCtx: TestHeatXferCtx.o
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-TestMEF90Ctx: TestMEF90Ctx.o 
+TestMEF90Ctx: TestMEF90Ctx.o
 	-@echo " $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
@@ -124,7 +134,7 @@ TestConstraintIO4: TestConstraintIO4.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
 	-@${RM} $<
 
-# TestMaterials is a false positive	
+# TestMaterials is a false positive
 # TestMaterials: TestMaterials.o
 # 	-@echo " $@"
 # 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
@@ -351,7 +361,7 @@ runTestConstraintIO: TestConstraintIO
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above "; fi;\
 	${RM} -f $@.out $@.exo
 
-# TestMaterials is a false positive	
+# TestMaterials is a false positive
 # runTestMaterials: TestMaterials
 # 	@echo "         Running " $@
 # 	-@ARGS='';\
@@ -440,7 +450,7 @@ allclean:
 	make -C ${MEF90_DIR} clean
 
 debug::
-	@echo FFLAGS              ${FFLAGS} 
+	@echo FFLAGS              ${FFLAGS}
 	@echo FC_FLAGS            ${FC_FLAGS}
 	@echo FCFLAGS             ${FCFLAGS}
 	@echo FCPPFLAGS           ${FCPPFLAGS}
