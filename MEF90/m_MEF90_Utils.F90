@@ -7,6 +7,8 @@ Module m_MEF90_Utils
    public :: MEF90ISAllGatherMerge
    public :: MEF90FilePrefix
    public :: MEF90FileExtension
+   public :: MEF90StrCount
+   public :: MEF90StrTokenize
 
 Contains
 #undef __FUNCT__

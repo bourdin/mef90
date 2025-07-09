@@ -17,13 +17,12 @@ include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 TestParser.o: ${MEF90_DIR}/Tests/TestParser.F90 MEF90
 	-@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -I${FFP_DIR}/include -c -o $@ $<
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestParser: TestParser.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} -L${FFP_DIR}/lib -lfortran_function_parser
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SYMENGINEF90_LIB} 
 	-@${RM} $<
-
 
 TestOffsets.o: ${MEF90_DIR}/Tests/TestOffsets.F90 MEF90
 	-@echo "      $<"
@@ -168,6 +167,15 @@ TestVecSetBCFromOptions.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptions.F90 MEF90
 TestVecSetBCFromOptions: TestVecSetBCFromOptions.o
 	-@echo " $@"
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${RM} $<
+
+TestVecSetBCFromOptionsExpr.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptionsExpr.F90 MEF90
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestVecSetBCFromOptionsExpr: TestVecSetBCFromOptionsExpr.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SYMENGINEF90_LIB} 
 	-@${RM} $<
 
 TestLabels.o: ${MEF90_DIR}/Tests/TestLabels.F90 MEF90

@@ -15,10 +15,12 @@ Module m_MEF90_DMPlex
                        !MEF90EdgeSetType,     &
                        MEF90VertexSetType
     End Enum
-    PetscEnum,Dimension(3),Parameter :: MEF90SetType = [ &
-        MEF90CellSetType,                                &
-        MEF90FaceSetType,                                &
-        !MEF90EdgeSetType,                                &
+
+    !!! Not sure why this has to be made explicitly public
+    PetscEnum,Dimension(3),Parameter,public :: MEF90SetType = [ &
+        MEF90CellSetType,                                       &
+        MEF90FaceSetType,                                       &
+        !MEF90EdgeSetType,                                       &
         MEF90VertexSetType ]
 
     Character(len=MEF90MXSTRLEN),Parameter :: MEF90CellSetLabelName   = 'Cell Sets  '
@@ -1009,7 +1011,7 @@ Contains
         PetscInt,Dimension(:),Pointer           :: setID,pointID
         Character(len=MEF90MXSTRLEN)            :: ValueKey,name
         PetscBool                               :: flg
-        PetscInt                                :: dim,numOpt,bs,numDofClosure
+        PetscInt                                :: dim,numOpt,bs,numDofClosure,i
         PetscReal,Dimension(:),pointer          :: Val,vArray
         Type(tPetscSection)                     :: section
 
@@ -1039,7 +1041,9 @@ Contains
                                 PetscCall(MEF90VecGetClosureSize(v,pointID(point),numDofClosure,ierr))
                                 If (numDofClosure > 0) Then
                                     PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
-                                    vArray = scalingFactor * Val
+                                    do i = 1, numDofClosure/bs
+                                        vArray((i-1)*bs+1:i*bs) = scalingFactor * Val
+                                    end do
                                     PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
                                     PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
                                 End If ! numDofClosure

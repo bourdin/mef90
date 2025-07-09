@@ -14,8 +14,6 @@ Module m_MEF90
    Use m_MEF90_NormsInterface
 
    Implicit NONE
-   Public :: MEF90Initialize
-   Public :: MEF90Finalize
    
    
 Contains
@@ -37,7 +35,7 @@ Contains
       !Call PetscLogBegin(ierr);CHKERRQ(ierr)
       Write(IOBuffer,*) "# MEF90: git changeset ",MEF90_GITVER,"\n"
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
-      Write(IOBuffer,*) "# Copyright (c) 1998-2022 B. Bourdin <bourdin@mcmaster.ca> and co-authors\n"
+      Write(IOBuffer,*) "# Copyright (c) 1998-2025 B. Bourdin <bourdin@mcmaster.ca> and co-authors\n"
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))
       Write(IOBuffer,*) "# See CONTRIBUTORS.txt for a list of contributors\n"
       PetscCall(PetscPrintf(comm,IOBuffer,ierr))

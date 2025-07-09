@@ -2,6 +2,7 @@ Program  TestVecSetBCFromOptionsExpr
 #include <petsc/finclude/petsc.h>
 Use petsc
 Use m_MEF90
+Use m_MEF90_DMPlex
 #ifdef MEF90_HAVE_SYMENGINEF90
 use symengine
 #endif
@@ -56,13 +57,13 @@ Implicit NONE
     PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-sdim',sdim,flg,ierr))
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,sdim,name,V,ierr))
     PetscCallA(VecSet(v,-1.234_Kr,ierr))
-    scalingFactor = 1.0_kI
-    PetscCallA(MEF90VecSetBCValuesFromOptions(V,scalingFactor,ierr))
-    PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
+    ! scalingFactor = 1.0_Kr
+    ! PetscCallA(MEF90VecSetBCValuesFromOptions(V,scalingFactor,ierr))
+    ! PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 
     PetscCallA(VecSet(v,5.678_Kr,ierr))
-    scalingFactor = 1.0_kI
-    PetscCallA(MEF90VecSetValuesFromOptions(V,scalingFactor,ierr))
+    scalingFactor = 2.0_Kr
+    PetscCallA(MEF90VecSetValuesFromOptionsExpr(V,scalingFactor,ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 
     ViewSec: block
@@ -74,6 +75,49 @@ Implicit NONE
         PetscCallA(PetscSectionViewFromOptions(sectionV,PETSC_NULL_OBJECT,"-temperature_section_view",ierr))
     end block ViewSec
 
+    ! test: block
+    !     character(len=32) :: str
+    !     character         :: delim
+    !     character(len=2)  :: delim2
+    !     character(len=MEF90MXSTRLEN),dimension(:),allocatable :: tok
+    !     integer :: i
+
+    !     str = 'x^2 - 2x + 1, x+y,z'
+    !     delim = ','
+    !     delim2 = ', '
+    !     write(*,*) MEF90StrCount(str,delim)
+    !     write(*,*) MEF90StrCount(str,delim2)
+    !     write(*,*) MEF90StrCount(trim(str),' ')
+
+    !     write(*,*) "MEF90StrTokenize(str,delim,tok)"
+    !     call MEF90StrTokenize(str,delim,tok)
+    !     do i = 1, MEF90StrCount(str,delim)+1
+    !         write(*,*) i, trim(tok(i))
+    !     end do
+    !     deallocate(tok)
+
+    !     write(*,*) "MEF90StrTokenize(str,delim2,tok)"
+    !     call MEF90StrTokenize(str,delim2,tok)
+    !     do i = 1, MEF90StrCount(str,delim2)+1
+    !         write(*,*) i, trim(tok(i))
+    !     end do
+    !     deallocate(tok)
+
+    !     write(*,*) "MEF90StrTokenize(str,',',tok)"
+    !     call MEF90StrTokenize(str,',',tok)
+    !     do i = 1, MEF90StrCount(str,delim2)+1
+    !         write(*,*) i, trim(tok(i))
+    !     end do
+    ! end block test
+
+    ! test2: block
+    !     integer :: i
+    !     write(*,*) MEF90CellSetType
+    !     write(*,*) 'size(MEF90SetType) ', size(MEF90SetType)
+    !     do i = 1, size(MEF90SetType)
+    !         write(*,*) 'MEF90SetLabelName(i) ', MEF90SetLabelName(i), MEF90SetPrefix(i)
+    !     end do
+    ! end block test2
 
     PetscCallA(VecDestroy(v,ierr))
     PetscCallA(DMDestroy(dm,ierr))
@@ -99,11 +143,11 @@ Contains
 #ifdef MEF90_HAVE_SYMENGINEF90
         Type(tDM)                                :: dm
         PetscEnum                                :: setType
-        PetscInt                                 :: set,point
+        PetscInt                                 :: set,point,p
         Type(tIS)                                :: setIS,pointIS
         PetscInt,Dimension(:),Pointer            :: setID,pointID
-        Character(len=MEF90MXSTRLEN)             :: ValueKey,name,ExprStr
-        Character(len=MEF90MXSTRLEN),allocatable :: ExprStrComp
+        Character(len=MEF90MXSTRLEN)             :: ValueKey,name,ExprStr,IOBuffer
+        Character(len=MEF90MXSTRLEN),dimension(:),allocatable :: ExprStrComp
         PetscBool                                :: flg
         PetscInt                                 :: dim,numOpt,bs,numDofClosure,i,c
         PetscReal,Dimension(:),pointer           :: Val,vArray
@@ -114,7 +158,9 @@ Contains
         PetscReal,dimension(3)                   :: xyz
         type(Basic),dimension(:),allocatable     :: exprs
         type(Basic)                              :: tmpExpr
-        type(symbol),dimension(3)                :: vars = [Symbol("x"), Symbol("y"), Symbol("z")]
+        type(symbol),dimension(3)                :: vars
+        type(realdouble),dimension(3)            :: vals
+        character                                :: delim = ','
 
         PetscCall(VecGetDM(v,dm,ierr))
         PetscCall(PetscObjectGetName(v,name,ierr))
@@ -122,13 +168,15 @@ Contains
 
         PetscCall(DMGetDimension(dm,dim,ierr))
         PetscCall(VecGetBlockSize(v,bs,ierr))
-        Allocate(Val(bs))
+
+        vars = [Symbol("x"), Symbol("y"), Symbol("z")]
+        allocate(val(bs))
+        allocate(exprs(bs))
 
         PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
         PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        allocate(exprs(dim))
 
-        vals[1] = RealDouble(t)
+        vals(1) = RealDouble(t)
         Do setType = 1,size(MEF90SetType)
             PetscCall(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),setIS,ierr))
             ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
@@ -138,15 +186,15 @@ Contains
                     write(ValueKey,'("-",a2,I4.4,"_",a)') MEF90SetPrefix(setType),setID(set),trim(name)
                     numOpt = bs
                     PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,trim(ValueKey),ExprStr,flg,ierr))
-                    numOpts = MEF90StrCount(ExprStr,',')
-                    call MEF90StrTokenize(ExprStr,',',ExprStrComp)
-                    if (shape(ExprStrComp) < dim) then
-                        Write(IOBuffer,"(A,' was expecting ',I2,' expressions but got only ',I2,' for key ',A,'\n')") __FUNCT__, dim, shape(ExprStrComp), ValueKey
+                    numOpt = MEF90StrCount(ExprStr,delim)
+                    call MEF90StrTokenize(ExprStr,delim,ExprStrComp)
+
+                    if (size(ExprStrComp) /= bs) then
+                        Write(IOBuffer,"(A,' was expecting ',I2,' expressions but got ',I2,' for key ',A,'\n')") __FUNCT__, bs, size(ExprStrComp), trim(ValueKey)
                         SETERRQ(MEF90Ctx%Comm,PETSC_ERR_ARG_SIZ,IOBuffer)
                     end if
                     !!! create parsers
-                    allocate(exprs(shape(ExprStrComp)))
-                    do c = 1, shape(ExprStrComp)
+                    do c = 1, bs
                         exprs(c) = parse(ExprStrComp(c))
                     end do
                     
@@ -160,22 +208,24 @@ Contains
                                     If (numDofClosure > 0) Then
                                     !!! Get the coordinates of the dof associated with the point
                                     !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                                    PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
+                                    PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,pointID(point),PETSC_NULL_INTEGER,coordArray,ierr))
                                     Do i = 1,dim
                                         xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
                                     End Do
-                                    PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,PETSC_NULL_INTEGER,coordArray,ierr))
+                                    PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,pointID(point),PETSC_NULL_INTEGER,coordArray,ierr))
                                     PetscCall(DMPlexVecGetClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
 
-                                    !!! Parse expressions
-                                    do c = 1, numDofClosure
-                                        tmpExpr = Exprs(c)
-                                        tmpExpr = tmpExpr%subs(Symbol("t"),RealDouble(t))
-                                        do i = 1, shape(ExprStrComp)
-                                            tmpExpr = tmpExpr%subs(vars(i),RealDouble(xyz(i)))
+                                    !! Parse expressions This will need to be updated when we can use symengine lambdify
+                                    do p = 1, numDofClosure
+                                        do c = 1, bs
+                                            tmpExpr = Exprs(c)
+                                            tmpExpr = tmpExpr%subs(Symbol("t"),RealDouble(t))
+                                            do i = 1, dim
+                                                tmpExpr = tmpExpr%subs(vars(i),RealDouble(xyz(i)))
+                                            end do
+                                            tmpExpr = tmpExpr%evalf()
+                                            vArray((p-1)*bs+c) = tmpExpr%dbl()
                                         end do
-                                        tmpExpr = tmpExpr%evalf()
-                                        vArray(c) = tmpExpr%dbl()
                                     end do
                                     PetscCall(DMPlexVecSetClosure(dm,section,v,pointID(point),vArray,INSERT_ALL_VALUES,ierr))
                                     PetscCall(DMPlexVecRestoreClosure(dm,section,v,pointID(point),PETSC_NULL_INTEGER,vArray,ierr))
@@ -185,8 +235,7 @@ Contains
                         End If ! pointIS
                         PetscCall(ISDestroy(pointIS,ierr))
                     End If ! numOpt
-                    deAllocate(exprs)
-                    DeAllocate(ExprStrComp)
+                    deAllocate(ExprStrComp)
                 End Do ! set
                 PetscCall(ISRestoreIndices(setIS,setID,ierr))
             End If ! setIS
