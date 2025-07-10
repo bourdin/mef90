@@ -21,7 +21,7 @@ TestParser.o: ${MEF90_DIR}/Tests/TestParser.F90 MEF90
 
 TestParser: TestParser.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SYMENGINEF90_LIB} 
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB} 
 	-@${RM} $<
 
 TestOffsets.o: ${MEF90_DIR}/Tests/TestOffsets.F90 MEF90
@@ -30,7 +30,7 @@ TestOffsets.o: ${MEF90_DIR}/Tests/TestOffsets.F90 MEF90
 
 TestOffsets: TestOffsets.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestLog.o: ${MEF90_DIR}/Tests/TestLog.F90 MEF90
@@ -39,7 +39,7 @@ TestLog.o: ${MEF90_DIR}/Tests/TestLog.F90 MEF90
 
 TestLog: TestLog.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90
@@ -48,7 +48,7 @@ TestOrientation.o: ${MEF90_DIR}/Tests/TestOrientation.F90 MEF90
 
 TestOrientation: TestOrientation.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestDotProduct.o: ${MEF90_DIR}/Tests/TestDotProduct.F90 MEF90
@@ -57,7 +57,7 @@ TestDotProduct.o: ${MEF90_DIR}/Tests/TestDotProduct.F90 MEF90
 
 TestDotProduct: TestDotProduct.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestMassMatrix.o: ${MEF90_DIR}/Tests/TestMassMatrix.F90 MEF90
@@ -65,7 +65,7 @@ TestMassMatrix.o: ${MEF90_DIR}/Tests/TestMassMatrix.F90 MEF90
 
 TestMassMatrix: TestMassMatrix.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestHeatXferCtx.o: ${MEF90_DIR}/Tests/TestHeatXferCtx.F90 MEF90 m_HeatXfer
@@ -74,7 +74,7 @@ TestHeatXferCtx.o: ${MEF90_DIR}/Tests/TestHeatXferCtx.F90 MEF90 m_HeatXfer
 
 TestHeatXferCtx: TestHeatXferCtx.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
@@ -82,7 +82,7 @@ TestMEF90Ctx.o: ${MEF90_DIR}/Tests/TestMEF90Ctx.F90 MEF90
 
 TestMEF90Ctx: TestMEF90Ctx.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestSection.o: ${MEF90_DIR}/Tests/TestSection.F90 MEF90
@@ -90,7 +90,7 @@ TestSection.o: ${MEF90_DIR}/Tests/TestSection.F90 MEF90
 
 TestSection: TestSection.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestConstraints.o: ${MEF90_DIR}/Tests/TestConstraints.F90 MEF90
@@ -98,7 +98,7 @@ TestConstraints.o: ${MEF90_DIR}/Tests/TestConstraints.F90 MEF90
 
 TestConstraints: TestConstraints.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestConstraintIO.o: ${MEF90_DIR}/Tests/TestConstraintIO.F90 MEF90
@@ -106,7 +106,7 @@ TestConstraintIO.o: ${MEF90_DIR}/Tests/TestConstraintIO.F90 MEF90
 
 TestConstraintIO: TestConstraintIO.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestConstraintIO2.o: ${MEF90_DIR}/Tests/TestConstraintIO2.F90 MEF90
@@ -114,7 +114,7 @@ TestConstraintIO2.o: ${MEF90_DIR}/Tests/TestConstraintIO2.F90 MEF90
 
 TestConstraintIO2: TestConstraintIO2.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestConstraintIO3.o: ${MEF90_DIR}/Tests/TestConstraintIO3.F90 MEF90
@@ -122,7 +122,7 @@ TestConstraintIO3.o: ${MEF90_DIR}/Tests/TestConstraintIO3.F90 MEF90
 
 TestConstraintIO3: TestConstraintIO3.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestConstraintIO4.o: ${MEF90_DIR}/Tests/TestConstraintIO4.F90 MEF90
@@ -130,13 +130,13 @@ TestConstraintIO4.o: ${MEF90_DIR}/Tests/TestConstraintIO4.F90 MEF90
 
 TestConstraintIO4: TestConstraintIO4.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 # TestMaterials is a false positive
 # TestMaterials: TestMaterials.o
 # 	-@echo " $@"
-# 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+# 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 # 	-@${RM} $<
 
 # TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
@@ -148,7 +148,7 @@ TestVec.o: ${MEF90_DIR}/Tests/TestVec.F90 MEF90
 
 TestVec: TestVec.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestDMPlexVecGetClosure.o: ${MEF90_DIR}/Tests/TestDMPlexVecGetClosure.F90 MEF90
@@ -157,7 +157,7 @@ TestDMPlexVecGetClosure.o: ${MEF90_DIR}/Tests/TestDMPlexVecGetClosure.F90 MEF90
 
 TestDMPlexVecGetClosure: TestDMPlexVecGetClosure.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestVecSetBCFromOptions.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptions.F90 MEF90
@@ -166,7 +166,7 @@ TestVecSetBCFromOptions.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptions.F90 MEF90
 
 TestVecSetBCFromOptions: TestVecSetBCFromOptions.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestVecSetBCFromOptionsExpr.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptionsExpr.F90 MEF90
@@ -175,7 +175,7 @@ TestVecSetBCFromOptionsExpr.o: ${MEF90_DIR}/Tests/TestVecSetBCFromOptionsExpr.F9
 
 TestVecSetBCFromOptionsExpr: TestVecSetBCFromOptionsExpr.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SYMENGINEF90_LIB} 
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestLabels.o: ${MEF90_DIR}/Tests/TestLabels.F90 MEF90
@@ -183,7 +183,7 @@ TestLabels.o: ${MEF90_DIR}/Tests/TestLabels.F90 MEF90
 
 TestLabels: TestLabels.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestATClass.o: ${MEF90_DIR}/Tests/TestATClass.F90 MEF90 m_DefMech
@@ -191,7 +191,7 @@ TestATClass.o: ${MEF90_DIR}/Tests/TestATClass.F90 MEF90 m_DefMech
 
 TestATClass: TestATClass.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestSNLP.o: ${MEF90_DIR}/Tests/TestSNLP.F90 MEF90
@@ -199,7 +199,7 @@ TestSNLP.o: ${MEF90_DIR}/Tests/TestSNLP.F90 MEF90
 
 TestSNLP: TestSNLP.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestVonMises2D.o: ${MEF90_DIR}/Tests/TestVonMises2D.F90 MEF90
@@ -207,7 +207,7 @@ TestVonMises2D.o: ${MEF90_DIR}/Tests/TestVonMises2D.F90 MEF90
 
 TestVonMises2D: TestVonMises2D.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 TestVonMises3D.o: ${MEF90_DIR}/Tests/TestVonMises3D.F90 MEF90
@@ -215,7 +215,7 @@ TestVonMises3D.o: ${MEF90_DIR}/Tests/TestVonMises3D.F90 MEF90
 
 TestVonMises3D: TestVonMises3D.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 	-@${RM} $<
 
 ### Old stuff
@@ -226,7 +226,7 @@ TestDofOrdering.o: ${MEF90_DIR}/Tests/TestDofOrdering.F90 MEF90 m_HeatXfer
 
 TestDofOrdering: TestDofOrdering.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestDMPlexComputeCellGeometryAffineFEM: TestDMPlexComputeCellGeometryAffineFEM.o
@@ -266,7 +266,7 @@ TestQuadrature.o: ${MEF90_DIR}/Tests/TestQuadrature.F90 MEF90
 
 TestQuadrature: TestQuadrature.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestSpectralDecomposition.o: ${MEF90_DIR}/Tests/TestSpectralDecomposition.F90 MEF90
@@ -274,7 +274,7 @@ TestSpectralDecomposition.o: ${MEF90_DIR}/Tests/TestSpectralDecomposition.F90 ME
 
 TestSpectralDecomposition: TestSpectralDecomposition.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestMasonry.o: ${MEF90_DIR}/Tests/TestMasonry.F90 MEF90
@@ -282,7 +282,7 @@ TestMasonry.o: ${MEF90_DIR}/Tests/TestMasonry.F90 MEF90
 
 TestMasonry: TestMasonry.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestHD.o: ${MEF90_DIR}/Tests/TestHD.F90 MEF90
@@ -290,7 +290,7 @@ TestHD.o: ${MEF90_DIR}/Tests/TestHD.F90 MEF90
 
 TestHD: TestHD.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestTresca3D.o: ${MEF90_DIR}/Tests/TestTresca3D.F90 MEF90
@@ -298,7 +298,7 @@ TestTresca3D.o: ${MEF90_DIR}/Tests/TestTresca3D.F90 MEF90
 
 TestTresca3D: TestTresca3D.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestTresca2D.o: ${MEF90_DIR}/Tests/TestTresca2D.F90 MEF90
@@ -306,7 +306,7 @@ TestTresca2D.o: ${MEF90_DIR}/Tests/TestTresca2D.F90 MEF90
 
 TestTresca2D: TestTresca2D.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 ###

@@ -28,7 +28,7 @@ WorkControlled:${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled: WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
-	-@${FLINKER} -o $@ WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
 WorkControlled.o: ${BASE_DIR}/WorkControlled.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
