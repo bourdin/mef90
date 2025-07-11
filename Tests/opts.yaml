@@ -1,0 +1,6 @@
+cs0001:
+  temperatureExpr: 'x;y'
+fs0021:
+  temperatureBC: yes,no
+  boundaryTemperatureExpr: 'sign(x);-y'
+

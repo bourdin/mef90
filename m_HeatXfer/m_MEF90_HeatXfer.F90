@@ -70,6 +70,8 @@ Contains
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90HeatXferCtx%temperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90HeatXferCtx%temperatureLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90HeatXferCtx%temperatureLocal,time,ierr))
       End Select
 
       Select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
@@ -80,6 +82,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90HeatXferCtx%externalTemperatureLocal,time,ierr))
       End Select
 
       Select case (MEF90HeatXferGlobalOptions%fluxScaling)
@@ -90,6 +94,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90HeatXferCtx%fluxLocal,time,ierr))
       End Select
 
       Select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
@@ -99,6 +105,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90HeatXferCtx%boundaryFluxLocal,time,ierr))
       End Select
    End Subroutine MEF90HeatXferSetTransients
    

@@ -4,6 +4,7 @@ Module m_MEF90_DefMechAT_class
 
    Use petscsys
    Use m_MEF90_Parameters
+   Use iso_c_binding
    Implicit none
 
 !!!
@@ -29,6 +30,7 @@ Module m_MEF90_DefMechAT_class
 
    Abstract Interface
       PetscReal function ATInterface(self,alpha)
+         use petscsys
          import :: MEF90DefMechAT_Type
          Class(MEF90DefMechAT_Type),Intent(IN)         :: self
          PetscReal                                     :: alpha
