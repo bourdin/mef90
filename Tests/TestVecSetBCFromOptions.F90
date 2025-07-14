@@ -52,12 +52,12 @@ Implicit NONE
     PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-sdim',sdim,flg,ierr))
     PetscCallA(MEF90CreateLocalVector(dm,MEF90GlobalOptions%elementFamily,MEF90GlobalOptions%elementOrder,sdim,name,V,ierr))
     PetscCallA(VecSet(v,-1.234_Kr,ierr))
-    scalingFactor = 1.0_kI
+    scalingFactor = 1.0_Kr
     PetscCallA(MEF90VecSetBCValuesFromOptions(V,scalingFactor,ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 
     PetscCallA(VecSet(v,5.678_Kr,ierr))
-    scalingFactor = 1.0_kI
+    scalingFactor = 2.0_Kr
     PetscCallA(MEF90VecSetValuesFromOptions(V,scalingFactor,ierr))
     PetscCallA(VecViewFromOptions(V,PETSC_NULL_OBJECT,"-temperature_vec_view",ierr))
 

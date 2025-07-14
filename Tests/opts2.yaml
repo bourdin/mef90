@@ -1,0 +1,6 @@
+cs0001:
+  displacementExpr: 'x;y'
+fs0021:
+  displacementBC: yes,yes
+  boundaryDisplacementExpr: 'x'
+

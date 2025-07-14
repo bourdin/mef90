@@ -34,7 +34,7 @@ ThermoElastoPlasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity: ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
-	-@${FLINKER} -o $@ ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
 ThermoElastoPlasticity.o: ${BASE_DIR}/ThermoElastoPlasticity.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"

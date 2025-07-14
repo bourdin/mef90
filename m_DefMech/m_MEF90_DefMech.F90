@@ -113,6 +113,8 @@ Contains
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementLocal,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%boundaryDamageScaling)
@@ -127,6 +129,8 @@ Contains
          SETERRQ(MEF90DefMechCtx%MEF90Ctx%Comm,PETSC_ERR_ARG_WRONG,IOBuffer)
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%damageLocal,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%cohesiveDisplacementScaling)
@@ -136,6 +140,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%cohesiveDisplacement,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%displacementLowerBoundScaling)
@@ -146,6 +152,8 @@ Contains
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLowerBoundLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLowerBoundLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementLowerBoundLocal,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%displacementUpperBoundScaling)
@@ -156,6 +164,8 @@ Contains
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementUpperBoundLocal,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementUpperBoundLocal,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementUpperBoundLocal,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%bodyForceScaling)
@@ -165,6 +175,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%bodyForce,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%boundaryForceScaling)
@@ -175,6 +187,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%boundaryForce,time,ierr))
       End Select
 
       Select case (MEF90DefMechGlobalOptions%pressureForceScaling)
@@ -185,6 +199,8 @@ Contains
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,time,ierr))
       Case (MEF90Scaling_CST)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce,1.0_Kr,ierr))
+      Case (MEF90Scaling_Expr)
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%pressureForce,time,ierr))
       End Select
    End Subroutine MEF90DefMechSetTransients
 

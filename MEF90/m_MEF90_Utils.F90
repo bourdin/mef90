@@ -7,6 +7,8 @@ Module m_MEF90_Utils
    public :: MEF90ISAllGatherMerge
    public :: MEF90FilePrefix
    public :: MEF90FileExtension
+   public :: MEF90StrCount
+   public :: MEF90StrTokenize
 
 Contains
 #undef __FUNCT__
@@ -87,4 +89,63 @@ Contains
       end if
    end function MEF90FileExtension
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90StrCount"
+!!!
+!!!  
+!!!  MEF90StrCount: counts the number of occurrences of a substring in a string
+!!!  
+!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   function MEF90StrCount(s,c)   
+      character(len=*),intent(IN)   :: s
+      character(len=*),intent(IN)   :: c
+      integer                       :: MEF90StrCount
+
+      integer                       :: idx,pos,count
+      count = 0
+      pos   = 1
+      do
+        idx = index(s(pos:),c)
+         if (idx == 0) then
+            exit
+         else
+            count = count+1 
+            pos = pos+idx+len(c)
+         endif
+      end do
+      MEF90StrCount = count
+   end function MEF90StrCount
+
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90StrTokenize"
+!!!
+!!!  
+!!!  MEF90StrTokenize: Breaks a string into an array of substrings based on a delimiter
+!!!  
+!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90StrTokenize(str,delim,tokens)   
+      character(len=*),intent(IN)                           :: str
+      character(len=*),intent(IN)                           :: delim
+      character(len=MEF90MXSTRLEN),dimension(:),allocatable :: tokens
+
+      integer                                               :: i,n,pos,offset 
+      n = MEF90StrCount(str,delim)
+      allocate(tokens(n+1))
+      if (n == 0) then
+         tokens(1) = str
+      else
+         pos = 1
+         do i = 1,n
+            offset = index(str(pos:),delim)
+            tokens(i) = str(pos:pos+offset-2)
+            pos = pos+offset-1+len(delim)
+         end do
+         tokens(n+1) = str(pos:)
+      end if
+   end subroutine MEF90StrTokenize
 End Module m_MEF90_Utils

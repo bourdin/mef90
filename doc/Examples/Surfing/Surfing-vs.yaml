@@ -1,6 +1,8 @@
 verbose: 1
 time:
-    interpolation: exo
+    min: 0
+    max: 10
+    numstep: 21
 defmech:
     irrevthres: 0.
     timestepping:
@@ -28,25 +30,37 @@ damage:
     snes:
         atol: 1e-6
         rtol: 1e-5
+stress:
+    export: 1
 boundaryDisplacement:
-  scaling: file
+  scaling: expression
 cs0001:
     hookesLaw:  
         type: isotropic
         YoungsModulus: 1.
-        PoissonRatio: 0.
+        PoissonRatio: 0.3
     linearThermalExpansion: 0,0,0
-    fracturetoughness: .888
+    fracturetoughness: 1.
     residualstiffness: 0.
-    internalLength: .45
+    internalLength: .15
     damage:
         type: AT1
     plasticity:
         type: NONE
 vs0020:
     displacementBC: 1,1,1
+    # kappa = (3.0-nu)/(1.0+nu) = 2.07692307692
+    # mu = E / (1. + nu) * .5.  = 0.3846153846
+    # r = sqrt((x-t)^2+y^2)
+    # theta = atan2(y,x-t)
+    # ux = np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
+    # uy = np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+    boundaryDisplacementExpr: "sqrt(sqrt((x-t)^2+y^2)/2./pi)/0.3846153846 /2 * cos(atan2(y,x-t)/2)*(2.07692307692-cos(atan2(y,x-t)));sqrt(sqrt((x-t)^2+y^2)/2./pi)/0.3846153846 /2 * sin(atan2(y,x-t)/2)*(2.07692307692-cos(atan2(y,x-t)));0."
     damageBC: 1
     boundaryDamage: 0.
+vs0030:
+    displacementBC: 0,0,0
+    damageBC: 0
 vs0500:
     displacementBC: 0,0,0
     damageBC: 1

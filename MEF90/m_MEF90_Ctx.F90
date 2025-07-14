@@ -61,13 +61,14 @@ Module m_MEF90_Ctx
       Enumerator ::  MEF90Scaling_CST=0,        &
                      MEF90Scaling_Linear,       &  
                      MEF90Scaling_File,         &  
+                     MEF90Scaling_Expr,         &
                      MEF90Scaling_Null
    End Enum
-   Character(len=MEF90MXSTRLEN),dimension(7),protected  :: MEF90ScalingList
+   Character(len=MEF90MXSTRLEN),dimension(8),protected  :: MEF90ScalingList
       
    Enum,bind(c)
       Enumerator  :: MEF90TimeInterpolation_linear = 0,  &
-                     MEF90TimeInterpolation_Vcycle,     &
+                     MEF90TimeInterpolation_Vcycle,      &
                      MEF90TimeInterpolation_quadratic,   &
                      MEF90TimeInterpolation_exo
    End Enum
@@ -107,10 +108,11 @@ Contains
       MEF90ScalingList(1) = 'constant'
       MEF90ScalingList(2) = 'linear'
       MEF90ScalingList(3) = 'file'
-      MEF90ScalingList(4) = 'null'
-      MEF90ScalingList(5) = 'MEF90scaling'
-      MEF90ScalingList(6) = '_MEF90Scaling'
-      MEF90ScalingList(7) = ''
+      MEF90ScalingList(4) = 'expression'
+      MEF90ScalingList(5) = 'null'
+      MEF90ScalingList(6) = 'MEF90scaling'
+      MEF90ScalingList(7) = '_MEF90Scaling'
+      MEF90ScalingList(8) = ''
       
       MEF90TimeInterpolationList(1) = 'linear'
       MEF90TimeInterpolationList(2) = 'Vcycle'
@@ -348,7 +350,7 @@ Contains
             Call EXGATM(exoUnit,t,exoErr)
          Else
             Write(IOBuffer,"(A,'EXO input file must be open prior to calling MEF90Ctx_GetTime\n')") __FUNCT__
-            SETERRQ(MEF90Ctx%Comm,PETSC_ERR_FILE_OPEN,"EXO input file must be open prior to calling MEF90Ctx_GetTime\n")
+            SETERRQ(MEF90Ctx%Comm,PETSC_ERR_FILE_OPEN,IOBuffer)
          End If
       Case Default
          Write(IOBuffer,"(A,'Unimplemented time interpolation: ',I0,'\n')") __FUNCT__,GlobalOptions%timeInterpolation

@@ -34,7 +34,7 @@ gmsh2exo.o: ${MEF90_DIR}/Utils/gmsh2exo.F90 MEF90
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/gmsh2exo: gmsh2exo.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 TestOrientation:${MEF90_DIR}/${PETSC_ARCH}/bin/TestOrientation
@@ -45,7 +45,7 @@ TestOrientation.o: ${MEF90_DIR}/Utils/TestOrientation.F90 MEF90
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/TestOrientation: TestOrientation.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 YAMLValidator.o: ${MEF90_DIR}/Utils/YAMLValidator.F90 
@@ -56,7 +56,7 @@ YAMLValidator:${MEF90_DIR}/${PETSC_ARCH}/bin/YAMLValidator
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/YAMLValidator: YAMLValidator.o
 	-@echo "      $@"
-	-@${FLINKER} -o $@ YAMLValidator.o ${PETSC_FORTRAN_LIB} ${PETSC_LIB} 
+	-@${FLINKER} -o $@ YAMLValidator.o ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} 
 
 HookeLaws:${MEF90_DIR}/${PETSC_ARCH}/bin/HookeLaws
 	-@echo "      $@"
@@ -66,7 +66,7 @@ HookeLaws.o: ${MEF90_DIR}/Utils/HookeLaws.F90 MEF90
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/HookeLaws: HookeLaws.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB}
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
 MEF90:

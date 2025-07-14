@@ -49,7 +49,6 @@ contains
         PetscCallA(VecRestoreArray(v,vArray,ierr))
         !!! Of course, this does not use informations from the section, so it does over-write constrained values
     End subroutine project
-
 End Module localFunctions
 
 Program  TestConstraintIO3
@@ -157,11 +156,12 @@ Implicit NONE
     PetscCallA(DMGetGlobalVector(dmU,V,ierr))
 
     ! ! Initialize boundary values of MEF90DefMechCtx%displacementLocal with values from the command line
-    ! PetscCallA(VecSet(MEF90DefMechCtx%displacementLocal,-1.23456789_Kr,ierr))
-    ! PetscCallA(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
+    PetscCallA(VecSet(MEF90DefMechCtx%displacementLocal,-1.23456789_Kr,ierr))
+    PetscCallA(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
+    PetscCallA(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementLocal,1.0_Kr,ierr))
 
     ! project a field onto a local vector
-    PetscCallA(project(MEF90DefMechCtx%displacementLocal,sectionU,ierr))
+    ! PetscCallA(project(MEF90DefMechCtx%displacementLocal,sectionU,ierr))
 
 
     ! Save MEF90DefMechCtx%displacementLocal in exo file
