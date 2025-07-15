@@ -1,40 +1,40 @@
 #include "../MEF90/mef90.inc"
-Module m_MEF90_DefMechAT_class
+module m_MEF90_DefMechAT_class
 #include "petsc/finclude/petsc.h"
 
-   Use petscsys
-   Use m_MEF90_Parameters
-   Use iso_c_binding
-   implicit none (type, external)
+   use petscsys
+   use m_MEF90_Parameters
+   use iso_c_binding
+   implicit none(type, external)
 
 !!!
-!!!  
+!!!
 !!!  MEF90_DefMechAT_Type: The abstract class used to define a generalized Ambrosio-Tortorelli phase field model
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   Type, abstract :: MEF90DefMechAT_Type
+   type, abstract :: MEF90DefMechAT_Type
       PetscReal                                        :: cw
       PetscInt                                         :: aOrder
-      PetscInt                                         :: wOrder  
-      Character(len=MEF90MXSTRLEN)                     :: type
-   Contains
-      Procedure(ATInterface), pass(self), deferred     :: a
-      Procedure(ATInterface), pass(self), deferred     :: Da
-      Procedure(ATInterface), pass(self), deferred     :: D2a
-      Procedure(ATInterface), pass(self), deferred     :: w
-      Procedure(ATInterface), pass(self), deferred     :: Dw
-      Procedure(ATInterface), pass(self), deferred     :: D2w
-   End Type MEF90DefMechAT_Type
+      PetscInt                                         :: wOrder
+      character(len=MEF90MXSTRLEN)                     :: type
+   contains
+      procedure(ATInterface), pass(self), deferred     :: a
+      procedure(ATInterface), pass(self), deferred     :: Da
+      procedure(ATInterface), pass(self), deferred     :: D2a
+      procedure(ATInterface), pass(self), deferred     :: w
+      procedure(ATInterface), pass(self), deferred     :: Dw
+      procedure(ATInterface), pass(self), deferred     :: D2w
+   end type MEF90DefMechAT_Type
 
-   Abstract Interface
-      PetscReal function ATInterface(self,alpha)
+   abstract interface
+      PetscReal function ATInterface(self, alpha)
          use petscsys
          import :: MEF90DefMechAT_Type
-         Class(MEF90DefMechAT_Type),Intent(IN)         :: self
+         class(MEF90DefMechAT_Type), intent(IN)         :: self
          PetscReal                                     :: alpha
-      End function ATInterface
-   End Interface
-End Module m_MEF90_DefMechAT_class
+      end function ATInterface
+   end interface
+end module m_MEF90_DefMechAT_class
 

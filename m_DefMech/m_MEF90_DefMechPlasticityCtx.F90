@@ -1,47 +1,47 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
-Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
+module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-   use m_MEF90_Materials
+use m_MEF90_Materials
 
-   Type :: MEF90DefMechPlasticityCtx
-      Type(MEF90_HOOKESLAW)       :: HookesLaw
-      Real(Kind = Kr)             :: YieldStress
-      Real(Kind = Kr)             :: DuctileCouplingPower
-      Type(MEF90_MATS)            :: totalStrain
-      Type(MEF90_MATS)            :: PlasticStrainOld
-      Type(MEF90_MATS)            :: plasticStrainPrevious
-      Real(Kind = Kr)             :: Damage
-      Real(Kind = Kr)             :: residualStiffness
-      Real(Kind = Kr)             :: residualYieldStress
-      Real(Kind = Kr)             :: CoefficientLinSoft
-      Real(Kind = Kr)             :: CoefficientDruckerPrager
-      Real(Kind = Kr)             :: CoefficientCapModel0
-      Real(Kind = Kr)             :: CoefficientCapModel1
-      Real(Kind = Kr)             :: CoefficientCapModel2
-      Real(Kind = Kr)             :: CoefficientCapModelD
-      PetscBool                   :: isPlaneStress
-      Real(Kind = Kr)             :: cumulatedDissipatedPlasticEnergy
-      PetscBool                   :: isLinearIsotropicHardening
-      Real(Kind = Kr)             :: CoeffF
-      Real(Kind = Kr)             :: CoeffG
-      Real(Kind = Kr)             :: CoeffH
-      Real(Kind = Kr)             :: CoeffM
-      Real(Kind = Kr)             :: CoeffN
-      Real(Kind = Kr)             :: CoeffL
-      Real(Kind = Kr)             :: YieldTau0
-      Real(Kind = Kr)             :: residualYieldTau0
-      Real(Kind = Kr)             :: phi1
-      Real(Kind = Kr)             :: phi2
-      Real(Kind = Kr)             :: Phi
-      Real(Kind = Kr)             :: delta
-      PetscBool                   :: isNoPlCoupling
-      Type(MEF90RotationMatrix3D) :: RotationMatrix3D
-      PetscBool                   :: isViscousPlasticity
-      Real(Kind = Kr)             :: ViscosityGamma0
-      Real(Kind = Kr)             :: ViscosityN
-      Real(Kind = Kr)             :: Viscositydt
-      Real(Kind = Kr)             :: viscousCumulatedDissipatedPlasticEnergyVariation
-      Real(Kind = Kr)             :: m
-   End Type MEF90DefMechPlasticityCtx
-End Module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
+type :: MEF90DefMechPlasticityCtx
+   type(MEF90_HOOKESLAW)       :: HookesLaw
+   real(Kind=Kr)             :: YieldStress
+   real(Kind=Kr)             :: DuctileCouplingPower
+   type(MEF90_MATS)            :: totalStrain
+   type(MEF90_MATS)            :: PlasticStrainOld
+   type(MEF90_MATS)            :: plasticStrainPrevious
+   real(Kind=Kr)             :: Damage
+   real(Kind=Kr)             :: residualStiffness
+   real(Kind=Kr)             :: residualYieldStress
+   real(Kind=Kr)             :: CoefficientLinSoft
+   real(Kind=Kr)             :: CoefficientDruckerPrager
+   real(Kind=Kr)             :: CoefficientCapModel0
+   real(Kind=Kr)             :: CoefficientCapModel1
+   real(Kind=Kr)             :: CoefficientCapModel2
+   real(Kind=Kr)             :: CoefficientCapModelD
+   PetscBool                   :: isPlaneStress
+   real(Kind=Kr)             :: cumulatedDissipatedPlasticEnergy
+   PetscBool                   :: isLinearIsotropicHardening
+   real(Kind=Kr)             :: CoeffF
+   real(Kind=Kr)             :: CoeffG
+   real(Kind=Kr)             :: CoeffH
+   real(Kind=Kr)             :: CoeffM
+   real(Kind=Kr)             :: CoeffN
+   real(Kind=Kr)             :: CoeffL
+   real(Kind=Kr)             :: YieldTau0
+   real(Kind=Kr)             :: residualYieldTau0
+   real(Kind=Kr)             :: phi1
+   real(Kind=Kr)             :: phi2
+   real(Kind=Kr)             :: Phi
+   real(Kind=Kr)             :: delta
+   PetscBool                   :: isNoPlCoupling
+   type(MEF90RotationMatrix3D) :: RotationMatrix3D
+   PetscBool                   :: isViscousPlasticity
+   real(Kind=Kr)             :: ViscosityGamma0
+   real(Kind=Kr)             :: ViscosityN
+   real(Kind=Kr)             :: Viscositydt
+   real(Kind=Kr)             :: viscousCumulatedDissipatedPlasticEnergyVariation
+   real(Kind=Kr)             :: m
+end type MEF90DefMechPlasticityCtx
+end module MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D

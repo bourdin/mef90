@@ -3,12 +3,12 @@
 module m_MEF90_DefMechAT1exp
 #include "petsc/finclude/petsc.h"
    ! Use m_MEF90
-   Use m_MEF90_DefMechAT_class
-   implicit none (type, external)
+   use m_MEF90_DefMechAT_class
+   implicit none(type, external)
    private
    public :: MEF90DefMechAT1exp_Type
 
-!!! AT1exp, a variant of AT1 model with an exponential stiffness interpolation 
+!!! AT1exp, a variant of AT1 model with an exponential stiffness interpolation
 !!! function:
 !!!
 !!! a_b(s)  = 1 + (e^{-bs} - 1) / (1 - e^-b) if b /= 0
@@ -17,133 +17,133 @@ module m_MEF90_DefMechAT1exp
 !!! a is convex if b > 1 and
 !!! a_b'(0) = -b / (1-e^{-b}) < -2 if b < 1.5
 !!!
-   Type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1exp_Type
+   type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1exp_Type
       PetscReal                                        :: b
-   Contains
-      Procedure, pass(self)                            :: a   => aAT1exp
-      Procedure, pass(self)                            :: Da  => DaAT1exp
-      Procedure, pass(self)                            :: D2a => D2aAT1exp
+   contains
+      procedure, pass(self)                            :: a => aAT1exp
+      procedure, pass(self)                            :: Da => DaAT1exp
+      procedure, pass(self)                            :: D2a => D2aAT1exp
 
-      Procedure, pass(self)                            :: w   => wAT1exp
-      Procedure, pass(self)                            :: Dw  => DwAT1exp
-      Procedure, pass(self)                            :: D2w => D2wAT1exp
-   end Type MEF90DefMechAT1exp_Type
+      procedure, pass(self)                            :: w => wAT1exp
+      procedure, pass(self)                            :: Dw => DwAT1exp
+      procedure, pass(self)                            :: D2w => D2wAT1exp
+   end type MEF90DefMechAT1exp_Type
 
    interface MEF90DefMechAT1exp_Type
       module procedure MEF90DefMechAT1exp_Constructor
    end interface
 
-Contains
+contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT1exp_Constructor"
 !!!
-!!!  
+!!!
 !!!  MEF90DefMechAT1exp_Constructor: the default constructor for a MEF90_DefMechAT1exp_Type
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Type(MEF90DefMechAT1exp_Type) Function MEF90DefMechAT1exp_Constructor(b)
-      PetscReal,Intent(IN)                             :: b
-      
-      MEF90DefMechAT1exp_Constructor%b                 = b
-      MEF90DefMechAT1exp_Constructor%cw                = 2.0_Kr / 3.0_Kr
-      MEF90DefMechAT1exp_Constructor%aorder            = 2
-      MEF90DefMechAT1exp_Constructor%worder            = 1
-      MEF90DefMechAT1exp_Constructor%type              = 'MEF90_DefMechAT1exp'
-   End Function MEF90DefMechAT1exp_Constructor
+   type(MEF90DefMechAT1exp_Type) function MEF90DefMechAT1exp_Constructor(b)
+      PetscReal, intent(IN)                             :: b
+
+      MEF90DefMechAT1exp_Constructor % b = b
+      MEF90DefMechAT1exp_Constructor % cw = 2.0_kr / 3.0_kr
+      MEF90DefMechAT1exp_Constructor % aorder = 2
+      MEF90DefMechAT1exp_Constructor % worder = 1
+      MEF90DefMechAT1exp_Constructor % type = 'MEF90_DefMechAT1exp'
+   end function MEF90DefMechAT1exp_Constructor
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1exp"
 !!!
-!!!  
+!!!
 !!!  aAT1exp: the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function aAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+   PetscReal function aAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      If (self%b == 0.0_Kr) Then
-         aAT1exp = 1.0_Kr - alpha
-      Else
-         aAT1exp = 1.0_Kr + (exp(-self%b * alpha) - 1.0_Kr) / (1.0_kr - exp(-self%b))
-      End If
-   End function aAT1exp
+      if (self % b == 0.0_kr) then
+         aAT1exp = 1.0_kr - alpha
+      else
+         aAT1exp = 1.0_kr + (exp(-self % b * alpha) - 1.0_kr) / (1.0_kr - exp(-self % b))
+      end if
+   end function aAT1exp
 
 #undef __FUNCT__
 #define __FUNCT__ "DaAT1exp"
 !!!
-!!!  
+!!!
 !!!  DaAT1exp: the derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function DaAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+   PetscReal function DaAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      If (self%b == 0.0_Kr) Then
-         DaAT1exp = -1.0_Kr
-      Else
-         DaAT1exp = -self%b * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
-      End If
-   End function DaAT1exp
+      if (self % b == 0.0_kr) then
+         DaAT1exp = -1.0_kr
+      else
+         DaAT1exp = -self % b * exp(-self % b * alpha) / (1.0_kr - exp(-self % b))
+      end if
+   end function DaAT1exp
 
 #undef __FUNCT__
 #define __FUNCT__ "D2aAT1exp"
 !!!
-!!!  
+!!!
 !!!  D2aAT1exp: the second derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function D2aAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+   PetscReal function D2aAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      If (self%b == 0.0_Kr) Then
-         D2aAT1exp = 0.0_Kr
-      Else
-         D2aAT1exp = self%b**2 * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
-      End If
-   End function D2aAT1exp
+      if (self % b == 0.0_kr) then
+         D2aAT1exp = 0.0_kr
+      else
+         D2aAT1exp = self % b**2 * exp(-self % b * alpha) / (1.0_kr - exp(-self % b))
+      end if
+   end function D2aAT1exp
 
 #undef __FUNCT__
 #define __FUNCT__ "wAT1exp"
 !!!
-!!!  
+!!!
 !!!  wAT1exp: the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function wAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)         :: self
+   PetscReal function wAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)         :: self
       PetscReal                                        :: alpha
 
       wAT1exp = alpha
-   End function wAT1exp
+   end function wAT1exp
 
 #undef __FUNCT__
 #define __FUNCT__ "DwAT1exp"
 !!!
-!!!  
+!!!
 !!!  DwAT1exp: the derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function DwAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+   PetscReal function DwAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      DwAT1exp = 1.0_Kr
-   End function DwAT1exp
+      DwAT1exp = 1.0_kr
+   end function DwAT1exp
 
 #undef __FUNCT__
 #define __FUNCT__ "D2wAT1exp"
 !!!
-!!!  
+!!!
 !!!  D2wAT1exp: the second derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   PetscReal function D2wAT1exp(self,alpha)
-      Class(MEF90DefMechAT1exp_Type),Intent(IN)        :: self
+   PetscReal function D2wAT1exp(self, alpha)
+      class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      D2wAT1exp = 0.0_Kr
-   End function D2wAT1exp
-End module m_MEF90_DefMechAT1exp
+      D2wAT1exp = 0.0_kr
+   end function D2wAT1exp
+end module m_MEF90_DefMechAT1exp

@@ -1,11 +1,11 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
-Module MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
+module MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-   implicit none (type, external)
+implicit none(type, external)
 
-Contains
+contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_NONE"
 !!!
@@ -16,16 +16,16 @@ Contains
 !!!
 !!!
 
-   subroutine FHG_NONE(x,f,h,g,myctx) bind(c)
-      use,intrinsic :: iso_c_binding
+subroutine FHG_NONE(x, f, h, g, myctx) bind(c)
+   use, intrinsic :: iso_c_binding
 
-      real(kind=c_double)                       :: x(*)
-      real(kind=c_double)                       :: f(*)
-      real(kind=c_double)                       :: h(*)
-      real(kind=c_double)                       :: g(*)
-      type(c_ptr),intent(in),value              :: myctx
+   real(kind=c_double)                       :: x(*)
+   real(kind=c_double)                       :: f(*)
+   real(kind=c_double)                       :: h(*)
+   real(kind=c_double)                       :: g(*)
+   type(c_ptr), intent(in), value              :: myctx
 
-      CONTINUE
-   end subroutine FHG_NONE
+   continue
+end subroutine FHG_NONE
 
-End Module MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
+end module MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D

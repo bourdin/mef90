@@ -1,442 +1,439 @@
-Module localFunctions
+module localFunctions
 #include <petsc/finclude/petsc.h>
-use petsc
-use m_MEF90
-implicit none (type, external)
+   use petsc
+   use m_MEF90
+   implicit none(type, external)
 
-    abstract interface
-        pure function f_interface(x,y)
-            PetscReal,intent(in) :: x,y
-            PetscReal            :: f_interface
-        end function f_interface
-    end interface
-        
+   abstract interface
+      pure function f_interface(x, y)
+         PetscReal, intent(in) :: x, y
+         PetscReal            :: f_interface
+      end function f_interface
+   end interface
+
 contains
 #undef __FUNCT__
 #define __FUNCT__ "f1"
 
-    pure function f1(x,y)
-        PetscReal,intent(in)   :: x,y
-        PetscReal              :: f1
+   pure function f1(x, y)
+      PetscReal, intent(in)   :: x, y
+      PetscReal              :: f1
 
-        f1 = x**2 + y**2
-    end function f1
+      f1 = x**2 + y**2
+   end function f1
 
 #undef __FUNCT__
 #define __FUNCT__ "f2"
 
-    pure function f2(x,y)
-        PetscReal,intent(in)   :: x,y
-        PetscReal              :: f2
+   pure function f2(x, y)
+      PetscReal, intent(in)   :: x, y
+      PetscReal              :: f2
 
-        f2 = 100.0_Kr * x**2 + y**2
-    end function f2
+      f2 = 100.0_kr * x**2 + y**2
+   end function f2
 
 #undef __FUNCT__
 #define __FUNCT__ "project1"
 !!! Projects a function over a Lagrange finite element space using DMPlexVecSetClosure
 !!! U must be  LOCAL vector
-    subroutine project1(v,s,f,ierr)
-        Type(tVec),intent(IN)              :: v
-        Type(tPetscSection),intent(IN)     :: s
-        procedure(f_interface)             :: f
-        PetscErrorCode,intent(INOUT)       :: ierr
+   subroutine project1(v, s, f, ierr)
+      type(tVec), intent(IN)              :: v
+      type(tPetscSection), intent(IN)     :: s
+      procedure(f_interface)             :: f
+      PetscErrorCode, intent(INOUT)       :: ierr
 
-        PetscInt                           :: pStart,pEnd,p,numDof,i
-        Type(tDM)                          :: dm
-        Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec
-        PetscScalar,dimension(:),Pointer   :: coordArray,vArray
-        PetscScalar,dimension(3)           :: xyz
-        PetscInt                           :: dim
+      PetscInt                           :: pStart, pEnd, p, numDof, i
+      type(tDM)                          :: dm
+      type(tPetscSection)                :: coordSection
+      type(tVec)                         :: coordVec
+      PetscScalar, dimension(:), pointer   :: coordArray, vArray
+      PetscScalar, dimension(3)           :: xyz
+      PetscInt                           :: dim
 
-        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCallA(DMGetDimension(dm,dim,ierr))
+      PetscCallA(PetscSectionGetChart(s, pStart, pEnd, ierr))
+      PetscCallA(VecGetDM(v, dm, ierr))
+      PetscCallA(DMGetCoordinateSection(dm, coordSection, ierr))
+      PetscCallA(DMGetCoordinatesLocal(dm, coordVec, ierr))
+      PetscCallA(DMGetDimension(dm, dim, ierr))
 
-        Do p = pStart,pEnd-1
-            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
-            If (numDof > 0) Then
+      do p = pStart, pEnd - 1
+         PetscCallA(PetscSectionGetDof(s, p, numDof, ierr))
+         if (numDof > 0) then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
-                Do i = 1,dim
-                    xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
-                End Do
-                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            PetscCallA(DMPlexVecGetClosure(dm, coordSection, coordVec, p, coordArray, ierr))
+            do i = 1, dim
+               xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+            end do
+            PetscCallA(DMPlexVecRestoreClosure(dm, coordSection, coordVec, p, coordArray, ierr))
 
-                PetscCallA(DMPlexVecGetClosure(dm,s,v,p,vArray,ierr))
-                Do i = 1,numDof
-                    vArray(i) = f(xyz(1),xyz(2)) * 10**i
-                End Do
-                !!! This is dangerous as I could potentially overwrite the value of 
+            PetscCallA(DMPlexVecGetClosure(dm, s, v, p, vArray, ierr))
+            do i = 1, numDof
+               vArray(i) = f(xyz(1), xyz(2)) * 10**i
+            end do
+                !!! This is dangerous as I could potentially overwrite the value of
                 !!! v at other points
                 !!! In the current state of DMPlexVecSetClosure / DMPlexVecRestoreClosure
-                !!! in fortran, it also forces 1 alloc and 1 free 
-                PetscCallA(DMPlexVecSetClosure(dm,s,v,p,vArray,INSERT_ALL_VALUES,ierr))
+                !!! in fortran, it also forces 1 alloc and 1 free
+            PetscCallA(DMPlexVecSetClosure(dm, s, v, p, vArray, INSERT_ALL_VALUES, ierr))
                 !!! VecSetClosure will silently drop constrained DOF, so the write does not
                 !!! set the value at any constrained DOF
-                PetscCallA(DMPlexVecRestoreClosure(dm,s,v,p,vArray,ierr))
-            End If
-        End Do
-    End subroutine project1
+            PetscCallA(DMPlexVecRestoreClosure(dm, s, v, p, vArray, ierr))
+         end if
+      end do
+   end subroutine project1
 
 #undef __FUNCT__
 #define __FUNCT__ "project2"
 
-    subroutine project2(v,s,f,ierr)
-        Type(tVec),intent(IN)              :: v
-        Type(tPetscSection),intent(IN)     :: s
-        procedure(f_interface)             :: f
-        PetscErrorCode,intent(INOUT)       :: ierr
+   subroutine project2(v, s, f, ierr)
+      type(tVec), intent(IN)              :: v
+      type(tPetscSection), intent(IN)     :: s
+      procedure(f_interface)             :: f
+      PetscErrorCode, intent(INOUT)       :: ierr
 
-        PetscInt                           :: pStart,pEnd,p,numDof,i
-        Type(tDM)                          :: dm
-        Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec
-        PetscScalar,dimension(:),Pointer   :: coordArray,vArray
-        PetscScalar,dimension(3)           :: xyz
-        PetscInt                           :: dim
+      PetscInt                           :: pStart, pEnd, p, numDof, i
+      type(tDM)                          :: dm
+      type(tPetscSection)                :: coordSection
+      type(tVec)                         :: coordVec
+      PetscScalar, dimension(:), pointer   :: coordArray, vArray
+      PetscScalar, dimension(3)           :: xyz
+      PetscInt                           :: dim
 
-        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCallA(DMGetDimension(dm,dim,ierr))
+      PetscCallA(PetscSectionGetChart(s, pStart, pEnd, ierr))
+      PetscCallA(VecGetDM(v, dm, ierr))
+      PetscCallA(DMGetCoordinateSection(dm, coordSection, ierr))
+      PetscCallA(DMGetCoordinatesLocal(dm, coordVec, ierr))
+      PetscCallA(DMGetDimension(dm, dim, ierr))
 
-        Do p = pStart,pEnd-1
-            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
-            If (numDof > 0) Then
+      do p = pStart, pEnd - 1
+         PetscCallA(PetscSectionGetDof(s, p, numDof, ierr))
+         if (numDof > 0) then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
-                Do i = 1,dim
-                    xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
-                End Do
-                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            PetscCallA(DMPlexVecGetClosure(dm, coordSection, coordVec, p, coordArray, ierr))
+            do i = 1, dim
+               xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+            end do
+            PetscCallA(DMPlexVecRestoreClosure(dm, coordSection, coordVec, p, coordArray, ierr))
 
                 !!! If numdof is constant (where > 0) I could move the allocate
-                !!! outside of this loop 
-                Allocate(vArray(numDof))
-                Do i = 1,numDof
-                    vArray(i) = f(xyz(1),xyz(2)) * 10**i
-                End Do
-                PetscCallA(VecSetValuesSection(v,s,p,vArray,INSERT_ALL_VALUES,ierr))
+                !!! outside of this loop
+            allocate (vArray(numDof))
+            do i = 1, numDof
+               vArray(i) = f(xyz(1), xyz(2)) * 10**i
+            end do
+            PetscCallA(VecSetValuesSection(v, s, p, vArray, INSERT_ALL_VALUES, ierr))
                 !!! As before, this call silently drops the constrained values
-                DeAllocate(vArray)
-            End If
-        End Do
-    End subroutine project2    
-    
+            deallocate (vArray)
+         end if
+      end do
+   end subroutine project2
+
 #undef __FUNCT__
 #define __FUNCT__ "project3"
 
-    subroutine project3(v,s,f,ierr)
-        Type(tVec),intent(IN)              :: v
-        Type(tPetscSection),intent(IN)     :: s
-        procedure(f_interface)             :: f
-        PetscErrorCode,intent(INOUT)       :: ierr
+   subroutine project3(v, s, f, ierr)
+      type(tVec), intent(IN)              :: v
+      type(tPetscSection), intent(IN)     :: s
+      procedure(f_interface)             :: f
+      PetscErrorCode, intent(INOUT)       :: ierr
 
-        PetscInt                           :: pStart,pEnd,p,numDof,i
-        Type(tDM)                          :: dm
-        Type(tPetscSection)                :: coordSection
-        Type(tVec)                         :: coordVec
-        PetscScalar,dimension(:),Pointer   :: coordArray,vArray
-        PetscScalar,dimension(3)           :: xyz
-        PetscInt                           :: dim,pOffset
+      PetscInt                           :: pStart, pEnd, p, numDof, i
+      type(tDM)                          :: dm
+      type(tPetscSection)                :: coordSection
+      type(tVec)                         :: coordVec
+      PetscScalar, dimension(:), pointer   :: coordArray, vArray
+      PetscScalar, dimension(3)           :: xyz
+      PetscInt                           :: dim, pOffset
 
-        PetscCallA(PetscSectionGetChart(s,pStart,pEnd,ierr))
-        PetscCallA(VecGetDM(v,dm,ierr))
-        PetscCallA(DMGetCoordinateSection(dm,coordSection,ierr))
-        PetscCallA(DMGetCoordinatesLocal(dm,coordVec,ierr))
-        PetscCallA(DMGetDimension(dm,dim,ierr))
-        PetscCallA(VecGetArray(v,vArray,ierr))
+      PetscCallA(PetscSectionGetChart(s, pStart, pEnd, ierr))
+      PetscCallA(VecGetDM(v, dm, ierr))
+      PetscCallA(DMGetCoordinateSection(dm, coordSection, ierr))
+      PetscCallA(DMGetCoordinatesLocal(dm, coordVec, ierr))
+      PetscCallA(DMGetDimension(dm, dim, ierr))
+      PetscCallA(VecGetArray(v, vArray, ierr))
 
-        Do p = pStart,pEnd-1
-            PetscCallA(PetscSectionGetDof(s,p,numDof,ierr))
-            If (numDof > 0) Then
+      do p = pStart, pEnd - 1
+         PetscCallA(PetscSectionGetDof(s, p, numDof, ierr))
+         if (numDof > 0) then
                 !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
-                PetscCallA(DMPlexVecGetClosure(dm,coordSection,coordVec,p,coordArray,ierr))
-                Do i = 1,dim
-                    xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
-                End Do
-                PetscCallA(DMPlexVecRestoreClosure(dm,coordSection,coordVec,p,coordArray,ierr))
+            PetscCallA(DMPlexVecGetClosure(dm, coordSection, coordVec, p, coordArray, ierr))
+            do i = 1, dim
+               xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
+            end do
+            PetscCallA(DMPlexVecRestoreClosure(dm, coordSection, coordVec, p, coordArray, ierr))
 
-                PetscCallA(PetscSectionGetOffset(s,p,pOffset,ierr))
-                Do i = 1,numDof
-                    vArray(pOffset+i) = f(xyz(1),xyz(2)) * 10**i
-                End Do
-            End If
-        End Do
-        PetscCallA(VecRestoreArray(v,vArray,ierr))
+            PetscCallA(PetscSectionGetOffset(s, p, pOffset, ierr))
+            do i = 1, numDof
+               vArray(pOffset + i) = f(xyz(1), xyz(2)) * 10**i
+            end do
+         end if
+      end do
+      PetscCallA(VecRestoreArray(v, vArray, ierr))
         !!! Of course, this does not use informations from the section, so it does over-write constrained values
-    End subroutine project3    
+   end subroutine project3
 
-    Subroutine MyVecView(v,ierr)
-        Type(tVec),Intent(IN)               :: v
-        PetscErrorCode,Intent(INOUT)        :: ierr
+   subroutine MyVecView(v, ierr)
+      type(tVec), intent(IN)               :: v
+      PetscErrorCode, intent(INOUT)        :: ierr
 
-        Type(tDM)                           :: dm
-        PetscInt                            :: p,pStart,pEnd
-        Character(len=MEF90MXSTRLEN)        :: IOBuffer
-        PetscScalar,Dimension(:),Pointer    :: vArray
-        PetscInt                            :: height = 0
+      type(tDM)                           :: dm
+      PetscInt                            :: p, pStart, pEnd
+      character(len=MEF90MXSTRLEN)        :: IOBuffer
+      PetscScalar, dimension(:), pointer    :: vArray
+      PetscInt                            :: height = 0
 
+      PetscCall(VecGetDM(v, dm, ierr))
 
-        PetscCall(VecGetDM(v,dm,ierr))
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Cell closure\n", ierr))
+      PetscCall(DMPlexGetHeightStratum(dm, height, pStart, pEnd, ierr))
+      do p = pStart, pEnd - 1
+         PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, v, p, vArray, ierr))
+         write (IOBuffer, *) p, vArray, "\n"
+         PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+         PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, v, p, vArray, ierr))
+      end do
 
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Cell closure\n",ierr))
-        PetscCall(DMPlexGetHeightStratum(dm,height,pStart,pEnd,ierr))
-        Do p = pStart,pEnd-1
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
-            Write(IOBuffer,*) p, vArray,"\n"
-            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
-        End Do
-    
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD,"Point Values\n",ierr))
-        PetscCall(DMPlexGetChart(dm,pStart,pEnd,ierr))
-        Do p = pStart,pEnd-1
-            PetscCall(DMPlexVecGetClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
-            Write(IOBuffer,*) p, vArray,"\n"
-            PetscCall(PetscPrintf(PETSC_COMM_SELF,IOBuffer,ierr))
-            PetscCall(DMPlexVecRestoreClosure(dm,PETSC_NULL_SECTION,v,p,vArray,ierr))
-        End Do
-    End Subroutine MyVecView
-End Module localFunctions
+      PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Point Values\n", ierr))
+      PetscCall(DMPlexGetChart(dm, pStart, pEnd, ierr))
+      do p = pStart, pEnd - 1
+         PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, v, p, vArray, ierr))
+         write (IOBuffer, *) p, vArray, "\n"
+         PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+         PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, v, p, vArray, ierr))
+      end do
+   end subroutine MyVecView
+end module localFunctions
 
-Program  TestDofOrdering
+program TestDofOrdering
 #include <petsc/finclude/petsc.h>
-Use m_MEF90
-Use petsc
-Use localFunctions
-implicit none (type, external)   
-    
-    PetscErrorCode                      :: ierr
-    Type(MEF90Ctx_Type),target          :: MEF90Ctx
-    Type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
-    Type(tDM)                           :: dm,dmU,dmU0
-    PetscBool                           :: interpolate = PETSC_TRUE
-    Character(len=MEF90MXSTRLEN)        :: IOBuffer
-    PetscEnum                           :: setType
+   use m_MEF90
+   use petsc
+   use localFunctions
+   implicit none(type, external)
 
-    Type(MEF90ElementType)              :: cellSetElementType,faceSetElementType
-    PetscInt                            :: numComponents
-    PetscInt                            :: set
-    type(tIS)                           :: setIS
-    PetscInt,Dimension(:),pointer       :: setID
-    PetscInt                            :: dim,pStart,pEnd,order = 1,sdim = 1
-    PetscBool                           :: flg
-    Type(tPetscSection)                 :: sectionU,sectionU0
-    Logical,Dimension(:,:),Pointer      :: ConstraintTruthTableU,ConstraintTruthTableU0
-    Logical,Dimension(:),Pointer        :: Constraints
-    Type(tVec)                          :: U,U0,Uloc,Uloc2
-    PetscInt                            :: projectType
+   PetscErrorCode                      :: ierr
+   type(MEF90Ctx_Type), target          :: MEF90Ctx
+   type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
+   type(tDM)                           :: dm, dmU, dmU0
+   PetscBool                           :: interpolate = PETSC_TRUE
+   character(len=MEF90MXSTRLEN)        :: IOBuffer
+   PetscEnum                           :: setType
 
-    PetscCallA(PetscInitialize(ierr))
-    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
+   type(MEF90ElementType)              :: cellSetElementType, faceSetElementType
+   PetscInt                            :: numComponents
+   PetscInt                            :: set
+   type(tIS)                           :: setIS
+   PetscInt, dimension(:), pointer       :: setID
+   PetscInt                            :: dim, pStart, pEnd, order = 1, sdim = 1
+   PetscBool                           :: flg
+   type(tPetscSection)                 :: sectionU, sectionU0
+   logical, dimension(:, :), pointer      :: ConstraintTruthTableU, ConstraintTruthTableU0
+   logical, dimension(:), pointer        :: Constraints
+   type(tVec)                          :: U, U0, Uloc, Uloc2
+   PetscInt                            :: projectType
 
-    MEF90GlobalOptions_default%verbose           = 1
-    MEF90GlobalOptions_default%dryrun            = PETSC_FALSE
-    MEF90GlobalOptions_default%timeMin           = 0.0_Kr
-    MEF90GlobalOptions_default%timeMax           = 1.0_Kr
-    MEF90GlobalOptions_default%timeNumStep       = 11
-    MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
-    MEF90GlobalOptions_default%timeSkip          = 0
-    MEF90GlobalOptions_default%timeNumCycle      = 1
-    MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
-    MEF90GlobalOptions_default%elementOrder      = 1
+   PetscCallA(PetscInitialize(ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
 
-    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
-    
-    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryfile,PETSC_NULL_CHARACTER,interpolate,dm,ierr))
-    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
-    PetscCallA(DMSetFromOptions(dm,ierr))
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-dm_view",ierr))
-    
-    distribute: Block 
-        Type(tDM),target                    :: dmDist
-        PetscInt                            :: ovlp = 0
-        If (MEF90Ctx%NumProcs > 1) Then
-            PetscCallA(DMPlexDistribute(dm,ovlp,PETSC_NULL_SF,dmDist,ierr))
-            PetscCallA(DMDestroy(dm,ierr))
-            dm = dmDist
-        End If
-    End Block distribute
-    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-mef90dm_view",ierr))
+   MEF90GlobalOptions_default % verbose = 1
+   MEF90GlobalOptions_default % dryrun = PETSC_FALSE
+   MEF90GlobalOptions_default % timeMin = 0.0_kr
+   MEF90GlobalOptions_default % timeMax = 1.0_kr
+   MEF90GlobalOptions_default % timeNumStep = 11
+   MEF90GlobalOptions_default % timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90GlobalOptions_default % timeSkip = 0
+   MEF90GlobalOptions_default % timeNumCycle = 1
+   MEF90GlobalOptions_default % elementFamily = MEF90ElementFamilyLagrange
+   MEF90GlobalOptions_default % elementOrder = 1
 
-    PetscCallA(DMGetDimension(dm,dim,ierr))
-    PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
 
-    PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU,ierr))
-    PetscCallA(PetscObjectSetName(SectionU,"Section for U",ierr))
-    PetscCallA(PetscSectionSetNumFields(sectionU,sdim,ierr))
-    PetscCallA(PetscSectionSetChart(sectionU,pStart,pEnd,ierr))
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx % Comm, MEF90Ctx % geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
+   PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
+   PetscCallA(DMSetFromOptions(dm, ierr))
+   PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-dm_view", ierr))
 
-    PetscCallA(PetscSectionCreate(MEF90Ctx%Comm,sectionU0,ierr))
-    PetscCallA(PetscObjectSetName(SectionU,"Section for boundary values of U",ierr))
-    PetscCallA(PetscSectionSetNumFields(sectionU0,sdim,ierr))
-    PetscCallA(PetscSectionSetChart(sectionU0,pStart,pEnd,ierr))
+   distribute: block
+      type(tDM), target                    :: dmDist
+      PetscInt                            :: ovlp = 0
+      if (MEF90Ctx % NumProcs > 1) then
+         PetscCallA(DMPlexDistribute(dm, ovlp, PETSC_NULL_SF, dmDist, ierr))
+         PetscCallA(DMDestroy(dm, ierr))
+         dm = dmDist
+      end if
+   end block distribute
+   PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
-    numComponents = dim
+   PetscCallA(DMGetDimension(dm, dim, ierr))
+   PetscCallA(DMPlexGetChart(dm, pStart, pEnd, ierr))
+
+   PetscCallA(PetscSectionCreate(MEF90Ctx % Comm, sectionU, ierr))
+   PetscCallA(PetscObjectSetName(SectionU, "Section for U", ierr))
+   PetscCallA(PetscSectionSetNumFields(sectionU, sdim, ierr))
+   PetscCallA(PetscSectionSetChart(sectionU, pStart, pEnd, ierr))
+
+   PetscCallA(PetscSectionCreate(MEF90Ctx % Comm, sectionU0, ierr))
+   PetscCallA(PetscObjectSetName(SectionU, "Section for boundary values of U", ierr))
+   PetscCallA(PetscSectionSetNumFields(sectionU0, sdim, ierr))
+   PetscCallA(PetscSectionSetChart(sectionU0, pStart, pEnd, ierr))
+
+   numComponents = dim
     !!! Allocate DoF at cell and face sets
-    !!! Note that if the face sets corresponds to faces in elements in cell set 
+    !!! Note that if the face sets corresponds to faces in elements in cell set
     !!! (which will always be the case in an exodusII mesh), the second call does nothing
-    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-order',order,flg,ierr))
-    If (dim == 2) Then
-        Select case(order)
-        case(1)
-            cellSetElementType = MEF90P1Lagrange2D
-            faceSetElementType = MEF90P1Lagrange2DBoundary
-        case(2)
-            cellSetElementType = MEF90P2Lagrange2D
-            faceSetElementType = MEF90P2Lagrange2DBoundary
-        Case default
-            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
-            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
-        End Select
-    Else If (dim == 3) Then
-        Select case(order)
-            case(1)
-                cellSetElementType = MEF90P1Lagrange3D
-                faceSetElementType = MEF90P1Lagrange3DBoundary
-            case(2)
-                cellSetElementType = MEF90P2Lagrange3D
-                faceSetElementType = MEF90P2Lagrange3DBoundary
-            Case default
-            Write(IOBuffer,*) 'ERROR: unimplemented order ', order, '\n'
-            SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
-        End Select
-    End If
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90CellSetType,cellSetElementType,numComponents,sectionU0,ierr))
-    PetscCallA(MEF90SectionAllocateDof(dm,MEF90FaceSetType,faceSetElementType,numComponents,sectionU0,ierr))
-
+   PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS, '', '-order', order, flg, ierr))
+   if (dim == 2) then
+      select case (order)
+      case (1)
+         cellSetElementType = MEF90P1Lagrange2D
+         faceSetElementType = MEF90P1Lagrange2DBoundary
+      case (2)
+         cellSetElementType = MEF90P2Lagrange2D
+         faceSetElementType = MEF90P2Lagrange2DBoundary
+      case default
+         write (IOBuffer, *) 'ERROR: unimplemented order ', order, '\n'
+         SETERRA(MEF90Ctx % Comm, PETSC_ERR_USER, IOBuffer)
+      end select
+   else if (dim == 3) then
+      select case (order)
+      case (1)
+         cellSetElementType = MEF90P1Lagrange3D
+         faceSetElementType = MEF90P1Lagrange3DBoundary
+      case (2)
+         cellSetElementType = MEF90P2Lagrange3D
+         faceSetElementType = MEF90P2Lagrange3DBoundary
+      case default
+         write (IOBuffer, *) 'ERROR: unimplemented order ', order, '\n'
+         SETERRA(MEF90Ctx % Comm, PETSC_ERR_USER, IOBuffer)
+      end select
+   end if
+   PetscCallA(MEF90SectionAllocateDof(dm, MEF90CellSetType, cellSetElementType, numComponents, sectionU, ierr))
+   PetscCallA(MEF90SectionAllocateDof(dm, MEF90FaceSetType, faceSetElementType, numComponents, sectionU, ierr))
+   PetscCallA(MEF90SectionAllocateDof(dm, MEF90CellSetType, cellSetElementType, numComponents, sectionU0, ierr))
+   PetscCallA(MEF90SectionAllocateDof(dm, MEF90FaceSetType, faceSetElementType, numComponents, sectionU0, ierr))
 
     !!! Allocate constraints.
     !!! This is definitely not optimized. We could create a table of dimension
     !!! # points with dof x # components instead of #points x # components
     !!! We can address this later if needed
-    !!! The whole constraint setup takes 2 passes: 
+    !!! The whole constraint setup takes 2 passes:
     !!!   1. Fill the constraint truth table (typically from data in CS/FS/ES/VS bag)
     !!!      This is done in MEF90SetupConstraintTableSet
     !!!   2. Allocate space in the section, call PetscSectionSetup, and set the constraint indices
     !!!      for each constrained dof. This is done in MEF90SectionAllocateConstraint
-    PetscCallA(DMPlexGetChart(dm,pStart,pEnd,ierr))
-    Allocate(ConstraintTruthTableU(pEnd,numComponents),source=.FALSE.)
-    Allocate(ConstraintTruthTableU0(pEnd,numComponents),source=.FALSE.)
+   PetscCallA(DMPlexGetChart(dm, pStart, pEnd, ierr))
+   allocate (ConstraintTruthTableU(pEnd, numComponents), source=.false.)
+   allocate (ConstraintTruthTableU0(pEnd, numComponents), source=.false.)
 
-    Allocate(constraints(numComponents))
+   allocate (constraints(numComponents))
 
-    setType = MEF90FaceSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    If (SetIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndices(SetIS,setID,ierr))
-        Do set = 1,size(setID)
+   setType = MEF90FaceSetType
+   PetscCallA(DMGetLabelIdIS(dm, MEF90SetLabelName(setType), SetIS, ierr))
+   if (SetIS /= PETSC_NULL_IS) then
+      PetscCallA(ISGetIndices(SetIS, setID, ierr))
+      do set = 1, size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-            constraints = .FALSE.
-            constraints(mod(setID(set),numComponents)+1) = .TRUE.
-            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-        End Do
-        PetscCallA(ISRestoreIndices(SetIS,setID,ierr))
-    End If
-    PetscCallA(ISDestroy(SetIS,ierr))
+         constraints = .false.
+         constraints(mod(setID(set), numComponents) + 1) = .true.
+         PetscCallA(MEF90SetupConstraintTableSet(dm, sectionU, setType, setID(set), constraints, ConstraintTruthTableU, ierr))
+         PetscCallA(MEF90SetupConstraintTableSet(dm, sectionU, setType, setID(set), constraints, ConstraintTruthTableU0, ierr))
+      end do
+      PetscCallA(ISRestoreIndices(SetIS, setID, ierr))
+   end if
+   PetscCallA(ISDestroy(SetIS, ierr))
 
-    setType = MEF90VertexSetType
-    PetscCallA(DMGetLabelIdIS(dm,MEF90SetLabelName(setType),SetIS,ierr))
-    If (setIS /= PETSC_NULL_IS) Then
-        PetscCallA(ISGetIndices(SetIS,setID,ierr))
-        Do set = 1,size(setID)
+   setType = MEF90VertexSetType
+   PetscCallA(DMGetLabelIdIS(dm, MEF90SetLabelName(setType), SetIS, ierr))
+   if (setIS /= PETSC_NULL_IS) then
+      PetscCallA(ISGetIndices(SetIS, setID, ierr))
+      do set = 1, size(setID)
             !!! setting the constrained components to an arbitrary value
             !!! In real life, we would get constraint from the CS/FS/ES/VS bag
-            constraints = .FALSE.
-            constraints(mod(setID(set),numComponents)+1) = .TRUE.
-            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU,setType,setID(set),constraints,ConstraintTruthTableU,ierr))
-            PetscCallA(MEF90SetupConstraintTableSet(dm,sectionU0,setType,setID(set),constraints,ConstraintTruthTableU0,ierr))
-        End Do
-        PetscCallA(ISRestoreIndices(SetIS,setID,ierr))
-    End If
-    PetscCallA(ISDestroy(SetIS,ierr))
-    DeAllocate(constraints)
+         constraints = .false.
+         constraints(mod(setID(set), numComponents) + 1) = .true.
+         PetscCallA(MEF90SetupConstraintTableSet(dm, sectionU, setType, setID(set), constraints, ConstraintTruthTableU, ierr))
+         PetscCallA(MEF90SetupConstraintTableSet(dm, sectionU0, setType, setID(set), constraints, ConstraintTruthTableU0, ierr))
+      end do
+      PetscCallA(ISRestoreIndices(SetIS, setID, ierr))
+   end if
+   PetscCallA(ISDestroy(SetIS, ierr))
+   deallocate (constraints)
 
-    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU,sectionU,ierr))
-    PetscCallA(MEF90SectionAllocateConstraint(dm,ConstraintTruthTableU0,sectionU0,ierr))
+   PetscCallA(MEF90SectionAllocateConstraint(dm, ConstraintTruthTableU, sectionU, ierr))
+   PetscCallA(MEF90SectionAllocateConstraint(dm, ConstraintTruthTableU0, sectionU0, ierr))
 
-    DeAllocate(ConstraintTruthTableU)
-    DeAllocate(ConstraintTruthTableU0)
-    PetscCallA(PetscSectionViewFromOptions(SectionU,PETSC_NULL_OBJECT,"-mef90section_view",ierr))
-    PetscCallA(PetscSectionViewFromOptions(SectionU0,PETSC_NULL_OBJECT,"-mef90section_view",ierr))
+   deallocate (ConstraintTruthTableU)
+   deallocate (ConstraintTruthTableU0)
+   PetscCallA(PetscSectionViewFromOptions(SectionU, PETSC_NULL_OBJECT, "-mef90section_view", ierr))
+   PetscCallA(PetscSectionViewFromOptions(SectionU0, PETSC_NULL_OBJECT, "-mef90section_view", ierr))
 
-    PetscCallA(DMClone(dm,dmU,ierr))
-    PetscCallA(DMSetLocalSection(dmU,sectionU,ierr))
-    PetscCallA(DMCreateGlobalVector(dmU,U,ierr))
-    PetscCallA(PetscObjectSetName(U,"U: global vector",ierr))
-    PetscCallA(DMCreateLocalVector(dmU,uLoc,ierr))
-    PetscCallA(PetscObjectSetName(Uloc,"Uloc: local vector",ierr))
-    PetscCallA(DMCreateLocalVector(dmU,uLoc2,ierr))
-    PetscCallA(PetscObjectSetName(Uloc2,"Uloc2: local vector",ierr))
-    
-    PetscCallA(DMClone(dm,dmU0,ierr))
-    PetscCallA(DMSetLocalSection(dmU0,sectionU0,ierr))
-    PetscCallA(DMCreateLocalVector(dmU0,U0,ierr))
-    PetscCallA(PetscObjectSetName(U0,"U0: boundary vector",ierr))
+   PetscCallA(DMClone(dm, dmU, ierr))
+   PetscCallA(DMSetLocalSection(dmU, sectionU, ierr))
+   PetscCallA(DMCreateGlobalVector(dmU, U, ierr))
+   PetscCallA(PetscObjectSetName(U, "U: global vector", ierr))
+   PetscCallA(DMCreateLocalVector(dmU, uLoc, ierr))
+   PetscCallA(PetscObjectSetName(Uloc, "Uloc: local vector", ierr))
+   PetscCallA(DMCreateLocalVector(dmU, uLoc2, ierr))
+   PetscCallA(PetscObjectSetName(Uloc2, "Uloc2: local vector", ierr))
 
-    projectType = 1
-    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,'','-projectType',projectType,flg,ierr))
-    If ((projectType < 0) .OR. (projectType > 3)) Then
-        Write(IOBuffer,*) 'ERROR: unimplemented projection type ', projectType, '\n'
-        SETERRA(MEF90Ctx%Comm,PETSC_ERR_USER,IOBuffer)
-    End If
-    
-    PetscCallA(VecSet(U,-1.0_Kr,ierr))
-    PetscCallA(VecSet(U0,-1.0_Kr,ierr))
-    PetscCallA(VecSet(Uloc,-3.0_Kr,ierr))
-    PetscCallA(VecSet(Uloc2,-3.0_Kr,ierr))
+   PetscCallA(DMClone(dm, dmU0, ierr))
+   PetscCallA(DMSetLocalSection(dmU0, sectionU0, ierr))
+   PetscCallA(DMCreateLocalVector(dmU0, U0, ierr))
+   PetscCallA(PetscObjectSetName(U0, "U0: boundary vector", ierr))
 
-    Select Case(ProjectType)
-    Case(1)
-        PetscCallA(project1(Uloc,sectionU,f1,ierr))
-        PetscCallA(project1(U0,sectionU0,f1,ierr))
-    Case(2)
-        PetscCallA(project2(Uloc,sectionU,f1,ierr))
-        PetscCallA(project2(U0,sectionU0,f1,ierr))
-    Case(3)
-        PetscCallA(project3(Uloc,sectionU,f1,ierr))
-        PetscCallA(project3(U0,sectionU0,f1,ierr))
-    End Select
+   projectType = 1
+   PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS, '', '-projectType', projectType, flg, ierr))
+   if ((projectType < 0) .or. (projectType > 3)) then
+      write (IOBuffer, *) 'ERROR: unimplemented projection type ', projectType, '\n'
+      SETERRA(MEF90Ctx % Comm, PETSC_ERR_USER, IOBuffer)
+   end if
 
-    PetscCallA(VecViewFromOptions(Uloc,PETSC_NULL_OBJECT,"-uloc_view",ierr))
+   PetscCallA(VecSet(U, -1.0_kr, ierr))
+   PetscCallA(VecSet(U0, -1.0_kr, ierr))
+   PetscCallA(VecSet(Uloc, -3.0_kr, ierr))
+   PetscCallA(VecSet(Uloc2, -3.0_kr, ierr))
 
-    PetscCallA(VecViewFromOptions(U0,PETSC_NULL_OBJECT,"-u0_view",ierr))
+   select case (ProjectType)
+   case (1)
+      PetscCallA(project1(Uloc, sectionU, f1, ierr))
+      PetscCallA(project1(U0, sectionU0, f1, ierr))
+   case (2)
+      PetscCallA(project2(Uloc, sectionU, f1, ierr))
+      PetscCallA(project2(U0, sectionU0, f1, ierr))
+   case (3)
+      PetscCallA(project3(Uloc, sectionU, f1, ierr))
+      PetscCallA(project3(U0, sectionU0, f1, ierr))
+   end select
 
-    PetscCallA(DMLocalToGlobal(dmU,Uloc,INSERT_ALL_VALUES,U,ierr))
+   PetscCallA(VecViewFromOptions(Uloc, PETSC_NULL_OBJECT, "-uloc_view", ierr))
 
-    PetscCallA(DMGlobalToLocal(dmU,U,INSERT_ALL_VALUES,Uloc2,ierr))
+   PetscCallA(VecViewFromOptions(U0, PETSC_NULL_OBJECT, "-u0_view", ierr))
+
+   PetscCallA(DMLocalToGlobal(dmU, Uloc, INSERT_ALL_VALUES, U, ierr))
+
+   PetscCallA(DMGlobalToLocal(dmU, U, INSERT_ALL_VALUES, Uloc2, ierr))
     !!! In this process, we should have lost the constrained values
-    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OBJECT,"-uloc2_view",ierr))
+   PetscCallA(VecViewFromOptions(Uloc2, PETSC_NULL_OBJECT, "-uloc2_view", ierr))
 
-    PetscCall(VecSet(Uloc2,-33.33_Kr,ierr))
-    PetscCall(MEF90VecGlobalToLocalConstraint(U,U0,Uloc2,ierr))
-    PetscCallA(VecViewFromOptions(Uloc2,PETSC_NULL_OBJECT,"-uloc2_view",ierr))
+   PetscCall(VecSet(Uloc2, -33.33_kr, ierr))
+   PetscCall(MEF90VecGlobalToLocalConstraint(U, U0, Uloc2, ierr))
+   PetscCallA(VecViewFromOptions(Uloc2, PETSC_NULL_OBJECT, "-uloc2_view", ierr))
 
+   PetscCallA(VecDestroy(Uloc, ierr))
+   PetscCallA(VecDestroy(Uloc2, ierr))
+   PetscCallA(VecDestroy(U, ierr))
+   PetscCallA(VecDestroy(U0, ierr))
+   PetscCallA(PetscSectionDestroy(sectionU, ierr))
+   PetscCallA(PetscSectionDestroy(sectionU0, ierr))
+   PetscCallA(DMDestroy(dm, ierr))
+   PetscCallA(DMDestroy(dmU, ierr))
+   PetscCallA(DMDestroy(dmU0, ierr))
 
-    PetscCallA(VecDestroy(Uloc,ierr))
-    PetscCallA(VecDestroy(Uloc2,ierr))
-    PetscCallA(VecDestroy(U,ierr))
-    PetscCallA(VecDestroy(U0,ierr))
-    PetscCallA(PetscSectionDestroy(sectionU,ierr))
-    PetscCallA(PetscSectionDestroy(sectionU0,ierr))
-    PetscCallA(DMDestroy(dm,ierr))
-    PetscCallA(DMDestroy(dmU,ierr))
-    PetscCallA(DMDestroy(dmU0,ierr))
+   call MEF90CtxDestroy(MEF90Ctx, ierr)
+   call MEF90Finalize(ierr)
+   call PetscFinalize(ierr)
+end program TestDofOrdering
 
-    Call MEF90CtxDestroy(MEF90Ctx,ierr)   
-    Call MEF90Finalize(ierr)
-    Call PetscFinalize(ierr)
-End Program  TestDofOrdering
- 
 ! mpirun -np 3 ./TestConstraints -geometry ../TestMeshes/SquareFaceSetCubit2CS.gen -result test.exo -mef90section_view -uloc_view -u0_view -uloc2_view
-       
+

@@ -3,29 +3,29 @@
 module m_MEF90_DefMechDrivingForce
 #include "petsc/finclude/petsc.h"
    use m_MEF90_DefMechDrivingForceDruckerPrager
-   implicite none (type, external)
+   implicite none(type, external)
 
-Contains
+contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGetDrivingForce"
 !!!
-!!!  
+!!!
 !!!  MEF90DefMechGetATModel: Return the AT model object from the cell set options
-!!!  
+!!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   Subroutine MEF90DefMechGetDrivingForce(cellSetOptions,DrivingForce)
-      Type(MEF90DefMechCellSetOptions_Type),Pointer,intent(IN)      :: cellSetOptions
-      Class(MEF90_DefMechDrivingForce_Type),Allocatable,Intent(OUT) :: DrivingForce
+   subroutine MEF90DefMechGetDrivingForce(cellSetOptions, DrivingForce)
+      type(MEF90DefMechCellSetOptions_Type), pointer, intent(IN)      :: cellSetOptions
+      class(MEF90_DefMechDrivingForce_Type), allocatable, intent(OUT) :: DrivingForce
 
-      Select Case (cellSetOptions%drivingForceType)
-      Case (MEF90DefMech_drivingForceTypeDruckerPrager)
+      select case (cellSetOptions % drivingForceType)
+      case (MEF90DefMech_drivingForceTypeDruckerPrager)
          DrivingForce = MEF90_DefMechDrivingForceDruckerPrager_Type()
-      Case (MEF90DefMech_drivingForceTypeDruckerPrager2)
+      case (MEF90DefMech_drivingForceTypeDruckerPrager2)
          DrivingForce = MEF90_DefMechDrivingForceDruckerPrager2_Type()
-      Case default
-         Print*,__FUNCT__,': Unimplemented damage Type, only DP and DP2 implemented',cellSetOptions%drivingForceType
-         STOP  
-      End Select
-   End Subroutine MEF90DefMechGetDrivingForce
-End module m_MEF90_DefMechDrivingForce
+      case default
+         print *, __FUNCT__, ': Unimplemented damage Type, only DP and DP2 implemented', cellSetOptions % drivingForceType
+         stop
+      end select
+   end subroutine MEF90DefMechGetDrivingForce
+end module m_MEF90_DefMechDrivingForce

@@ -1,23 +1,23 @@
 #include "../MEF90/mef90.inc"
 #include "mef90DefMech.inc"
-Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
+module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityCap,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalBCC,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalSingleSlip,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityDruckerPragerCap,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityGreen,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityGurson,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityHill,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
-   use MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D
-   use m_MEF90_DefMechCtx
+use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityCap,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalBCC,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalSingleSlip,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityDruckerPragerCap,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityGreen,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityGurson,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityHill,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
+use MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D
+use m_MEF90_DefMechCtx
 
-   implicit none (type, external)
-   ! private
-   public :: MEF90DefMechPlasticStrainUpdate
+implicit none(type, external)
+! private
+public :: MEF90DefMechPlasticStrainUpdate
 
 contains
 
@@ -32,16 +32,16 @@ contains
 !!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   Subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
-      use,intrinsic :: iso_c_binding
+subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr)
+   use, intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SNLP
-      use SNLPF90
+   use SNLPF90
 #endif
 
-      Type(MEF90DefMechCtx_Type),Intent(IN)              :: MEF90DefMechCtx
-      Type(tVec),Intent(INOUT)                           :: plasticStrain
-      Type(tVec),Intent(IN)                              :: x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld
-      PetscErrorCode,Intent(INOUT)                       :: ierr
+   type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+   type(tVec), intent(INOUT)                           :: plasticStrain
+   type(tVec), intent(IN)                              :: x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld
+   PetscErrorCode, intent(INOUT)                       :: ierr
 
 ! #ifdef MEF90_HAVE_SNLP
 !       Type(DM)                                           :: Mesh
@@ -245,7 +245,7 @@ contains
 ! #endif
 !                      if (matpropSet%isViscousPlasticity) then
 !                         snlp_p = 0
-!                      else   
+!                      else
 !                         snlp_p = 1
 !                      end if
 !                      snlp_ctx  = c_loc(PlasticityCtx)
@@ -289,13 +289,11 @@ contains
 !                PlasticityCtx%Viscositydt = matpropSet%Viscositydt
 !                PlasticityCtx%m = matpropSet%m
 
-
 ! #if MEF90_DIM == 2
 !    PlasticityCtx%isPlaneStress = matPropSet%HookesLaw%isPlaneStress
 ! #else
 !    PlasticityCtx%isPlaneStress = .FALSE.
 ! #endif
-
 
 !                Call SNLPNew(s,snlp_n,snlp_m,snlp_p,snlp_fhg,snlp_Dfhg,snlp_ctx)
 !                QuadratureOrder = 2 * (elemDisplacementType%order - 1)
@@ -311,7 +309,6 @@ contains
 !                   Call SectionRealRestrict(totalStrainSec,cellID(cell),totalStrainLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyVariationSec,cellID(cell),cumulatedDissipatedPlasticEnergyVariationLoc,ierr);CHKERRQ(ierr)
 !                   Call SectionRealRestrict(cumulatedDissipatedPlasticEnergyOldSec,cellID(cell),cumulatedDissipatedPlasticEnergyOldLoc,ierr);CHKERRQ(ierr)
-
 
 !                   If (Associated(MEF90DefMechCtx%damage)) Then
 !                      Call SectionRealRestrictClosure(damageSec,MEF90DefMechCtx%DMScal,cellID(cell),elemScalType%numDof,damageLoc,ierr);CHKERRQ(ierr)
@@ -417,5 +414,5 @@ contains
 !       ! Indicate a generic error:
 !       ierr = 1
 ! #endif
-   End Subroutine MEF90DefMechPlasticStrainUpdate
-End Module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
+end subroutine MEF90DefMechPlasticStrainUpdate
+end module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
