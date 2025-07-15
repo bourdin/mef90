@@ -14,7 +14,7 @@ Program HookeLaw
    PetscInt                         :: i,n
    PetscRandom                      :: RdmCtx
 
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    PetscCallA(PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr))
    PetscCallA(PetscRandomSetFromOptions(RdmCtx,ierr))

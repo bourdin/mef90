@@ -19,7 +19,7 @@ Program TestExoRead_Part
 
 
 
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
 
    MEF90GlobalOptions_default%verbose           = 0

@@ -26,7 +26,7 @@ Program TestQuadrature
    Type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions_default
 
    !!! Initialize MEF90
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    MEF90GlobalOptions_default%verbose           = 1

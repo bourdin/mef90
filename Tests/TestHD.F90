@@ -29,7 +29,7 @@ Program TestSplit
 
    Class(MEF90_DEFMECHSPLIT),Allocatable :: Split
 
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    PetscCallA(PetscRandomCreate(PETSC_COMM_WORLD,RdmCtx,ierr))
    PetscCallA(PetscRandomSetFromOptions(RdmCtx,ierr))

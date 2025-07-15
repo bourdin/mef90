@@ -17,7 +17,7 @@ implicit none
     character(len=256)                                  :: func,IOBuffer
     PetscBool                                           :: set
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
 

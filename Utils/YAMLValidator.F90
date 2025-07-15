@@ -12,7 +12,7 @@ Program YAMLValidator
       write(*,*) "Parsing options. If this takes more than a few seconds, "
       write(*,*) "there is probably a problem with the options file"
       end if
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(PetscOptionsView(PETSC_NULL_OPTIONS,PETSC_VIEWER_STDOUT_WORLD,ierr))
 
    PetscCallA(PetscFinalize(ierr))

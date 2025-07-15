@@ -233,7 +233,7 @@ Implicit NONE
     Type(tVec)                          :: U,U0,Uloc,Uloc2
     PetscInt                            :: projectType
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
     MEF90GlobalOptions_default%verbose           = 1

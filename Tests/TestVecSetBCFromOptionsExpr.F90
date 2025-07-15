@@ -299,7 +299,7 @@ Implicit NONE
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
     
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     
     Call MEF90Initialize(PETSC_COMM_WORLD,ierr)
     Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr)

@@ -16,7 +16,7 @@ Program TestMaterials
    PetscErrorCode                      :: ierr
    
 
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-n',numMat,flg,ierr))
    

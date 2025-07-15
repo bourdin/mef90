@@ -60,7 +60,7 @@ Program vDef
    PetscReal                                          :: damageMaxChange,damageMin,damageMax
    
    !!! Initialize MEF90
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
    PetscCallA(PetscLogStageRegister('HeatXfer    ',logStageHeatXfer,ierr))
    PetscCallA(PetscLogStageRegister('Damage      ',logStageDamage,ierr))

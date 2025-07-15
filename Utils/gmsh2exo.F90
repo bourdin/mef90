@@ -21,7 +21,7 @@ Program  gmsh2exo
     MEF90GlobalOptions_default%elementFamily     = MEF90ElementFamilyLagrange
     MEF90GlobalOptions_default%elementOrder      = 1
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
     PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90GlobalOptions_default,ierr))
 

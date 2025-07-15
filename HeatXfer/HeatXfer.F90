@@ -36,7 +36,7 @@ Program HeatXfer
    PetscInt                                           :: dim
       
    !!! Initialize MEF90
-   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    !!! Get all MEF90-wide options

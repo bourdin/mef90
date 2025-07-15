@@ -20,7 +20,7 @@ Implicit NONE
     Type(MEF90CtxGlobalOptions_Type),pointer  :: MEF90GlobalOptions
 
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
     MEF90GlobalOptions_default%verbose           = 0

@@ -17,7 +17,7 @@ Implicit NONE
     Type(tVec)                                     :: U
     PetscReal,Dimension(:),Pointer                 :: UArray
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
     MEF90GlobalOptions_default%verbose           = 1

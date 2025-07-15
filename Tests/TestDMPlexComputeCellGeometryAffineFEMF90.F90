@@ -14,7 +14,7 @@ Program  TestDMPlexComputeCellGeometryAffineFEMF90
   PetscInt                       :: c = 0
 
 
-  PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+  PetscCallA(PetscInitialize(ierr))
   PetscCallA(PetscOptionsGetString(PETSC_NULL_OPTIONS,'','-i',filename,flg,ierr))
   Write(IOBuffer,'("Filename :",A,"\n")') trim(filename)
   PetscCallA(PetscPrintf(PETSC_COMM_WORLD,IOBuffer,ierr))

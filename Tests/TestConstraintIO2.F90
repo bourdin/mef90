@@ -76,7 +76,7 @@ Implicit NONE
     PetscInt                                            :: step = 1_Ki
     PetscReal                                           :: myerr,err
 
-    PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+    PetscCallA(PetscInitialize(ierr))
     PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
     MEF90GlobalOptions_default%verbose           = 1
