@@ -10,7 +10,7 @@ module m_MEF90_DefMechAT
    use m_MEF90_DefMechATLinSoft
    use m_MEF90_DefMechCtx
 
-   implicit none
+   implicit none (type, external)
    ! private
    public :: MEF90DefMechGetATModel
    public :: MEF90DefMechAT_Type

@@ -11,7 +11,7 @@ Module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
    Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
    Use m_MEF90_DefMechAT
    
-   Implicit none
+   implicit none (type, external)
    ! Private
    Public MEF90DefMechOperatorDisplacement,     &
           MEF90DefMechBilinearFormDisplacement, &

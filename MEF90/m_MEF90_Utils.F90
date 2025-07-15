@@ -2,7 +2,7 @@ Module m_MEF90_Utils
 #include "petsc/finclude/petsc.h"
    Use petscis
    Use m_MEF90_Parameters
-   Implicit None
+   implicit none (type, external)
    private
    public :: MEF90ISAllGatherMerge
    public :: MEF90FilePrefix

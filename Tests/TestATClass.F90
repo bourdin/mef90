@@ -4,7 +4,7 @@ Program TestATClass
    Use m_MEF90
    Use m_MEF90_DefMechAT
 
-   IMPLICIT NONE
+   implicit none (type, external)
 
    PetscInt,Parameter      :: N = 11
    integer                 :: i

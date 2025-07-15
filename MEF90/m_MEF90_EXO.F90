@@ -5,7 +5,8 @@ Module m_MEF90_EXO
    Use m_MEF90_Elements
    Use m_MEF90_Ctx
    Use m_MEF90_DMPlex
-   IMPLICIT NONE
+
+   implicit none (type)
 #include "../mef90version.h"
 
    Private 
@@ -166,10 +167,12 @@ End Subroutine MEF90EXOFormat
       PetscErrorCode,Intent(INOUT)                       :: ierr
 
       Integer                                            :: exoid
-      Integer                                            :: offsetN = -1,offsetZ = -1
+      Integer                                            :: offsetN,offsetZ
       Type(tVec)                                         :: iov
       Character(len=PETSC_MAX_PATH_LEN)                  :: vecname,IOBuffer
 
+      offsetN = -1
+      offsetZ = -1
       PetscCall(PetscObjectGetName(v,vecname,ierr))
 
       PetscCall(MEF90VecCreateIO(iov,bs,sf,ierr))

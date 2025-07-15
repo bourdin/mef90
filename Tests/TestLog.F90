@@ -3,7 +3,7 @@ program TestLog
     Use m_MEF90
     Use petsc
 
-    implicit none
+    implicit none (type, external)
 
     type(tPetscViewer)                   :: logViewer
     PetscErrorCode                       :: ierr

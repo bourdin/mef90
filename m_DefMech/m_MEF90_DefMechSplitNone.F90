@@ -5,7 +5,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
    Use m_MEF90_Materials
 #define MEF90_DEFMECHSPLITNONE_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitNone_Constructor,MEF90_DIM)D
-   implicit none
+   implicit none (type)
    private
    public :: MEF90_DEFMECHSPLITNONE
 

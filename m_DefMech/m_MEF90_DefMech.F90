@@ -42,7 +42,7 @@ Module m_MEF90_DefMech
    Use m_MEF90_DefMechPlasticity3D, &
       MEF90DefMechPlasticStrainUpdate3D      => MEF90DefMechPlasticStrainUpdate
 
-   Implicit none
+   implicit none (type)
    ! private
    Public :: MEF90DefMechSetTransients
    Public :: MEF90DefMechOperatorDisplacement

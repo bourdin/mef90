@@ -10,7 +10,7 @@ c This is a test program for the Fortran binding of the EXODUS II
 c database read routines
 
 c       09/07/93 V.R. Yarberry - Modified for API 2.00
-      implicit none
+      implicit none (type, external)
 
       include 'exodusII.inc'
 

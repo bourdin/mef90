@@ -3,7 +3,7 @@
 Module MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
-   implicit NONE
+   implicit none (type, external)
 
 Contains
 #undef __FUNCT__

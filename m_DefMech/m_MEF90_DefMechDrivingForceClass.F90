@@ -4,7 +4,7 @@ Module m_MEF90_DefMechDrivingForce_class
 
    Use m_MEF90_Parameters
    Use petscsys
-   Implicit none
+   implicit none (type, external)
 
 !!!
 !!!  

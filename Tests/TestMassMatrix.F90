@@ -2,7 +2,7 @@ module mef90Projection
 #include <petsc/finclude/petsc.h>
 use petsc
 use m_MEF90
-implicit none
+implicit none (type, external)
 
     abstract interface
         function f_interface(x,y,z)
@@ -83,7 +83,7 @@ Program  TestMassMatrix
     Use m_MEF90
     Use petsc
     Use mef90Projection
-    Implicit NONE   
+    implicit none (type, external)   
         
     PetscErrorCode                                 :: ierr
     Type(MEF90Ctx_Type),target                     :: MEF90Ctx

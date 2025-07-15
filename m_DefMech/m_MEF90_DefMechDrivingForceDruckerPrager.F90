@@ -4,7 +4,7 @@ module m_MEF90_DefMechDrivingForceDruckerPrager
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_DefMechDrivingForce_class
-   implicit none
+   implicit none (type, external)
 
    Type, extends(MEF90_DefMechDrivingForce_Type)       :: MEF90_DefMechDrivingForceDruckerPrager_Type
    Contains

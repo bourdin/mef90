@@ -13,7 +13,7 @@ Module m_MEF90
    Use m_MEF90_MassMatrixInterface
    Use m_MEF90_NormsInterface
 
-   Implicit NONE
+   implicit none (type, external)
    
    
 Contains

@@ -4,7 +4,7 @@ use m_MEF90
 use petsc
 use symengine
 
-implicit none
+implicit none (type, external)
 
     PetscErrorCode                                      :: ierr
     type(Basic)                                         :: f,feval

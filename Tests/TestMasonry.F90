@@ -5,7 +5,7 @@ Program TestSplit
    Use m_MEF90
    Use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 
-   IMPLICIT NONE
+   implicit none (type, external)
 
    PetscReal                        :: E,nu
    Type(MEF90_HOOKESLAW)            :: A,APlus,AMinus

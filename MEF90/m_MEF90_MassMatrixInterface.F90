@@ -5,7 +5,7 @@ Module m_MEF90_MassMatrixInterface
    Use m_MEF90_MassMatrixImplementation_MEF90Element3DScal,  MassMatrixAssembleSet3DScal  => MEF90_MassMatrixAssembleSet
    Use m_MEF90_MassMatrixImplementation_MEF90Element3DVect,  MassMatrixAssembleSet3DVect  => MEF90_MassMatrixAssembleSet
 
-   IMPLICIT NONE
+   implicit none (type, external)
 
    Private
 

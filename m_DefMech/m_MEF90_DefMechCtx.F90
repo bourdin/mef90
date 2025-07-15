@@ -1,7 +1,7 @@
 Module m_MEF90_DefMechCtx_Type
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Ctx
-   Implicit none
+   implicit none (type, external)
    
    Type MEF90DefMechCtx_Type
       Type(MEF90Ctx_Type),pointer             :: MEF90Ctx
@@ -135,7 +135,7 @@ Module m_MEF90DefMechGlobalOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_DefMechCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90DefMechCtxGlobalOptions
@@ -170,7 +170,7 @@ Module m_MEF90DefMechCellSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_DefMechCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90DefMechCtxCellSetOptions
@@ -205,7 +205,7 @@ Module m_MEF90DefMechFaceSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_DefMechCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90DefMechCtxFaceSetOptions
@@ -240,7 +240,7 @@ Module m_MEF90DefMechVertexSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_DefMechCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90DefMechCtxVertexSetOptions
@@ -279,7 +279,7 @@ Module m_MEF90_DefMechCtx
    Use m_MEF90DefMechCellSetOptions_Private
    Use m_MEF90DefMechFaceSetOptions_Private
    Use m_MEF90DefMechVertexSetOptions_Private
-   Implicit none
+   implicit none (type)
 
    PetscSizeT,protected   :: sizeofMEF90DefMechGlobalOptions
    PetscSizeT,protected   :: sizeofMEF90DefMechCellSetOptions

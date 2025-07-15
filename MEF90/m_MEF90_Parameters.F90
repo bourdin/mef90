@@ -3,7 +3,7 @@ Module m_MEF90_Parameters
 #include "../mef90version.h"
 
    Use petscsys
-   IMPLICIT NONE
+   implicit none (type, external)
 #include "exodusII.inc"  
 #include "../mef90version.h"
    

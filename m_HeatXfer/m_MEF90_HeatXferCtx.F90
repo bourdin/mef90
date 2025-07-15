@@ -1,7 +1,7 @@
 Module m_MEF90_HeatXferCtx_Type
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Ctx
-   Implicit none
+   implicit none (type, external)
    Private  
    Public :: MEF90HeatXferCtx_Type
    Public :: MEF90HeatXferGlobalOptions_Type
@@ -70,7 +70,7 @@ Module m_MEF90HeatXferGlobalOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_HeatXferCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90HeatXferCtxGlobalOptions
@@ -105,7 +105,7 @@ Module m_MEF90HeatXferCellSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_HeatXferCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90HeatXferCtxCellSetOptions
@@ -140,7 +140,7 @@ Module m_MEF90HeatXferFaceSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_HeatXferCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
@@ -175,7 +175,7 @@ Module m_MEF90HeatXferVertexSetOptions_Private
 #include "petsc/finclude/petsc.h"
    Use petscbag
    Use m_MEF90_HeatXferCtx_Type
-   Implicit None
+   implicit none (type, external)
 
    Private
    Public :: PetscBagGetDataMEF90HeatXferCtxVertexSetOptions
@@ -216,7 +216,7 @@ Module m_MEF90_HeatXferCtx
    Use m_MEF90HeatXferCellSetOptions_Private
    Use m_MEF90HeatXferFaceSetOptions_Private
    Use m_MEF90HeatXferVertexSetOptions_Private
-   Implicit none
+   implicit none (type)
 
    PetscSizeT,protected   :: sizeofMEF90HeatXferGlobalOptions
    PetscSizeT,protected   :: sizeofMEF90HeatXferCellSetOptions

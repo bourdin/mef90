@@ -9,7 +9,7 @@ Program vDef
    Use m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXfer
    use m_vDefDefault
-   Implicit NONE   
+   implicit none (type, external)   
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx

@@ -10,7 +10,7 @@ Module m_MEF90_DMPlex
 #ifdef MEF90_HAVE_SYMENGINEF90
     Use symengine
 #endif
-    IMPLICIT NONE
+    implicit none (type)
     
     Enum,bind(c)
         enumerator  :: MEF90CellSetType = 1, &
@@ -1553,7 +1553,7 @@ Contains
             glNLeaves = lgNLeaves + tempNLeaves
             Allocate(glLocal(glNLeaves))
             Allocate(glRemote(glNLeaves))
-            If (loc(lgLocal) .ne. loc(PETSC_NULL_INTEGER)) Then
+            If (loc(lgLocal) /= loc(PETSC_NULL_INTEGER)) Then
                 Do p = 1,lgNLeaves
                     glLocal(p) = lgLocal(p)
                     glRemote(p)%rank  = lgRemote(p)%rank
@@ -1566,7 +1566,7 @@ Contains
                     glRemote(p)%index = lgRemote(p)%index
                 End Do
             End If
-            If (loc(tempLocal) .ne. loc(PETSC_NULL_INTEGER)) Then
+            If (loc(tempLocal) /= loc(PETSC_NULL_INTEGER)) Then
                 Do p = 1,tempNLeaves
                     glLocal(p+lgNLeaves)        = tempLocal(p)
                     glRemote(p+lgNLeaves)%rank  = tempRemote(p)%rank

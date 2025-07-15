@@ -15,7 +15,7 @@ Module m_MEF90_NormsInterface
                                                         MEF90H1SymDotProductSet3DVect => MEF90H1SymDotProductSet, &
                                                         MEF90L2NormSet3DVect          => MEF90L2NormSet
 
-    IMPLICIT NONE
+    implicit none (type, external)
 
     Private
 

@@ -5,7 +5,7 @@ module m_vDefDefault
    Use m_MEF90
    Use m_MEF90_DefMechCtx
    Use m_MEF90_HeatXferCtx
-   Implicit NONE   
+   implicit none (type, external)   
 
 
 !!! Default values of the contexts

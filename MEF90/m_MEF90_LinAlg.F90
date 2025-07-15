@@ -1,5 +1,5 @@
 Module m_MEF90_LinAlg_class
-   implicit none
+   implicit none (type, external)
    private
    public :: mef90Vect
    public :: mef90Mat 
@@ -14,11 +14,13 @@ Module m_MEF90_LinAlg_class
 !!!
 
    type, abstract :: mef90Vect
-   end type
+   end type mef90Vect
+
    type, abstract :: mef90Mat
-   end type
+   end type mef90Mat
+
    type, abstract :: mef90Tens4OS
-   end type
+   end type mef90Tens4OS
 End module m_MEF90_LinAlg_class
 
 Module m_MEF90_LinAlg
@@ -26,8 +28,13 @@ Module m_MEF90_LinAlg
    Use m_MEF90_LinAlg_class
    Use m_MEF90_Parameters
    Use m_MEF90_Utils
+
+   implicit none (type)
+
+   external :: dsyevd
+   external :: dgetrf
+   external :: dgetri
    
-   IMPLICIT NONE
  
    Type, Extends(mef90Vect) :: Vect2D
       PetscReal          :: X
@@ -258,12 +265,12 @@ Module m_MEF90_LinAlg
 
 
 
-!!$  Type(Vect2D),Parameter       :: e1_2D = (/ 1.0_Kr,0.0_Kr /)
-!!$  Type(Vect2D),Parameter       :: e2_2D = (/ 0.0_Kr,1.0_Kr /)
+!!$  Type(Vect2D),Parameter       :: e1_2D = [1.0_Kr,0.0_Kr]
+!!$  Type(Vect2D),Parameter       :: e2_2D = [0.0_Kr,1.0_Kr]
 !!$
-!!$  Type(Vect3D),Parameter       :: e1_3D = (/ 1.0_Kr,0.0_Kr,0.0_Kr /)
-!!$  Type(Vect3D),Parameter       :: e2_3D = (/ 0.0_Kr,1.0_Kr,0.0_Kr /)
-!!$  Type(Vect3D),Parameter       :: e3_3D = (/ 0.0_Kr,0.0_Kr,1.0_Kr /)
+!!$  Type(Vect3D),Parameter       :: e1_3D = [1.0_Kr,0.0_Kr,0.0_Kr]
+!!$  Type(Vect3D),Parameter       :: e2_3D = [0.0_Kr,1.0_Kr,0.0_Kr]
+!!$  Type(Vect3D),Parameter       :: e3_3D = [0.0_Kr,0.0_Kr,1.0_Kr]
 
 
 Contains
@@ -2262,7 +2269,7 @@ Contains
       PetscErrorCode,Intent(INOUT)                    :: ierr
 
 
-      n = (/ Coord(1)%Y-Coord(2)%Y, Coord(2)%X-Coord(1)%X /)
+      n = [Coord(1)%Y-Coord(2)%Y, Coord(2)%X-Coord(1)%X]
       n = n / norm(n)
    End Subroutine simplexNormal2D
 
@@ -2347,31 +2354,31 @@ Contains
       A(1,1,1,1) = T%XXXX 
       A(1,1,2,2) = T%XXYY; A(2,2,1,1) = T%XXYY
       A(1,1,3,3) = T%XXZZ; A(3,3,1,1) = T%XXZZ
-      A(1,1,2,3) = T%XXYZ; A(1,1,3,2) = T%XXYZ; A(2,3,1,1) = T%XXYZ; A(3,2,1,1) = T%XXYZ;
-      A(1,1,1,3) = T%XXXZ; A(1,1,3,1) = T%XXXZ; A(1,3,1,1) = T%XXXZ; A(3,1,1,1) = T%XXXZ;
-      A(1,1,1,2) = T%XXXY; A(1,1,2,1) = T%XXXY; A(1,2,1,1) = T%XXXY; A(2,1,1,1) = T%XXXY;
+      A(1,1,2,3) = T%XXYZ; A(1,1,3,2) = T%XXYZ; A(2,3,1,1) = T%XXYZ; A(3,2,1,1) = T%XXYZ
+      A(1,1,1,3) = T%XXXZ; A(1,1,3,1) = T%XXXZ; A(1,3,1,1) = T%XXXZ; A(3,1,1,1) = T%XXXZ
+      A(1,1,1,2) = T%XXXY; A(1,1,2,1) = T%XXXY; A(1,2,1,1) = T%XXXY; A(2,1,1,1) = T%XXXY
 
       A(2,2,2,2) = T%YYYY 
       A(2,2,3,3) = T%YYZZ; A(3,3,2,2) = T%YYZZ
-      A(2,2,2,3) = T%YYYZ; A(2,2,3,2) = T%YYYZ; A(2,3,2,2) = T%YYYZ; A(3,2,2,2) = T%YYYZ;
-      A(2,2,1,3) = T%YYXZ; A(2,2,3,1) = T%YYXZ; A(1,3,2,2) = T%YYXZ; A(3,1,2,2) = T%YYXZ;
-      A(2,2,1,2) = T%YYXY; A(2,2,2,1) = T%YYXY; A(1,2,2,2) = T%YYXY; A(2,1,2,2) = T%YYXY;
+      A(2,2,2,3) = T%YYYZ; A(2,2,3,2) = T%YYYZ; A(2,3,2,2) = T%YYYZ; A(3,2,2,2) = T%YYYZ
+      A(2,2,1,3) = T%YYXZ; A(2,2,3,1) = T%YYXZ; A(1,3,2,2) = T%YYXZ; A(3,1,2,2) = T%YYXZ
+      A(2,2,1,2) = T%YYXY; A(2,2,2,1) = T%YYXY; A(1,2,2,2) = T%YYXY; A(2,1,2,2) = T%YYXY
 
       A(3,3,3,3) = T%ZZZZ 
-      A(3,3,2,3) = T%ZZYZ; A(3,3,3,2) = T%ZZYZ; A(2,3,3,3) = T%ZZYZ; A(3,2,3,3) = T%ZZYZ;
-      A(3,3,1,3) = T%ZZXZ; A(3,3,3,1) = T%ZZXZ; A(1,3,3,3) = T%ZZXZ; A(3,1,3,3) = T%ZZXZ;
-      A(3,3,1,2) = T%ZZXY; A(3,3,2,1) = T%ZZXY; A(1,2,3,3) = T%ZZXY; A(2,1,3,3) = T%ZZXY;
+      A(3,3,2,3) = T%ZZYZ; A(3,3,3,2) = T%ZZYZ; A(2,3,3,3) = T%ZZYZ; A(3,2,3,3) = T%ZZYZ
+      A(3,3,1,3) = T%ZZXZ; A(3,3,3,1) = T%ZZXZ; A(1,3,3,3) = T%ZZXZ; A(3,1,3,3) = T%ZZXZ
+      A(3,3,1,2) = T%ZZXY; A(3,3,2,1) = T%ZZXY; A(1,2,3,3) = T%ZZXY; A(2,1,3,3) = T%ZZXY
 
-      A(2,3,2,3) = T%YZYZ; A(2,3,3,2) = T%YZYZ; A(3,2,2,3) = T%YZYZ; A(3,2,3,2) = T%YZYZ;
-      A(2,3,1,3) = T%YZXZ; A(2,3,3,1) = T%YZXZ; A(3,2,1,3) = T%YZXZ; A(3,2,3,1) = T%YZXZ;
-      A(1,3,2,3) = T%YZXZ; A(1,3,3,2) = T%YZXZ; A(3,1,2,3) = T%YZXZ; A(3,1,3,2) = T%YZXZ;
-      A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY; A(3,2,1,2) = T%YZXY; A(3,2,2,1) = T%YZXY;
-      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,1,2,3) = T%YZXY; A(2,1,3,2) = T%YZXY;
+      A(2,3,2,3) = T%YZYZ; A(2,3,3,2) = T%YZYZ; A(3,2,2,3) = T%YZYZ; A(3,2,3,2) = T%YZYZ
+      A(2,3,1,3) = T%YZXZ; A(2,3,3,1) = T%YZXZ; A(3,2,1,3) = T%YZXZ; A(3,2,3,1) = T%YZXZ
+      A(1,3,2,3) = T%YZXZ; A(1,3,3,2) = T%YZXZ; A(3,1,2,3) = T%YZXZ; A(3,1,3,2) = T%YZXZ
+      A(2,3,1,2) = T%YZXY; A(2,3,2,1) = T%YZXY; A(3,2,1,2) = T%YZXY; A(3,2,2,1) = T%YZXY
+      A(1,2,2,3) = T%YZXY; A(1,2,3,2) = T%YZXY; A(2,1,2,3) = T%YZXY; A(2,1,3,2) = T%YZXY
 
-      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY;
-      A(1,3,1,2) = T%XZXY; A(1,3,2,1) = T%XZXY; A(3,1,1,2) = T%XZXY; A(3,1,2,1) = T%XZXY;
-      A(1,2,1,3) = T%XZXY; A(1,2,3,1) = T%XZXY; A(2,1,1,3) = T%XZXY; A(2,1,3,1) = T%XZXY;
-      A(1,3,1,3) = T%XZXZ; A(1,3,3,1) = T%XZXZ; A(3,1,1,3) = T%XZXZ; A(3,1,3,1) = T%XZXZ;
+      A(1,2,1,2) = T%XYXY; A(1,2,2,1) = T%XYXY; A(2,1,1,2) = T%XYXY; A(2,1,2,1) = T%XYXY
+      A(1,3,1,2) = T%XZXY; A(1,3,2,1) = T%XZXY; A(3,1,1,2) = T%XZXY; A(3,1,2,1) = T%XZXY
+      A(1,2,1,3) = T%XZXY; A(1,2,3,1) = T%XZXY; A(2,1,1,3) = T%XZXY; A(2,1,3,1) = T%XZXY
+      A(1,3,1,3) = T%XZXZ; A(1,3,3,1) = T%XZXZ; A(3,1,1,3) = T%XZXZ; A(3,1,3,1) = T%XZXZ
    End Subroutine Tens4OS3D2Array4
 
 

@@ -3,7 +3,7 @@ Module localFunctions
 use m_MEF90
 use m_MEF90_DefMech
 use m_vDefDefault
-implicit none
+implicit none (type, external)
     
 contains
 
@@ -56,7 +56,7 @@ Program  TestConstraintIO3
 Use m_MEF90
 Use petsc
 Use localFunctions
-Implicit NONE   
+implicit none (type, external)   
     
     PetscErrorCode                                      :: ierr
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx

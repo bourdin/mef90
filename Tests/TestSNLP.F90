@@ -1,7 +1,7 @@
 module TestSNLPF90_mod
 #include "petsc/finclude/petsc.h"
    use m_MEF90
-   implicit NONE
+   implicit none (type, external)
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
    !!! need SNLP to carry its address
    type :: ctx 
@@ -90,7 +90,7 @@ program testSNLP
    use m_MEF90
 #ifdef MEF90_HAVE_SNLP   
    use SNLPF90
-   implicit NONE
+   implicit none (type, external)
    
    integer(kind=c_int)  :: n = 3
    integer(kind=c_int)  :: m = 1

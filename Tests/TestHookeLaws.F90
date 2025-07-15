@@ -2,7 +2,7 @@ Program HookeLaw
 #include <petsc/finclude/petsc.h>
    Use m_MEF90
    Use petsc
-   IMPLICIT NONE
+   implicit none (type, external)
 
    PetscReal                        :: E, nu
    Type(Tens4OS2D)                  :: HookeLaw2D,HookeLawInv2D

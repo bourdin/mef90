@@ -8,7 +8,7 @@ Module MEF90_APPEND(m_MEF90_NormsImplementation_,MEF90_ELEMENTTYPE)
    Use m_MEF90_Elements
    Use m_MEF90_Ctx
    Use m_MEF90_DMPlex
-   IMPLICIT NONE
+   implicit none (type, external)
 
    Private   
 #if MEF90_ELEMENTTYPE_SCALAR

@@ -3,7 +3,7 @@ Program TestExoRead_Part
 #include "exodusii.h90"
    Use m_mef90
    Use petsc
-   Implicit NONE   
+   implicit none (type, external)   
 
    Integer                             :: exoid,cpu_ws,io_ws,mod_sz,exoerr
    Integer                             :: num_dim,num_nodes,num_elem,num_elem_blk,num_node_sets,num_side_sets

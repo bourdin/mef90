@@ -1,7 +1,7 @@
 Program TestSpectralDecomposition
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
-   IMPLICIT NONE
+   implicit none (type, external)
 
    Type(MatS2D)                     :: M2D,D2D
    Type(Mat2D)                      :: P2D

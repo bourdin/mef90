@@ -5,7 +5,7 @@ Use m_MEF90
 Use m_MEF90_DMPlex
 Use symengine
 
-Implicit NONE   
+implicit none (type, external)   
 Contains
 
 #undef __FUNCT__
@@ -274,7 +274,7 @@ Use m_MEF90
 Use m_MEF90_DMPlex
 Use TestExpr
 
-Implicit NONE   
+implicit none (type, external)   
 
     PetscErrorCode                                     :: ierr
     Type(MEF90Ctx_Type),target                         :: MEF90Ctx

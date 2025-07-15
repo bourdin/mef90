@@ -1,7 +1,7 @@
 Program YAMLValidator
 #include "petsc/finclude/petsc.h"
    use petsc
-   IMPLICIT NONE
+   implicit none (type, external)
 
    PetscErrorCode                   :: ierr
    Integer                          :: rank

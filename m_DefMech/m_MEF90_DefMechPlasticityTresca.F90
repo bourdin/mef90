@@ -4,7 +4,7 @@ Module MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 
    use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
-   implicit NONE
+   implicit none (type, external)
    private
    public :: FHG_TRESCA
 

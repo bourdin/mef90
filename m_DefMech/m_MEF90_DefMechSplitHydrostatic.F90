@@ -6,7 +6,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
 
    Use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
    use m_MEF90_Materials
-   implicit none
+   implicit none (type)
    private
    public :: MEF90_DEFMECHSPLITHYDROSTATIC
    

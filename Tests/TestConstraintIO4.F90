@@ -6,7 +6,7 @@ Use m_MEF90
 use m_MEF90_DefMech
 use m_vDefDefault
 Use petsc
-Implicit NONE   
+implicit none (type, external)   
     
     PetscErrorCode                                      :: ierr
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx

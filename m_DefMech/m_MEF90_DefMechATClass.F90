@@ -5,7 +5,7 @@ Module m_MEF90_DefMechAT_class
    Use petscsys
    Use m_MEF90_Parameters
    Use iso_c_binding
-   Implicit none
+   implicit none (type, external)
 
 !!!
 !!!  

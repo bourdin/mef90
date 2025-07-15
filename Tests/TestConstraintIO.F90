@@ -2,7 +2,7 @@ Module localFunctions
 #include <petsc/finclude/petsc.h>
 use petsc
 use m_MEF90
-implicit none
+implicit none (type, external)
     
 contains
 
@@ -56,7 +56,7 @@ Program  TestConstraintIO
 Use m_MEF90
 Use petsc
 Use localFunctions
-Implicit NONE   
+implicit none (type, external)   
     
     PetscErrorCode                                      :: ierr
     Type(MEF90Ctx_Type),target                          :: MEF90Ctx

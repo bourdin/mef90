@@ -5,7 +5,7 @@ Module m_MEF90_Elements
    Use m_MEF90_LinAlg
    Use petscdmplex
    Use,intrinsic :: iso_c_binding
-   IMPLICIT NONE
+   implicit none (type, external)
 
    !Private   
    Public :: MEF90ElementCreate
@@ -171,32 +171,32 @@ Module m_MEF90_Elements
    3,1,1                                        &  ! dim,codim,order
    )
    Type MEF90Element2DScal
-      PetscReal,Dimension(:,:),Pointer             :: BF
-      Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
+      PetscReal,Dimension(:,:),Pointer             :: BF => null()
+      Type(Vect2D),Dimension(:,:),Pointer          :: Grad_BF => null()
+      PetscReal,Dimension(:),Pointer               :: Gauss_C => null()
       Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element2DScal
  
    Type MEF90Element2DVect
-      Type (Vect2D),Dimension(:,:),Pointer         :: BF
-      Type (Mat2D),Dimension(:,:),Pointer          :: Grad_BF
-      Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type (Vect2D),Dimension(:,:),Pointer         :: BF => null()
+      Type (Mat2D),Dimension(:,:),Pointer          :: Grad_BF => null()
+      Type (MatS2D),Dimension(:,:),Pointer         :: GradS_BF => null()
+      PetscReal,Dimension(:),Pointer               :: Gauss_C => null()
       Type(Vect2D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element2DVect
  
    Type MEF90Element3DScal
-      PetscReal,Dimension(:,:),Pointer             :: BF
-      Type (Vect3D),Dimension(:,:),Pointer         :: Grad_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
+      PetscReal,Dimension(:,:),Pointer             :: BF => null()
+      Type (Vect3D),Dimension(:,:),Pointer         :: Grad_BF => null()
+      PetscReal,Dimension(:),Pointer               :: Gauss_C => null()
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3DScal
  
    Type MEF90Element3DVect
-      Type (Vect3D),Dimension(:,:),Pointer         :: BF
-      Type (Mat3D),Dimension(:,:),Pointer          :: Grad_BF
-      Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF
-      PetscReal,Dimension(:),Pointer               :: Gauss_C
+      Type (Vect3D),Dimension(:,:),Pointer         :: BF => null()
+      Type (Mat3D),Dimension(:,:),Pointer          :: Grad_BF => null()
+      Type (MatS3D),Dimension(:,:),Pointer         :: GradS_BF => null()
+      PetscReal,Dimension(:),Pointer               :: Gauss_C => null()
       Type(Vect3D)                                 :: outerNormal ! only makes sense for elements of codim 1
    End Type MEF90Element3DVect
  
@@ -847,7 +847,7 @@ Contains
          GradPhiHat(6,:)%X = 0.0_Kr;                                    GradPhiHat(6,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
          GradPhiHat(1,:)%X = 4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y);  GradPhiHat(1,:)%Y = -4.0_Kr * Xi%X
          GradPhiHat(2,:)%X = 4.0_Kr * Xi%Y;                             GradPhiHat(2,:)%Y = 4.0_Kr * Xi%X
-         GradPhiHat(3,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(3,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y);
+         GradPhiHat(3,:)%X = -4.0_Kr * Xi%Y;                            GradPhiHat(3,:)%Y = 4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y)
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder
@@ -1286,78 +1286,70 @@ Contains
          Num_DoF = 4
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         ! PhiHat(2,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
-         ! PhiHat(1,:) = Xi(:)%X
-         ! PhiHat(3,:) = Xi(:)%Y
-         ! PhiHat(4,:) = Xi(:)%Z
-         
-         ! GradPhiHat(2,:)%X = -1.0_Kr;GradPhiHat(2,:)%Y = -1.0_Kr;GradPhiHat(2,:)%Z = -1.0_Kr;
-         ! GradPhiHat(1,:)%X =  1.0_Kr;GradPhiHat(1,:)%Y =  0.0_Kr;GradPhiHat(1,:)%Z =  0.0_Kr;
-         ! GradPhiHat(3,:)%X =  0.0_Kr;GradPhiHat(3,:)%Y =  1.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
-         ! GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
          PhiHat(1,:) = 1.0_Kr - Xi%X - Xi%Y - Xi%Z
-         PhiHat(3,:) = Xi(:)%X
          PhiHat(2,:) = Xi(:)%Y
+         PhiHat(3,:) = Xi(:)%X
          PhiHat(4,:) = Xi(:)%Z
          
-         GradPhiHat(1,:)%X = -1.0_Kr;GradPhiHat(1,:)%Y = -1.0_Kr;GradPhiHat(1,:)%Z = -1.0_Kr;
-         GradPhiHat(3,:)%X =  1.0_Kr;GradPhiHat(3,:)%Y =  0.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr;
-         GradPhiHat(2,:)%X =  0.0_Kr;GradPhiHat(2,:)%Y =  1.0_Kr;GradPhiHat(2,:)%Z =  0.0_Kr;
-         GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr;
+         GradPhiHat(1,:)%X = -1.0_Kr;GradPhiHat(1,:)%Y = -1.0_Kr;GradPhiHat(1,:)%Z = -1.0_Kr
+         GradPhiHat(2,:)%X =  0.0_Kr;GradPhiHat(2,:)%Y =  1.0_Kr;GradPhiHat(2,:)%Z =  0.0_Kr
+         GradPhiHat(3,:)%X =  1.0_Kr;GradPhiHat(3,:)%Y =  0.0_Kr;GradPhiHat(3,:)%Z =  0.0_Kr
+         GradPhiHat(4,:)%X =  0.0_Kr;GradPhiHat(4,:)%Y =  0.0_Kr;GradPhiHat(4,:)%Z =  1.0_Kr
       Case(2)
          Num_Dof = 10
          Allocate(PhiHat(Num_DoF,Nb_Gauss),stat=ierr)
          Allocate(GradPhiHat(Num_DoF,Nb_Gauss),stat=ierr)
-         PhiHat(7, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
-         PhiHat(9, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
-         PhiHat(8, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
-         PhiHat(10,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
-         PhiHat(3, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
-         PhiHat(2, :)  = 4.0_Kr *  Xi%X * Xi%Y
          PhiHat(1, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
+         PhiHat(2, :)  = 4.0_Kr *  Xi%X * Xi%Y
+         PhiHat(3, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
          PhiHat(4, :)  = 4.0_Kr * (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * Xi%Z
-         PhiHat(6, :)  = 4.0_Kr * Xi%X * Xi%Z
          PhiHat(5, :)  = 4.0_Kr * Xi%Y * Xi%Z
+         PhiHat(6, :)  = 4.0_Kr * Xi%X * Xi%Z
+         PhiHat(7, :)  = (1.0_Kr - Xi%X - Xi%Y - Xi%Z) * (1.0_Kr - 2.0_Kr*Xi%X - 2.0_Kr*Xi%Y - 2.0_Kr*Xi%Z)
+         PhiHat(8, :)  = Xi%Y * (2.0_Kr * Xi%Y - 1.0_Kr)
+         PhiHat(9, :)  = Xi%X * (2.0_Kr * Xi%X - 1.0_Kr)
+         PhiHat(10,:)  = Xi%Z * (2.0_Kr * Xi%Z - 1.0_Kr)
          
-         GradPhiHat(7,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(7,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-         GradPhiHat(7,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
-
-         GradPhiHat(9,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
-         GradPhiHat(9,:)%Y = 0.0_Kr
-         GradPhiHat(9,:)%Z = 0.0_Kr
-         
-         GradPhiHat(8,:)%X = 0.0_Kr
-         GradPhiHat(8,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
-         GradPhiHat(8,:)%Z = 0.0_Kr
-         
-         GradPhiHat(10,:)%X = 0.0_Kr
-         GradPhiHat(10,:)%Y = 0.0_Kr
-         GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
-         
-         GradPhiHat(3,:)%X =  4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
-         GradPhiHat(3,:)%Y = -4.0_Kr * Xi%X
-         GradPhiHat(3,:)%Z = -4.0_Kr * Xi%X
+         GradPhiHat(1,:)%X = -4.0_Kr * Xi%Y
+         GradPhiHat(1,:)%Y =  4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
+         GradPhiHat(1,:)%Z = -4.0_Kr * Xi%Y
 
          GradPhiHat(2,:)%X = 4.0_Kr * Xi%Y
          GradPhiHat(2,:)%Y = 4.0_Kr * Xi%X
          GradPhiHat(2,:)%Z = 0.0_Kr
 
-         GradPhiHat(1,:)%X = -4.0_Kr * Xi%Y
-         GradPhiHat(1,:)%Y =  4.0_Kr * (1.0_Kr - Xi%X - 2.0_Kr * Xi%Y - Xi%Z)
-         GradPhiHat(1,:)%Z = -4.0_Kr * Xi%Y
+         GradPhiHat(3,:)%X =  4.0_Kr * (1.0_Kr - 2.0_Kr * Xi%X - Xi%Y - Xi%Z)
+         GradPhiHat(3,:)%Y = -4.0_Kr * Xi%X
+         GradPhiHat(3,:)%Z = -4.0_Kr * Xi%X
 
          GradPhiHat(4,:)%X = -4.0_Kr * Xi%Z
          GradPhiHat(4,:)%Y = -4.0_Kr * Xi%Z
          GradPhiHat(4,:)%Z =  4.0_Kr * (1.0_Kr - Xi%X - Xi%Y -2.0_Kr * Xi%Z)
 
+         GradPhiHat(5,:)%X = 0.0_Kr
+         GradPhiHat(5,:)%Y = 4.0_Kr * Xi%Z
+         GradPhiHat(5,:)%Z = 4.0_Kr * Xi%Y
+
          GradPhiHat(6,:)%X = 4.0_Kr * Xi%Z
          GradPhiHat(6,:)%Y = 0.0_Kr
          GradPhiHat(6,:)%Z = 4.0_Kr * Xi%X
           
-         GradPhiHat(5,:)%X = 0.0_Kr
-         GradPhiHat(5,:)%Y = 4.0_Kr * Xi%Z
-         GradPhiHat(5,:)%Z = 4.0_Kr * Xi%Y
+         GradPhiHat(7,:)%X = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(7,:)%Y = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+         GradPhiHat(7,:)%Z = 4.0_Kr * Xi%X + 4.0_Kr * Xi%Y + 4.0_Kr * Xi%Z - 3.0_Kr
+
+         GradPhiHat(8,:)%X = 0.0_Kr
+         GradPhiHat(8,:)%Y = 4.0_Kr * Xi%Y - 1.0_Kr
+         GradPhiHat(8,:)%Z = 0.0_Kr
+         
+         GradPhiHat(9,:)%X = 4.0_Kr * Xi%X - 1.0_Kr
+         GradPhiHat(9,:)%Y = 0.0_Kr
+         GradPhiHat(9,:)%Z = 0.0_Kr
+         
+         GradPhiHat(10,:)%X = 0.0_Kr
+         GradPhiHat(10,:)%Y = 0.0_Kr
+         GradPhiHat(10,:)%Z = 4.0_Kr * Xi%Z - 1.0_Kr
+         
       Case Default
          Num_DoF = 0
          Write(*,*) __FUNCT__,': Unimplemented PolynomialOrder',dPolynomialOrder

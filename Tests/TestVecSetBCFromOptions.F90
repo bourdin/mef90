@@ -2,7 +2,7 @@ Program  TestVecSetBCFromOptions
 #include <petsc/finclude/petsc.h>
 Use petsc
 Use m_MEF90
-Implicit NONE   
+implicit none (type, external)   
     
     PetscErrorCode                                     :: ierr
     Type(MEF90Ctx_Type),target                         :: MEF90Ctx

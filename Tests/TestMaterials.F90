@@ -3,7 +3,7 @@ Program TestMaterials
    Use m_MEF90
    Use m_MEF90_Materials
    Use petsc
-   Implicit NONE   
+   implicit none (type, external)   
 
    PetscInt                            :: i,numMat=1
    PetscBool                           :: flg

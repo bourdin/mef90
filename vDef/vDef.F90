@@ -10,7 +10,7 @@ Program vDef
    Use m_vDefDefault
    Use petsc
    Use petsctao
-   Implicit NONE
+   implicit none (type)
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx

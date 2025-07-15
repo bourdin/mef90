@@ -7,7 +7,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 #define D2EEDINTERFACE MEF90_APPEND(D2EED,MEF90_DIM)D
 
    Use m_MEF90_Materials
-   Implicit none
+   implicit none (type, external)
    private
    public :: MEF90_DEFMECHSPLIT
    public :: MEF90_DefMechSplit_SmoothPositiveSquare

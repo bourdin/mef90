@@ -6,7 +6,7 @@ Module m_MEF90_Ctx_Type
    Use m_MEF90_LinAlg
    Use m_MEF90_Elements
    Use,Intrinsic :: iso_c_binding
-   Implicit none
+   implicit none (type, external)
    Private  
    Public :: MEF90Ctx_Type
    Public :: MEF90CtxGlobalOptions_Type
@@ -42,7 +42,8 @@ Module m_MEF90_Ctx
    Use m_MEF90_LinAlg
    Use m_MEF90_Elements
    Use m_MEF90_Ctx_Type
-   Implicit none
+
+   implicit none (type)
 
    Public :: MEF90Ctx_Type
    Public :: MEF90CtxGlobalOptions_Type
@@ -78,11 +79,12 @@ Module m_MEF90_Ctx
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_Ctx_Type
          Use petscbag
-         type(tPetscBag)                              :: bag
-         Type(MEF90CtxGlobalOptions_Type),pointer     :: data
-         PetscErrorCode,Intent(OUT)                   :: ierr
+         implicit none (type)
+         type(tPetscBag),intent(IN)                           :: bag
+         Type(MEF90CtxGlobalOptions_Type),pointer,intent(OUT) :: data
+         PetscErrorCode,Intent(INOUT)                         :: ierr
       End subroutine PetscBagGetData
-   End interface
+   End interface PetscBagGetData
 
 Contains
 #undef __FUNCT__
@@ -134,9 +136,9 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag,data,ierr)
-      Type(tPetscBag)                                 :: bag
-      Type(MEF90CtxGlobalOptions_Type),pointer        :: data
-      PetscErrorCode,Intent(OUT)                      :: ierr
+         type(tPetscBag),intent(IN)                           :: bag
+         Type(MEF90CtxGlobalOptions_Type),pointer,intent(OUT) :: data
+         PetscErrorCode,Intent(INOUT)                         :: ierr
       
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90CtxGlobalOptions
@@ -152,10 +154,10 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag,name,prefix,default,ierr)
-      Type(tPetscBag)                                 :: bag
+      type(tPetscBag),intent(IN)                      :: bag
       Character(len=*),intent(IN)                     :: prefix,name
       Type(MEF90CtxGlobalOptions_Type),intent(IN)     :: default
-      PetscErrorCode,intent(OUT)                      :: ierr
+      PetscErrorCode,intent(INOUT)                    :: ierr
 
       Type(MEF90CtxGlobalOptions_Type),pointer        :: MEF90CtxGlobalOptions
       

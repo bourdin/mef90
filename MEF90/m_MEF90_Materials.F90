@@ -4,7 +4,7 @@ Module m_MEF90_Materials_Types
    Use m_MEF90_Utils
    Use m_MEF90_LinAlg
    Use petscbag
-   IMPLICIT NONE
+   implicit none (type, external)
 
    Type MEF90HookesLaw2D
       Type(Tens4OS2D)    :: fullTensor
@@ -271,13 +271,14 @@ End Module m_MEF90_Materials_Types
 Module m_MEF90_Materials_Interface2D
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Materials_Types
-   Implicit NONE
+   implicit none (type)
    Private
    Public :: PetscBagGetDataMEF90MatProp2D
 
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_Materials_Types
+         implicit none (type)
          PetscBag                             :: bag
          type(MEF90MatProp2D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
@@ -346,13 +347,14 @@ End Module m_MEF90_Materials_Interface2D
 Module m_MEF90_Materials_Interface3D
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Materials_Types
-   Implicit NONE
+   implicit none (type)
    Private
    Public :: PetscBagGetDataMEF90MatProp3D
 
    Interface PetscBagGetData
       Subroutine PetscBagGetData(bag,data,ierr)
          Use m_MEF90_Materials_Types
+         implicit none (type)
          PetscBag                             :: bag
          type(MEF90MatProp3D_Type),pointer    :: data
          PetscErrorCode                       :: ierr
@@ -415,7 +417,7 @@ Module m_MEF90_Materials
    Use m_MEF90_Materials_Types
    Use m_MEF90_Materials_Interface2D
    Use m_MEF90_Materials_Interface3D
-   Implicit NONE
+   implicit none (type)
 
    Interface PetscBagGetDataMEF90MatProp
       Module Procedure PetscBagGetDataMEF90MatProp2D,PetscBagGetDataMEF90MatProp3D

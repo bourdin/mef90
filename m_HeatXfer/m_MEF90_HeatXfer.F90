@@ -18,7 +18,7 @@ Module m_MEF90_HeatXfer
       MEF90HeatXferIFunction3D    => MEF90HeatXferIFunction, &
       MEF90HeatXferIJacobian3D    => MEF90HeatXferIJacobian
 
-   Implicit none
+   implicit none (type)
 
    !Private
    Public MEF90HeatXferOperator

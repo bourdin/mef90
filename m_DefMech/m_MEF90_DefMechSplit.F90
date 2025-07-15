@@ -10,7 +10,7 @@ module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
    use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
    use m_MEF90_DefMechCtx
 
-   implicit none
+   implicit none (type, external)
    ! private
    public :: MEF90DefMechGetSplit
    public :: MEF90_DEFMECHSPLIT

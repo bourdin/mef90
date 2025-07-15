@@ -2,7 +2,7 @@ Program  gmsh2exo
 #include <petsc/finclude/petsc.h>
     Use m_MEF90
     Use petsc
-    Implicit NONE   
+    implicit none (type, external)   
 
     PetscErrorCode                      :: ierr
     Type(MEF90Ctx_Type),target          :: MEF90Ctx

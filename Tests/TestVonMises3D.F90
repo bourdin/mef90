@@ -1,7 +1,7 @@
 module TestVonMises3D_mod
 #include "petsc/finclude/petsc.h"
    use m_MEF90
-   implicit NONE
+   implicit none (type, external)
    !!! note that this type is NOT C interoperable, which is not an issue, since we only
    !!! need SNLP to carry its address
 
@@ -95,7 +95,7 @@ program testVonMises
    use m_MEF90
 #ifdef MEF90_HAVE_SNLP
    use SNLPF90
-   implicit NONE
+   implicit none (type, external)
 
    integer(kind=c_int)  :: n = 6
    integer(kind=c_int)  :: m = 1

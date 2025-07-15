@@ -4,7 +4,7 @@ Module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
    Use petscsnes
    Use petsctao
    Use m_MEF90_HeatXferCtx
-   Implicit none
+   implicit none (type, external)
    
    Private
    Public MEF90HeatXferOperator, &

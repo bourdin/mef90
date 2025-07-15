@@ -1,7 +1,7 @@
 Module m_MEF90_MPI
 #include "petsc/finclude/petsc.h"
    Use m_MEF90_Parameters
-   Implicit None
+   implicit none (type, external)
 
    Private
    PetscMPIInt,Public,protected   :: Vect2D_MPIType

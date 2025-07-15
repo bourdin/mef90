@@ -1,7 +1,7 @@
 Program  TestDMPlexComputeCellGeometryAffineFEMF90
 #include <petsc/finclude/petsc.h>
   Use petsc
-  Implicit NONE   
+  implicit none (type, external)   
   
   Type(tDM)                      :: dm
   Character(len=2048)            :: filename,IOBuffer

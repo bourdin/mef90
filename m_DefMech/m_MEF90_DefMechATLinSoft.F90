@@ -4,7 +4,7 @@ module m_MEF90_DefMechATLinSoft
 #include "petsc/finclude/petsc.h"
    ! Use m_MEF90
    Use m_MEF90_DefMechAT_class
-   implicit none
+   implicit none (type, external)
    private
    public :: MEF90DefMechATLinSoft_Type
 
