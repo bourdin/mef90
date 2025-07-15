@@ -23,7 +23,7 @@ module m_MEF90_DefMechATKKL
       Procedure, pass(self)                            :: w   => wKKL
       Procedure, pass(self)                            :: Dw  => DwKKL
       Procedure, pass(self)                            :: D2w => D2wKKL
-   end Type
+   end Type MEF90DefMechATKKL_Type
 
    interface MEF90DefMechATKKL_Type
       module procedure MEF90DefMechATKKL_Constructor

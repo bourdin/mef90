@@ -27,7 +27,7 @@ module m_MEF90_DefMechAT1exp
       Procedure, pass(self)                            :: w   => wAT1exp
       Procedure, pass(self)                            :: Dw  => DwAT1exp
       Procedure, pass(self)                            :: D2w => D2wAT1exp
-   end Type
+   end Type MEF90DefMechAT1exp_Type
 
    interface MEF90DefMechAT1exp_Type
       module procedure MEF90DefMechAT1exp_Constructor
@@ -66,7 +66,7 @@ Contains
          aAT1exp = 1.0_Kr - alpha
       Else
          aAT1exp = 1.0_Kr + (exp(-self%b * alpha) - 1.0_Kr) / (1.0_kr - exp(-self%b))
-      EndIf
+      End If
    End function aAT1exp
 
 #undef __FUNCT__

@@ -24,7 +24,7 @@ module m_MEF90_DefMechATLinSoft
       Procedure, pass(self)                            :: w   => wLinSoft
       Procedure, pass(self)                            :: Dw  => DwLinSoft
       Procedure, pass(self)                            :: D2w => D2wLinSoft
-   end Type
+   end Type MEF90DefMechATLinSoft_Type
 
    interface MEF90DefMechATLinSoft_Type
       module procedure MEF90DefMechATLinSoft_Constructor

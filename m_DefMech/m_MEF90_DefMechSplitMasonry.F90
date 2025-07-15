@@ -14,7 +14,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDMasonry
       Procedure, pass(self)                            :: DEED  => DEEDMasonry
       Procedure, pass(self)                            :: D2EED => D2EEDMasonry
-   End Type
+   End Type MEF90_DEFMECHSPLITMASONRY
 
    interface MEF90_DEFMECHSPLITMASONRY
       module procedure MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR

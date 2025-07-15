@@ -4,26 +4,29 @@ Module m_MEF90_DefMechCtx_Type
    implicit none (type, external)
    
    Type MEF90DefMechCtx_Type
-      Type(MEF90Ctx_Type),pointer             :: MEF90Ctx
+      Type(MEF90Ctx_Type),pointer             :: MEF90Ctx => null()
       Type(tDM)                               :: megaDM
       PetscInt                                :: dim
       PetscReal                               :: analysisTime,timeStep
 
       !!!  vertex based vec
-      Type(tVec),pointer                      :: displacementLocal,displacementPreviousStepLocal
-      Type(tVec),pointer                      :: damageLocal,damagePreviousStepLocal
-      Type(tVec),pointer                      :: displacementLowerBoundLocal,displacementUpperBoundLocal
-      Type(tVec),Pointer                      :: temperatureLocal
+      Type(tVec),pointer                      :: displacementLocal => null()
+      Type(tVec),pointer                      :: displacementPreviousStepLocal => null()
+      Type(tVec),pointer                      :: damageLocal => null()
+      Type(tVec),pointer                      :: damagePreviousStepLocal => null()
+      Type(tVec),pointer                      :: displacementLowerBoundLocal => null()
+      Type(tVec),pointer                      :: displacementUpperBoundLocal => null()
+      Type(tVec),Pointer                      :: temperatureLocal => null()
       
       !!! cell based vec      
-      Type(tVec),pointer                      :: bodyForce
-      Type(tVec),pointer                      :: boundaryForce
-      Type(tVec),pointer                      :: pressureForce
-      !Type(tVec),pointer                      :: crackPressure
-      Type(tVec),pointer                      :: cohesiveDisplacement
-      Type(tVec),Pointer                      :: plasticStrain
-      Type(tVec),Pointer                      :: cumulatedPlasticDissipation
-      Type(tVec),Pointer                      :: stress
+      Type(tVec),pointer                      :: bodyForce => null()
+      Type(tVec),pointer                      :: boundaryForce => null()
+      Type(tVec),pointer                      :: pressureForce => null()
+      !Type(tVec),pointer                      :: crackPressure => null()
+      Type(tVec),pointer                      :: cohesiveDisplacement => null()
+      Type(tVec),Pointer                      :: plasticStrain => null()
+      Type(tVec),Pointer                      :: cumulatedPlasticDissipation => null()
+      Type(tVec),Pointer                      :: stress => null()
 
       Type(tPetscSF)                          :: displacementToIOSF,IOToDisplacementSF
       Type(tPetscSF)                          :: cohesiveDisplacementToIOSF,IOToCohesiveDisplacementSF
@@ -39,13 +42,13 @@ Module m_MEF90_DefMechCtx_Type
       Type(tPetscSF)                          :: cumulatedPlasticDissToIOSF,IOToCumulatedPlasticDissSF
       
       Type(tPetscBag)                         :: GlobalOptionsBag
-      Type(tPetscBag),Dimension(:),Pointer    :: CellSetOptionsBag
-      Type(tPetscBag),Dimension(:),Pointer    :: FaceSetOptionsBag
-      Type(tPetscBag),Dimension(:),Pointer    :: VertexSetOptionsBag
-      Type(tPetscBag),Dimension(:),Pointer    :: MaterialPropertiesBag
+      Type(tPetscBag),Dimension(:),Pointer    :: CellSetOptionsBag => null()
+      Type(tPetscBag),Dimension(:),Pointer    :: FaceSetOptionsBag => null()
+      Type(tPetscBag),Dimension(:),Pointer    :: VertexSetOptionsBag => null()
+      Type(tPetscBag),Dimension(:),Pointer    :: MaterialPropertiesBag => null()
 
       Type(tPetscViewer)                      :: globalEnergyViewer
-      Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer
+      Type(tPetscViewer),Dimension(:),Pointer :: setEnergyViewer => null()
 
       PetscBool                               :: hasDisplacementBounds
       PetscBool                               :: hasUnilateralContact
@@ -144,6 +147,7 @@ Module m_MEF90DefMechGlobalOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use petscbag
          Use m_MEF90_DefMechCtx_Type
+         implicit none (type)
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
          PetscErrorCode                                        :: ierr
@@ -158,9 +162,9 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions(bag,data,ierr)
-      Type(tPetscBag)                                       :: bag
+      Type(tPetscBag),intent(IN)                            :: bag
       Type(MEF90DefMechGlobalOptions_Type),pointer          :: data
-      PetscErrorCode                                        :: ierr
+      PetscErrorCode,intent(INOUT)                          :: ierr
       
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90DefMechCtxGlobalOptions
@@ -179,6 +183,8 @@ Module m_MEF90DefMechCellSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use petscbag
          Use m_MEF90_DefMechCtx_Type
+         implicit none (type, external)
+         
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
          PetscErrorCode                                        :: ierr
@@ -193,9 +199,9 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions(bag,data,ierr)
-      Type(tPetscBag)                                       :: bag
+      Type(tPetscBag),intent(IN)                            :: bag
       Type(MEF90DefMechCellSetOptions_Type),pointer         :: data
-      PetscErrorCode                                        :: ierr
+      PetscErrorCode,intent(INOUT)                          :: ierr
       
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90DefMechCtxCellSetOptions
@@ -214,6 +220,8 @@ Module m_MEF90DefMechFaceSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use petscbag
          Use m_MEF90_DefMechCtx_Type
+         implicit none (type, external)
+
          Type(tPetscBag)                                       :: bag
          Type(MEF90DefMechFaceSetOptions_Type),pointer         :: data
          PetscErrorCode                                        :: ierr
@@ -228,9 +236,9 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxFaceSetOptions(bag,data,ierr)
-      Type(tPetscBag)                                       :: bag
+      Type(tPetscBag),intent(IN)                            :: bag
       Type(MEF90DefMechFaceSetOptions_Type),pointer         :: data
-      PetscErrorCode                                        :: ierr
+      PetscErrorCode,intent(INOUT)                          :: ierr
       
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90DefMechCtxFaceSetOptions
@@ -249,9 +257,11 @@ Module m_MEF90DefMechVertexSetOptions_Private
       Subroutine PetscBagGetData(bag,data,ierr)
          Use petscbag
          Use m_MEF90_DefMechCtx_Type
+         implicit none (type, external)
+
          Type(tPetscBag)                                       :: bag
-         Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
-         PetscErrorCode                                           :: ierr
+         Type(MEF90DefMechVertexSetOptions_Type),pointer       :: data
+         PetscErrorCode,intent(INOUT)                          :: ierr
       End subroutine PetscBagGetData
    End interface
 
@@ -263,9 +273,9 @@ Contains
 !!!
 
    Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions(bag,data,ierr)
-      Type(tPetscBag)                                       :: bag
-      Type(MEF90DefMechVertexSetOptions_Type),pointer          :: data
-      PetscErrorCode                                           :: ierr
+      Type(tPetscBag),intent(IN)                            :: bag
+      Type(MEF90DefMechVertexSetOptions_Type),pointer       :: data
+      PetscErrorCode,intent(INOUT)                          :: ierr
       
       PetscCall(PetscBagGetData(bag,data,ierr))
    End Subroutine PetscBagGetDataMEF90DefMechCtxVertexSetOptions
@@ -785,7 +795,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxGlobalOptions(bag,name,prefix,default,ierr)
-      Type(tPetscBag)                                          :: bag
+      Type(tPetscBag),Intent(IN)                               :: bag
       Character(len=*),Intent(IN)                              :: prefix,name
       Type(MEF90DefMechGlobalOptions_Type),Intent(IN)          :: default
       PetscErrorCode,Intent(INOUT)                             :: ierr
@@ -846,7 +856,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxCellSetOptions(bag,name,prefix,default,ierr)
-      Type(tPetscBag)                                    :: bag
+      Type(tPetscBag),Intent(IN)                         :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechCellSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -895,7 +905,7 @@ Contains
 !!!
 
    Subroutine PetscBagRegisterMEF90DefMechCtxFaceSetOptions(bag,name,prefix,default,ierr)
-      Type(tPetscBag)                                    :: bag
+      Type(tPetscBag),Intent(IN)                         :: bag
       Character(len=*),Intent(IN)                        :: prefix,name
       Type(MEF90DefMechFaceSetOptions_Type),Intent(IN)   :: default
       PetscErrorCode,Intent(INOUT)                       :: ierr
@@ -932,7 +942,7 @@ Contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
    Subroutine PetscBagRegisterMEF90DefMechCtxVertexSetOptions(bag,name,prefix,default,ierr)
-      Type(tPetscBag)                                    :: bag
+      Type(tPetscBag),Intent(IN)                            :: bag
       Character(len=*),Intent(IN)                           :: prefix,name
       Type(MEF90DefMechVertexSetOptions_Type),Intent(IN)    :: default
       PetscErrorCode,Intent(INOUT)                          :: ierr

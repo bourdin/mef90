@@ -17,7 +17,7 @@ module m_MEF90_DefMechAT2
       Procedure, pass(self)                            :: w   => wAT2
       Procedure, pass(self)                            :: Dw  => DwAT2
       Procedure, pass(self)                            :: D2w => D2wAT2
-   end Type
+   end Type MEF90DefMechAT2_Type
 
    interface MEF90DefMechAT2_Type
       module procedure MEF90DefMechAT2_Constructor

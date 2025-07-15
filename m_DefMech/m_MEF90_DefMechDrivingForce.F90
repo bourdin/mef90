@@ -3,7 +3,7 @@
 module m_MEF90_DefMechDrivingForce
 #include "petsc/finclude/petsc.h"
    use m_MEF90_DefMechDrivingForceDruckerPrager
-   ! use m_MEF90_DefMechCtx
+   implicite none (type, external)
 
 Contains
 #undef __FUNCT__
@@ -15,7 +15,7 @@ Contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    Subroutine MEF90DefMechGetDrivingForce(cellSetOptions,DrivingForce)
-      Type(MEF90DefMechCellSetOptions_Type),Pointer                 :: cellSetOptions
+      Type(MEF90DefMechCellSetOptions_Type),Pointer,intent(IN)      :: cellSetOptions
       Class(MEF90_DefMechDrivingForce_Type),Allocatable,Intent(OUT) :: DrivingForce
 
       Select Case (cellSetOptions%drivingForceType)

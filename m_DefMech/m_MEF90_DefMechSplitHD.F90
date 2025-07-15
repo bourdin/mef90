@@ -16,7 +16,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDHD
       Procedure, pass(self)                            :: DEED  => DEEDHD
       Procedure, pass(self)                            :: D2EED => D2EEDHD
-   End Type
+   End Type MEF90_DEFMECHSPLITHD
 
    interface MEF90_DEFMECHSPLITHD
       module procedure MEF90_DEFMECHSPLITHD_CONSTRUCTOR

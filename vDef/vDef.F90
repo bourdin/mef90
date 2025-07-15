@@ -425,7 +425,7 @@ Program vDef
                         PetscCallA(SNESVIGetVariableBounds(damageSNES,damageLB,damageUB,ierr))
                         PetscCallA(VecPointwiseMax(damage,damage,damageLB,ierr))
                         PetscCallA(VecPointwiseMin(damage,damage,damageUB,ierr))
-                     EndIf
+                     End If
                   End If
 
                   !!! Monitor the progress of the Alt Min algorithm
@@ -439,7 +439,7 @@ Program vDef
 
                   !!! Test for convergence based on the L^\infty norm of the increment
                   If (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) Then
-                     EXIT
+                     EXIT altMin
                   End If
 
                   If (mod(AltMinIter,25) == 0) Then
@@ -511,7 +511,7 @@ Program vDef
          End Select ! timeStepingType
 
          If (step == MEF90GlobalOptions%timeNumStep) Then
-            EXIT
+            EXIT mainloopQS
          Else
             step = step + 1
          End If

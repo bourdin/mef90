@@ -14,7 +14,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDNone
       Procedure, pass(self)                            :: DEED  => DEEDNone
       Procedure, pass(self)                            :: D2EED => D2EEDNone
-   end Type
+   end Type MEF90_DEFMECHSPLITNONE
 
    interface MEF90_DEFMECHSPLITNONE
       module procedure MEF90_DEFMECHSPLITNONE_CONSTRUCTOR

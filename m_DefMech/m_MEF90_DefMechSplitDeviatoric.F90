@@ -15,7 +15,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDDeviatoric
       Procedure, pass(self)                            :: DEED  => DEEDDeviatoric
       Procedure, pass(self)                            :: D2EED => D2EEDDeviatoric
-   End Type
+   End Type MEF90_DEFMECHSPLITDEVIATORIC
 
    interface MEF90_DEFMECHSPLITDEVIATORIC
       module procedure MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR

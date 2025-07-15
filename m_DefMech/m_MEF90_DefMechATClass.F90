@@ -26,7 +26,7 @@ Module m_MEF90_DefMechAT_class
       Procedure(ATInterface), pass(self), deferred     :: w
       Procedure(ATInterface), pass(self), deferred     :: Dw
       Procedure(ATInterface), pass(self), deferred     :: D2w
-   End Type
+   End Type MEF90DefMechAT_Type
 
    Abstract Interface
       PetscReal function ATInterface(self,alpha)

@@ -16,7 +16,7 @@ Module MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
       Procedure, pass(self)                            :: EED   => EEDHydrostatic
       Procedure, pass(self)                            :: DEED  => DEEDHydrostatic
       Procedure, pass(self)                            :: D2EED => D2EEDHydrostatic
-   End Type
+   End Type MEF90_DEFMECHSPLITHYDROSTATIC
 
    interface MEF90_DEFMECHSPLITHYDROSTATIC
       module procedure MEF90_DEFMECHSPLITHYDROSTATIC_CONSTRUCTOR

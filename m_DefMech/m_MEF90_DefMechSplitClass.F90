@@ -29,12 +29,14 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
       Procedure(EEDINTERFACE), pass(self), deferred     :: EED
       Procedure(DEEDINTERFACE), pass(self), deferred    :: DEED
       Procedure(D2EEDINTERFACE), pass(self), deferred   :: D2EED
-   End Type
+   End Type MEF90_DEFMECHSPLIT
 
    Abstract Interface
       Subroutine EEDINTERFACE(self,Strain,HookesLaw,EEDPlus,EEDMinus)
          Use m_MEF90
          import :: MEF90_DEFMECHSPLIT
+         implicit none (type, external)
+
          Class(MEF90_DEFMECHSPLIT),Intent(IN)           :: self
          Type(MEF90_MATS),Intent(IN)                    :: Strain
          Type(MEF90_HOOKESLAW),Intent(IN)               :: HookesLaw
@@ -44,6 +46,8 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
       Subroutine DEEDINTERFACE(self,Strain,HookesLaw,DEEDPlus,DEEDMinus)
          Use m_MEF90
          import :: MEF90_DEFMECHSPLIT
+         implicit none (type, external)
+
          Class(MEF90_DEFMECHSPLIT),Intent(IN)           :: self
          Type(MEF90_MATS),Intent(IN)                    :: Strain
          Type(MEF90_HOOKESLAW),Intent(IN)               :: HookesLaw
@@ -53,6 +57,8 @@ Module MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
       Subroutine D2EEDINTERFACE(self,Strain,HookesLaw,D2EEDPlus,D2EEDMinus)
          Use m_MEF90
          import :: MEF90_DEFMECHSPLIT
+         implicit none (type, external)
+
          Class(MEF90_DEFMECHSPLIT),Intent(IN)           :: self
          Type(MEF90_MATS),Intent(IN)                    :: Strain
          Type(MEF90_HOOKESLAW),Intent(IN)               :: HookesLaw
