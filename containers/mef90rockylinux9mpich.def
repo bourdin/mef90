@@ -1,0 +1,94 @@
+Bootstrap: docker
+From: rockylinux:9 
+
+### bbserv:containers (dmplex)$ apptainer build --force --sandbox /tmp/mef90rockylinux9mpich mef90rockylinux9mpich.def 
+
+%setup
+
+
+%environment
+export PETSC_DIR=/opt/HPC/petsc
+export PATH=$PETSC_DIR/bin:$PATH
+export MPI_DIR=/usr/lib64/mpich
+export PATH=$PATH:${MPI_DIR}/bin
+export PETSC_ARCH=arch-rocky-mpich-O
+export MEF90_DIR=/opt/HPC/mef90
+export PATH=$MEF90_DIR/$PETSC_ARCH/bin:$MEF90_DIR/bin:$PATH
+export PYTHONPATH=$MEF90_DIR/python:$PETSC_DIR/$PETSC_ARCH/lib:$PYTHONPATH
+export GMSH_DIR=/opt/HPC/gmsh-4.13.1-Linux64
+export PATH=$PATH:$GMSH_DIR/bin
+export VISIT_DIR=/opt/HPC/visit
+export PATH=$PATH:$VISIT_DIR/bin
+export SYMENGINE_ROOT=/opt/HPC/symengine
+export SYMENGINE_LIBDIR=${SYMENGINE_ROOT}/lib64
+export SYMENGINEF90_ROOT=/opt/HPC/symengine-f90
+
+%post
+export PETSC_DIR=/opt/HPC/petsc
+export PATH=$PETSC_DIR/bin:$PATH
+export MPI_DIR=/usr/lib64/mpich
+export PATH=$PATH:${MPI_DIR}/bin
+export PETSC_ARCH=arch-rocky-mpich-O
+export MEF90_DIR=/opt/HPC/mef90
+export PATH=$MEF90_DIR/$PETSC_ARCH/bin:$MEF90_DIR/bin:$PATH
+export PYTHONPATH=$MEF90_DIR/python:$PETSC_DIR/$PETSC_ARCH/lib:$PYTHONPATH
+export GMSH_DIR=/opt/HPC/gmsh-4.13.1-Linux64
+export PATH=$PATH:$GMSH_DIR/bin
+export VISIT_DIR=/opt/HPC/visit
+export PATH=$PATH:$VISIT_DIR/bin
+export SYMENGINE_ROOT=/opt/HPC/symengine
+export SYMENGINE_LIBDIR=${SYMENGINE_ROOT}/lib64
+export SYMENGINEF90_ROOT=/opt/HPC/symengine-f90
+
+mkdir -p /opt/HPC/src
+mkdir -p ${PETSC_DIR}
+dnf update -y 
+dnf install -y diffutils cmake procps make gcc gcc-c++ gfortran pkgconfig which bzip2 openssh-server openssh-clients wget net-tools git libtool automake autoconf mesa-libGLU libXrender libXcursor libXft fontconfig libXinerama libxkbcommon pcre2-utf16 cpio python3-pip gmp gmp-devel hwloc hwloc-devel mpich mpich-devel
+
+### symengine
+cd /opt/HPC/src; git clone https://github.com/symengine/symengine.git
+mkdir -p /opt/HPC/src/symengine/build 
+cd /opt/HPC/src/symengine/build; cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${SYMENGINE_ROOT} ..; make -j$(nproc) install
+
+### symengine.f90
+cd /opt/HPC/src; git clone --branch bourdin/cmakeFixes https://github.com/bourdin/symengine.f90.git
+mkdir /opt/HPC/src/symengine.f90/build
+cd /opt/HPC/src/symengine.f90/build; cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=${SYMENGINEF90_ROOT} -DSymEngine_DIR=${SYMENGINE_ROOT} ..; make -j$(nproc) install
+
+### petsc
+git clone --single-branch --branch release https://gitlab.com/petsc/petsc.git /opt/HPC/petsc
+cd ${PETSC_DIR};                      \
+    ./configure                       \
+    --CFLAGS='-Wimplicit-function-declaration -Wunused -Wuninitialized' \
+    --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch -Wunused -Wuninitialized' \
+    --COPTFLAGS='-O3 -march=native'   \
+    --CXXOPTFLAGS='-O3 -march=native' \
+    --FOPTFLAGS='-O3 -march=native'   \
+    --download-chaco=0                \
+    --download-exodusii=1             \
+    --download-fblaslapack=1          \
+    --download-hdf5=1                 \
+    --download-hypre=1                \
+    --download-metis=1                \
+    --download-netcdf=1               \
+    --download-ml=1                   \
+    --download-parmetis=1             \
+    --download-pnetcdf=1              \
+    --download-zlib=1                 \
+    --with-debugging=0                \
+    --with-exodusii-fortran-bindings  \
+    --with-mpi-dir=${MPI_DIR}         \
+    --with-shared-libraries=1         \
+    --with-x11=1;                     \
+    make PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} all
+
+## mef90
+git clone https://github.com/bourdin/mef90 $MEF90_DIR
+cd $MEF90_DIR; make HeatXfer ThermoElasticity vDef; make -C Utils all
+
+## gmsh
+cd /opt/HPC; wget https://gmsh.info/bin/Linux/gmsh-4.13.1-Linux64.tgz; tar zxvf gmsh-4.13.1-Linux64.tgz; rm gmsh-4.13.1-Linux64.tgz
+
+## visit
+cd /opt/HPC; wget https://github.com/visit-dav/visit/releases/download/v3.4.2/visit3_4_2.linux-x86_64-rocky9.tar.gz; wget https://github.com/visit-dav/visit/releases/download/v3.4.2/visit-install3_4_2; sh visit-install3_4_2 -c none 3.4.2 linux-x86_64-rocky9 /opt/HPC/visit
+rm /opt/HPC/visit3_4_2.linux-x86_64-rocky9.tar.gz /opt/HPC/visit-install3_4_2
