@@ -22,6 +22,7 @@ export PATH=$PATH:$VISIT_DIR/bin
 export SYMENGINE_ROOT=/opt/HPC/symengine
 export SYMENGINE_LIBDIR=${SYMENGINE_ROOT}/lib64
 export SYMENGINEF90_ROOT=/opt/HPC/symengine-f90
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${SYMENGINE_LIBDIR}
 
 %post
 export PETSC_DIR=/opt/HPC/petsc
@@ -39,6 +40,8 @@ export PATH=$PATH:$VISIT_DIR/bin
 export SYMENGINE_ROOT=/opt/HPC/symengine
 export SYMENGINE_LIBDIR=${SYMENGINE_ROOT}/lib64
 export SYMENGINEF90_ROOT=/opt/HPC/symengine-f90
+# I really don;t understand why this is needed
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${SYMENGINE_LIBDIR}
 
 mkdir -p /opt/HPC/src
 mkdir -p ${PETSC_DIR}
@@ -59,8 +62,7 @@ cd /opt/HPC/src/symengine.f90/build; cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTAL
 git clone --single-branch --branch release https://gitlab.com/petsc/petsc.git /opt/HPC/petsc
 cd ${PETSC_DIR};                      \
     ./configure                       \
-    --CFLAGS='-Wimplicit-function-declaration -Wunused -Wuninitialized' \
-    --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch -Wunused -Wuninitialized' \
+    --FFLAGS='-ffree-line-length-none -fallow-argument-mismatch' \
     --COPTFLAGS='-O3 -march=native'   \
     --CXXOPTFLAGS='-O3 -march=native' \
     --FOPTFLAGS='-O3 -march=native'   \
