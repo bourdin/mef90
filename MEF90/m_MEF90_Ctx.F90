@@ -164,16 +164,16 @@ contains
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(bag, MEF90CtxGlobalOptions, ierr))
       PetscCall(PetscBagSetName(bag, trim(name), "MEF90 Global options object", ierr))
       PetscCall(PetscBagSetOptionsPrefix(bag, trim(prefix), ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions % verbose, default % verbose, 'verbose', 'Verbosity: level', ierr))
-      PetscCall(PetscBagRegisterBool(bag, MEF90CtxGlobalOptions % dryrun, default % dryrun, 'dryrun', 'Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions % timeInterpolation, MEF90TimeInterpolationList, default % timeInterpolation, 'time_interpolation', 'Time: interpolation type', ierr))
-      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions % timeMin, default % timeMin, 'time_min', 'Time: min', ierr))
-      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions % timeMax, default % timeMax, 'time_max', 'Time: max', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions % timeNumStep, default % timeNumStep, 'time_numstep', 'Time: number of time steps', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions % timeSkip, default % timeSkip, 'time_skip', 'Time: number of time steps', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions % timenumCycle, default % timenumCycle, 'time_numCycle', 'Time: number of cycles', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions % ElementFamily, MEF90ElementFamilyList, default % ElementFamily, 'element_family', 'Element family (possibly overridden in application contexts)', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions % ElementOrder, default % ElementOrder, 'element_order', 'Element order (possibly overridden in application contexts)', ierr))
+      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%verbose, default%verbose, 'verbose', 'Verbosity: level', ierr))
+      PetscCall(PetscBagRegisterBool(bag, MEF90CtxGlobalOptions%dryrun, default%dryrun, 'dryrun', 'Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck', ierr))
+      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions%timeInterpolation, MEF90TimeInterpolationList, default%timeInterpolation, 'time_interpolation', 'Time: interpolation type', ierr))
+      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions%timeMin, default%timeMin, 'time_min', 'Time: min', ierr))
+      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions%timeMax, default%timeMax, 'time_max', 'Time: max', ierr))
+      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timeNumStep, default%timeNumStep, 'time_numstep', 'Time: number of time steps', ierr))
+      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timeSkip, default%timeSkip, 'time_skip', 'Time: number of time steps', ierr))
+      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timenumCycle, default%timenumCycle, 'time_numCycle', 'Time: number of cycles', ierr))
+      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions%ElementFamily, MEF90ElementFamilyList, default%ElementFamily, 'element_family', 'Element family (possibly overridden in application contexts)', ierr))
+      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%ElementOrder, default%ElementOrder, 'element_order', 'Element order (possibly overridden in application contexts)', ierr))
    end subroutine PetscBagRegisterMEF90CtxGlobalOptions
 
 #undef __FUNCT__
@@ -201,12 +201,12 @@ contains
       integer                                      :: procNameLength
 #endif
 
-      MEF90Ctx % comm = comm
-      PetscCallMPI(MPI_COMM_RANK(MEF90Ctx % comm, MEF90Ctx % rank, ierr))
-      PetscCallMPI(MPI_COMM_SIZE(MEF90Ctx % comm, MEF90Ctx % numProcs, ierr))
+      MEF90Ctx%comm = comm
+      PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm, MEF90Ctx%rank, ierr))
+      PetscCallMPI(MPI_COMM_SIZE(MEF90Ctx%comm, MEF90Ctx%numProcs, ierr))
       PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-prefix', tmpPrefix, hasPrefix, ierr))
-      PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-geometry', MEF90Ctx % geometryFile, hasGeometry, ierr))
-      PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-result', MEF90Ctx % resultFile, hasResult, ierr))
+      PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-geometry', MEF90Ctx%geometryFile, hasGeometry, ierr))
+      PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-result', MEF90Ctx%resultFile, hasResult, ierr))
       if (.not. (hasPrefix .neqv. hasGeometry)) then
          PetscCall(PetscPrintf(comm, "prefix or geometry must be given (-prefix or -geometry) \n", ierr))
          PetscCall(PetscFinalize(ierr))
@@ -220,40 +220,40 @@ contains
       end if
       if (hasPrefix) then
          !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
-         MEF90Ctx % geometryFile = trim(tmpPrefix)//'.gen'
-         MEF90Ctx % resultFile = trim(MEF90FilePrefix(MEF90Ctx % geometryFile))//'_out.gen'
+         MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
+         MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
       else
          if (.not. hasResult) then
-            MEF90Ctx % resultFile = trim(MEF90FilePrefix(MEF90Ctx % geometryFile))//'_out.gen'
+            MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
          end if
       end if
-      PetscCall(PetscBagCreate(comm, sizeofMEF90CtxGlobalOptions, MEF90Ctx % GlobalOptionsBag, ierr))
-      PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, 'MEF90Ctx', PETSC_NULL_CHARACTER, default, ierr))
+      PetscCall(PetscBagCreate(comm, sizeofMEF90CtxGlobalOptions, MEF90Ctx%GlobalOptionsBag, ierr))
+      PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, 'MEF90Ctx', PETSC_NULL_CHARACTER, default, ierr))
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, GlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
 
 #ifdef PETSC_USE_DEBUG
       PetscCallMPI(MPI_Get_processor_name(procName, procNameLength, ierr))
-      write (IOBuffer, "(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx % rank, MEF90Ctx % numProcs, trim(procName)
-      PetscCall(PetscSynchronizedPrintf(MEF90Ctx % comm, IOBuffer, ierr))
-      PetscCall(PetscSynchronizedFlush(MEF90Ctx % comm, PETSC_STDOUT, ierr))
+      write (IOBuffer, "(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx%rank, MEF90Ctx%numProcs, trim(procName)
+      PetscCall(PetscSynchronizedPrintf(MEF90Ctx%comm, IOBuffer, ierr))
+      PetscCall(PetscSynchronizedFlush(MEF90Ctx%comm, PETSC_STDOUT, ierr))
 #endif
 
-      if (GlobalOptions % verbose > 0) then
+      if (GlobalOptions%verbose > 0) then
          write (IOBuffer, *) 'MEF90 Global Context: \n'
          PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  geometry file:       ',(A),'\n')") trim(MEF90Ctx % geometryFile)
+         write (IOBuffer, "('  geometry file:       ',(A),'\n')") trim(MEF90Ctx%geometryFile)
          PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  result file:         ',(A),'\n')") trim(MEF90Ctx % resultFile)
+         write (IOBuffer, "('  result file:         ',(A),'\n')") trim(MEF90Ctx%resultFile)
          PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  log file:            ',(A),'\n')") trim(MEF90FilePrefix(MEF90Ctx % resultFile))//'.log'
+         write (IOBuffer, "('  log file:            ',(A),'\n')") trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
          PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         PetscCall(PetscBagView(MEF90Ctx % GlobalOptionsBag, PETSC_VIEWER_STDOUT_WORLD, ierr))
+         PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag, PETSC_VIEWER_STDOUT_WORLD, ierr))
          PetscCall(PetscPrintf(comm, "\n", ierr))
       end if
 
       !!! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
-      if (MEF90FileExtension(MEF90Ctx % geometryfile) == 'msh') then
+      if (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') then
          PetscCallA(PetscOptionsInsertString(PETSC_NULL_OPTIONS, "-dm_plex_gmsh_mark_vertices", ierr))
       end if
    end subroutine MEF90CtxCreate
@@ -274,13 +274,13 @@ contains
 
       type(MEF90CtxGlobalOptions_Type), pointer        :: GlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, GlobalOptions, ierr))
-      if (GlobalOptions % dryrun) then
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
+      if (GlobalOptions%dryrun) then
          PetscCall(PetscOptionsLeft(PETSC_NULL_OPTIONS, ierr))
       end if
-      PetscCall(PetscBagDestroy(MEF90Ctx % GlobalOptionsBag, ierr))
-      if (.not. PetscObjectIsNull(MEF90Ctx % resultViewer)) then
-         PetscCall(PetscViewerDestroy(MEF90Ctx % resultViewer, ierr))
+      PetscCall(PetscBagDestroy(MEF90Ctx%GlobalOptionsBag, ierr))
+      if (.not. PetscObjectIsNull(MEF90Ctx%resultViewer)) then
+         PetscCall(PetscViewerDestroy(MEF90Ctx%resultViewer, ierr))
       end if
    end subroutine MEF90CtxDestroy
 
@@ -309,59 +309,59 @@ contains
       character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       i = 0 ! silence gfortran silly warning
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, GlobalOptions, ierr))
-      select case (GlobalOptions % timeInterpolation)
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
+      select case (GlobalOptions%timeInterpolation)
       case (MEF90TimeInterpolation_linear)
-         allocate (t(GlobalOptions % timeNumStep))
+         allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
-         if (GlobalOptions % timeNumStep > 1) then
-            dt = (GlobalOptions % timeMax - GlobalOptions % timeMin) / real(GlobalOptions % timeNumStep - 1.0_kr)
+         if (GlobalOptions%timeNumStep > 1) then
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1.0_kr)
          end if
-         t = [(GlobalOptions % timeMin + real(i) * dt, i=0, GlobalOptions % timeNumStep - 1)]
-         t(GlobalOptions % timeNumStep) = GlobalOptions % timeMax
+         t = [(GlobalOptions%timeMin + real(i) * dt, i=0, GlobalOptions%timeNumStep - 1)]
+         t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
       case (MEF90TimeInterpolation_Vcycle)
-         cycleLength = GlobalOptions % timeNumStep / GlobalOptions % timeNumCycle
-         allocate (t(GlobalOptions % timeNumStep))
+         cycleLength = GlobalOptions%timeNumStep / GlobalOptions%timeNumCycle
+         allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
-         if (GlobalOptions % timeNumStep > 1) then
-            dt = (GlobalOptions % timeMax - GlobalOptions % timeMin) * GlobalOptions % timeNumCycle / real((GlobalOptions % timeNumStep - 1))
+         if (GlobalOptions%timeNumStep > 1) then
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) * GlobalOptions%timeNumCycle / real((GlobalOptions%timeNumStep - 1))
          end if
-         do i = 1, GlobalOptions % timeNumCycle
+         do i = 1, GlobalOptions%timeNumCycle
             do j = 1, cycleLength
-               t((i - 1) * cycleLength + j) = min(GlobalOptions % timeMin + 2.0_kr * real(j - 1) * dt, 2.0_kr * GlobalOptions % timeMax - GlobalOptions % timeMin - 2.0_kr * real(j - 1) * dt)
+               t((i - 1) * cycleLength + j) = min(GlobalOptions%timeMin + 2.0_kr * real(j - 1) * dt, 2.0_kr * GlobalOptions%timeMax - GlobalOptions%timeMin - 2.0_kr * real(j - 1) * dt)
             end do
          end do
-         t(cycleLength * GlobalOptions % timeNumCycle + 1:GlobalOptions % timeNumStep) = t(cycleLength * GlobalOptions % timeNumCycle)
+         t(cycleLength * GlobalOptions%timeNumCycle + 1:GlobalOptions%timeNumStep) = t(cycleLength * GlobalOptions%timeNumCycle)
 
       case (MEF90TimeInterpolation_quadratic)
          !!! Natural time scale for the heat equation
-         allocate (t(GlobalOptions % timeNumStep))
+         allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
-         if (GlobalOptions % timeNumStep > 1) then
-            dt = (sqrt(GlobalOptions % timeMax) - sqrt(GlobalOptions % timeMin)) / real(GlobalOptions % timeNumStep - 1.0_kr)
+         if (GlobalOptions%timeNumStep > 1) then
+            dt = (sqrt(GlobalOptions%timeMax) - sqrt(GlobalOptions%timeMin)) / real(GlobalOptions%timeNumStep - 1.0_kr)
          end if
-         t = [((sqrt(GlobalOptions % timeMin) + real(i) * dt)**2, i=0, GlobalOptions % timeNumStep - 1)]
-         t(GlobalOptions % timeNumStep) = GlobalOptions % timeMax
+         t = [((sqrt(GlobalOptions%timeMin) + real(i) * dt)**2, i=0, GlobalOptions%timeNumStep - 1)]
+         t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
       case (MEF90TimeInterpolation_exo)
-         PetscCall(PetscViewerExodusIIGetId(MEF90Ctx % resultViewer, exoUnit, ierr))
-         if (.not. PetscObjectIsNull(MEF90Ctx % resultViewer)) then
-            call EXINQ(exoUnit, EXTIMS, GlobalOptions % timeNumStep, dummyR, dummyS, exoErr)
-            allocate (t(GlobalOptions % timeNumStep))
+         PetscCall(PetscViewerExodusIIGetId(MEF90Ctx%resultViewer, exoUnit, ierr))
+         if (.not. PetscObjectIsNull(MEF90Ctx%resultViewer)) then
+            call EXINQ(exoUnit, EXTIMS, GlobalOptions%timeNumStep, dummyR, dummyS, exoErr)
+            allocate (t(GlobalOptions%timeNumStep))
             call EXGATM(exoUnit, t, exoErr)
          else
             write (IOBuffer, "(A,'EXO input file must be open prior to calling MEF90Ctx_GetTime\n')") __FUNCT__
-            SETERRQ(MEF90Ctx % Comm, PETSC_ERR_FILE_OPEN, IOBuffer)
+            SETERRQ(MEF90Ctx%Comm, PETSC_ERR_FILE_OPEN, IOBuffer)
          end if
       case Default
-         write (IOBuffer, "(A,'Unimplemented time interpolation: ',I0,'\n')") __FUNCT__, GlobalOptions % timeInterpolation
-         SETERRQ(MEF90Ctx % Comm, PETSC_ERR_ARG_OUTOFRANGE, IOBuffer)
+         write (IOBuffer, "(A,'Unimplemented time interpolation: ',I0,'\n')") __FUNCT__, GlobalOptions%timeInterpolation
+         SETERRQ(MEF90Ctx%Comm, PETSC_ERR_ARG_OUTOFRANGE, IOBuffer)
       end select
-      if ((GlobalOptions % verbose > 0) .and. (MEF90Ctx % rank == 0)) then
-         PetscCall(PetscPrintf(MEF90Ctx % Comm, "Time values array:\n", ierr))
-         PetscCall(PetscRealView(GlobalOptions % timeNumStep, t, PETSC_VIEWER_STDOUT_SELF, ierr))
-         PetscCall(PetscPrintf(MEF90Ctx % Comm, "===\n", ierr))
+      if ((GlobalOptions%verbose > 0) .and. (MEF90Ctx%rank == 0)) then
+         PetscCall(PetscPrintf(MEF90Ctx%Comm, "Time values array:\n", ierr))
+         PetscCall(PetscRealView(GlobalOptions%timeNumStep, t, PETSC_VIEWER_STDOUT_SELF, ierr))
+         PetscCall(PetscPrintf(MEF90Ctx%Comm, "===\n", ierr))
       end if
    end subroutine MEF90CtxGetTime
 end module m_MEF90_Ctx

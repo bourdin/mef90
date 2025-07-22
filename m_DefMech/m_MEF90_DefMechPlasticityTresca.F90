@@ -39,18 +39,18 @@ subroutine FHG_TRESCA(x, f, h, g, myctx) bind(c)
 
    !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
    ! D=P^(-1).A.P
-   call Diagonalize(deviatoricPart(myctx_ptr % HookesLaw * myctx_ptr % totalStrain), MatProjLocBasisToPrincipalBasis, MatDiagPrincipalBasis)
+   call Diagonalize(deviatoricPart(myctx_ptr%HookesLaw * myctx_ptr%totalStrain), MatProjLocBasisToPrincipalBasis, MatDiagPrincipalBasis)
 
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld)) / 2.
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld)) / 2.
    h(1) = Trace(xMatS)
 
 #if MEF90_DIM == 2
-   g(1) = +(MatDiagPrincipalBasis % XX - MatDiagPrincipalBasis % YY) - myctx_ptr % YieldStress
-   g(2) = -(MatDiagPrincipalBasis % XX - MatDiagPrincipalBasis % YY) - myctx_ptr % YieldStress
-   g(3) = +(MatDiagPrincipalBasis % YY) - myctx_ptr % YieldStress
-   g(4) = -(MatDiagPrincipalBasis % YY) - myctx_ptr % YieldStress
-   g(5) = +(MatDiagPrincipalBasis % XX) - myctx_ptr % YieldStress
-   g(6) = -(MatDiagPrincipalBasis % XX) - myctx_ptr % YieldStress
+   g(1) = +(MatDiagPrincipalBasis%XX - MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+   g(2) = -(MatDiagPrincipalBasis%XX - MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+   g(3) = +(MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+   g(4) = -(MatDiagPrincipalBasis%YY) - myctx_ptr%YieldStress
+   g(5) = +(MatDiagPrincipalBasis%XX) - myctx_ptr%YieldStress
+   g(6) = -(MatDiagPrincipalBasis%XX) - myctx_ptr%YieldStress
 #else
    write (*, *) 'Tresca3D is NOT implemented'
 #endif

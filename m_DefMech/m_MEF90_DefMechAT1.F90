@@ -32,10 +32,10 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    type(MEF90DefMechAT1_Type) function MEF90DefMechAT1_Constructor()
-      MEF90DefMechAT1_Constructor % cw = 2.0_kr / 3.0_kr
-      MEF90DefMechAT1_Constructor % aorder = 2
-      MEF90DefMechAT1_Constructor % worder = 1
-      MEF90DefMechAT1_Constructor % type = 'MEF90DefMechAT1'
+      MEF90DefMechAT1_Constructor%cw = 2.0_kr / 3.0_kr
+      MEF90DefMechAT1_Constructor%aorder = 2
+      MEF90DefMechAT1_Constructor%worder = 1
+      MEF90DefMechAT1_Constructor%type = 'MEF90DefMechAT1'
    end function MEF90DefMechAT1_Constructor
 
 #undef __FUNCT__

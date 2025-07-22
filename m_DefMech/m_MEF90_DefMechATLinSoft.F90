@@ -41,11 +41,11 @@ contains
    type(MEF90DefMechATLinSoft_Type) function MEF90DefMechATLinSoft_Constructor(k)
       PetscReal, intent(IN)                                :: k
 
-      MEF90DefMechATLinSoft_Constructor % k = k
-      MEF90DefMechATLinSoft_Constructor % cw = PETSC_PI / 4.0_kr
-      MEF90DefMechATLinSoft_Constructor % aorder = 2
-      MEF90DefMechATLinSoft_Constructor % worder = 2
-      MEF90DefMechATLinSoft_Constructor % type = 'MEF90DefMechATLinSoft'
+      MEF90DefMechATLinSoft_Constructor%k = k
+      MEF90DefMechATLinSoft_Constructor%cw = PETSC_PI / 4.0_kr
+      MEF90DefMechATLinSoft_Constructor%aorder = 2
+      MEF90DefMechATLinSoft_Constructor%worder = 2
+      MEF90DefMechATLinSoft_Constructor%type = 'MEF90DefMechATLinSoft'
    end function MEF90DefMechATLinSoft_Constructor
 
 #undef __FUNCT__
@@ -59,7 +59,7 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      aLinSoft = (1.0_kr - alpha)**2 / (self % k + (1.0_kr - self % k) * (1.0_kr * alpha)**2)
+      aLinSoft = (1.0_kr - alpha)**2 / (self%k + (1.0_kr - self%k) * (1.0_kr * alpha)**2)
    end function aLinSoft
 
 #undef __FUNCT__
@@ -73,8 +73,8 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      DaLinSoft = -2.0_kr * alpha * (1.0_kr - alpha)**2 * (self % k - 1.0_kr) / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)**2 &
-                  + (2.0_kr * alpha - 2.0_kr) / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)
+      DaLinSoft = -2.0_kr * alpha * (1.0_kr - alpha)**2 * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
+                  + (2.0_kr * alpha - 2.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)
    end function DaLinSoft
 
 #undef __FUNCT__
@@ -88,10 +88,10 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      D2aLinSoft = 8.0_kr * alpha**2 * (1.0_kr - alpha)**2 * (self % k - 1.0_kr)**2 / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)**3 &
-                   - 4.0_kr * alpha * (2.0_kr * alpha - 2.0_kr) * (self % k - 1.0_kr) / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)**2 &
-                   - 2.0_kr * (1.0_kr - alpha)**2 * (self % k - 1.0_kr) / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)**2 &
-                   + 2.0_kr / (alpha**2 * (self % k - 1.0_kr) + 1.0_kr)
+      D2aLinSoft = 8.0_kr * alpha**2 * (1.0_kr - alpha)**2 * (self%k - 1.0_kr)**2 / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**3 &
+                   - 4.0_kr * alpha * (2.0_kr * alpha - 2.0_kr) * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
+                   - 2.0_kr * (1.0_kr - alpha)**2 * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
+                   + 2.0_kr / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)
    end function D2aLinSoft
 
 #undef __FUNCT__

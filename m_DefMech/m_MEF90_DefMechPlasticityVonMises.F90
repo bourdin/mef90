@@ -41,26 +41,26 @@ subroutine FHG_VONMISES(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
       !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2 + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2))) + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2))) + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    end if
 
-   Stress = myctx_ptr % HookesLaw * (myctx_ptr % totalStrain - xMatS)
+   Stress = myctx_ptr%HookesLaw * (myctx_ptr%totalStrain - xMatS)
 
-   if (myctx_ptr % isLinearIsotropicHardening .eqv. .true.) then
-      PlasticStrainCumulated = (myctx_ptr % cumulatedDissipatedPlasticEnergy + (Stress.DotP. (xMatS - myctx_ptr % PlasticStrainOld))) / myctx_ptr % YieldStress
+   if (myctx_ptr%isLinearIsotropicHardening .eqv. .true.) then
+      PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy + (Stress.DotP. (xMatS - myctx_ptr%PlasticStrainOld))) / myctx_ptr%YieldStress
    else
       PlasticStrainCumulated = 0.0_kr
    end if
 
    Stiffness = StiffnessB * (1.0_kr + PlasticStrainCumulated)
 
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld))
-   g(1) = StiffnessA * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - ((1.0_kr - myctx_ptr % residualYieldStress) * Stiffness + myctx_ptr % residualYieldStress) * myctx_ptr % YieldStress
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld))
+   g(1) = StiffnessA * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - ((1.0_kr - myctx_ptr%residualYieldStress) * Stiffness + myctx_ptr%residualYieldStress) * myctx_ptr%YieldStress
    g(2) = -PlasticStrainCumulated
    h(1) = Trace(xMatS)
 end subroutine FHG_VONMISES
@@ -96,64 +96,64 @@ subroutine FHG_VONMISESPLANETHEORY(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
       !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2 + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2))) + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2))) + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    end if
 
-   E = myctx_ptr % HookesLaw % YoungsModulus
-   nu = myctx_ptr % HookesLaw % PoissonRatio
+   E = myctx_ptr%HookesLaw%YoungsModulus
+   nu = myctx_ptr%HookesLaw%PoissonRatio
    mu = E / (1.0_kr + nu)*.5_kr
    lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
 
-   if (myctx_ptr % isPlaneStress .eqv. .true.) then
+   if (myctx_ptr%isPlaneStress .eqv. .true.) then
          !!! If plane stress
       Strain = 0.0_kr
-      Strain % XX = myctx_ptr % totalStrain % XX
-      Strain % YY = myctx_ptr % totalStrain % YY
-      Strain % XY = myctx_ptr % totalStrain % XY
-      Strain % ZZ = (-lambda * Trace(myctx_ptr % totalStrain) - 2 * mu * Trace(myctx_ptr % plasticStrainPrevious)) / (lambda + 2 * mu)
+      Strain%XX = myctx_ptr%totalStrain%XX
+      Strain%YY = myctx_ptr%totalStrain%YY
+      Strain%XY = myctx_ptr%totalStrain%XY
+      Strain%ZZ = (-lambda * Trace(myctx_ptr%totalStrain) - 2 * mu * Trace(myctx_ptr%plasticStrainPrevious)) / (lambda + 2 * mu)
 
       PlasticStrainFlow = 0.0_kr
-      PlasticStrainFlow % XX = xMatS % XX - myctx_ptr % PlasticStrainOld % XX
-      PlasticStrainFlow % YY = xMatS % YY - myctx_ptr % PlasticStrainOld % YY
-      PlasticStrainFlow % XY = xMatS % XY - myctx_ptr % PlasticStrainOld % XY
-      PlasticStrainFlow % ZZ = -(PlasticStrainFlow % XX + PlasticStrainFlow % YY)
+      PlasticStrainFlow%XX = xMatS%XX - myctx_ptr%PlasticStrainOld%XX
+      PlasticStrainFlow%YY = xMatS%YY - myctx_ptr%PlasticStrainOld%YY
+      PlasticStrainFlow%XY = xMatS%XY - myctx_ptr%PlasticStrainOld%XY
+      PlasticStrainFlow%ZZ = -(PlasticStrainFlow%XX + PlasticStrainFlow%YY)
 
       Stress = 0.0_kr
-      Stress % XX = lambda * (Trace(Strain)) + 2 * mu * (Strain % XX - xMatS % XX)
-      Stress % YY = lambda * (Trace(Strain)) + 2 * mu * (Strain % YY - xMatS % YY)
-      Stress % XY = 2 * mu * (Strain % XY - xMatS % XY)
-      Stress % ZZ = lambda * (Trace(Strain)) + 2 * mu * (Strain % ZZ + Trace(xMatS))
+      Stress%XX = lambda * (Trace(Strain)) + 2 * mu * (Strain%XX - xMatS%XX)
+      Stress%YY = lambda * (Trace(Strain)) + 2 * mu * (Strain%YY - xMatS%YY)
+      Stress%XY = 2 * mu * (Strain%XY - xMatS%XY)
+      Stress%ZZ = lambda * (Trace(Strain)) + 2 * mu * (Strain%ZZ + Trace(xMatS))
    else
          !!! If plane strain
       Strain = 0.0_kr
-      Strain % XX = myctx_ptr % totalStrain % XX
-      Strain % YY = myctx_ptr % totalStrain % YY
-      Strain % XY = myctx_ptr % totalStrain % XY
+      Strain%XX = myctx_ptr%totalStrain%XX
+      Strain%YY = myctx_ptr%totalStrain%YY
+      Strain%XY = myctx_ptr%totalStrain%XY
 
       PlasticStrainFlow = 0.0_kr
-      PlasticStrainFlow % XX = xMatS % XX - myctx_ptr % PlasticStrainOld % XX
-      PlasticStrainFlow % YY = xMatS % YY - myctx_ptr % PlasticStrainOld % YY
-      PlasticStrainFlow % XY = xMatS % XY - myctx_ptr % PlasticStrainOld % XY
-      PlasticStrainFlow % ZZ = -(PlasticStrainFlow % XX + PlasticStrainFlow % YY)
+      PlasticStrainFlow%XX = xMatS%XX - myctx_ptr%PlasticStrainOld%XX
+      PlasticStrainFlow%YY = xMatS%YY - myctx_ptr%PlasticStrainOld%YY
+      PlasticStrainFlow%XY = xMatS%XY - myctx_ptr%PlasticStrainOld%XY
+      PlasticStrainFlow%ZZ = -(PlasticStrainFlow%XX + PlasticStrainFlow%YY)
 
       Stress = 0.0_kr
-      Stress % XX = lambda * (Trace(Strain)) + 2 * mu * (Strain % XX - xMatS % XX)
-      Stress % YY = lambda * (Trace(Strain)) + 2 * mu * (Strain % YY - xMatS % YY)
-      Stress % XY = 2 * mu * (Strain % XY - xMatS % XY)
-      Stress % ZZ = lambda * (Trace(Strain)) + 2 * mu * (Strain % ZZ + Trace(xMatS))
+      Stress%XX = lambda * (Trace(Strain)) + 2 * mu * (Strain%XX - xMatS%XX)
+      Stress%YY = lambda * (Trace(Strain)) + 2 * mu * (Strain%YY - xMatS%YY)
+      Stress%XY = 2 * mu * (Strain%XY - xMatS%XY)
+      Stress%ZZ = lambda * (Trace(Strain)) + 2 * mu * (Strain%ZZ + Trace(xMatS))
    end if
 
-   if (myctx_ptr % isNoPlCoupling .eqv. .true.) then
+   if (myctx_ptr%isNoPlCoupling .eqv. .true.) then
       f(1) = (PlasticStrainFlow.DotP.PlasticStrainFlow)
-      g(1) = StiffnessA * sqrt((3.0 / 2.0) * (deviatoricPart(Stress) .dotP.deviatoricPart(Stress))) - myctx_ptr % YieldStress
+      g(1) = StiffnessA * sqrt((3.0 / 2.0) * (deviatoricPart(Stress) .dotP.deviatoricPart(Stress))) - myctx_ptr%YieldStress
    else
       f(1) = (PlasticStrainFlow.DotP.PlasticStrainFlow)
-      g(1) = StiffnessA * sqrt((3.0 / 2.0) * (deviatoricPart(Stress) .dotP.deviatoricPart(Stress))) - ((1.0_kr - myctx_ptr % residualYieldStress) * StiffnessB + myctx_ptr % residualYieldStress) * myctx_ptr % YieldStress
+      g(1) = StiffnessA * sqrt((3.0 / 2.0) * (deviatoricPart(Stress) .dotP.deviatoricPart(Stress))) - ((1.0_kr - myctx_ptr%residualYieldStress) * StiffnessB + myctx_ptr%residualYieldStress) * myctx_ptr%YieldStress
    end if
 
 end subroutine FHG_VONMISESPLANETHEORY
@@ -188,29 +188,29 @@ subroutine FHG_VONMISES1D(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
        !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2)))
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2)))
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower
    end if
 
-   Stress = myctx_ptr % HookesLaw * (myctx_ptr % totalStrain - xMatS)
+   Stress = myctx_ptr%HookesLaw * (myctx_ptr%totalStrain - xMatS)
 
-   if (myctx_ptr % isLinearIsotropicHardening .eqv. .true.) then
-      PlasticStrainCumulated = (myctx_ptr % cumulatedDissipatedPlasticEnergy + (Stress.DotP. (xMatS - myctx_ptr % PlasticStrainOld))) / myctx_ptr % YieldStress
+   if (myctx_ptr%isLinearIsotropicHardening .eqv. .true.) then
+      PlasticStrainCumulated = (myctx_ptr%cumulatedDissipatedPlasticEnergy + (Stress.DotP. (xMatS - myctx_ptr%PlasticStrainOld))) / myctx_ptr%YieldStress
    else
       PlasticStrainCumulated = 0.0_kr
    end if
 
    Stiffness = StiffnessB * (1.0_kr + PlasticStrainCumulated)
 
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld))
-   g(1) = StiffnessA * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - myctx_ptr % YieldStress * Stiffness
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld))
+   g(1) = StiffnessA * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - myctx_ptr%YieldStress * Stiffness
    g(2) = -PlasticStrainCumulated
-   h(1) = xMatS % YY
-   h(2) = xMatS % XY
+   h(1) = xMatS%YY
+   h(2) = xMatS%XY
 end subroutine FHG_VONMISES1D
 
 end module MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D

@@ -34,19 +34,19 @@ subroutine MEF90DefMechGetSplit(cellSetOptions, Split, ierr)
    class(MEF90_DEFMECHSPLIT), allocatable, intent(OUT)  :: Split
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   select case (cellSetOptions % unilateralContactType)
+   select case (cellSetOptions%unilateralContactType)
    case (MEF90DefMech_unilateralContactTypeNone)
       Split = MEF90_DEFMECHSPLITNONE()
       !Case(MEF90DefMech_unilateralContactTypeMasonry)
       !   Split = MEF90_DEFMECHSPLITMASONRY()
    case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
-      Split = MEF90_DEFMECHSPLITHD(cellSetOptions % unilateralContactHydrostaticDeviatoricGamma)
+      Split = MEF90_DEFMECHSPLITHD(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
    case (MEF90DefMech_unilateralContactTypeDeviatoric)
       Split = MEF90_DEFMECHSPLITDEVIATORIC()
    case (MEF90DefMech_unilateralContactTypeHydrostatic)
-      Split = MEF90_DEFMECHSPLITHYDROSTATIC(cellSetOptions % unilateralContactHydrostaticDeviatoricGamma)
+      Split = MEF90_DEFMECHSPLITHYDROSTATIC(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
    case default
-      print *, __FUNCT__, ': Unimplemented split Type', cellSetOptions % unilateralContactType
+      print *, __FUNCT__, ': Unimplemented split Type', cellSetOptions%unilateralContactType
       stop
    end select
 end subroutine MEF90DefMechGetSplit

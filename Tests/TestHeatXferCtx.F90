@@ -27,9 +27,9 @@ program TestHeatXferCtx
 
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90DefaultGlobalOptions, ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
 
-   PetscCallA(DMPlexCreateFromFile(MEF90Ctx % Comm, MEF90Ctx % geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetUseNatural(dm, PETSC_TRUE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
@@ -37,10 +37,10 @@ program TestHeatXferCtx
 
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
 
-   inquire (file=MEF90Ctx % resultFile, exist=flg)
+   inquire (file=MEF90Ctx%resultFile, exist=flg)
    if (flg) then
       ! we assume that the output file exists and is formatted
-      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx % resultViewer, FILE_MODE_APPEND, ierr))
+      PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx%resultViewer, FILE_MODE_APPEND, ierr))
    else
       ! we need to create the output file
       EXOFormat: block
@@ -52,9 +52,9 @@ program TestHeatXferCtx
          allocate (gVarName(numGVar))
          nodalVarName = ["Temperature        "]
          cellVarName = ["Flux               "]
-         PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx % resultViewer, FILE_MODE_WRITE, ierr))
-         PetscCallA(MEF90EXODMView(dm, MEF90Ctx % resultViewer, MEF90GlobalOptions % elementOrder, ierr))
-         PetscCallA(MEF90EXOFormat(MEF90Ctx % resultViewer, gVarName, cellVarName, nodalVarName, time, ierr))
+         PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx%resultViewer, FILE_MODE_WRITE, ierr))
+         PetscCallA(MEF90EXODMView(dm, MEF90Ctx%resultViewer, MEF90GlobalOptions%elementOrder, ierr))
+         PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer, gVarName, cellVarName, nodalVarName, time, ierr))
          deallocate (nodalVarName)
          deallocate (cellVarName)
          deallocate (gVarName)
@@ -65,7 +65,7 @@ program TestHeatXferCtx
       PetscInt                            :: ovlp = 0_ki
       type(tPetscSF)                      :: naturalPointSF
 
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCallA(DMPlexDistribute(dm, ovlp, naturalPointSF, dmDist, ierr))
          PetscCallA(DMPlexSetMigrationSF(dmDist, naturalPointSF, ierr))
          PetscCallA(PetscSFDestroy(naturalPointSF, ierr))
@@ -80,22 +80,22 @@ program TestHeatXferCtx
    PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx, PETSC_NULL_CHARACTER, MEF90HeatXferDefaultGlobalOptions, MEF90HeatXferDefaultCellSetOptions, MEF90HeatXferDefaultFaceSetOptions, MEF90HeatXferDefaultVertexSetOptions, ierr))
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx
    PetscCallA(DMDestroy(dm, ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx % GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
 
    !!! Get parse all materials data from the command line
-   PetscCallA(DMGetDimension(MEF90HeatXferCtx % megaDM, dim, ierr))
+   PetscCallA(DMGetDimension(MEF90HeatXferCtx%megaDM, dim, ierr))
    if (dim == 2) then
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx % MaterialPropertiesBag, MEF90HeatXferCtx % megaDM, MEF90Mathium2D, MEF90Ctx, ierr))
+      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag, MEF90HeatXferCtx%megaDM, MEF90Mathium2D, MEF90Ctx, ierr))
    else
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx % MaterialPropertiesBag, MEF90HeatXferCtx % megaDM, MEF90Mathium3D, MEF90Ctx, ierr))
+      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag, MEF90HeatXferCtx%megaDM, MEF90Mathium3D, MEF90Ctx, ierr))
    end if
 
-   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx % megaDM, MEF90CellSetLabelName, cellSetIS, ierr))
+   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM, MEF90CellSetLabelName, cellSetIS, ierr))
    PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, cellSetIS, ierr))
    PetscCallA(IsGetSize(cellSetIS, numCellSet, ierr))
    PetscCallA(ISGetIndices(cellSetIS, cellSetID, ierr))
 
-   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx % megaDM, MEF90FaceSetLabelName, faceSetIS, ierr))
+   PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM, MEF90FaceSetLabelName, faceSetIS, ierr))
    PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, faceSetIS, ierr))
    PetscCallA(IsGetSize(faceSetIS, numFaceSet, ierr))
    PetscCallA(ISGetIndices(faceSetIS, faceSetID, ierr))
@@ -108,7 +108,7 @@ program TestHeatXferCtx
    do step = 1, size(time)
       write (IOBuffer, '("Step: ",I4," Analysis time: ",ES12.5,"\n")') step, time(step)
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, ierr))
-      PetscCallA(VecSet(MEF90HeatXferCtx % temperatureLocal, time(step), ierr))
+      PetscCallA(VecSet(MEF90HeatXferCtx%temperatureLocal, time(step), ierr))
       PetscCallA(MEF90HeatXferSetTransients(MEF90HeatXferCtx, step, time(step), ierr))
       PetscCallA(MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, ierr))
       do set = 1, numCellSet

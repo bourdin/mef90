@@ -25,20 +25,20 @@ program TestSpectralDecomposition
    PetscCallA(PetscOptionsGetInt(PETSC_NULL_OPTIONS, '', '-n', n, flg, ierr))
    write (*, *) 'Testing SpectralDecomposition'
    do i = 1, n
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % XX, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % YY, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % XY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%XX, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%YY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%XY, ierr))
       call SpectralDecomposition(M2D, ppleValues2D, ppleDirections2D)
       do j = 1, 2
          M2D = M2D - ppleValues2D(j) * ppleDirections2D(j)
       end do
 
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XX, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % YY, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % ZZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % YZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XX, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%YY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%ZZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%YZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XY, ierr))
       call SpectralDecomposition(M3D, ppleValues3D, ppleDirections3D)
       do j = 1, 3
          M3D = M3D - ppleValues3D(j) * ppleDirections3D(j)
@@ -48,17 +48,17 @@ program TestSpectralDecomposition
 
    write (*, *) 'Testing EigenVectorValues and MatRaRt'
    do i = 1, n
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % XX, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % YY, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M2D % XY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%XX, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%YY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M2D%XY, ierr))
       call Diagonalize(M2D, P2D, D2D)
       M2D = M2D - MEF90MatRaRt(D2D, P2D)
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XX, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % YY, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % ZZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % YZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M3D % XY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XX, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%YY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%ZZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%YZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M3D%XY, ierr))
       call Diagonalize(M3D, P3D, D3D)
       M3D = M3D - MEF90MatRaRt(D3D, P3D)
       write (*, *) i, norm(M2D), norm(M3D)
