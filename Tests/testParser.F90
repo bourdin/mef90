@@ -26,7 +26,7 @@ program TestParser
    PetscCallA(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr))
 
    f = parse(func)
-   write (IOBuffer, '("Parsed:  ",A,"\n")') f % str()
+   write (IOBuffer, '("Parsed:  ",A,"\n")') f%str()
    PetscCallA(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr))
 
    vars = [Symbol("x"), Symbol("y")]
@@ -35,10 +35,10 @@ program TestParser
       vals = [RealDouble(cos(theta)), RealDouble(sin(theta))]
       feval = f
       do j = 1, nvars
-         feval = feval % subs(vars(j), vals(j))
+         feval = feval%subs(vars(j), vals(j))
       end do
-      feval = feval % evalf()
-      write (IOBuffer, '("Evaluated as a PetscReal:  ",ES12.4, ES12.4,"\n")') theta, feval % dbl()
+      feval = feval%evalf()
+      write (IOBuffer, '("Evaluated as a PetscReal:  ",ES12.4, ES12.4,"\n")') theta, feval%dbl()
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, iErr))
    end do
 

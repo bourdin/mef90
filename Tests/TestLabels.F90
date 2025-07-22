@@ -16,24 +16,24 @@ program TestLabels
    PetscInt                            :: labelSize, i
    character(len=MEF90MXSTRLEN)        :: IOBuffer
 
-   MEF90GlobalOptions_default % verbose = 1
-   MEF90GlobalOptions_default % dryrun = PETSC_FALSE
-   MEF90GlobalOptions_default % timeMin = 0.0_kr
-   MEF90GlobalOptions_default % timeMax = 1.0_kr
-   MEF90GlobalOptions_default % timeNumStep = 1
-   MEF90GlobalOptions_default % timeSkip = 0
-   MEF90GlobalOptions_default % timeNumCycle = 1
-   MEF90GlobalOptions_default % timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90GlobalOptions_default % elementFamily = MEF90ElementFamilyLagrange
-   MEF90GlobalOptions_default % elementOrder = 1
+   MEF90GlobalOptions_default%verbose = 1
+   MEF90GlobalOptions_default%dryrun = PETSC_FALSE
+   MEF90GlobalOptions_default%timeMin = 0.0_kr
+   MEF90GlobalOptions_default%timeMax = 1.0_kr
+   MEF90GlobalOptions_default%timeNumStep = 1
+   MEF90GlobalOptions_default%timeSkip = 0
+   MEF90GlobalOptions_default%timeNumCycle = 1
+   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
+   MEF90GlobalOptions_default%elementOrder = 1
 
    PetscCallA(PetscInitialize(ierr))
 
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr)
 
-   PetscCallA(PetscPrintf(MEF90Ctx % Comm, MEF90Ctx % geometryfile//'\n', ierr))
-   PetscCallA(DMPlexCreateFromFile(MEF90Ctx % Comm, MEF90Ctx % geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
+   PetscCallA(PetscPrintf(MEF90Ctx%Comm, MEF90Ctx%geometryfile//'\n', ierr))
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
@@ -41,7 +41,7 @@ program TestLabels
    distribute: block
       type(tDM), target                    :: dmDist
       PetscInt                            :: ovlp = 0_ki
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCallA(DMPlexDistribute(dm, ovlp, PETSC_NULL_SF, dmDist, ierr))
          PetscCallA(DMDestroy(dm, ierr))
          dm = dmDist

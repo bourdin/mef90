@@ -29,9 +29,9 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 type(MEF90_DEFMECHSPLITMASONRY) function MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR()
-   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR % damageOrder = 0
-   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR % strainOrder = 2
-   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR % type = 'MEF90DefMech_unilateralContactTypeMasonry'
+   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%damageOrder = 0
+   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%strainOrder = 2
+   MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR%type = 'MEF90DefMech_unilateralContactTypeMasonry'
 end function MEF90_DEFMECHSPLITMASONRY_CONSTRUCTOR
 
 #undef __FUNCT__
@@ -61,7 +61,7 @@ subroutine EEDMasonry(self, Strain, HookesLaw, EEDPlus, EEDMinus)
    PetscErrorCode                                     :: ierr
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
@@ -69,28 +69,28 @@ subroutine EEDMasonry(self, Strain, HookesLaw, EEDPlus, EEDMinus)
    call Diagonalize(Strain, Pinv, D)
       !!! D is the strain tensor in the principal basis
 
-   nu = HookesLaw % PoissonRatio
+   nu = HookesLaw%PoissonRatio
    DPlus = 0.0_kr
 
 #if MEF90_DIM == 2
-   if (HookesLaw % isPlaneStress) then
+   if (HookesLaw%isPlaneStress) then
       alpha = nu / (1.0_kr - nu)
    else
       alpha = nu / (1.0_kr - 2.0_kr * nu)
    end if
-   if (D % XX >= 0.0_kr) then
+   if (D%XX >= 0.0_kr) then
       DPlus = D
-   else if ((1.0_kr + alpha) * D % YY + alpha * D % XX >= 0.0_kr) then
-      Dplus % YY = alpha / (1.0_kr + alpha) * D % XX + D % YY
+   else if ((1.0_kr + alpha) * D%YY + alpha * D%XX >= 0.0_kr) then
+      Dplus%YY = alpha / (1.0_kr + alpha) * D%XX + D%YY
    end if
 #else
-   if (D % XX >= 0.0_kr) then
+   if (D%XX >= 0.0_kr) then
       DPlus = D
-   else if (nu * D % XX + D % YY >= 0.0_kr) then
-      DPlus % YY = nu * D % XX + D % YY
-      DPlus % ZZ = nu * D % XX + D % ZZ
-   else if (nu * (D % XX + D % YY) + (1.0_kr - nu) * D % ZZ >= 0.0_kr) then
-      DPlus % ZZ = nu / (1.0_kr - nu) * (D % YY + D % XX) + D % ZZ
+   else if (nu * D%XX + D%YY >= 0.0_kr) then
+      DPlus%YY = nu * D%XX + D%YY
+      DPlus%ZZ = nu * D%XX + D%ZZ
+   else if (nu * (D%XX + D%YY) + (1.0_kr - nu) * D%ZZ >= 0.0_kr) then
+      DPlus%ZZ = nu / (1.0_kr - nu) * (D%YY + D%XX) + D%ZZ
    end if
 #endif
       !!! We compute the Elastic energy density in the principal basis
@@ -122,7 +122,7 @@ subroutine DEEDMasonry(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
    PetscErrorCode                                     :: ierr
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
@@ -131,24 +131,24 @@ subroutine DEEDMasonry(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
    call Diagonalize(Strain, Pinv, D)
       !!! D is the strain tensor in the principal basis
 
-   E = HookesLaw % YoungsModulus
-   nu = HookesLaw % PoissonRatio
+   E = HookesLaw%YoungsModulus
+   nu = HookesLaw%PoissonRatio
    StrainPlus = 0.0_kr
    DEEDPlus = 0.0_kr
    DEEDMinus = 0.0_kr
 #if MEF90_DIM == 2
-   if (HookesLaw % isPlaneStress) then
+   if (HookesLaw%isPlaneStress) then
       alpha = nu / (1.0_kr - nu)
    else
       alpha = nu / (1.0_kr - 2.0_kr * nu)
    end if
-   if (D % XX >= 0.0_kr) then
+   if (D%XX >= 0.0_kr) then
       DEEDPlus = HookesLaw * Strain
       DEEDMinus = 0.0_kr
-   else if ((1.0_kr + alpha) * D % YY + alpha * D % XX >= 0.0_kr) then
+   else if ((1.0_kr + alpha) * D%YY + alpha * D%XX >= 0.0_kr) then
          !!! Compute the projection of the strain in the principal basis
-      StrainPlus % XX = 0.0_kr
-      StrainPlus % YY = alpha / (1.0_kr + alpha) * D % XX + D % YY
+      StrainPlus%XX = 0.0_kr
+      StrainPlus%YY = alpha / (1.0_kr + alpha) * D%XX + D%YY
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
       DEEDPlus = MEF90MatRaRt(HookesLaw * StrainPlus, Pinv)
       DEEDMinus = HookesLaw * Strain - DEEDPlus
@@ -157,17 +157,17 @@ subroutine DEEDMasonry(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
       DEEDMinus = HookesLaw * Strain
    end if
 #else
-   if (D % XX >= 0.0_kr) then
+   if (D%XX >= 0.0_kr) then
       DEEDPlus = HookesLaw * Strain
       DEEDMinus = 0.0_kr
-   else if (nu * D % XX + D % YY >= 0.0_kr) then
-      StrainPlus % YY = nu * D % XX + D % YY
-      StrainPlus % ZZ = nu * D % XX + D % ZZ
+   else if (nu * D%XX + D%YY >= 0.0_kr) then
+      StrainPlus%YY = nu * D%XX + D%YY
+      StrainPlus%ZZ = nu * D%XX + D%ZZ
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
       DEEDPlus = MEF90MatRaRt(HookesLaw * StrainPlus, Pinv)
       DEEDMinus = HookesLaw * Strain - DEEDPlus
-   else if (nu * (D % XX + D % YY) + (1.0_kr - nu) * D % ZZ >= 0.0_kr) then
-      StrainPlus % ZZ = nu / (1.0_kr - nu) * (D % XX + D % YY) + D % ZZ
+   else if (nu * (D%XX + D%YY) + (1.0_kr - nu) * D%ZZ >= 0.0_kr) then
+      StrainPlus%ZZ = nu / (1.0_kr - nu) * (D%XX + D%YY) + D%ZZ
          !!! Compute Sigma(Strain^+) then pull back to the canonical basis
       DEEDPlus = MEF90MatRaRt(HookesLaw * StrainPlus, Pinv)
       DEEDMinus = HookesLaw * Strain - DEEDPlus
@@ -211,7 +211,7 @@ subroutine D2EEDMasonry(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
    PetscErrorCode                                     :: ierr
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Masonry projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
@@ -220,115 +220,115 @@ subroutine D2EEDMasonry(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
    call Diagonalize(Strain, Pinv, D)
       !!! D is the strain tensor in the principal basis
 
-   E = HookesLaw % YoungsModulus
-   nu = HookesLaw % PoissonRatio
+   E = HookesLaw%YoungsModulus
+   nu = HookesLaw%PoissonRatio
    A = 0.0_kr
-   D2EEDPlus % fullTensor = 0.0_kr
-   D2EEDMinus % fullTensor = 0.0_kr
+   D2EEDPlus%fullTensor = 0.0_kr
+   D2EEDMinus%fullTensor = 0.0_kr
 #if MEF90_DIM == 2
-   if (HookesLaw % isPlaneStress) then
+   if (HookesLaw%isPlaneStress) then
       alpha = nu / (1.0_kr - nu)
    else
       alpha = nu / (1.0_kr - 2.0_kr * nu)
    end if
-   if (D % XX >= 0.0_kr) then
-      D2EEDPlus % type = MEF90HookesLawTypeIsotropic
-      D2EEDMinus % type = MEF90HookesLawTypeIsotropic
-      D2EEDPlus % YoungsModulus = E
-      D2EEDPlus % PoissonRatio = nu
-      D2EEDPlus % lambda = HookesLaw % lambda
-      D2EEDPlus % mu = HookesLaw % mu
+   if (D%XX >= 0.0_kr) then
+      D2EEDPlus%type = MEF90HookesLawTypeIsotropic
+      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+      D2EEDPlus%YoungsModulus = E
+      D2EEDPlus%PoissonRatio = nu
+      D2EEDPlus%lambda = HookesLaw%lambda
+      D2EEDPlus%mu = HookesLaw%mu
 
-      D2EEDMinus % YoungsModulus = 0.0_kr
-      D2EEDMinus % PoissonRatio = 0.0_kr
-      D2EEDMinus % lambda = 0.0_kr
-      D2EEDMinus % mu = 0.0_kr
-   else if (alpha * D % XX + (1.0_kr + alpha) * D % YY >= 0.0_kr) then
+      D2EEDMinus%YoungsModulus = 0.0_kr
+      D2EEDMinus%PoissonRatio = 0.0_kr
+      D2EEDMinus%lambda = 0.0_kr
+      D2EEDMinus%mu = 0.0_kr
+   else if (alpha * D%XX + (1.0_kr + alpha) * D%YY >= 0.0_kr) then
          !!! Note that since D%XX < 0, we cannot have D%XX = D%YY or (1.0_Kr + alpha) * D%YY + D%XX would be < 0
          !!! so we do not need to worry about the case a_i  = a_j in the computation of H_{ij}
-      A % XXXX = E * alpha**2 / (1.0_kr + nu) / (1.0_kr + alpha)
-      A % XXYY = E * alpha / (1.0_kr + nu)
-      A % YYYY = E * (1.0_kr + alpha) / (1.0_kr + nu)
-      A % XYXY = E / (1.0_kr + nu) / (1.0_kr + alpha) * ((1.0_kr + alpha) * D % YY + alpha * D % XX) / (D % YY - D % XX)
+      A%XXXX = E * alpha**2 / (1.0_kr + nu) / (1.0_kr + alpha)
+      A%XXYY = E * alpha / (1.0_kr + nu)
+      A%YYYY = E * (1.0_kr + alpha) / (1.0_kr + nu)
+      A%XYXY = E / (1.0_kr + nu) / (1.0_kr + alpha) * ((1.0_kr + alpha) * D%YY + alpha * D%XX) / (D%YY - D%XX)
 
-      D2EEDPlus % type = MEF90HookesLawTypeFull
-      D2EEDMinus % type = MEF90HookesLawTypeFull
-      D2EEDPlus % fullTensor = Tens4OSTransform(A, Pinv)
-      call MEF90HookeLawIsoLambdaMu2D(D2EEDMinus % fullTensor, HookesLaw % lambda, HookesLaw % mu)
-      D2EEDMinus % fullTensor = D2EEDMinus % fullTensor - D2EEDPlus % fullTensor
+      D2EEDPlus%type = MEF90HookesLawTypeFull
+      D2EEDMinus%type = MEF90HookesLawTypeFull
+      D2EEDPlus%fullTensor = Tens4OSTransform(A, Pinv)
+      call MEF90HookeLawIsoLambdaMu2D(D2EEDMinus%fullTensor, HookesLaw%lambda, HookesLaw%mu)
+      D2EEDMinus%fullTensor = D2EEDMinus%fullTensor - D2EEDPlus%fullTensor
 
    else
-      D2EEDPlus % type = MEF90HookesLawTypeIsotropic
-      D2EEDMinus % type = MEF90HookesLawTypeIsotropic
+      D2EEDPlus%type = MEF90HookesLawTypeIsotropic
+      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
 
-      D2EEDPlus % YoungsModulus = 0.0_kr
-      D2EEDPlus % PoissonRatio = 0.0_kr
-      D2EEDPlus % lambda = 0.0_kr
-      D2EEDPlus % mu = 0.0_kr
+      D2EEDPlus%YoungsModulus = 0.0_kr
+      D2EEDPlus%PoissonRatio = 0.0_kr
+      D2EEDPlus%lambda = 0.0_kr
+      D2EEDPlus%mu = 0.0_kr
 
-      D2EEDMinus % YoungsModulus = E
-      D2EEDMinus % PoissonRatio = nu
-      D2EEDMinus % lambda = HookesLaw % lambda
-      D2EEDMinus % mu = HookesLaw % mu
+      D2EEDMinus%YoungsModulus = E
+      D2EEDMinus%PoissonRatio = nu
+      D2EEDMinus%lambda = HookesLaw%lambda
+      D2EEDMinus%mu = HookesLaw%mu
    end if
 #else
-   if (D % XX >= 0.0_kr) then
-      D2EEDPlus % type = MEF90HookesLawTypeIsotropic
-      D2EEDMinus % type = MEF90HookesLawTypeIsotropic
+   if (D%XX >= 0.0_kr) then
+      D2EEDPlus%type = MEF90HookesLawTypeIsotropic
+      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
 
-      D2EEDPlus % YoungsModulus = E
-      D2EEDPlus % PoissonRatio = nu
-      D2EEDPlus % lambda = HookesLaw % lambda
-      D2EEDPlus % mu = HookesLaw % mu
+      D2EEDPlus%YoungsModulus = E
+      D2EEDPlus%PoissonRatio = nu
+      D2EEDPlus%lambda = HookesLaw%lambda
+      D2EEDPlus%mu = HookesLaw%mu
 
-      D2EEDMinus % YoungsModulus = 0.0_kr
-      D2EEDMinus % PoissonRatio = 0.0_kr
-      D2EEDMinus % lambda = 0.0_kr
-      D2EEDMinus % mu = 0.0_kr
-   else if (nu * D % XX + D % YY >= 0.0_kr) then
-      A % XXXX = 2.0_kr * E * nu**2 / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % XXYY = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % XXZZ = A % XXYY
-      A % YYYY = E * (1.0_kr - nu) / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % YYZZ = A % XXYY
-      A % ZZZZ = A % YYYY
-      A % YZYZ = E / (1.0_kr + nu)
-      A % XZXZ = E / (1.0_kr + nu) * (D % ZZ + nu * D % XX) / (D % ZZ - D % XX)
-      A % XYXY = E / (1.0_kr + nu) * (D % YY + nu * D % XX) / (D % YY - D % XX)
+      D2EEDMinus%YoungsModulus = 0.0_kr
+      D2EEDMinus%PoissonRatio = 0.0_kr
+      D2EEDMinus%lambda = 0.0_kr
+      D2EEDMinus%mu = 0.0_kr
+   else if (nu * D%XX + D%YY >= 0.0_kr) then
+      A%XXXX = 2.0_kr * E * nu**2 / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%XXYY = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%XXZZ = A%XXYY
+      A%YYYY = E * (1.0_kr - nu) / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%YYZZ = A%XXYY
+      A%ZZZZ = A%YYYY
+      A%YZYZ = E / (1.0_kr + nu)
+      A%XZXZ = E / (1.0_kr + nu) * (D%ZZ + nu * D%XX) / (D%ZZ - D%XX)
+      A%XYXY = E / (1.0_kr + nu) * (D%YY + nu * D%XX) / (D%YY - D%XX)
 
-      D2EEDPlus % type = MEF90HookesLawTypeFull
-      D2EEDMinus % type = MEF90HookesLawTypeFull
-      D2EEDPlus % fullTensor = Tens4OSTransform(A, Pinv)
-      call MEF90HookeLawIsoLambdaMu3D(D2EEDMinus % fullTensor, HookesLaw % lambda, HookesLaw % mu)
-      D2EEDMinus % fullTensor = D2EEDMinus % fullTensor - D2EEDPlus % fullTensor
-   else if (nu * (D % XX + D % YY) + (1.0_kr - nu) * D % ZZ >= 0.0_kr) then
-      A % XXXX = E * nu**2 / (1.0_kr - nu**2) / (1.0_kr - 2.0_kr * nu)
-      A % XXYY = A % XXXX
-      A % XXZZ = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % YYYY = A % XXXX
-      A % YYZZ = A % XXZZ
-      A % ZZZZ = E * (1.0_kr - nu) / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % YZYZ = E * nu / (1.0_kr - nu**2) * (nu * (D % XX + D % YY) + (1.0_kr - nu) * D % XX) / (D % ZZ - D % YY)
-      A % XZXZ = E * nu / (1.0_kr - nu**2) * (nu * (D % XX + D % YY) + (1.0_kr - nu) * D % XX) / (D % ZZ - D % XX)
-      A % XYXY = 0.0_kr
+      D2EEDPlus%type = MEF90HookesLawTypeFull
+      D2EEDMinus%type = MEF90HookesLawTypeFull
+      D2EEDPlus%fullTensor = Tens4OSTransform(A, Pinv)
+      call MEF90HookeLawIsoLambdaMu3D(D2EEDMinus%fullTensor, HookesLaw%lambda, HookesLaw%mu)
+      D2EEDMinus%fullTensor = D2EEDMinus%fullTensor - D2EEDPlus%fullTensor
+   else if (nu * (D%XX + D%YY) + (1.0_kr - nu) * D%ZZ >= 0.0_kr) then
+      A%XXXX = E * nu**2 / (1.0_kr - nu**2) / (1.0_kr - 2.0_kr * nu)
+      A%XXYY = A%XXXX
+      A%XXZZ = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%YYYY = A%XXXX
+      A%YYZZ = A%XXZZ
+      A%ZZZZ = E * (1.0_kr - nu) / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%YZYZ = E * nu / (1.0_kr - nu**2) * (nu * (D%XX + D%YY) + (1.0_kr - nu) * D%XX) / (D%ZZ - D%YY)
+      A%XZXZ = E * nu / (1.0_kr - nu**2) * (nu * (D%XX + D%YY) + (1.0_kr - nu) * D%XX) / (D%ZZ - D%XX)
+      A%XYXY = 0.0_kr
 
-      D2EEDPlus % type = MEF90HookesLawTypeFull
-      D2EEDMinus % type = MEF90HookesLawTypeFull
-      D2EEDPlus % fullTensor = Tens4OSTransform(A, Pinv)
-      call MEF90HookeLawIsoLambdaMu3D(D2EEDMinus % fullTensor, HookesLaw % lambda, HookesLaw % mu)
-      D2EEDMinus % fullTensor = D2EEDMinus % fullTensor - D2EEDPlus % fullTensor
+      D2EEDPlus%type = MEF90HookesLawTypeFull
+      D2EEDMinus%type = MEF90HookesLawTypeFull
+      D2EEDPlus%fullTensor = Tens4OSTransform(A, Pinv)
+      call MEF90HookeLawIsoLambdaMu3D(D2EEDMinus%fullTensor, HookesLaw%lambda, HookesLaw%mu)
+      D2EEDMinus%fullTensor = D2EEDMinus%fullTensor - D2EEDPlus%fullTensor
    else
-      D2EEDPlus % type = MEF90HookesLawTypeIsotropic
-      D2EEDMinus % type = MEF90HookesLawTypeIsotropic
-      D2EEDPlus % YoungsModulus = 0.0_kr
-      D2EEDPlus % PoissonRatio = 0.0_kr
-      D2EEDPlus % lambda = 0.0_kr
-      D2EEDPlus % mu = 0.0_kr
+      D2EEDPlus%type = MEF90HookesLawTypeIsotropic
+      D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+      D2EEDPlus%YoungsModulus = 0.0_kr
+      D2EEDPlus%PoissonRatio = 0.0_kr
+      D2EEDPlus%lambda = 0.0_kr
+      D2EEDPlus%mu = 0.0_kr
 
-      D2EEDMinus % YoungsModulus = E
-      D2EEDMinus % PoissonRatio = nu
-      D2EEDMinus % lambda = HookesLaw % lambda
-      D2EEDMinus % mu = HookesLaw % mu
+      D2EEDMinus%YoungsModulus = E
+      D2EEDMinus%PoissonRatio = nu
+      D2EEDMinus%lambda = HookesLaw%lambda
+      D2EEDMinus%mu = HookesLaw%mu
    end if
 #endif
 end subroutine D2EEDMasonry

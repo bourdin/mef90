@@ -35,7 +35,7 @@ program TestMaterials
       write (*, *) 'MatProp2D: ', matProp2D
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD, '\n', ierr))
       E2D = MEF90MatS2DIdentity
-      write (*, *) matprop2D % HookesLaw * E2D
+      write (*, *) matprop2D%HookesLaw * E2D
    end do
 
    do i = 1, numMat
@@ -51,7 +51,7 @@ program TestMaterials
       PetscCallA(PetscBagGetDataMEF90MatProp(matBag3D(i), matProp3D, ierr))
       write (*, *) 'MatProp3D: ', matProp3D
 
-      matProp3D % Density = -123456.0
+      matProp3D%Density = -123456.0
       PetscCallA(PetscBagSetFromOptions(matBag3D(i), ierr))
       ! PetscBagSetFromOptions resets only to CL options, not to default options
       ! This could probably be fixed by inserting the options in the registration routine, if desired

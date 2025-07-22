@@ -79,19 +79,19 @@ program TestConstraintIO2
    PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
 
-   MEF90GlobalOptions_default % verbose = 1
-   MEF90GlobalOptions_default % dryrun = PETSC_FALSE
-   MEF90GlobalOptions_default % timeMin = 0.0_kr
-   MEF90GlobalOptions_default % timeMax = 1.0_kr
-   MEF90GlobalOptions_default % timeNumStep = 1
-   MEF90GlobalOptions_default % timeSkip = 0
-   MEF90GlobalOptions_default % timeNumCycle = 1
-   MEF90GlobalOptions_default % timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90GlobalOptions_default % elementFamily = MEF90ElementFamilyLagrange
-   MEF90GlobalOptions_default % elementOrder = 1
+   MEF90GlobalOptions_default%verbose = 1
+   MEF90GlobalOptions_default%dryrun = PETSC_FALSE
+   MEF90GlobalOptions_default%timeMin = 0.0_kr
+   MEF90GlobalOptions_default%timeMax = 1.0_kr
+   MEF90GlobalOptions_default%timeNumStep = 1
+   MEF90GlobalOptions_default%timeSkip = 0
+   MEF90GlobalOptions_default%timeNumCycle = 1
+   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
+   MEF90GlobalOptions_default%elementOrder = 1
 
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
 
    allocate (nodalVarName(numNodalVar))
@@ -100,16 +100,16 @@ program TestConstraintIO2
    nodalVarName = ["U_X", "U_Y", "U_Z"]
 
    ! Create DM from file
-   PetscCallA(DMPlexCreateFromFile(MEF90Ctx % Comm, MEF90Ctx % geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetUseNatural(dm, PETSC_TRUE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
    ! Open exodus file + write geometry + format the file
-   PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx % resultViewer, FILE_MODE_WRITE, ierr))
-   PetscCallA(MEF90EXODMView(dm, MEF90Ctx % resultViewer, MEF90GlobalOptions % elementOrder, ierr))
-   PetscCallA(MEF90EXOFormat(MEF90Ctx % resultViewer, gVarName, cellVarName, nodalVarName, time, ierr))
+   PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx%resultViewer, FILE_MODE_WRITE, ierr))
+   PetscCallA(MEF90EXODMView(dm, MEF90Ctx%resultViewer, MEF90GlobalOptions%elementOrder, ierr))
+   PetscCallA(MEF90EXOFormat(MEF90Ctx%resultViewer, gVarName, cellVarName, nodalVarName, time, ierr))
 
    deallocate (nodalVarName)
    deallocate (cellVarName)
@@ -119,7 +119,7 @@ program TestConstraintIO2
    distribute: block
       type(tDM), target                    :: dmDist
       PetscInt                            :: ovlp = 0
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCallA(DMPlexDistribute(dm, ovlp, naturalPointSF, dmDist, ierr))
          PetscCallA(DMPlexSetMigrationSF(dmDist, naturalPointSF, ierr))
          PetscCallA(PetscSFDestroy(naturalPointSF, ierr))
@@ -135,7 +135,7 @@ program TestConstraintIO2
 
    ! Create nodal local Vec holding coordinates
    name = "U"
-   PetscCallA(MEF90CreateLocalVector(dm, MEF90GlobalOptions % elementFamily, MEF90GlobalOptions % elementOrder, dim, name, locVecU, ierr))
+   PetscCallA(MEF90CreateLocalVector(dm, MEF90GlobalOptions%elementFamily, MEF90GlobalOptions%elementOrder, dim, name, locVecU, ierr))
    PetscCallA(VecGetDM(locVecU, dmU, ierr))
    PetscCallA(DMGetLocalSection(dmU, sectionU, ierr))
    PetscCallA(DMCreateGlobalVector(dmU, U, ierr))
@@ -147,7 +147,7 @@ program TestConstraintIO2
    PetscCallA(VecViewFromOptions(U, PETSC_NULL_OBJECT, "-U_view", ierr))
 
    ! Save locVecU in exo file
-   PetscCallA(MEF90EXOVecView(locVecU, lioSF, iolSF, MEF90Ctx % resultViewer, step, dim, ierr))
+   PetscCallA(MEF90EXOVecView(locVecU, lioSF, iolSF, MEF90Ctx%resultViewer, step, dim, ierr))
 
    ! Create new vectors and read them from the file
    PetscCallA(VecDuplicate(locVecU, locVecV, ierr))
@@ -155,13 +155,13 @@ program TestConstraintIO2
    PetscCallA(VecSet(locVecV, -1000.0_kr, ierr))
    PetscCallA(PetscObjectSetName(locVecV, "U", ierr))
    PetscCallA(VecSet(locVecV, 0.0_kr, ierr))
-   PetscCallA(MEF90EXOVecLoad(locVecV, lioSF, iolSF, MEF90Ctx % resultViewer, step, dim, ierr))
+   PetscCallA(MEF90EXOVecLoad(locVecV, lioSF, iolSF, MEF90Ctx%resultViewer, step, dim, ierr))
 
    PetscCallA(VecViewFromOptions(locVecV, PETSC_NULL_OBJECT, "-Vloc_view", ierr))
    PetscCallA(VecViewFromOptions(V, PETSC_NULL_OBJECT, "-V_view", ierr))
 
    ! Save it again
-   PetscCallA(MEF90EXOVecView(locVecU, lioSF, iolSF, MEF90Ctx % resultViewer, step + 1, dim, ierr))
+   PetscCallA(MEF90EXOVecView(locVecU, lioSF, iolSF, MEF90Ctx%resultViewer, step + 1, dim, ierr))
 
    ! Compute the difference between the LOCAL vector we wrote and the one we read
    PetscCallA(VecAXPY(locVecV, -1.0_kr, locVecU, ierr))

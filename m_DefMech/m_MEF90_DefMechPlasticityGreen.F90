@@ -41,21 +41,21 @@ subroutine FHG_GREEN(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
       !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2 + myctx_ptr % residualStiffness
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2))) + myctx_ptr % residualStiffness
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2))) + myctx_ptr%residualStiffness
    end if
 
-   Stress = (myctx_ptr % HookesLaw * (myctx_ptr % totalStrain - xMatS)) * StiffnessA
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld))
+   Stress = (myctx_ptr%HookesLaw * (myctx_ptr%totalStrain - xMatS)) * StiffnessA
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld))
 
-   if (myctx_ptr % Damage == 0.0_kr) then
+   if (myctx_ptr%Damage == 0.0_kr) then
          !!! If porosity equals zero, Green reduces to von Mises. A residual damage term is added in order to avoid instability on plastic admissibility
-      g(1) = sqrt((1.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + (myctx_ptr % delta * Trace(Stress))**2) - myctx_ptr % YieldStress
+      g(1) = sqrt((1.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + (myctx_ptr%delta * Trace(Stress))**2) - myctx_ptr%YieldStress
    else
          !!! If porosity is greater than zero, the Green criterion holds and no plastic admissibility has to be considered
-      g(1) = sqrt((1.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + (myctx_ptr % Damage * Trace(Stress))**2) - myctx_ptr % YieldStress
+      g(1) = sqrt((1.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + (myctx_ptr%Damage * Trace(Stress))**2) - myctx_ptr%YieldStress
    end if
 
 end subroutine FHG_GREEN

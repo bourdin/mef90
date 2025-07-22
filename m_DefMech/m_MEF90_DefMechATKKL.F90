@@ -37,10 +37,10 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    type(MEF90DefMechATKKL_Type) function MEF90DefMechATKKL_Constructor()
-      MEF90DefMechATKKL_Constructor % cw = 0.7165753016381484_kr
-      MEF90DefMechATKKL_Constructor % aorder = 3
-      MEF90DefMechATKKL_Constructor % worder = 1
-      MEF90DefMechATKKL_Constructor % type = 'MEF90DefMechKKL'
+      MEF90DefMechATKKL_Constructor%cw = 0.7165753016381484_kr
+      MEF90DefMechATKKL_Constructor%aorder = 3
+      MEF90DefMechATKKL_Constructor%worder = 1
+      MEF90DefMechATKKL_Constructor%type = 'MEF90DefMechKKL'
    end function MEF90DefMechATKKL_Constructor
 
 #undef __FUNCT__

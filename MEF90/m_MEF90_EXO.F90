@@ -43,7 +43,7 @@ contains
       opts = 0
 #endif
       call exopts(opts, ierr)
-      PetscCall(PetscViewerExodusIIOpen(MEF90Ctx % Comm, MEF90Ctx % resultFile, mode, Viewer, ierr))
+      PetscCall(PetscViewerExodusIIOpen(MEF90Ctx%Comm, MEF90Ctx%resultFile, mode, Viewer, ierr))
    end subroutine MEF90CtxOpenEXO
 
 #undef __FUNCT__

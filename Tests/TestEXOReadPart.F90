@@ -18,17 +18,17 @@ program TestExoRead_Part
    PetscCallA(PetscInitialize(ierr))
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
 
-   MEF90GlobalOptions_default % verbose = 0
-   MEF90GlobalOptions_default % dryrun = PETSC_FALSE
-   MEF90GlobalOptions_default % timeMin = 0.0_kr
-   MEF90GlobalOptions_default % timeMax = 1.0_kr
-   MEF90GlobalOptions_default % timeNumStep = 11
+   MEF90GlobalOptions_default%verbose = 0
+   MEF90GlobalOptions_default%dryrun = PETSC_FALSE
+   MEF90GlobalOptions_default%timeMin = 0.0_kr
+   MEF90GlobalOptions_default%timeMax = 1.0_kr
+   MEF90GlobalOptions_default%timeNumStep = 11
 
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr)
 
    cpu_ws = 0
    io_ws = 0
-   exoid = ex_open(MEF90Ctx % geometryfile, EXREAD, cpu_ws, io_ws, vers, exoerr)
+   exoid = ex_open(MEF90Ctx%geometryfile, EXREAD, cpu_ws, io_ws, vers, exoerr)
    write (*, '("after exopen, error = ",i3)') exoerr
 
    write (*, '("test.exo is an EXODUSII file; version ", f4.2)') vers

@@ -48,20 +48,20 @@ program TestSplit
    split = MEF90_DEFMECHSPLITHD(gamma)
 
    !A%type = MEF90HookesLawTypeFull
-   A % type = MEF90HookesLawTypeIsotropic
-   A % YoungsModulus = E
-   A % PoissonRatio = nu
+   A%type = MEF90HookesLawTypeIsotropic
+   A%YoungsModulus = E
+   A%PoissonRatio = nu
 
-   ASph % type = MEF90HookesLawTypeFull
-   ASph % type = MEF90HookesLawTypeIsotropic
-   ADev % type = MEF90HookesLawTypeFull
-   ADev % type = MEF90HookesLawTypeIsotropic
-   ASph % fullTensor = 0.0_kr
-   ADev % fullTensor = 0.0_kr
+   ASph%type = MEF90HookesLawTypeFull
+   ASph%type = MEF90HookesLawTypeIsotropic
+   ADev%type = MEF90HookesLawTypeFull
+   ADev%type = MEF90HookesLawTypeIsotropic
+   ASph%fullTensor = 0.0_kr
+   ADev%fullTensor = 0.0_kr
 
 #if MEF90_DIM == 2
-   A % IsPlaneStress = .false.
-   if (A % IsPlaneStress) then
+   A%IsPlaneStress = .false.
+   if (A%IsPlaneStress) then
       lambda = E * nu / (1.0_kr - nu**2)
       mu = E / (1.0_kr + nu)*.5_kr
    else
@@ -72,24 +72,24 @@ program TestSplit
    lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
    mu = E / (1.0_kr + nu)*.5_kr
 #endif
-   A % lambda = lambda
-   A % mu = mu
-   ASph % lambda = lambda + 2.0_kr * mu / Ndim
-   ASph % mu = 0.0_kr
-   ADev % lambda = (1.0_kr - Ndim) * mu / Ndim
-   ADev % mu = mu
+   A%lambda = lambda
+   A%mu = mu
+   ASph%lambda = lambda + 2.0_kr * mu / Ndim
+   ASph%mu = 0.0_kr
+   ADev%lambda = (1.0_kr - Ndim) * mu / Ndim
+   ADev%mu = mu
 
-   write (*, *) 'lambda', A % lambda, ASph % lambda, ADev % lambda
-   write (*, *) 'mu    ', A % mu, ASph % mu, ADev % mu
+   write (*, *) 'lambda', A%lambda, ASph%lambda, ADev%lambda
+   write (*, *) 'mu    ', A%mu, ASph%mu, ADev%mu
 
    do i = 0, n - 1
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % XX, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % YY, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % XY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%XX, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%YY, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%XY, ierr))
 #if MEF90_DIM == 3
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % ZZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % YZ, ierr))
-      PetscCallA(PetscRandomGetValue(RdmCtx, M % XZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%ZZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%YZ, ierr))
+      PetscCallA(PetscRandomGetValue(RdmCtx, M%XZ, ierr))
 #endif
       write (*, '(A,6(E12.5,2x))') 'M: ', M
 
@@ -100,9 +100,9 @@ program TestSplit
       EEDDev = ((A * MDev) .dotP.MDev) * 0.5_kr
 
       write (*, '(A,4(E12.5,2x))') 'W^S, W^D, W^S + W^D , W ', EEDSph, EEDDev, EEDSph + EEDDev, EED
-      EED = (A % lambda * trace(M)**2 + 2.0_kr * A % mu * Trace(M * M)) * 0.5_kr
-      EEDSph = (A % lambda + 2.0_kr * A % mu / Ndim) * trace(M)**2 * 0.5_kr
-      EEDDev = A % mu * (trace(M * M) - trace(M)**2 / Ndim)
+      EED = (A%lambda * trace(M)**2 + 2.0_kr * A%mu * Trace(M * M)) * 0.5_kr
+      EEDSph = (A%lambda + 2.0_kr * A%mu / Ndim) * trace(M)**2 * 0.5_kr
+      EEDDev = A%mu * (trace(M * M) - trace(M)**2 / Ndim)
       write (*, '(A,4(E12.5,2x))') 'W^S, W^D, W^S + W^D , W ', EEDSph, EEDDev, EEDSph + EEDDev, EED
       write (*, '(A,3(E12.5,2x))') 'W^S, A^SM.M, A^S M^S.M^S', EEDSph, ((ASph * M) .dotP.M) * 0.5_kr, ((ASph * MSph) .dotP.MSph) * 0.5_kr
       write (*, '(A,3(E12.5,2x))') 'W^D, A^DM.M, A^D M^D.M^D', EEDDev, ((ADev * M) .dotP.M) * 0.5_kr, ((ADev * MDev) .dotP.MDev) * 0.5_kr
@@ -116,21 +116,21 @@ program TestSplit
       write (*, '(A,(E12.5,2x))') '  tr(M)      ', trace(M)
       write (*, '(A,4(E12.5,2x))') 'Direct: EED, EED^+, EED^-, Sum', EED, EEDPlus, EEDMinus, EEDPlus + EEDMinus
 
-      call Split % EED(M, A, EEDPlus, EEDMinus)
+      call Split%EED(M, A, EEDPlus, EEDMinus)
       write (*, '(A,4(E12.5,2x))') '   EED: EED, EED^+, EED^-, Sum', EED, EEDPlus, EEDMinus, EEDPlus + EEDMinus
 
-      call Split % DEED(M, A, DEEDPlus, DEEDMinus)
+      call Split%DEED(M, A, DEEDPlus, DEEDMinus)
       EEDPlus = (DEEDPlus.dotP.M) * 0.5_kr
       EEDMinus = (DEEDMinus.dotP.M) * 0.5_kr
       write (*, '(A,4(E12.5,2x))') '  DEED: EED, EED^+, EED^-, Sum', EED, EEDPlus, EEDMinus, EEDPlus + EEDMinus
 
-      call Split % D2EED(M, A, APlus, AMinus)
+      call Split%D2EED(M, A, APlus, AMinus)
       EEDPlus = ((APlus * M) .dotP.M) * 0.5_kr
       EEDMinus = ((AMinus * M) .dotP.M) * 0.5_kr
       write (*, '(A,4(E12.5,2x))') 'D2EED:  EED, EED^+, EED^-, Sum', EED, EEDPlus, EEDMinus, EEDPlus + EEDMinus
-      write (*, '(A,2(E12.5,2x))') 'A   lambda, mu                ', A % lambda, A % mu
-      write (*, '(A,2(E12.5,2x))') 'A^+ lambda, mu                ', APlus % lambda, APlus % mu
-      write (*, '(A,2(E12.5,2x))') 'A^- lambda, mu                ', AMinus % lambda, AMinus % mu
+      write (*, '(A,2(E12.5,2x))') 'A   lambda, mu                ', A%lambda, A%mu
+      write (*, '(A,2(E12.5,2x))') 'A^+ lambda, mu                ', APlus%lambda, APlus%mu
+      write (*, '(A,2(E12.5,2x))') 'A^- lambda, mu                ', AMinus%lambda, AMinus%mu
 
       write (*, '(A,6(E12.5,2x))') ' Direct: A^+ M: ', (APlus * M)
       write (*, '(A,6(E12.5,2x))') '   DEED: A^+ M: ', DEEDPlus

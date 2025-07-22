@@ -112,29 +112,29 @@ program TestMassMatrix
    PetscReal                                      :: myH1NormSet, H1NormSet, H1Norm
    type(tPetscSection)                            :: sectionU
 
-   MEF90GlobalOptions_default % verbose = 1
-   MEF90GlobalOptions_default % dryrun = PETSC_FALSE
-   MEF90GlobalOptions_default % timeInterpolation = MEF90TimeInterpolation_linear
-   MEF90GlobalOptions_default % timeMin = 0.0_kr
-   MEF90GlobalOptions_default % timeMax = 1.0_kr
-   MEF90GlobalOptions_default % timeNumStep = 11
-   MEF90GlobalOptions_default % timeSkip = 0
-   MEF90GlobalOptions_default % timeNumCycle = 1
-   MEF90GlobalOptions_default % elementFamily = MEF90ElementFamilyLagrange
-   MEF90GlobalOptions_default % elementOrder = 1
+   MEF90GlobalOptions_default%verbose = 1
+   MEF90GlobalOptions_default%dryrun = PETSC_FALSE
+   MEF90GlobalOptions_default%timeInterpolation = MEF90TimeInterpolation_linear
+   MEF90GlobalOptions_default%timeMin = 0.0_kr
+   MEF90GlobalOptions_default%timeMax = 1.0_kr
+   MEF90GlobalOptions_default%timeNumStep = 11
+   MEF90GlobalOptions_default%timeSkip = 0
+   MEF90GlobalOptions_default%timeNumCycle = 1
+   MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
+   MEF90GlobalOptions_default%elementOrder = 1
 
    PetscCallA(PetscInitialize(ierr))
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr)
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
 
-   PetscCallA(DMPlexCreateFromFile(MEF90Ctx % Comm, MEF90Ctx % geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
+   PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
    distribute: block
       type(tDM), target                    :: dmDist
       PetscInt                            :: ovlp = 0
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCallA(DMPlexDistribute(dm, ovlp, PETSC_NULL_SF, dmDist, ierr))
          PetscCallA(DMDestroy(dm, ierr))
          dm = dmDist
@@ -144,7 +144,7 @@ program TestMassMatrix
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
    name = "U"
-   PetscCallA(MEF90CreateLocalVector(dm, MEF90GlobalOptions % elementFamily, MEF90GlobalOptions % elementOrder, 1_ki, name, U, ierr))
+   PetscCallA(MEF90CreateLocalVector(dm, MEF90GlobalOptions%elementFamily, MEF90GlobalOptions%elementOrder, 1_ki, name, U, ierr))
    PetscCallA(VecGetDM(U, dmU, ierr))
    PetscCallA(DMGetLocalSection(dmU, sectionU, ierr))
    PetscCallA(project(U, sectionU, f1, ierr))
@@ -153,7 +153,7 @@ program TestMassMatrix
    PetscCallA(VecSet(One, 1.0_kr, ierr))
 
    name = "U0"
-   PetscCallA(MEF90CreateBoundaryLocalVector(dm, MEF90GlobalOptions % elementFamily, MEF90GlobalOptions % elementOrder, 1_ki, name, U0, ierr))
+   PetscCallA(MEF90CreateBoundaryLocalVector(dm, MEF90GlobalOptions%elementFamily, MEF90GlobalOptions%elementOrder, 1_ki, name, U0, ierr))
    PetscCallA(VecGetDM(U0, dmU0, ierr))
    PetscCallA(VecSet(U0, 1.0_kr, ierr))
    PetscCallA(VecDuplicate(U0, One0, ierr))
@@ -161,7 +161,7 @@ program TestMassMatrix
 
    setType = MEF90CellSetType
    PetscCallA(DMGetLabelIdIS(dmU, MEF90SetLabelName(setType), setIS, ierr))
-   PetscCall(MEF90ISAllGatherMerge(MEF90Ctx % Comm, setIS, ierr))
+   PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%Comm, setIS, ierr))
    L1Norm = 0.0_kr
    L2Norm = 0.0_kr
    H1Norm = 0.0_kr
@@ -174,8 +174,8 @@ program TestMassMatrix
          PetscCallA(DMGetStratumIS(dmU, MEF90SetLabelName(setType), setID(set), setPointIS, ierr))
          PetscCallA(ISGetIndices(setPointIS, setPointID, ierr))
          PetscCallA(DMPlexGetCellType(dmU, setPointID(1), cellType, ierr))
-         PetscCallA(MEF90ElementGetType(MEF90GlobalOptions % elementFamily, MEF90GlobalOptions % elementOrder, cellType, elementType, ierr))
-         quadratureOrder = elementType % order * 2
+         PetscCallA(MEF90ElementGetType(MEF90GlobalOptions%elementFamily, MEF90GlobalOptions%elementOrder, cellType, elementType, ierr))
+         quadratureOrder = elementType%order * 2
          if (dim == 2) then
             PetscCallA(MEF90ElementCreate(dmU, setPointIS, elem2D, QuadratureOrder, elementType, ierr))
             PetscCallA(MEF90L2DotProductSet(myL1NormSet, One, U, setType, setID(set), elem2D, elementType, ierr))
@@ -222,8 +222,8 @@ program TestMassMatrix
          PetscCallA(DMGetStratumIS(dmU, MEF90SetLabelName(setType), setID(set), setPointIS, ierr))
          PetscCallA(ISGetIndices(setPointIS, setPointID, ierr))
          PetscCallA(DMPlexGetCellType(dmU, setPointID(1), faceType, ierr))
-         PetscCallA(MEF90ElementGetTypeBoundary(MEF90GlobalOptions % elementFamily, MEF90GlobalOptions % elementOrder, faceType, elementType, ierr))
-         quadratureOrder = elementType % order * 2
+         PetscCallA(MEF90ElementGetTypeBoundary(MEF90GlobalOptions%elementFamily, MEF90GlobalOptions%elementOrder, faceType, elementType, ierr))
+         quadratureOrder = elementType%order * 2
          if (dim == 2) then
             PetscCallA(MEF90ElementCreate(dmU, setPointIS, elem2D, QuadratureOrder, elementType, ierr))
             PetscCallA(MEF90L2DotProductSet(myL1NormSet, One, U, setType, setID(set), elem2D, elementType, ierr))

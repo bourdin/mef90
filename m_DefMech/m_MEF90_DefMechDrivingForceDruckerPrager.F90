@@ -25,7 +25,7 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    type(MEF90_DefMechAT2_Type) function MEF90_DefMechDrivingForceDruckerPrager_Type()
-      MEF90_DefMechDrivingForceDruckerPrager_Type % type = 'MEF90_DefMechDrivingForceTypeDruckerPrager'
+      MEF90_DefMechDrivingForceDruckerPrager_Type%type = 'MEF90_DefMechDrivingForceTypeDruckerPrager'
    end function MEF90_DefMechDrivingForceDruckerPrager_Type
 
 #undef __FUNCT__
@@ -61,22 +61,22 @@ contains
       character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
-      if (matprop % HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+      if (matprop%HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
          write (IOBuffer, '(''ERROR: unimplemented Hookes law type in'' (A),''\n'')') __FUNCT__
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, IOBuffer, ierr)
       end if
 
-      numDofDisplacement = size(elemDisplacement % BF, 1)
-      numDofDamage = size(elemDamage % BF, 1)
-      numGauss = size(elemDamage % BF, 2)
+      numDofDisplacement = size(elemDisplacement%BF, 1)
+      numDofDamage = size(elemDamage%BF, 1)
+      numGauss = size(elemDamage%BF, 2)
 
-      E = matprop % HookesLaw % YoungsModulus
-      Gc = matprop % FractureToughness
-      ell = matprop % internalLength
-      delta = matprop % drivingForceDelta
-      gamma = matprop % drivingForceGamma
-      sigma_cs = matprop % drivingForceCompressiveStrength
-      sigma_ts = matprop % drivingForceTensileStrength
+      E = matprop%HookesLaw%YoungsModulus
+      Gc = matprop%FractureToughness
+      ell = matprop%internalLength
+      delta = matprop%drivingForceDelta
+      gamma = matprop%drivingForceGamma
+      sigma_cs = matprop%drivingForceCompressiveStrength
+      sigma_ts = matprop%drivingForceTensileStrength
 
       beta3 = gamma * ell
       beta0 = 3.0_kr * Gc / 8.0_kr / ell * delta
@@ -91,33 +91,33 @@ contains
          !!! Compute the value of the damage field at the Gauss points
          damageGauss = 0.0_kr
          do iDof1 = 1, numDofDamage
-            damageGauss = damageGauss + elemDamage % BF(iDof1, iGauss) * xDof(iDof1)
+            damageGauss = damageGauss + elemDamage%BF(iDof1, iGauss) * xDof(iDof1)
          end do
-         stiffnessMultGauss = MEF90aAT(damageGauss) + matprop % residualStiffness
+         stiffnessMultGauss = MEF90aAT(damageGauss) + matprop%residualStiffness
          DalphaStiffnessMultGauss = MEF90DaAT(damageGauss)
          AeGauss = 0.0_kr
          do iDof1 = 1, numDofDisplacement
-            AeGauss = AeGauss + elemDisplacement % GradS_BF(iDof1, iGauss) * displacementDof(iDof1)
+            AeGauss = AeGauss + elemDisplacement%GradS_BF(iDof1, iGauss) * displacementDof(iDof1)
          end do
-         AeGauss = matprop % HookesLaw * AeGauss
+         AeGauss = matprop%HookesLaw * AeGauss
 #if MEF90_DIM == 3
          I1Gauss = Moment(1, AeGauss) * stiffnessMultGauss
          DalphaI1Gauss = Moment(1, AeGauss) * DalphaStiffnessMultGauss
          sqrtJ2Gauss = sqrt(Moment(2, DeviatoricPart(AeGauss))) * stiffnessMultGauss
          DalphaSqrtJ2Gauss = sqrt(Moment(2, DeviatoricPart(AeGauss))) * DalphaStiffnessMultGauss
 #else
-         if (matProp % HookesLaw % isPlaneStress) then
+         if (matProp%HookesLaw%isPlaneStress) then
             Ae3DGauss = 0.0_kr
-            Ae3DGauss % XX = AeGauss % XX
-            Ae3DGauss % YY = AeGauss % YY
-            Ae3DGauss % XY = AeGauss % XY
+            Ae3DGauss%XX = AeGauss%XX
+            Ae3DGauss%YY = AeGauss%YY
+            Ae3DGauss%XY = AeGauss%XY
          else
             Ae3DGauss = 0.0_kr
-            Ae3DGauss % XX = AeGauss % XX
-            Ae3DGauss % YY = AeGauss % YY
-            Ae3DGauss % XY = AeGauss % XY
-            Ae3DGauss % ZZ = matprop % HookesLaw % lambda / (matprop % HookesLaw % lambda + matprop % HookesLaw % mu) * 0.5_kr * &
-                             (AeGauss % XX + AeGauss % YY)
+            Ae3DGauss%XX = AeGauss%XX
+            Ae3DGauss%YY = AeGauss%YY
+            Ae3DGauss%XY = AeGauss%XY
+            Ae3DGauss%ZZ = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + matprop%HookesLaw%mu) * 0.5_kr * &
+                             (AeGauss%XX + AeGauss%YY)
          end if
          I1Gauss = Moment(1, Ae3DGauss) * stiffnessMultGauss
          DalphaI1Gauss = Moment(1, Ae3DGauss) * DalphaStiffnessMultGauss
@@ -128,8 +128,8 @@ contains
                          + (beta1 * DalphaI1Gauss + beta2 * DalphaSqrtJ2Gauss) / (1.0_kr + beta3 * I1Gauss**2)
          do iDoF1 = 1, numDofDamage
             do iDoF2 = 1, numDofDamage
-               Aloc(iDoF2, iDoF1) = Aloc(iDoF2, iDoF1) + elemDamage % Gauss_C(iGauss) * DalphadeGauss * &
-                                    elemDamage % BF(iDoF1, iGauss) * elemDamage % BF(iDoF2, iGauss)
+               Aloc(iDoF2, iDoF1) = Aloc(iDoF2, iDoF1) + elemDamage%Gauss_C(iGauss) * DalphadeGauss * &
+                                    elemDamage%BF(iDoF1, iGauss) * elemDamage%BF(iDoF2, iGauss)
             end do
          end do
       end do
@@ -168,22 +168,22 @@ contains
       character(len=MEF90MXSTRLEN)                      :: IOBuffer
       PetscErrorCode                                     :: ierr
 
-      if (matprop % HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+      if (matprop%HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
          write (IOBuffer, '(''ERROR: unimplemented Hookes law type in'' (A),''\n'')') __FUNCT__
          SETERRQ(PETSC_COMM_SELF, PETSC_ERR_SUP, IOBuffer, ierr)
       end if
 
-      numDofDisplacement = size(elemDisplacement % BF, 1)
-      numDofDamage = size(elemDamage % BF, 1)
-      numGauss = size(elemDamage % BF, 2)
+      numDofDisplacement = size(elemDisplacement%BF, 1)
+      numDofDamage = size(elemDamage%BF, 1)
+      numGauss = size(elemDamage%BF, 2)
 
-      E = matprop % HookesLaw % YoungsModulus
-      Gc = matprop % FractureToughness
-      ell = matprop % internalLength
-      delta = matprop % drivingForceDelta
-      gamma = matprop % drivingForceGamma
-      sigma_cs = matprop % drivingForceCompressiveStrength
-      sigma_ts = matprop % drivingForceTensileStrength
+      E = matprop%HookesLaw%YoungsModulus
+      Gc = matprop%FractureToughness
+      ell = matprop%internalLength
+      delta = matprop%drivingForceDelta
+      gamma = matprop%drivingForceGamma
+      sigma_cs = matprop%drivingForceCompressiveStrength
+      sigma_ts = matprop%drivingForceTensileStrength
 
       beta3 = gamma * ell
       beta0 = 3.0_kr * Gc / 8.0_kr / ell * delta
@@ -200,33 +200,33 @@ contains
          !!! Compute the value of the damage field at the Gauss points
          damageGauss = 0.0_kr
          do iDof1 = 1, numDofDamage
-            damageGauss = damageGauss + elemDamage % BF(iDof1, iGauss) * xDof(iDof1)
+            damageGauss = damageGauss + elemDamage%BF(iDof1, iGauss) * xDof(iDof1)
          end do
-         stiffnessMultGauss = MEF90aAT(damageGauss) + matprop % residualStiffness
+         stiffnessMultGauss = MEF90aAT(damageGauss) + matprop%residualStiffness
          DalphaStiffnessMultGauss = MEF90DaAT(damageGauss)
          AeGauss = 0.0_kr
          do iDof1 = 1, numDofDisplacement
-            AeGauss = AeGauss + elemDisplacement % GradS_BF(iDof1, iGauss) * displacementDof(iDof1)
+            AeGauss = AeGauss + elemDisplacement%GradS_BF(iDof1, iGauss) * displacementDof(iDof1)
          end do
-         AeGauss = matprop % HookesLaw * AeGauss
+         AeGauss = matprop%HookesLaw * AeGauss
 #if MEF90_DIM == 3
          I1Gauss = Moment(1, AeGauss) * stiffnessMultGauss
          DalphaI1Gauss = Moment(1, AeGauss) * DalphaStiffnessMultGauss
          sqrtJ2Gauss = sqrt(Moment(2, DeviatoricPart(AeGauss))) * stiffnessMultGauss
          DalphaSqrtJ2Gauss = sqrt(Moment(2, DeviatoricPart(AeGauss))) * DalphaStiffnessMultGauss
 #else
-         if (matProp % HookesLaw % isPlaneStress) then
+         if (matProp%HookesLaw%isPlaneStress) then
             Ae3DGauss = 0.0_kr
-            Ae3DGauss % XX = AeGauss % XX
-            Ae3DGauss % YY = AeGauss % YY
-            Ae3DGauss % XY = AeGauss % XY
+            Ae3DGauss%XX = AeGauss%XX
+            Ae3DGauss%YY = AeGauss%YY
+            Ae3DGauss%XY = AeGauss%XY
          else
             Ae3DGauss = 0.0_kr
-            Ae3DGauss % XX = AeGauss % XX
-            Ae3DGauss % YY = AeGauss % YY
-            Ae3DGauss % XY = AeGauss % XY
-            Ae3DGauss % ZZ = matprop % HookesLaw % lambda / (matprop % HookesLaw % lambda + matprop % HookesLaw % mu) * 0.5_kr * &
-                             (AeGauss % XX + AeGauss % YY)
+            Ae3DGauss%XX = AeGauss%XX
+            Ae3DGauss%YY = AeGauss%YY
+            Ae3DGauss%XY = AeGauss%XY
+            Ae3DGauss%ZZ = matprop%HookesLaw%lambda / (matprop%HookesLaw%lambda + matprop%HookesLaw%mu) * 0.5_kr * &
+                             (AeGauss%XX + AeGauss%YY)
          end if
          I1Gauss = Moment(1, Ae3DGauss) * stiffnessMultGauss
          DalphaI1Gauss = Moment(1, Ae3DGauss) * DalphaStiffnessMultGauss
@@ -237,8 +237,8 @@ contains
                          + (beta1 * DalphaI1Gauss + beta2 * DalphaSqrtJ2Gauss) / (1.0_kr + beta3 * I1Gauss**2)
          do iDoF1 = 1, numDofDamage
             do iDoF2 = 1, numDofDamage
-               Aloc(iDoF2, iDoF1) = Aloc(iDoF2, iDoF1) + elemDamage % Gauss_C(iGauss) * DalphadeGauss * &
-                                    elemDamage % BF(iDoF1, iGauss) * elemDamage % BF(iDoF2, iGauss)
+               Aloc(iDoF2, iDoF1) = Aloc(iDoF2, iDoF1) + elemDamage%Gauss_C(iGauss) * DalphadeGauss * &
+                                    elemDamage%BF(iDoF1, iGauss) * elemDamage%BF(iDoF2, iGauss)
             end do
          end do
       end do

@@ -33,10 +33,10 @@ contains
 type(MEF90_DEFMECHSPLITHD) function MEF90_DEFMECHSPLITHD_CONSTRUCTOR(gamma)
    PetscReal, intent(IN)                             :: gamma
 
-   MEF90_DEFMECHSPLITHD_CONSTRUCTOR % gamma = gamma
-   MEF90_DEFMECHSPLITHD_CONSTRUCTOR % damageOrder = 3
-   MEF90_DEFMECHSPLITHD_CONSTRUCTOR % strainOrder = 2
-   MEF90_DEFMECHSPLITHD_CONSTRUCTOR % type = 'MEF90DefMech_unilateralContactTypeHD'
+   MEF90_DEFMECHSPLITHD_CONSTRUCTOR%gamma = gamma
+   MEF90_DEFMECHSPLITHD_CONSTRUCTOR%damageOrder = 3
+   MEF90_DEFMECHSPLITHD_CONSTRUCTOR%strainOrder = 2
+   MEF90_DEFMECHSPLITHD_CONSTRUCTOR%type = 'MEF90DefMech_unilateralContactTypeHD'
 end function MEF90_DEFMECHSPLITHD_CONSTRUCTOR
 
 #undef __FUNCT__
@@ -60,13 +60,13 @@ subroutine EEDHD(self, Strain, HookesLaw, EEDPlus, EEDMinus)
    PetscErrorCode                                   :: ierr
    character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
    end if
 
-   EEDMinus = MEF90_DefMechSplit_SmoothPositiveSquare(-trace(Strain), self % gamma) * (HookesLaw % lambda + 2.0_kr * HookesLaw % mu / MEF90_DIM) * 0.5_kr
+   EEDMinus = MEF90_DefMechSplit_SmoothPositiveSquare(-trace(Strain), self%gamma) * (HookesLaw%lambda + 2.0_kr * HookesLaw%mu / MEF90_DIM) * 0.5_kr
    EEDPlus = ((HookesLaw * Strain) .dotP.Strain) * 0.5_kr - EEDMinus
 end subroutine
 
@@ -88,13 +88,13 @@ subroutine DEEDHD(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
    PetscErrorCode                                   :: ierr
    character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
    end if
 
-   DEEDMinus = (-MEF90_DefMechSplit_DSmoothPositiveSquare(-trace(Strain), self % gamma) * (HookesLaw % lambda + 2.0_kr * HookesLaw % mu / MEF90_DIM) * 0.5_kr) * MEF90_MATS_IDENTITY
+   DEEDMinus = (-MEF90_DefMechSplit_DSmoothPositiveSquare(-trace(Strain), self%gamma) * (HookesLaw%lambda + 2.0_kr * HookesLaw%mu / MEF90_DIM) * 0.5_kr) * MEF90_MATS_IDENTITY
    DEEDPlus = (HookesLaw * Strain) - DEEDMinus
 end subroutine
 
@@ -116,31 +116,31 @@ subroutine D2EEDHD(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
    PetscErrorCode                                   :: ierr
    character(len=MEF90MXSTRLEN)                     :: IOBuffer
 
-   if (HookesLaw % type /= MEF90HookesLawTypeIsotropic) then
+   if (HookesLaw%type /= MEF90HookesLawTypeIsotropic) then
       write (IOBuffer, *) "Hydrostatic-Deviatoric projection not implemented for non isotropic Hooke laws: "//__FUNCT__//"\n"
       PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
       SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
    end if
 
-   D2EEDPlus % fullTensor = 0.0_kr
-   D2EEDMinus % fullTensor = 0.0_kr
-   D2EEDPlus % type = MEF90HookesLawTypeIsotropic
-   D2EEDMinus % type = MEF90HookesLawTypeIsotropic
-   D2EEDMinus % lambda = MEF90_DefMechSplit_D2SmoothPositiveSquare(-trace(Strain), self % gamma) * (HookesLaw % lambda + 2.0_kr * HookesLaw % mu / MEF90_DIM) * 0.5_kr
-   D2EEDMinus % mu = 0.0_kr
+   D2EEDPlus%fullTensor = 0.0_kr
+   D2EEDMinus%fullTensor = 0.0_kr
+   D2EEDPlus%type = MEF90HookesLawTypeIsotropic
+   D2EEDMinus%type = MEF90HookesLawTypeIsotropic
+   D2EEDMinus%lambda = MEF90_DefMechSplit_D2SmoothPositiveSquare(-trace(Strain), self%gamma) * (HookesLaw%lambda + 2.0_kr * HookesLaw%mu / MEF90_DIM) * 0.5_kr
+   D2EEDMinus%mu = 0.0_kr
 #if MEF90_DIM == 2
-   D2EEDMinus % isPlaneStress = HookesLaw % isPlaneStress
-   D2EEDMinus % YoungsModulus = 2.0_kr * D2EEDMinus % mu * (1.0_kr + D2EEDMinus % PoissonRatio)
-   D2EEDMinus % BulkModulus = D2EEDMinus % lambda + D2EEDMinus % mu
-   if (HookesLaw % isPlaneStress) then
-      D2EEDMinus % PoissonRatio = D2EEDMinus % lambda / (D2EEDMinus % lambda + D2EEDMinus % mu) * 0.5_kr
+   D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
+   D2EEDMinus%YoungsModulus = 2.0_kr * D2EEDMinus%mu * (1.0_kr + D2EEDMinus%PoissonRatio)
+   D2EEDMinus%BulkModulus = D2EEDMinus%lambda + D2EEDMinus%mu
+   if (HookesLaw%isPlaneStress) then
+      D2EEDMinus%PoissonRatio = D2EEDMinus%lambda / (D2EEDMinus%lambda + D2EEDMinus%mu) * 0.5_kr
    else
-      D2EEDMinus % PoissonRatio = D2EEDMinus % lambda / (D2EEDMinus % lambda + 2.0_kr * D2EEDMinus % mu) * 0.5_kr
+      D2EEDMinus%PoissonRatio = D2EEDMinus%lambda / (D2EEDMinus%lambda + 2.0_kr * D2EEDMinus%mu) * 0.5_kr
    end if
 #else
-   D2EEDMinus % PoissonRatio = D2EEDMinus % lambda / (D2EEDMinus % lambda + D2EEDMinus % mu) * 0.5_kr
-   D2EEDMinus % YoungsModulus = D2EEDMinus % mu * (3.0_kr * D2EEDMinus % lambda + 2.0_kr * D2EEDMinus % mu) / (D2EEDMinus % lambda + D2EEDMinus % mu)
-   D2EEDMinus % BulkModulus = D2EEDMinus % lambda + D2EEDMinus % mu * 2.0_kr / 3.0_kr
+   D2EEDMinus%PoissonRatio = D2EEDMinus%lambda / (D2EEDMinus%lambda + D2EEDMinus%mu) * 0.5_kr
+   D2EEDMinus%YoungsModulus = D2EEDMinus%mu * (3.0_kr * D2EEDMinus%lambda + 2.0_kr * D2EEDMinus%mu) / (D2EEDMinus%lambda + D2EEDMinus%mu)
+   D2EEDMinus%BulkModulus = D2EEDMinus%lambda + D2EEDMinus%mu * 2.0_kr / 3.0_kr
 #endif
    D2EEDPlus = HookesLaw - D2EEDMinus
 end subroutine

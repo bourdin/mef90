@@ -38,21 +38,21 @@ subroutine FHG_GURSON(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
     !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2 + myctx_ptr % residualStiffness
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2))) + myctx_ptr % residualStiffness
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2))) + myctx_ptr%residualStiffness
    end if
 
-   Stress = (myctx_ptr % HookesLaw * (myctx_ptr % totalStrain - xMatS)) * StiffnessA
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld)) * StiffnessA / 2.0
+   Stress = (myctx_ptr%HookesLaw * (myctx_ptr%totalStrain - xMatS)) * StiffnessA
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld)) * StiffnessA / 2.0
 
-   if (myctx_ptr % Damage == 0.0_kr) then
+   if (myctx_ptr%Damage == 0.0_kr) then
         !!! If porosity equals zero, Gurson reduces to von Mises. A residual damage term is added in order to avoid instability on plastic admissibility
-      g(1) = (3.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + 2.0_kr * (myctx_ptr % delta) * ((myctx_ptr % YieldStress)**2) * cosh(Trace(Stress) / (2.0_kr * myctx_ptr % YieldStress)) - ((myctx_ptr % YieldStress)**2) * (1.0_kr + (myctx_ptr % delta)**2)
+      g(1) = (3.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + 2.0_kr * (myctx_ptr%delta) * ((myctx_ptr%YieldStress)**2) * cosh(Trace(Stress) / (2.0_kr * myctx_ptr%YieldStress)) - ((myctx_ptr%YieldStress)**2) * (1.0_kr + (myctx_ptr%delta)**2)
    else
         !!! If porosity is greater than zero, the Gurson criterion holds and no plastic admissibility has to be considered
-      g(1) = (3.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + 2.0_kr * (myctx_ptr % Damage) * ((myctx_ptr % YieldStress)**2) * cosh(Trace(Stress) / (2.0_kr * myctx_ptr % YieldStress)) - ((myctx_ptr % YieldStress)**2) * (1.0_kr + (myctx_ptr % Damage)**2)
+      g(1) = (3.0_kr / 2.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress)) + 2.0_kr * (myctx_ptr%Damage) * ((myctx_ptr%YieldStress)**2) * cosh(Trace(Stress) / (2.0_kr * myctx_ptr%YieldStress)) - ((myctx_ptr%YieldStress)**2) * (1.0_kr + (myctx_ptr%Damage)**2)
    end if
 
 end subroutine FHG_GURSON

@@ -28,32 +28,32 @@ contains
       type(MatS2D)                  :: MatDiag
       type(Mat2D)                   :: MatPrincipal
 
-      x3D % XX = x(1)
-      x3D % YY = x(2)
-      x3D % XY = x(3)
+      x3D%XX = x(1)
+      x3D%YY = x(2)
+      x3D%XY = x(3)
 
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx, myctx_ptr)
 
-      f(1) = ((myctx_ptr % HookesLaw * (x3D - myctx_ptr % OldPlasticStrain)) .DotP. (x3D - myctx_ptr % OldPlasticStrain)) / 2.
+      f(1) = ((myctx_ptr%HookesLaw * (x3D - myctx_ptr%OldPlasticStrain)) .DotP. (x3D - myctx_ptr%OldPlasticStrain)) / 2.
 
       h(1) = Trace(x3D)
 
       !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain
-      call EigenVectorValues(deviatoricPart(myctx_ptr % HookesLaw * myctx_ptr % Strain), MatProj, MatDiag)
+      call EigenVectorValues(deviatoricPart(myctx_ptr%HookesLaw * myctx_ptr%Strain), MatProj, MatDiag)
 
       ! D=P^(-1).A.P
 
-      MatPrincipal = transpose(MatProj) * MatSymToMat(deviatoricPart(myctx_ptr % HookesLaw * myctx_ptr % Strain) - x3D) * MatProj
+      MatPrincipal = transpose(MatProj) * MatSymToMat(deviatoricPart(myctx_ptr%HookesLaw * myctx_ptr%Strain) - x3D) * MatProj
 
       write (*, *) 'MatPrincipal:          ', MatPrincipal
 
-      g(1) = +(MatPrincipal % XX - MatPrincipal % YY) - myctx_ptr % YieldStress
-      g(2) = -(MatPrincipal % XX - MatPrincipal % YY) - myctx_ptr % YieldStress
-      g(3) = +(MatPrincipal % YY) - myctx_ptr % YieldStress
-      g(4) = -(MatPrincipal % YY) - myctx_ptr % YieldStress
-      g(5) = +(MatPrincipal % XX) - myctx_ptr % YieldStress
-      g(6) = -(MatPrincipal % XX) - myctx_ptr % YieldStress
+      g(1) = +(MatPrincipal%XX - MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(2) = -(MatPrincipal%XX - MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(3) = +(MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(4) = -(MatPrincipal%YY) - myctx_ptr%YieldStress
+      g(5) = +(MatPrincipal%XX) - myctx_ptr%YieldStress
+      g(6) = -(MatPrincipal%XX) - myctx_ptr%YieldStress
 
    end subroutine fhg
 
@@ -114,24 +114,24 @@ program testTresca2D
    real(kind=c_double), dimension(:), pointer  ::x
    type(ctx), target     :: ctx_ptr
 
-   ctx_ptr % HookesLaw % type = MEF90HookesLawTypeIsotropic
-   ctx_ptr % HookesLaw % YoungsModulus = 1.0_kr
-   ctx_ptr % HookesLaw % PoissonRatio = 0.0_kr
-   ctx_ptr % HookesLaw % lambda = ctx_ptr % HookesLaw % YoungsModulus * ctx_ptr % HookesLaw % PoissonRatio / (1.0_kr + ctx_ptr % HookesLaw % PoissonRatio) / (1.0_kr - 2.0_kr * ctx_ptr % HookesLaw % PoissonRatio)
-   ctx_ptr % HookesLaw % mu = ctx_ptr % HookesLaw % YoungsModulus / (1.0_kr + ctx_ptr % HookesLaw % PoissonRatio)*.5_kr
+   ctx_ptr%HookesLaw%type = MEF90HookesLawTypeIsotropic
+   ctx_ptr%HookesLaw%YoungsModulus = 1.0_kr
+   ctx_ptr%HookesLaw%PoissonRatio = 0.0_kr
+   ctx_ptr%HookesLaw%lambda = ctx_ptr%HookesLaw%YoungsModulus * ctx_ptr%HookesLaw%PoissonRatio / (1.0_kr + ctx_ptr%HookesLaw%PoissonRatio) / (1.0_kr - 2.0_kr * ctx_ptr%HookesLaw%PoissonRatio)
+   ctx_ptr%HookesLaw%mu = ctx_ptr%HookesLaw%YoungsModulus / (1.0_kr + ctx_ptr%HookesLaw%PoissonRatio)*.5_kr
 
-   ctx_ptr % Strain = 0.0_kr
-   ctx_ptr % Strain % XX = 2.0_kr
+   ctx_ptr%Strain = 0.0_kr
+   ctx_ptr%Strain%XX = 2.0_kr
 
-   ctx_ptr % OldPlasticStrain = 0.0_kr
-   ctx_ptr % PlasticStrain = 0.0_kr
-   ctx_ptr % YieldStress = 1.0_kr
+   ctx_ptr%OldPlasticStrain = 0.0_kr
+   ctx_ptr%PlasticStrain = 0.0_kr
+   ctx_ptr%YieldStress = 1.0_kr
 
    allocate (x(n))
-   x = ctx_ptr % PlasticStrain
+   x = ctx_ptr%PlasticStrain
 
    call SNLPNew(s, n, m, p, c_funloc(fhg), c_null_funptr, c_loc(ctx_ptr))
-   s % show_progress = 1
+   s%show_progress = 1
 
    exit_code = SNLPL1SQP(s, x)
    write (*, *) 'exit_code: ', exit_code
