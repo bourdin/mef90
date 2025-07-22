@@ -53,7 +53,7 @@ program vDef
 
    PetscBool                                          :: flg, EXONeedsFormatting = PETSC_FALSE
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
-   ! Type(tPetscViewer)                                 :: logViewer
+   Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
    PetscInt                                           :: AltMinIter, AltMinStep = 0_ki
@@ -507,9 +507,9 @@ program vDef
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr))
             PetscCallA(PetscLogStagePop(ierr))
 
-            ! PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-            ! PetscCallA(PetscLogView(logViewer,ierr))
-            ! PetscCallA(PetscViewerDestroy(logViewer,ierr))
+            PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+            PetscCallA(PetscLogView(logViewer,ierr))
+            PetscCallA(PetscViewerDestroy(logViewer,ierr))
          end select ! timeStepingType
 
          if (step == MEF90GlobalOptions % timeNumStep) then
@@ -583,11 +583,11 @@ program vDef
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr))
 
    PetscCallA(PetscViewerDestroy(MEF90Ctx % resultViewer, ierr))
-   ! If (.NOT. MEF90GlobalOptions%dryrun) Then
-   !    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-   !    PetscCallA(PetscLogView(logViewer,ierr))
-   !    PetscCallA(PetscViewerDestroy(logViewer,ierr))
-   ! End If
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
+      PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+      PetscCallA(PetscLogView(logViewer,ierr))
+      PetscCallA(PetscViewerDestroy(logViewer,ierr))
+   End If
    PetscCallA(MEF90CtxDestroy(MEF90Ctx, ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))
