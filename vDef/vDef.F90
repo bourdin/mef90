@@ -49,6 +49,7 @@ program vDef
    PetscReal                                          :: temperatureInitialTimeStep, temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
    PetscLogStage                                      :: logStageHeatXfer, logStageDamage, logStageDisplacement, logStageEnergy, logStageIO
+   PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO,logStageSetup
 
    PetscBool                                          :: flg, EXONeedsFormatting = PETSC_FALSE
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
@@ -59,14 +60,16 @@ program vDef
    PetscReal                                          :: damageMaxChange, damageMin, damageMax
 
    !!! Initialize MEF90
-   PetscCallA(PetscInitialize(ierr))
-   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
-   PetscCallA(PetscLogStageRegister('HeatXfer    ', logStageHeatXfer, ierr))
-   PetscCallA(PetscLogStageRegister('Damage      ', logStageDamage, ierr))
-   PetscCallA(PetscLogStageRegister('Displacement', logStageDisplacement, ierr))
-   PetscCallA(PetscLogStageRegister('Energy      ', logStageEnergy, ierr))
-   PetscCallA(PetscLogStageRegister('IO          ', logStageIO, ierr))
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
+   PetscCallA(PetscLogStageRegister('HeatXfer    ',logStageHeatXfer,ierr))
+   PetscCallA(PetscLogStageRegister('Damage      ',logStageDamage,ierr))
+   PetscCallA(PetscLogStageRegister('Displacement',logStageDisplacement,ierr))
+   PetscCallA(PetscLogStageRegister('Energy      ',logStageEnergy,ierr))
+   PetscCallA(PetscLogStageRegister('IO          ',logStageIO,ierr))
+   PetscCallA(PetscLogStageRegister('Setup       ',logStageSetup,ierr))
 
+   PetscCallA(PetscLogStagePush(logStageSetup,ierr))
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90CtxDefaultGlobalOptions, ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr))
@@ -228,8 +231,9 @@ program vDef
    !!!
    !!! Actual computations / time stepping
    !!!
-   if (((MEF90DefMechGlobalOptions % timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL) .or. (MEF90HeatXferGlobalOptions % timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)) .and. &
-       (.not. MEF90GlobalOptions % dryrun)) then
+   PetscCallA(PetscLogStagePop(ierr))
+   If (((MEF90DefMechGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL) .OR. (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)) .AND. &
+        (.NOT. MEF90GlobalOptions%dryrun))  Then
 
          !!! Reload current state if necessary
       if (MEF90GlobalOptions % timeSkip > 0) then
