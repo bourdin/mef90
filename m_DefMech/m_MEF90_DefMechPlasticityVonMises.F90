@@ -28,11 +28,11 @@ subroutine FHG_VONMISES(x, f, h, g, myctx) bind(c)
    real(kind=c_double)                       :: f(*)
    real(kind=c_double)                       :: h(*)
    real(kind=c_double)                       :: g(*)
-   real(Kind=Kr)                           :: StiffnessA, PlasticStrainCumulated
-   real(Kind=Kr)                           :: StiffnessB, Stiffness
-   type(c_ptr), intent(in), value              :: myctx
+   real(Kind=Kr)                             :: StiffnessA, PlasticStrainCumulated
+   real(Kind=Kr)                             :: StiffnessB, Stiffness
+   type(c_ptr), intent(in), value            :: myctx
 
-   type(MEF90DefMechPlasticityCtx), pointer   :: myctx_ptr
+   type(MEF90DefMechPlasticityCtx), pointer  :: myctx_ptr
    type(MEF90_MATS)                          :: xMatS
    type(MEF90_MATS)                          :: Stress
 
