@@ -6,6 +6,7 @@ module m_MEF90_DefMech
 
    use m_MEF90_EXO
    use m_MEF90_DefMechCtx
+   use m_MEF90_DefMechAT
 
    use m_MEF90_DefMechAssembly2D, &
       MEF90DefMechOperatorDisplacement2D => MEF90DefMechOperatorDisplacement, &
@@ -73,6 +74,7 @@ module m_MEF90_DefMech
    public :: MEF90DefMechFormatEXO
 
 contains
+
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetTransients"
 !!!

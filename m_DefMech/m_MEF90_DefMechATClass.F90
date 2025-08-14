@@ -4,22 +4,30 @@ module m_MEF90_DefMechAT_class
 
    use petscsys
    use m_MEF90_Parameters
+   use m_MEF90_BaseClass
    use iso_c_binding
-   implicit none(type, external)
+   implicit none(type)
 
 !!!
 !!!
 !!!  MEF90_DefMechAT_Type: The abstract class used to define a generalized Ambrosio-Tortorelli phase field model
 !!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2022 Blaise Bourdin bourdin@lsu.edu
+!!!      2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   type, abstract :: MEF90DefMechAT_Type
-      PetscReal                                        :: cw
-      PetscInt                                         :: aOrder
-      PetscInt                                         :: wOrder
-      character(len=MEF90MXSTRLEN)                     :: type
-   contains
+   type, abstract, extends(MEF90Object_Type) :: MEF90DefMechAT_Type
+      PetscReal                                        :: internalLength = -1.0_Kr
+      PetscReal                                        :: residualStiffness = 0.0_Kr
+      PetscBool                                        :: isElastic = PETSC_FALSE
+      PetscReal                                        :: cw = -1.0_Kr
+      PetscInt                                         :: aOrder = -1
+      PetscInt                                         :: wOrder = -1
+      character(len=MEF90MXSTRLEN)                     :: type = ''
+
+      contains
+      ! procedure, pass(self) :: setFromOptions => MEF90DefMechAT_setFromOptions
+      procedure, pass(self) :: view => MEF90DefMechAT_View
       procedure(ATInterface), pass(self), deferred     :: a
       procedure(ATInterface), pass(self), deferred     :: Da
       procedure(ATInterface), pass(self), deferred     :: D2a
@@ -32,9 +40,70 @@ module m_MEF90_DefMechAT_class
       PetscReal function ATInterface(self, alpha)
          use petscsys
          import :: MEF90DefMechAT_Type
-         class(MEF90DefMechAT_Type), intent(IN)         :: self
+         class(MEF90DefMechAT_Type), intent(IN)        :: self
          PetscReal                                     :: alpha
       end function ATInterface
    end interface
+
+contains
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechAT_view"
+!!!
+!!!
+!!!  MEF90DefMechAT_view: the default viewer for a MEF90_DefMechAT_Type
+!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine MEF90DefMechAT_View(self,viewer,ierr)
+      class(MEF90DefMechAT_Type), intent(in) :: self
+      type(tPetscViewer), intent(in) :: viewer
+      PetscErrorCode, intent(inout) :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char) :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char) :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType == 'ascii') then
+         write(IOBuffer, "(A,': Options for MEF90DefMechAT_type\n')") trim(self%prefix)
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         type: ',A,'\n')") trim(self%type)
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         internalLength (ell): ',ES12.5,' [m]\n')") self%internalLength
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         residualStiffness (eta_ell): ',ES12.5,' [unit-less]\n')") self%residualStiffness
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         set isElastic (): ',L1,' [bool]\n')") self%isElastic
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+      end if
+   end subroutine MEF90DefMechAT_View
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechAT_setFromOptions"
+!!!
+!!!
+!!!  MEF90DefMechAT_setFromOptions: initializes a MEF90_DefMechAT_Type from options
+!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine MEF90DefMechAT_setFromOptions(self,ierr)
+      class(MEF90DefMechAT_Type), intent(inout) :: self
+      PetscErrorCode,intent(inout) :: ierr
+
+      PetscBool :: printHelp
+
+      self%internalLength = 1.0e-2
+      self%residualStiffness = 1.0e-8
+
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix)//"damage_", "Options for MEF90DefMechAT_type", "mef90DefMech", ierr))
+         PetscCall(PetscOptionsReal('-internalLength', 'internal length (\ell)', '[m]', self%internalLength, self%internalLength, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-residualStiffness', 'residual stiffness (\eta_\ell)', 'non-dimensional', self%residualStiffness, self%residualStiffness, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool('-elastic', 'set is elastic', '', PETSC_FALSE, self%isElastic, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsEnd(ierr))
+
+      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp) then
+         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      end if
+   end subroutine MEF90DefMechAT_setFromOptions
+
+
 end module m_MEF90_DefMechAT_class
 

@@ -2,41 +2,47 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1
 #include "petsc/finclude/petsc.h"
-   ! Use m_MEF90
+   use petscsys
+
    use m_MEF90_DefMechAT_class
-   implicit none(type, external)
+   implicit none(type)
    private
    public :: MEF90DefMechAT1_Type
 
-   type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT1_Type
-   contains
-      procedure, pass(self)                            :: a => aAT1
-      procedure, pass(self)                            :: Da => DaAT1
-      procedure, pass(self)                            :: D2a => D2aAT1
+   type, extends(MEF90DefMechAT_Type) :: MEF90DefMechAT1_Type
 
-      procedure, pass(self)                            :: w => wAT1
-      procedure, pass(self)                            :: Dw => DwAT1
-      procedure, pass(self)                            :: D2w => D2wAT1
+   contains
+      procedure, pass(self) :: a => aAT1
+      procedure, pass(self) :: Da => DaAT1
+      procedure, pass(self) :: D2a => D2aAT1
+
+      procedure, pass(self) :: w => wAT1
+      procedure, pass(self) :: Dw => DwAT1
+      procedure, pass(self) :: D2w => D2wAT1
+
+      procedure, pass(self) :: setFromOptions => MEF90DefMechAT1_setFromOptions
    end type MEF90DefMechAT1_Type
 
-   interface MEF90DefMechAT1_Type
-      module procedure MEF90DefMechAT1_Constructor
-   end interface
-
 contains
+
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechAT1_Constructor"
+#define __FUNCT__ "MEF90DefMechAT1_setFromOptions"
 !!!
 !!!
-!!!  MEF90_DefMechAT1_Constructor: the default constructor for a MEF90_DefMechAT1_Type
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!  MEF90DefMechAT1_setFromOptions: initializes a MEF90_DefMechAT1_Type from options
+!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   type(MEF90DefMechAT1_Type) function MEF90DefMechAT1_Constructor()
-      MEF90DefMechAT1_Constructor%cw = 2.0_kr / 3.0_kr
-      MEF90DefMechAT1_Constructor%aorder = 2
-      MEF90DefMechAT1_Constructor%worder = 1
-      MEF90DefMechAT1_Constructor%type = 'MEF90DefMechAT1'
-   end function MEF90DefMechAT1_Constructor
+   subroutine MEF90DefMechAT1_setFromOptions(self,ierr)
+      class(MEF90DefMechAT1_Type), intent(inout) :: self
+      PetscErrorCode,intent(inout) :: ierr
+
+      self%cw = 2.0_kr / 3.0_kr
+      self%aorder = 2
+      self%worder = 1
+      self%type = 'MEF90DefMechAT1'
+
+      PetscCall(MEF90DefMechAT_setFromOptions(self, ierr))
+   end subroutine MEF90DefMechAT1_setFromOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1"
@@ -46,7 +52,7 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT1(self, alpha)
-      class(MEF90DefMechAT1_Type), intent(IN)           :: self
+      class(MEF90DefMechAT1_Type), intent(IN)          :: self
       PetscReal                                        :: alpha
 
       aAT1 = (1.0_kr - alpha)**2
@@ -61,7 +67,7 @@ contains
 !!!
    PetscReal function DaAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                          :: alpha
+      PetscReal                                         :: alpha
 
       DaAT1 = -2.0_kr * (1.0_kr - alpha)
    end function DaAT1

@@ -9,13 +9,13 @@ module m_MEF90_Parameters
 
    ! The following ensures that mef90 and PETSC real types are compatible:
    ! thanks to Michael Metcalf in comp.lang.fortran
-   PetscReal, parameter                 :: PReal = 1.0
+   PetscReal, parameter                  :: PReal = 1.0
    integer, parameter, public            :: Kr = selected_real_kind(precision(PReal))
 
-   PetscInt, parameter                  :: PInt = 1
+   PetscInt, parameter                   :: PInt = 1
    integer, parameter, public            :: Ki = kind(PInt)
 
-   PetscLogDouble, parameter            :: flop = 1.0
+   PetscLogDouble, parameter             :: flop = 1.0
    integer, parameter, public            :: PFlop = selected_real_kind(precision(flop))
 
    PetscInt, parameter, public           :: MEF90MXSTRLEN = 256

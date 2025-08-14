@@ -4,6 +4,7 @@ module m_MEF90
    use m_MEF90_Ctx
    use m_MEF90_LinAlg
    use m_MEF90_Parameters
+   use m_MEF90_baseClass
    use m_MEF90_Materials
    use m_MEF90_MPI
    use m_MEF90_EXO

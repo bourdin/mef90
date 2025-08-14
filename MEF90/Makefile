@@ -28,7 +28,13 @@ m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
         m_MEF90_NormsImplementation_MEF90Element2D_Vect.o \
         m_MEF90_NormsImplementation_MEF90Element3D_Scal.o \
         m_MEF90_NormsImplementation_MEF90Element3D_Vect.o \
-        m_MEF90_NormsInterface.o
+        m_MEF90_NormsInterface.o \
+        m_MEF90_BaseClass.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_BaseClass.o: ${MEF90_DIR}/MEF90/m_MEF90_BaseClass.F90 \
+        m_MEF90_Parameters.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

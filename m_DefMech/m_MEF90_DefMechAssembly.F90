@@ -49,33 +49,33 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmBodyForce, dmBoundaryForce, dmPressureForce, dmPlasticStrain
-   type(tPetscSection)                                :: sectionBodyForce, sectionBoundaryForce, sectionPressureForce, sectionPlasticStrain
-   PetscReal, dimension(:), pointer                     :: cohesiveDisplacementDof, displacementDof, damageDof, temperatureDof
-   PetscReal, dimension(:), pointer                     :: bodyForceArray, boundaryForceArray, pressureForceArray, plasticStrainArray
-   type(MEF90_MATS)                                   :: plasticStrainCell
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim, vecOffset
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmBodyForce, dmBoundaryForce, dmPressureForce, dmPlasticStrain
+   type(tPetscSection)                                 :: sectionBodyForce, sectionBoundaryForce, sectionPressureForce, sectionPlasticStrain
+   PetscReal, dimension(:), pointer                    :: cohesiveDisplacementDof, displacementDof, damageDof, temperatureDof
+   PetscReal, dimension(:), pointer                    :: bodyForceArray, boundaryForceArray, pressureForceArray, plasticStrainArray
+   type(MEF90_MATS)                                    :: plasticStrainCell
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
    type(MEF90DefMechFaceSetOptions_Type), pointer      :: faceSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometry
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
-   PetscReal, dimension(:), pointer                     :: residualDof
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometry
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
+   PetscReal, dimension(:), pointer                    :: residualDof
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
-   type(tVec)                                         :: locResidual
+   type(tVec)                                          :: locResidual
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: totalStrainGauss, stressGaussPlus, stressGaussMinus, stressGauss
-   type(MEF90_VECT)                                   :: U0Gauss, bodyForce, boundaryForce, pressureForce
-   PetscReal                                          :: damageGauss, temperatureGauss
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss, stressGaussPlus, stressGaussMinus, stressGauss
+   type(MEF90_VECT)                                    :: U0Gauss, bodyForce, boundaryForce, pressureForce
+   PetscReal                                           :: damageGauss, temperatureGauss
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -119,8 +119,11 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -142,7 +145,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                do iGauss = 1, numGauss
                      !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
@@ -179,7 +182,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
                   call Split%DEED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, stressGaussPlus, stressGaussMinus)
-                  if (cellIsElastic) then
+                  if (ATModel%isElastic) then
                      stressGauss = stressGaussPlus + stressGaussMinus
                   else
                      stressGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlus + stressGaussMinus
@@ -383,27 +386,27 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain
-   type(tPetscSection)                                :: sectionPlasticStrain
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt                                           :: numDofDisplacement, numDofDamage, numGauss, set, cell, iGauss, iDof, jDof, QuadratureOrder, dim, vecOffset
-   PetscReal                                          :: damageGauss, temperatureGauss
-   PetscBool                                          :: cellIsElastic
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscReal, dimension(:), pointer                     :: matDof, displacementDof, damageDof, temperatureDof, plasticStrainArray
-   type(MEF90_HOOKESLAW)                              :: AGaussPlus, AGaussMinus, AGauss
-   type(MEF90_MATS)                                   :: totalStrainGauss, plasticStrainCell, AGradS_BF
-   type(MEF90_VECT)                                   :: U0Gauss
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain
+   type(tPetscSection)                                 :: sectionPlasticStrain
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt                                            :: numDofDisplacement, numDofDamage, numGauss, set, cell, iGauss, iDof, jDof, QuadratureOrder, dim, vecOffset
+   PetscReal                                           :: damageGauss, temperatureGauss
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscReal, dimension(:), pointer                    :: matDof, displacementDof, damageDof, temperatureDof, plasticStrainArray
+   type(MEF90_HOOKESLAW)                               :: AGaussPlus, AGaussMinus, AGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss, plasticStrainCell, AGradS_BF
+   type(MEF90_VECT)                                    :: U0Gauss
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometry
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometry
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -437,8 +440,11 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -460,7 +466,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                do iGauss = 1, numGauss
                      !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
@@ -494,7 +500,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  if (cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      AGauss = matpropSet%HookesLaw
                   else
                      call Split%D2EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, AGaussPlus, AGaussMinus)
@@ -843,32 +849,32 @@ end subroutine MEF90DefMechPlasticDissipation
 
 subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: energy
+   PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain
-   type(tPetscSection)                                :: sectionPlasticStrain
-   PetscReal, dimension(:), pointer                     :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   PetscInt                                           :: vecOffset
-   type(MEF90_MATS)                                   :: plasticStrainCell
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain
+   type(tPetscSection)                                 :: sectionPlasticStrain
+   PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
+   PetscInt                                            :: vecOffset
+   type(MEF90_MATS)                                    :: plasticStrainCell
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryVect, cellGeometryScal
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: totalStrainGauss
-   PetscReal                                          :: damageGauss, temperatureGauss, myEnergy, EEDPlus, EEDMinus, elasticEnergyDensityGauss
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss
+   PetscReal                                           :: damageGauss, temperatureGauss, myEnergy, EEDPlus, EEDMinus, elasticEnergyDensityGauss
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -901,8 +907,11 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -925,10 +934,10 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
-                  do iDof = 1, numDofDamage
-                     damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
-                  end do ! iDof numDofDamage
+                  if (.not. ATModel%isElastic) then
+                     do iDof = 1, numDofDamage
+                        damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
+                     end do ! iDof numDofDamage
                   end if
 
                   totalStrainGauss = 0.0_kr
@@ -951,7 +960,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 ! #endif
 
                   call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDPlus, EEDMinus)
-                  if (cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
                      elasticEnergyDensityGauss = (ATmodel%a(damageGauss) + matpropSet%residualStiffness) * EEDPlus + EEDMinus
@@ -993,29 +1002,29 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    PetscErrorCode, intent(INOUT)                       :: ierr
    type(tVec), intent(IN)                              :: stress
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain, dmStress
-   type(tPetscSection)                                :: sectionPlasticStrain
-   PetscReal, dimension(:), pointer                     :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   type(MEF90_MATS)                                   :: plasticStrainCell
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim, vecOffset
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain, dmStress
+   type(tPetscSection)                                 :: sectionPlasticStrain
+   PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
+   type(MEF90_MATS)                                    :: plasticStrainCell
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryVect, cellGeometryScal
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
-   PetscReal, dimension(:), pointer                     :: stressDof
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
+   PetscReal, dimension(:), pointer                    :: stressDof
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: totalStrainGauss, stressGaussPlus, stressGaussMinus, stressCell
-   PetscReal                                          :: damageGauss, temperatureGauss, cellSize
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss, stressGaussPlus, stressGaussMinus, stressCell
+   PetscReal                                           :: damageGauss, temperatureGauss, cellSize
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1049,8 +1058,11 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -1075,7 +1087,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                cellSize = 0.0_kr
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDamage
@@ -1104,7 +1116,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
                   call Split%DEED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, stressGaussPlus, stressGaussMinus)
-                  if (cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlus + stressGaussMinus)
                   else
                      stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * ((ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlus + stressGaussMinus)
@@ -1152,31 +1164,31 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
-   type(tPetscSection)                                :: sectionPlasticStrain
-   PetscReal, dimension(:), pointer                     :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   type(MEF90_MATS)                                   :: plasticStrainCell
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim, vecOffset
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
+   type(tPetscSection)                                 :: sectionPlasticStrain
+   PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
+   type(MEF90_MATS)                                    :: plasticStrainCell
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryVect, cellGeometryScal
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
-   PetscReal, dimension(:), pointer                     :: residualDof
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
+   PetscReal, dimension(:), pointer                    :: residualDof
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
-   type(tVec)                                         :: locResidual
+   type(tVec)                                          :: locResidual
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: totalStrainGauss, C2
-   type(MEF90_VECT)                                   :: gradDamageGauss
-   PetscReal                                          :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss, C2
+   type(MEF90_VECT)                                    :: gradDamageGauss
+   PetscReal                                           :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1214,8 +1226,11 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -1240,7 +1255,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
@@ -1269,7 +1284,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDGaussPlus, EEDGaussMinus)
                   else
                      EEDGaussPlus = 0.0_kr
@@ -1364,7 +1379,7 @@ end subroutine MEF90DefMechTAOGradientDamage
 !!!  MEF90DefMechBilinearFormDamage:
 !!!
 !!!  (c) 2012-19 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022-25 Blaise Bourdin bourdin@mcmaster.ca
 !!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
@@ -1375,30 +1390,30 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
-   type(tPetscSection)                                :: sectionPlasticStrain
-   PetscReal, dimension(:), pointer                     :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   type(MEF90_MATS)                                   :: plasticStrainCell
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim, vecOffset
+   type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
+   type(tPetscSection)                                 :: sectionPlasticStrain
+   PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
+   type(MEF90_MATS)                                    :: plasticStrainCell
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryVect, cellGeometryScal
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
-   PetscReal, dimension(:), pointer                     :: matDof
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
+   PetscReal, dimension(:), pointer                    :: matDof
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: totalStrainGauss, C2
-   type(MEF90_VECT)                                   :: gradDamageGauss
-   PetscReal                                          :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
-   PetscInt                                           :: iDof, jDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss, C2
+   type(MEF90_VECT)                                    :: gradDamageGauss
+   PetscReal                                           :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
+   PetscInt                                            :: iDof, jDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1434,8 +1449,11 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
@@ -1460,7 +1478,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
@@ -1489,7 +1507,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDGaussPlus, EEDGaussMinus)
                   else
                      EEDGaussPlus = 0.0_kr
@@ -1559,34 +1577,34 @@ end subroutine MEF90DefMechTAOHessianDamage
 !!!  MEF90DefMechSurfaceEnergy:
 !!!
 !!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
-!!!           2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022-2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!           2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: energy
+   PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDamage
-   PetscReal, dimension(:), pointer                     :: damageDof
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim
+   type(tDM)                                           :: dmDamage
+   PetscReal, dimension(:), pointer                    :: damageDof
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryScal
-   type(MEF90ElementType)                             :: elemScalType
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryScal
+   type(MEF90ElementType)                              :: elemScalType
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_MATS)                                   :: C2
-   type(MEF90_VECT)                                   :: gradDamageGauss
-   PetscReal                                          :: damageGauss, C1, myEnergy
-   PetscInt                                           :: iDof, iGauss, numDofDamage, numGauss
+   type(MEF90_MATS)                                    :: C2
+   type(MEF90_VECT)                                    :: gradDamageGauss
+   PetscReal                                           :: damageGauss, C1, myEnergy
+   PetscInt                                            :: iDof, iGauss, numDofDamage, numGauss
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1612,9 +1630,13 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(DMPlexGetCellType(dmDamage, setPointID(1), cellGeometryScal, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
-               !!! Allocate elements
+
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
+            !!! Allocate elements
             QuadratureOrder = max(ATmodel%wOrder, 2 * (elemScalType%order - 1))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -1628,7 +1650,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
@@ -1666,10 +1688,10 @@ subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMec
    PetscReal, intent(INOUT)                            :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   PetscReal, dimension(:), pointer                     :: surfaceEnergy, elasticEnergy
-   type(tDM)                                          :: dmDamage
-   type(tIS)                                          :: setIS
-   PetscInt                                           :: numSet
+   PetscReal, dimension(:), pointer                    :: surfaceEnergy, elasticEnergy
+   type(tDM)                                           :: dmDamage
+   type(tIS)                                           :: setIS
+   PetscInt                                            :: numSet
 
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
@@ -1707,29 +1729,29 @@ end subroutine MEF90DefMechTAOObjectiveDamage
 
 subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: CrackVolume
+   PetscReal, dimension(:), pointer                    :: CrackVolume
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDamage, dmDisplacement
-   PetscReal, dimension(:), pointer                     :: damageDof, displacementDof
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim
+   type(tDM)                                           :: dmDamage, dmDisplacement
+   PetscReal, dimension(:), pointer                    :: damageDof, displacementDof
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elemScal
-   type(eDMPolytopeType)                              :: cellGeometryVect
-   type(eDMPolytopeType)                              :: cellGeometryScal
-   type(MEF90ElementType)                             :: elemVectType, elemScalType
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
+   type(eDMPolytopeType)                               :: cellGeometryVect
+   type(eDMPolytopeType)                               :: cellGeometryScal
+   type(MEF90ElementType)                              :: elemVectType, elemScalType
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
-   PetscBool                                          :: cellIsElastic
-   type(MEF90_VECT)                                   :: gradDamageGauss, displacementCell
-   PetscReal                                          :: myCrackVolume
-   PetscInt                                           :: iDof, iGauss, numDofDamage, numDofDisplacement, numGauss
+   type(MEF90_VECT)                                    :: gradDamageGauss, displacementCell
+   PetscReal                                           :: myCrackVolume
+   PetscInt                                            :: iDof, iGauss, numDofDamage, numDofDisplacement, numGauss
+   character(len = MEF90MXSTRLEN)                      :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1758,9 +1780,12 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-               !!! get the ATModel and split objects
-            PetscCall(MEF90DefMechGetATModel(cellSetOptions, ATModel, cellIsElastic, ierr))
-               !!! Allocate elements
+            write(prefix,'("cs",I4.4,"_")') setID(set)
+            !!! get the ATModel and split objects
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(ATModel%setFromOptions(ierr))
+
+            !!! Allocate elements
             QuadratureOrder = 2 * (elemScalType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1774,7 +1799,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                do iGauss = 1, numGauss
                   gradDamageGauss = 0.0_kr
-                  if (.not. cellIsElastic) then
+                  if (.not. ATModel%isElastic) then
                      do iDof = 1, numDofDamage
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
                      end do ! iDof numDofDamage

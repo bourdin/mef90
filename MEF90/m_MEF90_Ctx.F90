@@ -14,7 +14,7 @@ module m_MEF90_Ctx_Type
    type MEF90Ctx_Type
       MPI_Comm                                        :: comm
       PetscMPIInt                                     :: rank, numProcs
-      character(len=MEF90MXSTRLEN, kind=c_char)        :: geometryfile, resultfile
+      character(len=MEF90MXSTRLEN, kind=c_char)       :: geometryfile, resultfile
       type(tPetscBag)                                 :: GlobalOptionsBag
       type(tPetscViewer)                              :: resultViewer
    end type MEF90Ctx_Type

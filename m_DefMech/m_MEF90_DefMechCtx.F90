@@ -94,13 +94,13 @@ module m_MEF90_DefMechCtx_Type
    type MEF90DefMechCellSetOptions_Type
       PetscReal, dimension(3)                 :: bodyforce
       PetscReal                               :: crackPressure
-      PetscEnum                               :: damageType
+      ! PetscEnum                               :: damageType
       PetscEnum                               :: plasticityType
       PetscEnum                               :: unilateralContactType
       PetscReal                               :: unilateralContactHydrostaticDeviatoricGamma
       PetscBool                               :: unilateralContactHybrid
-      PetscReal                               :: DamageATLinSoftk
-      PetscReal                               :: DamageAT1expb
+      ! PetscReal                               :: DamageATLinSoftk
+      ! PetscReal                               :: DamageAT1expb
       PetscEnum                               :: drivingForceType
       PetscReal, dimension(3)                 :: cohesiveDisplacement
       PetscBool, dimension(3)                 :: Has_displacementBC
@@ -322,20 +322,20 @@ module m_MEF90_DefMechCtx
    end enum
    character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90DefMech_BTTypeList
 
-   enum, bind(c)
-      enumerator :: MEF90DefMech_damageTypeAT1 = 0, &
-         MEF90DefMech_damageTypeAT1exp, &
-         MEF90DefMech_damageTypeAT2, &
-         MEF90DefMech_damageTypeLinSoft, &
-         MEF90DefMech_damageTypeKKL, &
-         MEf90DefMech_damageTypeAT1Elastic, &
-         MEf90DefMech_damageTypeAT1expElastic, &
-         MEf90DefMech_damageTypeAT2Elastic, &
-         MEF90DefMech_damageTypeLinSoftElastic, &
-         MEF90DefMech_damageTypeKKLElastic
+   ! enum, bind(c)
+   !    enumerator :: MEF90DefMech_damageTypeAT1 = 0, &
+   !       MEF90DefMech_damageTypeAT1exp, &
+   !       MEF90DefMech_damageTypeAT2, &
+   !       MEF90DefMech_damageTypeLinSoft, &
+   !       MEF90DefMech_damageTypeKKL, &
+   !       MEf90DefMech_damageTypeAT1Elastic, &
+   !       MEf90DefMech_damageTypeAT1expElastic, &
+   !       MEf90DefMech_damageTypeAT2Elastic, &
+   !       MEF90DefMech_damageTypeLinSoftElastic, &
+   !       MEF90DefMech_damageTypeKKLElastic
 
-   end enum
-   character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_damageTypeList
+   ! end enum
+   ! character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_damageTypeList
 
    enum, bind(c)
       enumerator :: MEF90DefMech_plasticityTypeNone = 0, &
@@ -420,19 +420,19 @@ contains
       MEF90DefMech_BTTypeList(5) = '_MEF90DefMech_BTType'
       MEF90DefMech_BTTypeList(6) = ''
 
-      MEF90DefMech_damageTypeList(1) = 'AT1'
-      MEF90DefMech_damageTypeList(2) = 'AT1exp'
-      MEF90DefMech_damageTypeList(3) = 'AT2'
-      MEF90DefMech_damageTypeList(4) = 'LinSoft'
-      MEF90DefMech_damageTypeList(5) = 'KKL'
-      MEF90DefMech_damageTypeList(6) = 'AT1Elastic'
-      MEF90DefMech_damageTypeList(7) = 'AT1expElastic'
-      MEF90DefMech_damageTypeList(8) = 'AT2Elastic'
-      MEF90DefMech_damageTypeList(9) = 'LinSoftElastic'
-      MEF90DefMech_damageTypeList(10) = 'KKLElastic'
-      MEF90DefMech_damageTypeList(11) = 'MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(12) = '_MEF90DefMech_damageType'
-      MEF90DefMech_damageTypeList(13) = ''
+      ! MEF90DefMech_damageTypeList(1) = 'AT1'
+      ! MEF90DefMech_damageTypeList(2) = 'AT1exp'
+      ! MEF90DefMech_damageTypeList(3) = 'AT2'
+      ! MEF90DefMech_damageTypeList(4) = 'LinSoft'
+      ! MEF90DefMech_damageTypeList(5) = 'KKL'
+      ! MEF90DefMech_damageTypeList(6) = 'AT1Elastic'
+      ! MEF90DefMech_damageTypeList(7) = 'AT1expElastic'
+      ! MEF90DefMech_damageTypeList(8) = 'AT2Elastic'
+      ! MEF90DefMech_damageTypeList(9) = 'LinSoftElastic'
+      ! MEF90DefMech_damageTypeList(10) = 'KKLElastic'
+      ! MEF90DefMech_damageTypeList(11) = 'MEF90DefMech_damageType'
+      ! MEF90DefMech_damageTypeList(12) = '_MEF90DefMech_damageType'
+      ! MEF90DefMech_damageTypeList(13) = ''
 
       MEF90DefMech_plasticityTypeList(1) = 'None'
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'
@@ -873,9 +873,9 @@ contains
 
       PetscCall(PetscBagRegisterRealArray(bag, DefMechCellSetOptions%bodyForce, 3_ki, 'bodyForce', '[N.m^(-3) / N.m^(-2)] (f): body force', ierr))
       PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%CrackPressure, default%CrackPressure, 'CrackPressure', 'without unit: internal crack pressure', ierr))
-      PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%DamageATLinSoftk, default%DamageATLinSoftk, 'damage_LinSoft_k', '[unit-less] (k): k parameter in the Linear Softening damage model', ierr))
-      PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%DamageAT1expb, default%DamageAT1expb, 'damage_AT1exp_b', '[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%damageType, MEF90DefMech_damageTypeList, default%damageType, 'damage_type', 'Type of damage law', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%DamageATLinSoftk, default%DamageATLinSoftk, 'damage_LinSoft_k', '[unit-less] (k): k parameter in the Linear Softening damage model', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%DamageAT1expb, default%DamageAT1expb, 'damage_AT1exp_b', '[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation', ierr))
+      ! PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%damageType, MEF90DefMech_damageTypeList, default%damageType, 'damage_type', 'Type of damage law', ierr))
       PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%plasticityType, MEF90DefMech_plasticityTypeList, default%plasticityType, 'plasticity_type', 'Type of plasticity law', ierr))
       PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%unilateralContactType, MEF90DefMech_unilateralContactTypeList, default%unilateralContactType, 'unilateralContact_type', 'Type of handling of unilateral contact', ierr))
       PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma, default%unilateralContactHydrostaticDeviatoricGamma, 'unilateralContact_hydrostaticDeviatoric_gamma', '[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter', ierr))
