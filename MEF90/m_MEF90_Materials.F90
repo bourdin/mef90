@@ -46,7 +46,7 @@ module m_MEF90_Materials_Types
       type(MatS2D)                  :: ThermalConductivity                              ! K
       type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
       type(MEF90HookesLaw2D)        :: HookesLaw                                        ! A
-      PetscReal                     :: internalLength                                   ! l
+      ! PetscReal                     :: internalLength                                   ! l
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: residualYieldStress                              ! residual yield stress
@@ -92,7 +92,7 @@ module m_MEF90_Materials_Types
       type(MatS3D)                  :: ThermalConductivity                              ! K
       type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
       type(MEF90HookesLaw3D)        :: HookesLaw                                        ! A
-      PetscReal                     :: internalLength                                   ! l
+      ! PetscReal                     :: internalLength                                   ! l
       PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: yieldStress                                      ! yield stress
       PetscReal                     :: residualYieldStress                              ! residual yield stress
@@ -163,7 +163,7 @@ module m_MEF90_Materials_Types
                                                0.0_kr, 0.0_kr, 1.0_kr, .3_kr, 0.0_kr, & ! lambda, mu, E, nu, kappa (lambda, mu, kappa will be recomputed)
                                                MEF90HookesLawTypeIsotropic, & ! type
                                                .false.), & ! isPlaneStress
-                                               1.0_kr, & ! Internal Length
+                                             !   1.0_kr, & ! Internal Length
                                                1.0e-9, & ! Residual Stiffness
                                                1.0_kr, & ! Yield Stress
                                                0.0_kr, & ! Residual Yield Stress
@@ -228,7 +228,7 @@ module m_MEF90_Materials_Types
                                                PETSC_FALSE & ! padding
 #endif
                                                ), & !
-                                               1.0_kr, & ! Internal Length
+                                             !   1.0_kr, & ! Internal Length
                                                1.0e-9, & ! Residual Stiffness
                                                1.0_kr, & ! Yield Stress
                                                0.0_kr, & ! Residual Yield Stress
@@ -527,7 +527,7 @@ contains
          matprop%HookesLaw%fulltensorLocal = -1.d+30
       end select
 
-      PetscCall(PetscBagRegisterReal(bag, matprop%internalLength, default%internalLength, 'internalLength', '[m] (l) Internal Length', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, matprop%internalLength, default%internalLength, 'internalLength', '[m] (l) Internal Length', ierr))
 
       PetscCall(PetscBagRegisterReal(bag, matprop%yieldStress, default%yieldStress, 'yieldStress', '[N.m^(-2)] (sigma_y) stress threshold for plasticity', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%residualYieldStress, default%residualYieldStress, 'residualyieldStress', '[unit-less] (eta) residual yield stress', ierr))
@@ -618,7 +618,7 @@ contains
          PetscCall(PetscBagRegisterReal(bag, matprop%HookesLaw%PoissonRatio, default%HookesLaw%PoissonRatio, 'hookeslaw_PoissonRatio', '[] (nu) Poisson Modulus', ierr))
          matprop%HookesLaw%fulltensor = -1.d+30
       end select
-      PetscCall(PetscBagRegisterReal(bag, matprop%internalLength, default%internalLength, 'internalLength', '[m] (l) Internal Length', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, matprop%internalLength, default%internalLength, 'internalLength', '[m] (l) Internal Length', ierr))
 
       PetscCall(PetscBagRegisterReal(bag, matprop%yieldStress, default%yieldStress, 'yieldStress', '[N.m^(-2)] (sigma_y) stress threshold for plasticity', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%residualYieldStress, default%residualYieldStress, 'residualyieldStress', '[unit-less] percentage of the yield stress', ierr))

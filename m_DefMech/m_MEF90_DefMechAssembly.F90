@@ -100,7 +100,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(locResidual, 0.0_kr, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -119,8 +119,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -129,7 +129,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-               !!! Allocate elements
+
+            !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -143,7 +144,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                do iGauss = 1, numGauss
-                     !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
+                  !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
                   if (.not. ATModel%isElastic) then
                      PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -189,7 +190,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   end if
 
                   do iDof = 1, numDofDisplacement
-                     residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (stressGauss.DotP.elemVect(cell)%GradS_BF(iDof, iGauss))
+                     residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (stressGauss .DotP. elemVect(cell)%GradS_BF(iDof, iGauss))
                   end do ! iDof numDofDisplacement
                end do ! iGauss
                PetscCall(DMPlexVecSetClosure(dmDisplacement, PETSC_NULL_SECTION, locResidual, setPointID(cell), residualDof, ADD_VALUES, ierr))
@@ -204,7 +205,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   bodyForce = bodyForceArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_VECT)
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (bodyForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (bodyForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecSetClosure(dmDisplacement, PETSC_NULL_SECTION, locResidual, setPointID(cell), residualDof, ADD_VALUES, ierr))
@@ -247,7 +248,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                      end do ! iDof numDofDisplacement
                      U0Gauss = U0Gauss * matpropSet%cohesiveStiffness
                      do iDof = 1, numDofDisplacement
-                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -330,7 +331,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   boundaryForce = boundaryForceArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_VECT)
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (boundaryForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (boundaryForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecSetClosure(dmDisplacement, PETSC_NULL_SECTION, locResidual, setPointID(cell), residualDof, ADD_VALUES, ierr))
@@ -344,7 +345,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   pressureForce = pressureForceArray(vecOffset + 1) * elemVect(cell)%outerNormal
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (pressureForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) - elemVect(cell)%Gauss_C(iGauss) * (pressureForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecSetClosure(dmDisplacement, PETSC_NULL_SECTION, locResidual, setPointID(cell), residualDof, ADD_VALUES, ierr))
@@ -422,7 +423,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
 
    PetscCall(MatZeroEntries(A, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -440,17 +441,17 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-               !!! Allocate elements
+
+            !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -500,7 +501,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  if (.not. ATModel%isElastic) then
+                  if (ATModel%isElastic) then
                      AGauss = matpropSet%HookesLaw
                   else
                      call Split%D2EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, AGaussPlus, AGaussMinus)
@@ -509,7 +510,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   do jDof = 0, numDofDisplacement - 1
                      do iDof = 1, numDofDisplacement
                         AGradS_BF = AGauss * elemVect(cell)%GradS_BF(iDof, iGauss)
-                        matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF.DotP.elemVect(cell)%GradS_BF(jDof + 1, iGauss))
+                        matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof + 1, iGauss))
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
                end do ! iGauss
@@ -540,7 +541,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                      do jDof = 0, numDofDisplacement - 1
                         do iDof = 1, numDofDisplacement
                            U0Gauss = matpropSet%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
-                           matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss.DotP.elemVect(cell)%BF(jDof + 1, iGauss))
+                           matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof + 1, iGauss))
                         end do ! iDof numDofDisplacement
                      end do ! jDof numDofDisplacement
                   end do ! iGauss
@@ -578,26 +579,26 @@ end subroutine MEF90DefMechBilinearFormDisplacement
 
 subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: bodyForceWork, boundaryForceWork
+   PetscReal, dimension(:), pointer                    :: bodyForceWork, boundaryForceWork
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmBodyForce, dmBoundaryForce, dmPressureForce
-   type(tPetscSection)                                :: sectionBodyForce, sectionBoundaryForce, sectionPressureForce
-   PetscReal, dimension(:), pointer                     :: displacementDof, bodyForceArray, boundaryForceArray, pressureForceArray
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell, dim, vecOffset
+   type(tDM)                                           :: dmDisplacement, dmBodyForce, dmBoundaryForce, dmPressureForce
+   type(tPetscSection)                                 :: sectionBodyForce, sectionBoundaryForce, sectionPressureForce
+   PetscReal, dimension(:), pointer                    :: displacementDof, bodyForceArray, boundaryForceArray, pressureForceArray
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
    type(MEF90DefMechFaceSetOptions_Type), pointer      :: faceSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(eDMPolytopeType)                              :: cellGeometry
-   type(MEF90ElementType)                             :: elemVectType
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(eDMPolytopeType)                               :: cellGeometry
+   type(MEF90ElementType)                              :: elemVectType
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
-   type(MEF90_VECT)                                   :: bodyForce, boundaryForce, pressureForce
-   PetscReal                                          :: myWork
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numGauss
+   type(MEF90_VECT)                                    :: bodyForce, boundaryForce, pressureForce
+   PetscReal                                           :: myWork
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numGauss
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -611,7 +612,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -629,7 +630,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-               !!! Allocate elements
+            !!! Allocate elements
             QuadratureOrder = 2 * (elemVectType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -643,7 +644,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
                   PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (bodyForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (bodyForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -661,7 +662,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
       PetscCall(ISDestroy(setIS, ierr))
    end if ! setIS
 
-      !!! face-based contributions
+   !!! face-based contributions
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90FaceSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -679,7 +680,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-               !!! Allocate elements
+            !!! Allocate elements
             QuadratureOrder = 2 * elemVectType%order
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -693,7 +694,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
                   PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (boundaryForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (boundaryForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -707,7 +708,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
                   pressureForce = boundaryForceArray(vecOffset + 1) * elemVect(cell)%outerNormal
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
-                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (pressureForce.DotP.elemVect(cell)%BF(iDof, iGauss))
+                        myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (pressureForce .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -740,32 +741,32 @@ end subroutine MEF90DefMechWork
 
 subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: cohesiveEnergy
+   PetscReal, dimension(:), pointer                    :: cohesiveEnergy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
-   type(tDM)                                          :: dmDisplacement, dmCohesiveDisplacement
-   PetscReal, dimension(:), pointer                     :: displacementDof, cohesiveDisplacementDof
-   type(tIS)                                          :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                      :: setID, setPointID
-   PetscInt                                           :: set, QuadratureOrder, cell
+   type(tDM)                                           :: dmDisplacement, dmCohesiveDisplacement
+   PetscReal, dimension(:), pointer                    :: displacementDof, cohesiveDisplacementDof
+   type(tIS)                                           :: setIS, setPointIS
+   PetscInt, dimension(:), pointer                     :: setID, setPointID
+   PetscInt                                            :: set, QuadratureOrder, cell
    type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   type(MEF90_ELEMENT_ELAST), dimension(:), pointer     :: elemVect
-   type(eDMPolytopeType)                              :: cellGeometry
-   type(MEF90ElementType)                             :: elemVectType
+   type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
+   type(eDMPolytopeType)                               :: cellGeometry
+   type(MEF90ElementType)                              :: elemVectType
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
-   type(MEF90_VECT)                                   :: U0Gauss
-   PetscReal                                          :: myCohesiveEnergy
-   PetscInt                                           :: iDof, iGauss, numDofDisplacement, numGauss
+   type(MEF90_VECT)                                    :: U0Gauss
+   PetscReal                                           :: myCohesiveEnergy
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numGauss
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -783,7 +784,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-               !!! Allocate elements
+            !!! Allocate elements
             QuadratureOrder = 2 * (elemVectType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -800,7 +801,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
                         U0Gauss = U0Gauss + (displacementDof(iDof) - cohesiveDisplacementDof(iDof)) * elemVect(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDisplacement
                      do iDof = 1, numDofDisplacement
-                        myCohesiveEnergy = myCohesiveEnergy + elemVect(cell)%Gauss_C(iGauss) * matpropSet%cohesiveStiffness * (U0Gauss.DotP.U0Gauss)
+                        myCohesiveEnergy = myCohesiveEnergy + elemVect(cell)%Gauss_C(iGauss) * matpropSet%cohesiveStiffness * (U0Gauss .DotP. U0Gauss)
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmCohesiveDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%cohesiveDisplacement, setPointID(cell), PETSC_NULL_INTEGER, cohesiveDisplacementDof, ierr))
@@ -831,7 +832,7 @@ end subroutine MEF90DefMechCohesiveEnergy
 subroutine MEF90DefMechPlasticDissipation(MEF90DefMechCtx, plasticStrainOld, energy, ierr)
    type(tVec), intent(IN)                              :: plasticStrainOld
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-   PetscReal, dimension(:), pointer                     :: energy
+   PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
 end subroutine MEF90DefMechPlasticDissipation
@@ -886,7 +887,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -907,8 +908,8 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -917,7 +918,8 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-               !!! Allocate elements
+
+            !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -960,7 +962,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 ! #endif
 
                   call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDPlus, EEDMinus)
-                  if (.not. ATModel%isElastic) then
+                  if (ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
                      elasticEnergyDensityGauss = (ATmodel%a(damageGauss) + matpropSet%residualStiffness) * EEDPlus + EEDMinus
@@ -1039,7 +1041,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
 
    PetscCall(VecSet(stress, 0.0_kr, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -1058,8 +1060,8 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -1068,7 +1070,8 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-               !!! Allocate elements
+
+            !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1116,7 +1119,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
                   call Split%DEED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, stressGaussPlus, stressGaussMinus)
-                  if (.not. ATModel%isElastic) then
+                  if (ATModel%isElastic) then
                      stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlus + stressGaussMinus)
                   else
                      stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * ((ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlus + stressGaussMinus)
@@ -1130,7 +1133,6 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
             end do ! cell
-
             deallocate (stressDof)
 
             PetscCall(MEF90ElementDestroy(elemVect, ierr))
@@ -1207,7 +1209,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(locResidual, 0.0_kr, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -1226,8 +1228,8 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -1236,7 +1238,8 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-               !!! Allocate elements
+            
+            !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1289,12 +1292,12 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   else
                      EEDGaussPlus = 0.0_kr
                   end if
-                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / matpropSet%internalLength
-                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
+                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
                   C3 = ATModel%Da(damageGauss) * EEDGaussPlus + C1 * ATModel%Dw(damageGauss)
                   do iDof = 1, numDofDamage
                      residualDof(iDof) = residualDof(iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                         C3 * elemScal(cell)%BF(iDof, iGauss) + (C2 * gradDamageGauss.DotP.elemScal(cell)%Grad_BF(iDof, iGauss)))
+                                         C3 * elemScal(cell)%BF(iDof, iGauss) + (C2 * gradDamageGauss .DotP. elemScal(cell)%Grad_BF(iDof, iGauss)))
                   end do ! iDof numDofDamage
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
@@ -1328,7 +1331,6 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             !       PetscCall(DMPlexVecSetClosure(dmDamage,PETSC_NULL_SECTION,locResidual,setPointID(cell),residualDof,ADD_VALUES,ierr))
             !    End Do ! cell
             ! End If ! crack Pressure
-
             deallocate (residualDof)
 
             PetscCall(MEF90ElementDestroy(elemVect, ierr))
@@ -1363,13 +1365,12 @@ subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, MEF90DefMe
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
-   type(tSNES)                                        :: dummySNES
-   type(tDM)                                          :: dmDamage
+   type(tSNES)                                         :: dummySNES
+   type(tDM)                                           :: dmDamage
 
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
    PetscCall(MEF90DefMechOperatorDamage(dummySNES, damage, residual, MEF90DefMechCtx, ierr))
-
 end subroutine MEF90DefMechTAOGradientDamage
 
 #undef __FUNCT__
@@ -1379,7 +1380,7 @@ end subroutine MEF90DefMechTAOGradientDamage
 !!!  MEF90DefMechBilinearFormDamage:
 !!!
 !!!  (c) 2012-19 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!      2022-25 Blaise Bourdin bourdin@mcmaster.ca
+!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
@@ -1430,7 +1431,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
 
    PetscCall(MatZeroEntries(A, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -1449,8 +1450,8 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -1512,13 +1513,13 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   else
                      EEDGaussPlus = 0.0_kr
                   end if
-                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / matpropSet%internalLength
-                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
+                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
                   C3 = ATModel%D2a(damageGauss) * EEDGaussPlus + C1 * ATModel%D2w(damageGauss)
                   do jDof = 0, numDofDamage - 1
                      do iDof = 1, numDofDamage
                         matDof(jDof * numDofDamage + iDof) = matDof(jDof * numDofDamage + iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                                             C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof + 1, iGauss) + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP.elemScal(cell)%Grad_BF(jDof + 1, iGauss)))
+                                                             C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof + 1, iGauss) + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP. elemScal(cell)%Grad_BF(jDof + 1, iGauss)))
                      end do ! iDof numDofDamage
                   end do ! jDof numDofDamage
                end do ! iGauss
@@ -1562,8 +1563,8 @@ subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, MEF90DefMechCtx
    type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
-   type(tSNES)                                        :: dummySNES
-   type(tDM)                                          :: dmDamage
+   type(tSNES)                                         :: dummySNES
+   type(tDM)                                           :: dmDamage
 
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
@@ -1577,7 +1578,7 @@ end subroutine MEF90DefMechTAOHessianDamage
 !!!  MEF90DefMechSurfaceEnergy:
 !!!
 !!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022-2025 Blaise Bourdin bourdin@mcmaster.ca
+!!!           2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!           2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
@@ -1630,12 +1631,10 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(DMPlexGetCellType(dmDamage, setPointID(1), cellGeometryScal, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-
+            !!! get the ATModel object
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            !!! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-
             !!! Allocate elements
             QuadratureOrder = max(ATmodel%wOrder, 2 * (elemScalType%order - 1))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1643,8 +1642,8 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             numDofDamage = size(elemScal(1)%BF(:, 1))
             numGauss = size(elemScal(1)%Gauss_C)
 
-            C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / matpropSet%internalLength
-            C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr * matpropSet%internalLength * matpropSet%toughnessAnisotropyMatrix
+            C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+            C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
             do cell = 1, size(setPointID)
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                do iGauss = 1, numGauss
@@ -1657,7 +1656,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
                      end do ! iDof numDofDamage
                   end if
                   myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * &
-                             (C1 * ATModel%w(damageGauss) + (C2 * gradDamageGauss.DotP.gradDamageGauss))
+                             (C1 * ATModel%w(damageGauss) + (C2 * gradDamageGauss .DotP. gradDamageGauss))
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
             end do ! cell
@@ -1751,7 +1750,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
    type(MEF90_VECT)                                    :: gradDamageGauss, displacementCell
    PetscReal                                           :: myCrackVolume
    PetscInt                                            :: iDof, iGauss, numDofDamage, numDofDisplacement, numGauss
-   character(len = MEF90MXSTRLEN)                      :: prefix
+   character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1780,8 +1779,8 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            write(prefix,'("cs",I4.4,"_")') setID(set)
             !!! get the ATModel and split objects
+            write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
@@ -1812,7 +1811,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
 
                   do iDof = 1, numDofDamage
                      myCrackVolume = myCrackVolume + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                     gradDamageGauss.DotP.displacementCell)
+                                     gradDamageGauss .DotP. displacementCell)
                   end do ! iDof numDofDamage
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))

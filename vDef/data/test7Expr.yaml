@@ -16,11 +16,11 @@ defmech:
 boundaryDisplacement:
     scaling: Expression
 cs0001:
-    fracturetoughness: 1
     residualstiffness: 0.
     internalLength: .5
     damage:
         type: AT1
+        fracturetoughness: 1
     plasticity:
         type: NONE 
     HookesLaw:

@@ -15,9 +15,9 @@ defmech:
 #            reason: ascii
 cs0001:
     fracturetoughness: 1
+    residualstiffness: 0.
     damage:
         type: AT1
-        residualstiffness: 0.
         internalLength: .5
     plasticity:
         type: NONE 

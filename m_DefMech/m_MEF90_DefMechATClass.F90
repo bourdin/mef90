@@ -71,7 +71,7 @@ contains
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         residualStiffness (eta_ell): ',ES12.5,' [unit-less]\n')") self%residualStiffness
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         set isElastic (): ',L1,' [bool]\n')") self%isElastic
+         write(IOBuffer, "('         elastic (): ',L1,' [bool]\n')") self%isElastic
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
       end if
    end subroutine MEF90DefMechAT_View
