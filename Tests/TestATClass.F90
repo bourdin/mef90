@@ -11,25 +11,22 @@ program TestATClass
    PetscReal, dimension(N) :: alpha = [((i - 1.0_kr) / (N - 1.0_kr), i=1, N)]
    PetscErrorCode          :: ierr
    character(len = MEF90MXSTRLEN) :: prefix = 'cs0001_'
-
    class(MEF90DefMechAT_Type), allocatable :: ATModel
 
    PetscCallA(PetscInitialize(ierr))
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
 
 
-   call MEF90DefMechGetATModel(PETSC_COMM_WORLD, prefix, ATModel, ierr)
-   ! AT = MEF90DefMechAT1_Type(PETSC_COMM_WORLD, "prefix_")
+   call MEF90DefMechGetATModel(PETSC_COMM_WORLD, prefix, 2, ATModel, ierr)
    call ATModel%SetFromOptions(ierr)
-   call ATModel%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
-   write (*, *) trim(ATModel%type)
-   write (*, *) '           prefix: ', trim(ATModel%prefix)
-   write (*, *) '             comm: ', ATModel%comm
-   write (*, *) '   internalLength: ', ATModel%InternalLength
-   write (*, *) 'residualStiffness: ', ATModel%InternalLength
-   write (*, *) '               cw: ', ATModel%cw
-   write (*, *) '           aorder: ', ATModel%aorder
-   write (*, *) '           worder: ', ATModel%worder
+   ! call ATModel%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+   ! write (*, *) trim(ATModel%type)
+   ! write (*, *) '           prefix: ', trim(ATModel%prefix)
+   ! write (*, *) '             comm: ', ATModel%comm
+   ! write (*, *) '   internalLength: ', ATModel%InternalLength
+   ! write (*, *) '               cw: ', ATModel%cw
+   ! write (*, *) '           aorder: ', ATModel%aorder
+   ! write (*, *) '           worder: ', ATModel%worder
    write (*, '(13x,7(A12,2x))') 'alpha', 'a', 'Da', 'D2a', 'w', 'Dw', 'D2w'
    do i = 1, N
       write (*, '(13x,7(ES12.5,2x))') alpha(i), ATModel%a(alpha(i)), ATModel%Da(alpha(i)), ATModel%D2a(alpha(i)), ATModel%w(alpha(i)), ATModel%Dw(alpha(i)), ATModel%D2w(alpha(i))

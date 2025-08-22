@@ -40,8 +40,8 @@ module m_MEF90_Materials_Types
 
    type MEF90MatProp2D_Type
       PetscReal                     :: Density                                          ! rho
-      PetscReal                     :: FractureToughness                                ! Gc
-      type(MatS2D)                  :: toughnessAnisotropyMatrix                        !
+      ! PetscReal                     :: FractureToughness                                ! Gc
+      ! type(MatS2D)                  :: toughnessAnisotropyMatrix                        !
       PetscReal                     :: SpecificHeat                                     ! Cp
       type(MatS2D)                  :: ThermalConductivity                              ! K
       type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
@@ -86,8 +86,8 @@ module m_MEF90_Materials_Types
 
    type MEF90MatProp3D_Type
       PetscReal                     :: Density                                          ! rho
-      PetscReal                     :: FractureToughness                                ! Gc
-      type(MatS3D)                  :: toughnessAnisotropyMatrix                        !
+      ! PetscReal                     :: FractureToughness                                ! Gc
+      ! type(MatS3D)                  :: toughnessAnisotropyMatrix                        !
       PetscReal                     :: SpecificHeat                                     ! Cp
       type(MatS3D)                  :: ThermalConductivity                              ! K
       type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
@@ -139,8 +139,8 @@ module m_MEF90_Materials_Types
    !!! except for a Poisson Ratio of 0.3
    type(MEF90MatProp2D_Type), parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type( &
                                                1.0_kr, & ! Density
-                                               1.0_kr, & ! FractureToughness
-                                               MEF90MatS2DIdentity, & ! toughnessAnisotropyMatrix
+                                             !   1.0_kr, & ! FractureToughness
+                                             !   MEF90MatS2DIdentity, & ! toughnessAnisotropyMatrix
                                                1.0_kr, & ! SpecificHeat
                                                MEF90MatS2DIdentity, & ! ThermalConductivity
                                                MEF90MatS2DIdentity, & ! LinearThermalExpansion
@@ -204,8 +204,8 @@ module m_MEF90_Materials_Types
 
    type(MEF90MatProp3D_Type), parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type( &
                                                1.0_kr, & ! Density
-                                               1.0_kr, & ! FractureToughness
-                                               MEF90MatS3DIdentity, & ! toughnessAnisotropyMatrix
+                                             !   1.0_kr, & ! FractureToughness
+                                             !   MEF90MatS3DIdentity, & ! toughnessAnisotropyMatrix
                                                1.0_kr, & ! SpecificHeat
                                                MEF90MatS3DIdentity, & ! ThermalConductivity
                                                MEF90MatS3DIdentity, & ! LinearThermalExpansion
@@ -280,7 +280,7 @@ module m_MEF90_Materials_Interface2D
          use m_MEF90_Materials_Types
          implicit none(type)
          PetscBag                             :: bag
-         type(MEF90MatProp2D_Type), pointer    :: data
+         type(MEF90MatProp2D_Type), pointer   :: data
          PetscErrorCode                       :: ierr
       end subroutine PetscBagGetData
    end interface
@@ -289,7 +289,7 @@ contains
 #define __FUNCT__ "PetscBagGetDataMEF90MatProp2D"
    subroutine PetscBagGetDataMEF90MatProp2D(bag, data, ierr)
       PetscBag                                :: bag
-      type(MEF90MatProp2D_Type), pointer       :: data
+      type(MEF90MatProp2D_Type), pointer      :: data
       PetscErrorCode                          :: ierr
       PetscReal                               :: normV1, normV2, normV3
       type(Tens4OS3D)                         :: HookesLaw3D
@@ -356,7 +356,7 @@ module m_MEF90_Materials_Interface3D
          use m_MEF90_Materials_Types
          implicit none(type)
          PetscBag                             :: bag
-         type(MEF90MatProp3D_Type), pointer    :: data
+         type(MEF90MatProp3D_Type), pointer   :: data
          PetscErrorCode                       :: ierr
       end subroutine PetscBagGetData
    end interface
@@ -365,7 +365,7 @@ contains
 #define __FUNCT__ "PetscBagGetDataMEF90MatProp3D"
    subroutine PetscBagGetDataMEF90MatProp3D(bag, data, ierr)
       PetscBag                                :: bag
-      type(MEF90MatProp3D_Type), pointer       :: data
+      type(MEF90MatProp3D_Type), pointer      :: data
       PetscErrorCode                          :: ierr
       PetscReal                               :: normV1, normV2, normV3
 
@@ -468,7 +468,7 @@ contains
       type(MEF90HookesLaw2D), target       :: HookesLaw2D
       type(MEF90HookesLaw3D), target       :: HookesLaw3D
       character(len=1), pointer            :: dummychar(:)
-      PetscSizeT                          :: sizeofchar
+      PetscSizeT                           :: sizeofchar
 
       PetscCall(PetscDataTypeGetSize(PETSC_CHAR, sizeofchar, ierr))
       sizeofMEF90MatProp2D = size(transfer(matProp2D, dummychar)) * sizeofchar
@@ -492,7 +492,7 @@ contains
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine PetscBagRegisterMEF90MatProp2D(bag, name, prefix, default, ierr)
-      PetscBag                               :: bag
+      PetscBag                                :: bag
       character(len=*), intent(IN)            :: prefix, name
       type(MEF90MatProp2D_Type), intent(IN)   :: default
       PetscErrorCode, intent(OUT)             :: ierr
@@ -505,9 +505,9 @@ contains
 
       PetscCall(PetscBagRegisterString(bag, matprop%name, trim(default%name), 'Name', '', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%density, default%density, 'Density', '[kg.m^(-2)] (rho) Density', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%FractureToughness, default%FractureToughness, 'FractureToughness', '[N.m^(-1)] (G_c) Fracture toughness', ierr))
-      matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%toughnessAnisotropyMatrix, 3_ki, 'toughnessAnisotropyMatrix', '[] toughness Anisotropy Matrix', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, matprop%FractureToughness, default%FractureToughness, 'FractureToughness', '[N.m^(-1)] (G_c) Fracture toughness', ierr))
+      ! matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
+      ! PetscCall(PetscBagRegisterRealArray(bag, matprop%toughnessAnisotropyMatrix, 3_ki, 'toughnessAnisotropyMatrix', '[] toughness Anisotropy Matrix', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%SpecificHeat, default%SpecificHeat, 'SpecificHeat', '[J.kg^(-1).K^(-1)] (Cp) Specific heat', ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
       PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 3_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
@@ -587,7 +587,7 @@ contains
 !!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine PetscBagRegisterMEF90MatProp3D(bag, name, prefix, default, ierr)
-      PetscBag                               :: bag
+      PetscBag                                :: bag
       character(len=*), intent(IN)            :: prefix, name
       type(MEF90MatProp3D_Type), intent(IN)   :: default
       PetscErrorCode, intent(INOUT)           :: ierr
@@ -599,9 +599,9 @@ contains
 
       PetscCall(PetscBagRegisterString(bag, matprop%name, trim(default%name), 'Name', '', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%density, default%density, 'Density', '[kg.m^(-3)] (rho) Density', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%FractureToughness, default%FractureToughness, 'FractureToughness', '[N.m^(-1)] (G_c) Fracture toughness', ierr))
-      matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%toughnessAnisotropyMatrix, 6_ki, 'toughnessAnisotropyMatrix', '[] toughness Anisotropy Matrix', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, matprop%FractureToughness, default%FractureToughness, 'FractureToughness', '[N.m^(-1)] (G_c) Fracture toughness', ierr))
+      ! matprop%toughnessAnisotropyMatrix = default%toughnessAnisotropyMatrix
+      ! PetscCall(PetscBagRegisterRealArray(bag, matprop%toughnessAnisotropyMatrix, 6_ki, 'toughnessAnisotropyMatrix', '[] toughness Anisotropy Matrix', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%SpecificHeat, default%SpecificHeat, 'SpecificHeat', '[J.kg^(-1).K^(-1)] (Cp) Specific heat', ierr))
       matprop%ThermalConductivity = default%ThermalConductivity
       PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 6_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
@@ -678,16 +678,16 @@ contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag, dm, defaultMaterial, MEF90Ctx, ierr)
-      PetscBag, dimension(:), pointer                   :: MEF90MatPropBag
+      PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
       type(tDM), intent(IN)                            :: dm
       type(MEF90MatProp2D_Type), intent(IN)            :: defaultMaterial
       type(MEF90Ctx_Type), intent(IN)                  :: MEF90Ctx
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      type(tIS)                                       :: setIS
-      PetscInt, dimension(:), pointer                   :: setID
-      PetscInt                                        :: numSet, set
-      character(len=MEF90MXSTRLEN)                    :: setName, setprefix, IOBuffer
+      type(tIS)                                        :: setIS
+      PetscInt, dimension(:), pointer                  :: setID
+      PetscInt                                         :: numSet, set
+      character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
@@ -726,16 +726,16 @@ contains
 !!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag, dm, defaultMaterial, MEF90Ctx, ierr)
-      PetscBag, dimension(:), pointer                   :: MEF90MatPropBag
+      PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
       type(tDM), intent(IN)                            :: dm
       type(MEF90MatProp3D_Type), intent(IN)            :: defaultMaterial
       type(MEF90Ctx_Type), intent(IN)                  :: MEF90Ctx
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      type(tIS)                                       :: setIS
-      PetscInt, dimension(:), pointer                   :: setID
-      PetscInt                                        :: numSet, set
-      character(len=MEF90MXSTRLEN)                    :: setName, setprefix, IOBuffer
+      type(tIS)                                        :: setIS
+      PetscInt, dimension(:), pointer                  :: setID
+      PetscInt                                         :: numSet, set
+      character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
@@ -785,7 +785,7 @@ contains
       PetscReal, intent(IN)                :: E, nu
       type(Tens4OS2D), intent(OUT)         :: A
 
-      PetscReal                           :: Lambda, mu
+      PetscReal                            :: Lambda, mu
 
       lambda = E * nu / (1.0_kr - nu**2)
       mu = E / (1.0_kr + nu)*.5_kr
@@ -802,7 +802,7 @@ contains
       PetscReal, intent(IN)                :: E, nu
       type(Tens4OS2D), intent(OUT)         :: A
 
-      PetscReal                           :: Lambda, mu
+      PetscReal                            :: Lambda, mu
 
       lambda = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
       mu = E / (1.0_kr + nu)*.5_kr
@@ -839,10 +839,10 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookeLawIsoENu3D"
    subroutine MEF90HookeLawIsoENu3D(A, E, nu)
-      PetscReal, intent(IN)                :: E, nu
-      type(Tens4OS3D), intent(OUT)         :: A
+      PetscReal, intent(IN)               :: E, nu
+      type(Tens4OS3D), intent(OUT)        :: A
 
-      real(Kind=Kr)                     :: Lambda, mu
+      real(Kind=Kr)                       :: Lambda, mu
 
       lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
       mu = E / (1.0_kr + nu)*.5_kr
@@ -1098,7 +1098,7 @@ contains
       type(MatS2D), intent(IN)                     :: X
       type(MatS2D)                                 :: MEF90HookesLaw2DXMatS2D
 
-      real(Kind=Kr)                              :: C1, C2
+      real(Kind=Kr)                                :: C1, C2
 
       select case (A%type)
       case (MEF90HookesLawTypeIsotropic)
@@ -1126,7 +1126,7 @@ contains
       type(MatS3D), intent(IN)                     :: X
       type(MatS3D)                                 :: MEF90HookesLaw3DXMatS3D
 
-      real(Kind=Kr)                              :: C1, C2
+      real(Kind=Kr)                                :: C1, C2
 
       select case (A%type)
       case (MEF90HookesLawTypeIsotropic)
@@ -1157,7 +1157,7 @@ contains
       type(Mat2D), intent(IN)                      :: X
       type(Mat2D)                                  :: MEF90HookesLaw2DXMat2D
 
-      real(Kind=Kr)                              :: C1, C2
+      real(Kind=Kr)                                :: C1, C2
 
       select case (A%type)
       case (MEF90HookesLawTypeIsotropic)
@@ -1185,7 +1185,7 @@ contains
       type(Mat3D), intent(IN)                      :: X
       type(Mat3D)                                  :: MEF90HookesLaw3DXMat3D
 
-      real(Kind=Kr)                              :: C1, C2
+      real(Kind=Kr)                                :: C1, C2
 
       select case (A%type)
       case (MEF90HookesLawTypeIsotropic)

@@ -121,7 +121,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             if (cellSetOptions%unilateralContactHybrid) then
@@ -443,7 +443,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             if (cellSetOptions%unilateralContactHybrid) then
                Split = MEF90_DEFMECHSPLITNONE()
@@ -910,7 +910,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             if (cellSetOptions%unilateralContactHybrid) then
@@ -1062,7 +1062,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             if (cellSetOptions%unilateralContactHybrid) then
@@ -1230,7 +1230,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             if (cellSetOptions%unilateralContactHybrid) then
@@ -1292,8 +1292,15 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   else
                      EEDGaussPlus = 0.0_kr
                   end if
-                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
-                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
+                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+                  !!! begin ugly hack
+                  !!! The following won't work until I overload the LinAlg operations to work with the parent classes
+                  ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
+                  select type (k => ATModel%toughnessAnisotropyMatrix)
+                     type is (MEF90_MATS)
+                        C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
+                  end select
+                  !!! end ugly hack
                   C3 = ATModel%Da(damageGauss) * EEDGaussPlus + C1 * ATModel%Dw(damageGauss)
                   do iDof = 1, numDofDamage
                      residualDof(iDof) = residualDof(iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
@@ -1452,7 +1459,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             if (cellSetOptions%unilateralContactHybrid) then
@@ -1513,8 +1520,15 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   else
                      EEDGaussPlus = 0.0_kr
                   end if
-                  C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
-                  C2 = matpropSet%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
+                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+                  !!! begin ugly hack
+                  !!! The following won't work until I overload the LinAlg operations to work with the parent classes
+                  ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
+                  select type (k => ATModel%toughnessAnisotropyMatrix)
+                     type is (MEF90_MATS)
+                        C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
+                  end select
+                  !!! end ugly hack
                   C3 = ATModel%D2a(damageGauss) * EEDGaussPlus + C1 * ATModel%D2w(damageGauss)
                   do jDof = 0, numDofDamage - 1
                      do iDof = 1, numDofDamage
@@ -1613,7 +1627,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -1633,7 +1647,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
 
             !!! get the ATModel object
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             !!! Allocate elements
             QuadratureOrder = max(ATmodel%wOrder, 2 * (elemScalType%order - 1))
@@ -1642,8 +1656,16 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             numDofDamage = size(elemScal(1)%BF(:, 1))
             numGauss = size(elemScal(1)%Gauss_C)
 
-            C1 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
-            C2 = matpropSet%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
+            C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+            ! C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
+            !!! begin ugly hack
+            !!! The following won't work until I overload the LinAlg operations to work with the parent classes
+            ! C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
+            select type (k => ATModel%toughnessAnisotropyMatrix)
+               type is (MEF90_MATS)
+                  C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * k
+            end select
+            !!! end ugly hack
             do cell = 1, size(setPointID)
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                do iGauss = 1, numGauss
@@ -1759,7 +1781,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
 
-      !!! get IS for cell sets
+   !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%MEF90Ctx%comm, setIS, ierr))
 
@@ -1781,7 +1803,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
 
             !!! get the ATModel and split objects
             write(prefix,'("cs",I4.4,"_")') setID(set)
-            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, ATModel, ierr))
+            PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
             !!! Allocate elements

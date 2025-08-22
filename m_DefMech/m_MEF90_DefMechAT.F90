@@ -61,9 +61,10 @@ contains
 !!!
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine MEF90DefMechGetATModel(comm, prefix, ATModel, ierr)
+   subroutine MEF90DefMechGetATModel(comm, prefix, dim, ATModel, ierr)
       MPI_Comm, intent(in) :: comm
       character(len = MEF90MXSTRLEN), intent(in) :: prefix
+      PetscInt, intent(IN) :: dim
       class(MEF90DefMechAT_Type), allocatable, intent(out) :: ATModel
       PetscErrorCode, intent(inout) :: ierr
 
@@ -76,19 +77,28 @@ contains
       select case (damageType)
          case (MEF90DefMech_damageTypeAT1)
             ATModel = MEF90DefMechAT1_Type(comm, prefix, isElastic = PETSC_FALSE)
-         case (MEF90DefMech_damageTypeAT1Elastic)
-            ATModel = MEF90DefMechAT1_Type(comm, prefix, isElastic = PETSC_TRUE)
-         ! case (MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT1expElastic)
-         !    ATModel = MEF90DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
-         ! case (MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeAT2Elastic)
-         !    ATModel = MEF90DefMechAT2_Type()
-         ! case (MEF90DefMech_damageTypeKKL, MEF90DefMech_damageTypeKKLElastic)
-         !    ATModel = MEF90DefMechATKKL_Type()
-         ! case (MEF90DefMech_damageTypeLinSoft, MEF90DefMech_damageTypeLinSoftElastic)
-         !    ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
-      case default
-         print *, __FUNCT__, ': Unimplemented damage Type', damageType
-         stop
+            case (MEF90DefMech_damageTypeAT1Elastic)
+               ATModel = MEF90DefMechAT1_Type(comm, prefix, isElastic = PETSC_TRUE)
+            ! case (MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT1expElastic)
+            !    ATModel = MEF90DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
+            ! case (MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeAT2Elastic)
+            !    ATModel = MEF90DefMechAT2_Type()
+            ! case (MEF90DefMech_damageTypeKKL, MEF90DefMech_damageTypeKKLElastic)
+            !    ATModel = MEF90DefMechATKKL_Type()
+            ! case (MEF90DefMech_damageTypeLinSoft, MEF90DefMech_damageTypeLinSoftElastic)
+            !    ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
+         case default
+            print *, __FUNCT__, ': Unimplemented damage Type', damageType
+            stop
+      end select
+      select case(dim)
+         case(2)
+            ATModel%toughnessAnisotropyMatrix = MEF90MatS2DIdentity
+         case(3)
+            ATModel%toughnessAnisotropyMatrix = MEF90MatS3DIdentity
+         case default
+            write(*,"('In ', A, ' dim = ', I2, 'and should be 2 or 3')") __FUNCT__, dim
+            STOP
       end select
    end subroutine MEF90DefMechGetATModel
 end module m_MEF90_DefMechAT

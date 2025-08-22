@@ -13,13 +13,13 @@ module m_MEF90_LinAlg_class
 !!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   type, abstract :: mef90Vect
+   type :: mef90Vect
    end type mef90Vect
 
-   type, abstract :: mef90Mat
+   type :: mef90Mat
    end type mef90Mat
 
-   type, abstract :: mef90Tens4OS
+   type :: mef90Tens4OS
    end type mef90Tens4OS
 end module m_MEF90_LinAlg_class
 
