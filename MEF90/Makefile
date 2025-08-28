@@ -14,6 +14,7 @@ m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
         m_MEF90_LinAlg.o \
         m_MEF90_MPI.o \
         m_MEF90_Parameters.o \
+        m_MEF90_HookesLaw.o \
         m_MEF90_Materials.o \
         m_MEF90_Elements.o \
         m_MEF90_EXO.o \
@@ -66,6 +67,24 @@ m_MEF90_EXO.o: ${MEF90_DIR}/MEF90/m_MEF90_EXO.F90 m_MEF90_Ctx.o \
 m_MEF90_LinAlg.o: ${MEF90_DIR}/MEF90/m_MEF90_LinAlg.F90 \
         m_MEF90_Parameters.o \
         m_MEF90_Utils.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_HookesLawClass.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLawClass.F90 \
+        m_MEF90_Parameters.o \
+        m_MEF90_LinAlg.o \
+        m_MEF90_BaseClass.o \
+        m_MEF90_Utils.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_HookesLawIsotropic.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLawIsotropic.F90 \
+        m_MEF90_HookesLawClass.o
+	@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+m_MEF90_HookesLaw.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLaw.F90 \
+        m_MEF90_HookesLawIsotropic.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

@@ -9,6 +9,10 @@ module m_MEF90_DefMechAT_class
    use iso_c_binding
    implicit none(type)
 
+   private
+   public :: MEF90DefMechAT_Type
+   public :: MEF90DefMechAT_setFromOptions
+
 !!!
 !!!
 !!!  MEF90_DefMechAT_Type: The abstract class used to define a generalized Ambrosio-Tortorelli phase field model
