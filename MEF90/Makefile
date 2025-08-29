@@ -14,6 +14,8 @@ m_MEF90.o: ${MEF90_DIR}/MEF90/m_MEF90.F90 \
         m_MEF90_LinAlg.o \
         m_MEF90_MPI.o \
         m_MEF90_Parameters.o \
+        m_MEF90_HookesLawClass.o \
+        m_MEF90_HookesLawIsotropic.o \
         m_MEF90_HookesLaw.o \
         m_MEF90_Materials.o \
         m_MEF90_Elements.o \

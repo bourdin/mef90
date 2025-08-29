@@ -3,7 +3,7 @@ module m_MEF90_HookesLawIsotropic2D
    use m_MEF90_Parameters
    use m_MEF90_Utils
    use m_MEF90_LinAlg
-   use m_MEF90_HookeLaw_Class
+   use m_MEF90_HookesLaw_Class
    use iso_c_binding
 
    implicit none(type)
@@ -97,7 +97,7 @@ module m_MEF90_HookesLawIsotropic3D
    use m_MEF90_Parameters
    use m_MEF90_Utils
    use m_MEF90_LinAlg
-   use m_MEF90_HookeLaw_Class
+   use m_MEF90_HookesLaw_Class
    use iso_c_binding
 
    implicit none(type)
@@ -129,7 +129,7 @@ contains
       PetscErrorCode,intent(inout) :: ierr
 
       PetscBool :: printHelp
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))

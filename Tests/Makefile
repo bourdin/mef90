@@ -15,6 +15,15 @@ include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 
+TestHookesLaw_Type.o: ${MEF90_DIR}/Tests/TestHookesLaw_Type.F90 MEF90
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestHookesLaw_Type: TestHookesLaw_Type.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB} 
+	-@${RM} $<
+
 TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<

@@ -46,6 +46,8 @@ contains
       PetscErrorCode, intent(inout) :: ierr
 
       PetscEnum :: HookesLawType
+
+      HookesLawType = MEF90HookesLaw_TypeIsotropic
       PetscCall(PetscOptionsBegin(comm, trim(prefix), "Options for MEF90HookesLaw_type", "MEF90", ierr))
          PetscCall(PetscOptionsEnum("-HookesLaw_type", "Hookes law type", "MEF90", MEF90HookesLaw_TypeList, MEF90HookesLaw_TypeIsotropic, HookesLawType, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
@@ -55,16 +57,15 @@ contains
          case (MEF90HookesLaw_TypeIsotropic)
             select case(dim)
                case(2)
-                  HookesLaw = MEF90HookesLawIsotropic2D_type(comm, prefix)
+                  HookesLaw = MEF90HookesLawIsotropic2D_type(comm = comm, prefix = prefix)
+                  !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawIsotropic2D_type extends 
+                  !!! MEF90Object_Type, so that the order of positional arguments is not clear.
                case(3)
-                  HookesLaw = MEF90HookesLawIsotropic3D_type(comm, prefix)
+                  HookesLaw = MEF90HookesLawIsotropic3D_type(comm = comm, prefix = prefix)
                case default
                   write(*,"('In ', A, ' dim = ', I2, 'and should be 2 or 3')") __FUNCT__, dim
                   STOP
             end select
-         case default
-            print *, __FUNCT__, ': Unimplemented Hookes law Type', HookesLawType
-            stop
       end select
    end subroutine MEF90GetHookesLaw
 end module m_MEF90_HookesLaw

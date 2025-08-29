@@ -6,47 +6,47 @@ mef90version.h: chkpaths
 MEF90: mef90version.h chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../MEF90/Makefile MEF90
+	-@make -C ${PETSC_ARCH}/objs -f ../../MEF90/Makefile MEF90 || exit 1
 
 m_HeatXfer: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_HeatXfer/Makefile m_HeatXfer
+	-@make -C ${PETSC_ARCH}/objs -f ../../m_HeatXfer/Makefile m_HeatXfer || exit 1
 
 HeatXfer: mef90version.h MEF90 m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../HeatXfer/Makefile HeatXfer
+	-@make -C ${PETSC_ARCH}/objs -f ../../HeatXfer/Makefile HeatXfer || exit 1
 
 m_DefMech: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_DefMech/Makefile m_DefMech
+	-@make -C ${PETSC_ARCH}/objs -f ../../m_DefMech/Makefile m_DefMech || exit 1
 
 m_Elasticity: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_Elasticity/Makefile m_Elasticity
+	-@make -C ${PETSC_ARCH}/objs -f ../../m_Elasticity/Makefile m_Elasticity || exit 1
 
 ThermoElasticity: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElasticity/Makefile ThermoElasticity
+	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElasticity/Makefile ThermoElasticity || exit 1
 
 ThermoElastoPlasticity: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity
+	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity || exit 1
 
 WorkControlled: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../WorkControlled/Makefile WorkControlled
+	-@make -C ${PETSC_ARCH}/objs -f ../../WorkControlled/Makefile WorkControlled || exit 1
 
 vDef: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef
+	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef || exit 1
 #	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT vDefHF
 
 Utils: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths

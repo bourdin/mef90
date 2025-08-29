@@ -13,6 +13,7 @@ module m_MEF90
    use m_MEF90_Elements
    use m_MEF90_MassMatrixInterface
    use m_MEF90_NormsInterface
+   use m_MEF90_HookesLaw
 
    implicit none(type, external)
 
