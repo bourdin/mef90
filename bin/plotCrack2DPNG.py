@@ -183,25 +183,26 @@ def plot(options):
     import os.path
     import shutil
     import math
-    
-    prefix,ext = os.path.splitext(options.inputfile)
+
+    prefix,ext = os.path.splitext(os.path.basename(options.inputfile))
+    rootDir = os.path.realpath(os.path.dirname(options.inputfile))
 
     laststep = 1000000
-    enerfile = prefix+'.ener'
     if options.step == 0:
+        enerfile = os.path.join(rootDir,f'{prefix}.ener')
         if os.path.exists(enerfile):
             laststep = getlaststep(enerfile)
         else:
-            enerfile = prefix.split('_out')[0]+'.ener'
+            enerfile = os.path.join(rootDir,f'{prefix}_out.ener')
             if os.path.exists(enerfile):
                 laststep = getlaststep(enerfile)
             else:
                 print ("unable to find step to plot.")
                 return -1
-        step = laststep
+        stepmax = laststep
     else:
-        step = options.step
-
+        stepmax = options.step
+     
     ##  
     ## Open the database
     ##
