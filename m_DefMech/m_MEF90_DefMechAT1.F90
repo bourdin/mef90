@@ -3,6 +3,8 @@
 module m_MEF90_DefMechAT1
 #include "petsc/finclude/petsc.h"
    use petscsys
+   use m_MEF90_Parameters
+   use m_MEF90_LinAlg
 
    use m_MEF90_DefMechAT_class
    implicit none(type)
