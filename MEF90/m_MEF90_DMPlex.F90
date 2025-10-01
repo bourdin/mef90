@@ -706,13 +706,13 @@ contains
 
    subroutine MEF90SectionAllocateConstraint(dm, table, section, ierr)
       type(tDM), intent(IN)               :: dm
-      logical, dimension(:, :), pointer     :: table
+      PetscBool, dimension(:, :), pointer :: table
       type(tPetscSection), intent(INOUT)  :: section
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      PetscInt                           :: p, i, pStart, pEnd, numConstraints, numComponents
-      PetscInt, dimension(:), pointer      :: constraints
-      PetscInt                           :: field = 0
+      PetscInt                            :: p, i, pStart, pEnd, numConstraints, numComponents
+      PetscInt, dimension(:), pointer     :: constraints
+      PetscInt                            :: field = 0
 
       PetscCall(DMPlexGetChart(dm, pStart, pEnd, ierr))
       do p = 1, pEnd

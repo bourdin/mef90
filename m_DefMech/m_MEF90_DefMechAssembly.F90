@@ -511,6 +511,8 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                      do iDof = 1, numDofDisplacement
                         AGradS_BF = AGauss * elemVect(cell)%GradS_BF(iDof, iGauss)
                         matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof + 1, iGauss))
+!!! Flip this loop!
+!!! Make bounds consistent
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
                end do ! iGauss

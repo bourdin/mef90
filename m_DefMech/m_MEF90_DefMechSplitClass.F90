@@ -26,6 +26,7 @@ type, abstract :: MEF90_DEFMECHSPLIT
    integer                                           :: damageOrder
    integer                                           :: strainOrder
 contains
+
    procedure(EEDINTERFACE), pass(self), deferred     :: EED
    procedure(DEEDINTERFACE), pass(self), deferred    :: DEED
    procedure(D2EEDINTERFACE), pass(self), deferred   :: D2EED
@@ -37,9 +38,9 @@ abstract interface
       import :: MEF90_DEFMECHSPLIT
       implicit none(type, external)
 
-      class(MEF90_DEFMECHSPLIT), intent(IN)           :: self
-      type(MEF90_MATS), intent(IN)                    :: Strain
-      type(MEF90_HOOKESLAW), intent(IN)               :: HookesLaw
+      class(MEF90_DEFMECHSPLIT), intent(IN)          :: self
+      type(MEF90_MATS), intent(IN)                   :: Strain
+      type(MEF90_HOOKESLAW), intent(IN)              :: HookesLaw
       PetscReal, intent(OUT)                         :: EEDPlus, EEDMinus
    end subroutine EEDINTERFACE
 

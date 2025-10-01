@@ -18,8 +18,9 @@ module m_MEF90_HookesLawIsotropic2D
       PetscReal :: BulkModulus = 0.0_Kr
       PetscBool :: isPlaneStress = PETSC_FALSE
    contains
-         procedure, pass(self) :: setFromOptions => MEF90HookesLawIsotropic2D_setFromOptions
-         procedure, pass(self) :: view => MEF90HookesLawIsotropic2D_view
+         procedure :: setFromOptions => MEF90HookesLawIsotropic2D_setFromOptions
+         procedure :: view => MEF90HookesLawIsotropic2D_view
+         procedure :: mult => MEF90HookesLawIsotropic2D_mult
    end type MEF90HookesLawIsotropic2D_type
 
 contains
@@ -90,6 +91,30 @@ contains
       end if
    end subroutine MEF90HookesLawIsotropic2D_View
 
+   subroutine MEF90HookesLawIsotropic2D_mult(A, e, Ae, ierr)
+      class(MEF90HookesLawIsotropic2D_Type), intent(in) :: A
+      class(mef90Mat), intent(in) :: e
+      class(mef90Mat), intent(inout) :: Ae
+      character(len=MEF90MXSTRLEN, kind=c_char) :: IOBuffer
+      PetscErrorCode, intent(inout) :: ierr
+
+      select type (e2D => e)
+         type is (MatS2D)
+            select type (Ae2D => Ae)
+               type is (MatS2D)
+                  Ae2D = A%lambda * trace(e2D) * MEF90Mat2DIdentity
+                  Ae2D = Ae2D + 2.0_Kr * A%mu * e2D
+               class default
+                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
+                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
+            end select ! Ae
+         class default
+            write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
+            PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
+      end select ! e
+   end subroutine MEF90HookesLawIsotropic2D_mult
 end module m_MEF90_HookesLawIsotropic2D
 
 module m_MEF90_HookesLawIsotropic3D
@@ -114,6 +139,7 @@ module m_MEF90_HookesLawIsotropic3D
    contains
          procedure, pass(self) :: setFromOptions => MEF90HookesLawIsotropic3D_setFromOptions
          procedure, pass(self) :: view => MEF90HookesLawIsotropic3D_view
+         procedure :: mult => MEF90HookesLawIsotropic3D_mult
    end type MEF90HookesLawIsotropic3D_type
 
 contains
@@ -175,4 +201,28 @@ contains
       end if
    end subroutine MEF90HookesLawIsotropic3D_View
 
+   subroutine MEF90HookesLawIsotropic3D_mult(A, e, Ae, ierr)
+      class(MEF90HookesLawIsotropic3D_Type), intent(in) :: A
+      class(mef90Mat), intent(in) :: e
+      class(mef90Mat), intent(inout) :: Ae
+      character(len=MEF90MXSTRLEN, kind=c_char) :: IOBuffer
+      PetscErrorCode, intent(inout) :: ierr
+
+      select type (e3D => e)
+         type is (MatS3D)
+            select type (Ae3D => Ae)
+               type is (MatS3D)
+                  Ae3D = A%lambda * trace(e3D) * MEF90Mat3DIdentity
+                  Ae3D = Ae3D + 2.0_Kr * A%mu * e3D
+               class default
+                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
+                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
+            end select ! Ae
+         class default
+            write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
+            PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
+            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
+      end select ! e
+   end subroutine MEF90HookesLawIsotropic3D_mult
 end module m_MEF90_HookesLawIsotropic3D

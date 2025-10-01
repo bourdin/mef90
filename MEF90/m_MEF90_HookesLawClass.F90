@@ -4,6 +4,8 @@ module m_MEF90_HookesLaw_class
    use m_MEF90_Utils
    ! use m_MEF90_LinAlg
    use m_MEF90_BaseClass
+   use petscsys
+
    implicit none(type, external)
    private
    public :: MEF90HookesLaw_Type
@@ -17,7 +19,22 @@ module m_MEF90_HookesLaw_class
 !!!
 
    type, abstract, extends(MEF90Object_Type) :: MEF90HookesLaw_Type
+   contains
+      procedure(HookesLawInterface), deferred :: mult
    end type MEF90HookesLaw_Type
+
+   abstract interface
+      subroutine HookesLawInterface(A, e, Ae, ierr)
+         use m_MEF90_LinAlg_class
+         use petscsys
+         import :: MEF90HookesLaw_Type
+
+         class(MEF90HookesLaw_Type), intent(in) :: A
+         class(mef90Mat), intent(in) :: e
+         class(mef90Mat), intent(inout) :: Ae
+         PetscErrorCode, intent(inout) :: ierr
+      end subroutine HookesLawInterface
+   end interface
 
 contains
 #undef __FUNCT__

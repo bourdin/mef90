@@ -107,7 +107,6 @@ contains
                write (IOBuffer, *) "Incompatible planar Hooke laws in "//__FUNCT__//'\n'
                PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
                SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-
             end if
          class default
             write (IOBuffer, *) "Incompatible Hooke law types in "//__FUNCT__//'\n'
