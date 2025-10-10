@@ -25,9 +25,9 @@ contains
       type(ctx), pointer             :: myctx_ptr
       type(MatS2D)                  :: x3D
 
-      x3D % XX = x(1)
-      x3D % YY = x(2)
-      x3D % XY = x(3)
+      x3D%XX = x(1)
+      x3D%YY = x(2)
+      x3D%XY = x(3)
 
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx, myctx_ptr)
@@ -36,9 +36,9 @@ contains
       !write(*,*) 'HookesLaw:         ',myctx_ptr%HookesLaw
       !write(*,*) 'sigma_D:         ',ctx_ptr%sigma_D
 
-      f(1) = ((myctx_ptr % HookesLaw * (x3D - myctx_ptr % OldPlasticStrain)) .DotP. (x3D - myctx_ptr % OldPlasticStrain)) / 2.
+      f(1) = ((myctx_ptr%HookesLaw * (x3D - myctx_ptr%OldPlasticStrain)) .DotP. (x3D - myctx_ptr%OldPlasticStrain)) / 2.
       h(1) = Trace(x3D)
-      g(1) = sqrt(2.0 * trace(deviatoricPart(myctx_ptr % HookesLaw * (myctx_ptr % Strain - x3D)) * deviatoricPart(myctx_ptr % HookesLaw * (myctx_ptr % Strain - x3D)))) - myctx_ptr % YieldStress
+      g(1) = sqrt(2.0 * trace(deviatoricPart(myctx_ptr%HookesLaw * (myctx_ptr%Strain - x3D)) * deviatoricPart(myctx_ptr%HookesLaw * (myctx_ptr%Strain - x3D)))) - myctx_ptr%YieldStress
 
    end subroutine fhg
 
@@ -98,24 +98,24 @@ program testVonMises2D
    real(kind=c_double), dimension(:), pointer  ::x
    type(ctx), target     :: ctx_ptr
 
-   ctx_ptr % HookesLaw % type = MEF90HookesLawTypeIsotropic
-   ctx_ptr % HookesLaw % YoungsModulus = 1.0_kr
-   ctx_ptr % HookesLaw % PoissonRatio = 0.0_kr
-   ctx_ptr % HookesLaw % lambda = ctx_ptr % HookesLaw % YoungsModulus * ctx_ptr % HookesLaw % PoissonRatio / (1.0_kr + ctx_ptr % HookesLaw % PoissonRatio) / (1.0_kr - 2.0_kr * ctx_ptr % HookesLaw % PoissonRatio)
-   ctx_ptr % HookesLaw % mu = ctx_ptr % HookesLaw % YoungsModulus / (1.0_kr + ctx_ptr % HookesLaw % PoissonRatio)*.5_kr
+   ctx_ptr%HookesLaw%type = MEF90HookesLawTypeIsotropic
+   ctx_ptr%HookesLaw%YoungsModulus = 1.0_kr
+   ctx_ptr%HookesLaw%PoissonRatio = 0.0_kr
+   ctx_ptr%HookesLaw%lambda = ctx_ptr%HookesLaw%YoungsModulus * ctx_ptr%HookesLaw%PoissonRatio / (1.0_kr + ctx_ptr%HookesLaw%PoissonRatio) / (1.0_kr - 2.0_kr * ctx_ptr%HookesLaw%PoissonRatio)
+   ctx_ptr%HookesLaw%mu = ctx_ptr%HookesLaw%YoungsModulus / (1.0_kr + ctx_ptr%HookesLaw%PoissonRatio)*.5_kr
 
-   ctx_ptr % Strain = 0.0_kr
-   ctx_ptr % Strain % XX = 2.0_kr
+   ctx_ptr%Strain = 0.0_kr
+   ctx_ptr%Strain%XX = 2.0_kr
 
-   ctx_ptr % OldPlasticStrain = 0.0_kr
-   ctx_ptr % PlasticStrain = 0.0_kr
-   ctx_ptr % YieldStress = 1.0_kr
+   ctx_ptr%OldPlasticStrain = 0.0_kr
+   ctx_ptr%PlasticStrain = 0.0_kr
+   ctx_ptr%YieldStress = 1.0_kr
 
    allocate (x(n))
-   x = ctx_ptr % PlasticStrain
+   x = ctx_ptr%PlasticStrain
 
    call SNLPNew(s, n, m, p, c_funloc(fhg), c_null_funptr, c_loc(ctx_ptr))
-   s % show_progress = 1
+   s%show_progress = 1
 
    exit_code = SNLPL1SQP(s, x)
    write (*, *) 'exit_code: ', exit_code

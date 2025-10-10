@@ -46,8 +46,8 @@ subroutine MEF90_MassMatrixAssembleSet(M, dm, setType, setID, elem, elemType, ie
          !!! This is really misleading: elemType doesn't know the number of component since we now use the
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
          !!! Maybe I need to change this to the old behaviour.
-      numDof = size(elem(1) % BF(:, 1))
-      numGauss = size(elem(1) % Gauss_C)
+      numDof = size(elem(1)%BF(:, 1))
+      numGauss = size(elem(1)%Gauss_C)
       allocate (MatElem(numDof**2))
       do point = 1, size(setPointID)
          MatElem = 0.0_kr
@@ -55,7 +55,7 @@ subroutine MEF90_MassMatrixAssembleSet(M, dm, setType, setID, elem, elemType, ie
             do iDoF1 = 1, numDof
                do iDoF2 = 1, numDof
                   MatElem((iDoF1 - 1) * numDof + iDof2) = MatElem((iDoF1 - 1) * numDof + iDof2) &
-                                                          + elem(point) % Gauss_C(iGauss) * (elem(point) % BF(iDoF1, iGauss) * elem(point) % BF(iDoF2, iGauss))
+                                                          + elem(point)%Gauss_C(iGauss) * (elem(point)%BF(iDoF1, iGauss) * elem(point)%BF(iDoF2, iGauss))
                end do ! iDoF2
             end do ! iDoF1
          end do ! iGauss

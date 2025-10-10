@@ -57,22 +57,22 @@ subroutine MEF90L2DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
          !!! This is really misleading: elemType doesn't know the number of component since we now use the
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
          !!! Maybe I need to change this to the old behaviour.
-      numDof = size(elem(1) % BF(:, 1))
-      numGauss = size(elem(1) % Gauss_C)
+      numDof = size(elem(1)%BF(:, 1))
+      numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
       allocate (Vloc(numDof), source=0.0_kr)
       do point = 1, size(setPointID)
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
 
-         do iGauss = 1, size(elem(point) % Gauss_C)
+         do iGauss = 1, size(elem(point)%Gauss_C)
             UGauss = 0.0_kr
             VGauss = 0.0_kr
             do iDoF1 = 1, numDof
-               UGauss = UGauss + elem(point) % BF(iDoF1, iGauss) * Uloc(iDof1)
-               VGauss = VGauss + elem(point) % BF(iDoF1, iGauss) * Vloc(iDof1)
+               UGauss = UGauss + elem(point)%BF(iDoF1, iGauss) * Uloc(iDof1)
+               VGauss = VGauss + elem(point)%BF(iDoF1, iGauss) * Vloc(iDof1)
             end do ! iDoF1
-            myDotProductSet = myDotProductSet + (UGauss * VGauss) * elem(point) % Gauss_C(iGauss)
+            myDotProductSet = myDotProductSet + (UGauss * VGauss) * elem(point)%Gauss_C(iGauss)
          end do ! iGauss
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
@@ -124,20 +124,20 @@ subroutine MEF90H1DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
          !!! This is really misleading: elemType doesn't know the number of component since we now use the
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
          !!! Maybe I need to change this to the old behaviour.
-      numDof = size(elem(1) % BF(:, 1))
-      numGauss = size(elem(1) % Gauss_C)
+      numDof = size(elem(1)%BF(:, 1))
+      numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
       do point = 1, size(setPointID)
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
-         do iGauss = 1, size(elem(point) % Gauss_C)
+         do iGauss = 1, size(elem(point)%Gauss_C)
             GradUGauss = 0.0_kr
             GradVGauss = 0.0_kr
             do iDoF1 = 1, numDof
-               GradUGauss = GradUGauss + elem(point) % Grad_BF(iDoF1, iGauss) * Uloc(iDof1)
-               GradVGauss = GradVGauss + elem(point) % Grad_BF(iDoF1, iGauss) * Vloc(iDof1)
+               GradUGauss = GradUGauss + elem(point)%Grad_BF(iDoF1, iGauss) * Uloc(iDof1)
+               GradVGauss = GradVGauss + elem(point)%Grad_BF(iDoF1, iGauss) * Vloc(iDof1)
             end do ! iDoF1
-            myDotProductSet = myDotProductSet + (GradUGauss.DotP.GradVGauss) * elem(point) % Gauss_C(iGauss)
+            myDotProductSet = myDotProductSet + (GradUGauss.DotP.GradVGauss) * elem(point)%Gauss_C(iGauss)
          end do ! iGauss
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
@@ -185,20 +185,20 @@ subroutine MEF90H1SymDotProductSet(myDotProductSet, U, V, setType, setID, elem, 
          !!! This is really misleading: elemType doesn't know the number of component since we now use the
          !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
          !!! Maybe I need to change this to the old behaviour.
-      numDof = size(elem(1) % BF(:, 1))
-      numGauss = size(elem(1) % Gauss_C)
+      numDof = size(elem(1)%BF(:, 1))
+      numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
       do point = 1, size(setPointID)
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
-         do iGauss = 1, size(elem(point) % Gauss_C)
+         do iGauss = 1, size(elem(point)%Gauss_C)
             GradSUGauss = 0.0_kr
             GradSVGauss = 0.0_kr
             do iDoF1 = 1, numDof
-               GradSUGauss = GradSUGauss + elem(point) % GradS_BF(iDoF1, iGauss) * Uloc(iDof1)
-               GradSVGauss = GradSVGauss + elem(point) % GradS_BF(iDoF1, iGauss) * Vloc(iDof1)
+               GradSUGauss = GradSUGauss + elem(point)%GradS_BF(iDoF1, iGauss) * Uloc(iDof1)
+               GradSVGauss = GradSVGauss + elem(point)%GradS_BF(iDoF1, iGauss) * Vloc(iDof1)
             end do ! iDoF1
-            myDotProductSet = myDotProductSet + (GradSUGauss.DotP.GradSVGauss) * elem(point) % Gauss_C(iGauss)
+            myDotProductSet = myDotProductSet + (GradSUGauss.DotP.GradSVGauss) * elem(point)%Gauss_C(iGauss)
          end do ! iGauss
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
@@ -249,17 +249,17 @@ subroutine MEF90L2NormSet(myNormSet, U, setType, setID, elem, elemType, ierr)
             !!! This is really misleading: elemType doesn't know the number of component since we now use the
             !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
             !!! Maybe I need to change this to the old behaviour.
-      numDof = size(elem(1) % BF(:, 1))
-      numGauss = size(elem(1) % Gauss_C)
+      numDof = size(elem(1)%BF(:, 1))
+      numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
       do point = 1, size(setPointID)
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
-         do iGauss = 1, size(elem(point) % Gauss_C)
+         do iGauss = 1, size(elem(point)%Gauss_C)
             UGauss = 0.0_kr
             do iDoF1 = 1, numDof
-               UGauss = UGauss + elem(point) % BF(iDoF1, iGauss) * Uloc(iDof1)
+               UGauss = UGauss + elem(point)%BF(iDoF1, iGauss) * Uloc(iDof1)
             end do ! iDoF1
-            myNormSet = myNormSet + (UGauss * UGauss) * elem(point) % Gauss_C(iGauss)
+            myNormSet = myNormSet + (UGauss * UGauss) * elem(point)%Gauss_C(iGauss)
          end do ! iGauss
          PetscCall(DMPlexVecRestoreClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
       end do ! point

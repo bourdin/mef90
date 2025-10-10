@@ -39,16 +39,16 @@ subroutine FHG_CAPMODEL(x, f, h, g, myctx) bind(c)
    call c_f_pointer(myctx, myctx_ptr)
 
       !!! Select which softening young model
-   if (myctx_ptr % CoefficientLinSoft == 0) then
-      StiffnessA = (1.0_kr - myctx_ptr % Damage)**2 + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+   if (myctx_ptr%CoefficientLinSoft == 0) then
+      StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    else
-      StiffnessA = ((1.0_kr - myctx_ptr % Damage)**2 / (1.0_kr + (myctx_ptr % CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr % Damage)**2))) + myctx_ptr % residualStiffness
-      StiffnessB = (1.0_kr - myctx_ptr % Damage)**myctx_ptr % DuctileCouplingPower + myctx_ptr % residualStiffness
+      StiffnessA = ((1.0_kr - myctx_ptr%Damage)**2 / (1.0_kr + (myctx_ptr%CoefficientLinSoft - 1.0_kr) * (1.0_kr - (1.0_kr - myctx_ptr%Damage)**2))) + myctx_ptr%residualStiffness
+      StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
    end if
 
-   Stress = (myctx_ptr % HookesLaw * (myctx_ptr % totalStrain - xMatS)) * StiffnessA
-   f(1) = ((myctx_ptr % HookesLaw * (xMatS - myctx_ptr % PlasticStrainOld)) .DotP. (xMatS - myctx_ptr % PlasticStrainOld)) * StiffnessA / 2.0_kr
-   g(1) = myctx_ptr % CoefficientCapModelD * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - myctx_ptr % CoefficientCapModel0 * StiffnessB + myctx_ptr % CoefficientCapModel1 * Trace(Stress) + myctx_ptr % CoefficientCapModel2 * Trace(Stress)**2.0_kr
+   Stress = (myctx_ptr%HookesLaw * (myctx_ptr%totalStrain - xMatS)) * StiffnessA
+   f(1) = ((myctx_ptr%HookesLaw * (xMatS - myctx_ptr%PlasticStrainOld)) .DotP. (xMatS - myctx_ptr%PlasticStrainOld)) * StiffnessA / 2.0_kr
+   g(1) = myctx_ptr%CoefficientCapModelD * sqrt(MEF90_DIM / (MEF90_DIM - 1.0_kr) * (deviatoricPart(Stress) .DotP.deviatoricPart(Stress))) - myctx_ptr%CoefficientCapModel0 * StiffnessB + myctx_ptr%CoefficientCapModel1 * Trace(Stress) + myctx_ptr%CoefficientCapModel2 * Trace(Stress)**2.0_kr
 end subroutine FHG_CAPMODEL
 end module MEF90_APPEND(m_MEF90_DefMechPlasticityCap,MEF90_DIM)D

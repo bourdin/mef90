@@ -18,13 +18,13 @@ contains
       type(MEF90DefMechCellSetOptions_Type), pointer, intent(IN)      :: cellSetOptions
       class(MEF90_DefMechDrivingForce_Type), allocatable, intent(OUT) :: DrivingForce
 
-      select case (cellSetOptions % drivingForceType)
+      select case (cellSetOptions%drivingForceType)
       case (MEF90DefMech_drivingForceTypeDruckerPrager)
          DrivingForce = MEF90_DefMechDrivingForceDruckerPrager_Type()
       case (MEF90DefMech_drivingForceTypeDruckerPrager2)
          DrivingForce = MEF90_DefMechDrivingForceDruckerPrager2_Type()
       case default
-         print *, __FUNCT__, ': Unimplemented damage Type, only DP and DP2 implemented', cellSetOptions % drivingForceType
+         print *, __FUNCT__, ': Unimplemented damage Type, only DP and DP2 implemented', cellSetOptions%drivingForceType
          stop
       end select
    end subroutine MEF90DefMechGetDrivingForce

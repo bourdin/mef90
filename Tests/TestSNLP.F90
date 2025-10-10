@@ -25,22 +25,22 @@ contains
       x3D = x(1:3)
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx, myctx_ptr)
-      write (*, *) 'A:      ', myctx_ptr % A
-      write (*, *) 'C:      ', myctx_ptr % C
-      write (*, *) 'b:      ', myctx_ptr % b
-      write (*, *) 'p:      ', myctx_ptr % p
-      write (*, *) 'sigmac: ', myctx_ptr % sigmac
+      write (*, *) 'A:      ', myctx_ptr%A
+      write (*, *) 'C:      ', myctx_ptr%C
+      write (*, *) 'b:      ', myctx_ptr%b
+      write (*, *) 'p:      ', myctx_ptr%p
+      write (*, *) 'sigmac: ', myctx_ptr%sigmac
 
-      f(1) = ((myctx_ptr % A * (x3D - myctx_ptr % p)) .DotP. (x3D - myctx_ptr % p)) / 2.-(x3D.DotP.myctx_ptr % b)
+      f(1) = ((myctx_ptr%A * (x3D - myctx_ptr%p)) .DotP. (x3D - myctx_ptr%p)) / 2.-(x3D.DotP.myctx_ptr%b)
 
       h(1) = sum(x(1:3))
 
-      g(1) = x(1) - x(2) - myctx_ptr % sigmac
-      g(2) = -x(1) + x(2) - myctx_ptr % sigmac
-      g(3) = x(1) - x(3) - myctx_ptr % sigmac
-      g(4) = -x(1) + x(3) - myctx_ptr % sigmac
-      g(5) = x(2) - x(3) - myctx_ptr % sigmac
-      g(6) = -x(2) + x(3) - myctx_ptr % sigmac
+      g(1) = x(1) - x(2) - myctx_ptr%sigmac
+      g(2) = -x(1) + x(2) - myctx_ptr%sigmac
+      g(3) = x(1) - x(3) - myctx_ptr%sigmac
+      g(4) = -x(1) + x(3) - myctx_ptr%sigmac
+      g(5) = x(2) - x(3) - myctx_ptr%sigmac
+      g(6) = -x(2) + x(3) - myctx_ptr%sigmac
    end subroutine fhg
 
    subroutine Dfhg(x, Df, Dh, Dg, myctx) bind(c)
@@ -61,10 +61,10 @@ contains
 
       !!! This is the fortran equivalent of casting ctx into a c_ptr
       call c_f_pointer(myctx, myctx_ptr)
-      Df3D = myctx_ptr % A * (x3D - myctx_ptr % p) - myctx_ptr % b
-      Df(1) = Df3D % X
-      Df(2) = Df3D % Y
-      Df(3) = Df3D % Z
+      Df3D = myctx_ptr%A * (x3D - myctx_ptr%p) - myctx_ptr%b
+      Df(1) = Df3D%X
+      Df(2) = Df3D%Y
+      Df(3) = Df3D%Z
 
       call c_f_pointer(Dh, Dhptr, [3])
       Dhptr = 1.
@@ -99,24 +99,24 @@ program testSNLP
    real(kind=c_double), dimension(:), pointer  ::x
    type(ctx), target     :: ctx_ptr
 
-   ctx_ptr % A = 0.0_kr
-   ctx_ptr % A % XX = 1.0_kr
-   ctx_ptr % A % YY = 2.0_kr
-   ctx_ptr % A % ZZ = 5.0_kr
+   ctx_ptr%A = 0.0_kr
+   ctx_ptr%A%XX = 1.0_kr
+   ctx_ptr%A%YY = 2.0_kr
+   ctx_ptr%A%ZZ = 5.0_kr
 
-   ctx_ptr % b = 0.0_kr
+   ctx_ptr%b = 0.0_kr
 
-   ctx_ptr % p = [-1.0_kr, 2.0_kr, -5.0_kr]
-   ctx_ptr % sigmac = 1.0_kr
+   ctx_ptr%p = [-1.0_kr, 2.0_kr, -5.0_kr]
+   ctx_ptr%sigmac = 1.0_kr
 
-   ctx_ptr % C = -1.23_kr
-   ctx_ptr % C % YYYY = 999.9_kr
+   ctx_ptr%C = -1.23_kr
+   ctx_ptr%C%YYYY = 999.9_kr
 
    allocate (x(n))
    x = 0.
 
    call SNLPNew(s, n, m, p, c_funloc(fhg), c_funloc(Dfhg), c_loc(ctx_ptr))
-   s % show_progress = 1
+   s%show_progress = 1
 
    exit_code = SNLPL1SQP(s, x)
    write (*, *) 'exit_code: ', exit_code

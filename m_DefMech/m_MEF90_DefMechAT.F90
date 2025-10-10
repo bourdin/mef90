@@ -36,23 +36,23 @@ contains
       PetscErrorCode, intent(INOUT)                       :: ierr
 
       isElastic = .false.
-      select case (cellSetOptions % damageType)
+      select case (cellSetOptions%damageType)
       case (MEF90DefMech_damageTypeAT1, MEF90DefMech_damageTypeAT1Elastic)
          ATModel = MEF90DefMechAT1_Type()
       case (MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT1expElastic)
-         ATModel = MEF90DefMechAT1exp_Type(cellSetOptions % DamageAT1expb)
+         ATModel = MEF90DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
       case (MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeAT2Elastic)
          ATModel = MEF90DefMechAT2_Type()
       case (MEF90DefMech_damageTypeKKL, MEF90DefMech_damageTypeKKLElastic)
          ATModel = MEF90DefMechATKKL_Type()
       case (MEF90DefMech_damageTypeLinSoft, MEF90DefMech_damageTypeLinSoftElastic)
-         ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions % DamageATLinSoftk)
+         ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
       case default
-         print *, __FUNCT__, ': Unimplemented damage Type', cellSetOptions % damageType
+         print *, __FUNCT__, ': Unimplemented damage Type', cellSetOptions%damageType
          stop
       end select
       !!!  Check if the block is elastic
-      select case (cellSetOptions % damageType)
+      select case (cellSetOptions%damageType)
       case (MEF90DefMech_damageTypeAT1Elastic, MEF90DefMech_damageTypeAT1expElastic, MEF90DefMech_damageTypeAT2Elastic, MEF90DefMech_damageTypeKKLElastic, MEF90DefMech_damageTypeLinSoftElastic)
          isElastic = .true.
       end select

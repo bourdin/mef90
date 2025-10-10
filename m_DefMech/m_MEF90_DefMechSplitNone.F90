@@ -29,9 +29,9 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 type(MEF90_DEFMECHSPLITNONE) function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR()
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR % damageOrder = 0
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR % strainOrder = 2
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR % type = 'MEF90DefMech_unilateralContactTypeNone'
+   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%damageOrder = 0
+   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%strainOrder = 2
+   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%type = 'MEF90DefMech_unilateralContactTypeNone'
 end function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR
 
 #undef __FUNCT__
@@ -92,19 +92,19 @@ subroutine D2EEDNone(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
    D2EEDPlus = HookesLaw
 
 #if MEF90_DIM==2
-   D2EEDMinus % isPlaneStress = HookesLaw % isPlaneStress
+   D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
 #endif
-   D2EEDMinus % type = HookesLaw % type
-   select case (HookesLaw % type)
+   D2EEDMinus%type = HookesLaw%type
+   select case (HookesLaw%type)
    case (MEF90HookesLawTypeIsotropic)
-      D2EEDMinus % YoungsModulus = 0.0_kr * HookesLaw % YoungsModulus
-      D2EEDMinus % PoissonRatio = 0.0_kr * HookesLaw % PoissonRatio
-      D2EEDMinus % lambda = 0.0_kr * HookesLaw % lambda
-      D2EEDMinus % mu = 0.0_kr * HookesLaw % mu
-      D2EEDMinus % BulkModulus = 0.0_kr * HookesLaw % BulkModulus
+      D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
+      D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
+      D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
+      D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
+      D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
    case (MEF90HookesLawTypeFull)
-      D2EEDMinus % FullTensor = 0.0_kr * HookesLaw % FullTensor
-      D2EEDMinus % fullTensorLocal = 0.0_kr * HookesLaw % fullTensorLocal
+      D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
+      D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
    end select !HookesLaw%type
 end subroutine D2EEDNone
 

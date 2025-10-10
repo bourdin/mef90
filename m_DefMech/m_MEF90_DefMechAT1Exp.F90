@@ -44,11 +44,11 @@ contains
    type(MEF90DefMechAT1exp_Type) function MEF90DefMechAT1exp_Constructor(b)
       PetscReal, intent(IN)                             :: b
 
-      MEF90DefMechAT1exp_Constructor % b = b
-      MEF90DefMechAT1exp_Constructor % cw = 2.0_kr / 3.0_kr
-      MEF90DefMechAT1exp_Constructor % aorder = 2
-      MEF90DefMechAT1exp_Constructor % worder = 1
-      MEF90DefMechAT1exp_Constructor % type = 'MEF90_DefMechAT1exp'
+      MEF90DefMechAT1exp_Constructor%b = b
+      MEF90DefMechAT1exp_Constructor%cw = 2.0_kr / 3.0_kr
+      MEF90DefMechAT1exp_Constructor%aorder = 2
+      MEF90DefMechAT1exp_Constructor%worder = 1
+      MEF90DefMechAT1exp_Constructor%type = 'MEF90_DefMechAT1exp'
    end function MEF90DefMechAT1exp_Constructor
 
 #undef __FUNCT__
@@ -62,10 +62,10 @@ contains
       class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      if (self % b == 0.0_kr) then
+      if (self%b == 0.0_kr) then
          aAT1exp = 1.0_kr - alpha
       else
-         aAT1exp = 1.0_kr + (exp(-self % b * alpha) - 1.0_kr) / (1.0_kr - exp(-self % b))
+         aAT1exp = 1.0_kr + (exp(-self%b * alpha) - 1.0_kr) / (1.0_kr - exp(-self%b))
       end if
    end function aAT1exp
 
@@ -80,10 +80,10 @@ contains
       class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      if (self % b == 0.0_kr) then
+      if (self%b == 0.0_kr) then
          DaAT1exp = -1.0_kr
       else
-         DaAT1exp = -self % b * exp(-self % b * alpha) / (1.0_kr - exp(-self % b))
+         DaAT1exp = -self%b * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
       end if
    end function DaAT1exp
 
@@ -98,10 +98,10 @@ contains
       class(MEF90DefMechAT1exp_Type), intent(IN)        :: self
       PetscReal                                        :: alpha
 
-      if (self % b == 0.0_kr) then
+      if (self%b == 0.0_kr) then
          D2aAT1exp = 0.0_kr
       else
-         D2aAT1exp = self % b**2 * exp(-self % b * alpha) / (1.0_kr - exp(-self % b))
+         D2aAT1exp = self%b**2 * exp(-self%b * alpha) / (1.0_kr - exp(-self%b))
       end if
    end function D2aAT1exp
 

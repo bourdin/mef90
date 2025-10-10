@@ -46,39 +46,39 @@ program TestSplit
    gamma = 1.0e-5
    split = MEF90_DEFMECHSPLITHD(gamma)
 
-   A % type = MEF90HookesLawTypeIsotropic
-   A % YoungsModulus = E
-   A % PoissonRatio = nu
+   A%type = MEF90HookesLawTypeIsotropic
+   A%YoungsModulus = E
+   A%PoissonRatio = nu
 #if MEF90_DIM == 2
-   A % IsPlaneStress = .false.
-   if (A % IsPlaneStress) then
-      A % lambda = E * nu / (1.0_kr - nu**2)
-      A % mu = E / (1.0_kr + nu)*.5_kr
+   A%IsPlaneStress = .false.
+   if (A%IsPlaneStress) then
+      A%lambda = E * nu / (1.0_kr - nu**2)
+      A%mu = E / (1.0_kr + nu)*.5_kr
    else
-      A % lambda = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
-      A % mu = E / (1.0_kr + nu)*.5_kr
+      A%lambda = E * nu / (1.0_kr + nu) / (1.0_kr - 2.0_kr * nu)
+      A%mu = E / (1.0_kr + nu)*.5_kr
    end if
 #else
-   A % lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
-   A % mu = E / (1.0_kr + nu)*.5_kr
+   A%lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
+   A%mu = E / (1.0_kr + nu)*.5_kr
 #endif
 
    do i = 0, n - 1
-      call PetscRandomGetValue(RdmCtx, M % XX, ierr); CHKERRQ(ierr)
-      call PetscRandomGetValue(RdmCtx, M % YY, ierr); CHKERRQ(ierr)
-      call PetscRandomGetValue(RdmCtx, M % XY, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%XX, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%YY, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%XY, ierr); CHKERRQ(ierr)
 #if MEF90_DIM == 3
-      call PetscRandomGetValue(RdmCtx, M % ZZ, ierr); CHKERRQ(ierr)
-      call PetscRandomGetValue(RdmCtx, M % YZ, ierr); CHKERRQ(ierr)
-      call PetscRandomGetValue(RdmCtx, M % XZ, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%ZZ, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%YZ, ierr); CHKERRQ(ierr)
+      call PetscRandomGetValue(RdmCtx, M%XZ, ierr); CHKERRQ(ierr)
 #endif
       write (*, '(A,<sizeOfMatS>(E12.5,2x))') 'M: ', M
       call Diagonalize(A * M, Pinv, D)
 
       EED = 0.5_kr * ((A * M) .dotP.M)
-      call Split % EED(M, A, EEDPlus, EEDMinus)
-      call Split % DEED(M, A, Sigmaplus, Sigmaminus)
-      call Split % D2EED(M, A, APlus, AMinus)
+      call Split%EED(M, A, EEDPlus, EEDMinus)
+      call Split%DEED(M, A, Sigmaplus, Sigmaminus)
+      call Split%D2EED(M, A, APlus, AMinus)
       write (*, '(A,<sizeOfMatS>(E12.5,2x))') '                   A^+ M: ', APlus * M
       write (*, '(A,<sizeOfMatS>(E12.5,2x))') '                 Sigma^+: ', SigmaPlus
       call Diagonalize(SigmaPlus, Pinv, DPlus)
@@ -91,12 +91,12 @@ program TestSplit
       !    write(*,'(A,3(ES12.5,2x))') '1/2 AM.M, EED+, EED-', EED, 0.5_Kr * ((A * M) .dotP. M)
       ! End If
 #if MEF90_DIM == 2
-      write (*, '(A,2(E12.5,2x))') '      Principal stresses: ', D % XX, D % YY
-      write (*, '(A,2(E12.5,2x))') '    Sigma^+ (pple basis): ', DPlus % XX, DPlus % YY
-      write (*, '(A,2(E12.5,2x))') '    Sigma^- (pple basis): ', DMinus % XX, DMinus % YY
-      write (*, '(A,2(E12.5,2x))') '        Sum (pple basis): ', DMinus % XX + DPlus % XX, DMinus % YY + DPlus % YY
+      write (*, '(A,2(E12.5,2x))') '      Principal stresses: ', D%XX, D%YY
+      write (*, '(A,2(E12.5,2x))') '    Sigma^+ (pple basis): ', DPlus%XX, DPlus%YY
+      write (*, '(A,2(E12.5,2x))') '    Sigma^- (pple basis): ', DMinus%XX, DMinus%YY
+      write (*, '(A,2(E12.5,2x))') '        Sum (pple basis): ', DMinus%XX + DPlus%XX, DMinus%YY + DPlus%YY
 #else
-      write (*, '(A,3(E12.5,2x))') '      Principal stresses: ', D % XX, D % YY, D % ZZ
+      write (*, '(A,3(E12.5,2x))') '      Principal stresses: ', D%XX, D%YY, D%ZZ
       !Write(*,'(A,3(E12.5,2x))') '    Sigma^+ (pple basis): ', DPlus%XX,DPlus%YY,DPlus%ZZ
       !Write(*,'(A,3(E12.5,2x))') '    Sigma^- (pple basis): ', DMinus%XX,DMinus%YY,DMinus%ZZ
       !Write(*,'(A,3(E12.5,2x))') '        Sum (pple basis): ', DMinus%XX + DPlus%XX,DMinus%YY + DPlus%YY,DMinus%ZZ + DPlus%ZZ

@@ -95,112 +95,112 @@ contains
       type(tVec)                                      :: tmpVec
       character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx % MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr))
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
 
-      PetscCall(VecGetDM(MEF90DefMechCtx % damageLocal, dmDamage, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx % displacementLocal, dmDisplacement, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx % cohesiveDisplacement, dmCohesiveDisplacement, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
 
-      select case (MEF90DefMechGlobalOptions % boundaryDisplacementScaling)
+      select case (MEF90DefMechGlobalOptions%boundaryDisplacementScaling)
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dmDisplacement, tmpVec, ierr))
          PetscCall(PetscObjectSetName(tmpVec, "Displacement", ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx % displacementToIOSF, MEF90DefMechCtx % IOToDisplacementSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim, ierr))
-         PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx % displacementLocal, MEF90DefMechCtx % displacementConstraintsSF, ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
+         PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementConstraintsSF, ierr))
          PetscCall(DMRestoreLocalVector(dmDisplacement, tmpVec, ierr))
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementLocal, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLocal, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx % displacementLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementLocal, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % boundaryDamageScaling)
+      select case (MEF90DefMechGlobalOptions%boundaryDamageScaling)
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dmDamage, tmpVec, ierr))
          PetscCall(PetscObjectSetName(tmpVec, "Damage", ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx % damageToIOSF, MEF90DefMechCtx % IOToDamageSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, 1_ki, ierr))
-         PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx % damageLocal, MEF90DefMechCtx % damageConstraintsSF, ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageConstraintsSF, ierr))
          PetscCall(DMRestoreLocalVector(dmDamage, tmpVec, ierr))
       case (MEF90Scaling_Linear)
          write (IOBuffer, '((A),": linear scaling of damage does not make any sense.\n")') __FUNCT__
-         SETERRQ(MEF90DefMechCtx % MEF90Ctx % Comm, PETSC_ERR_ARG_WRONG, IOBuffer)
+         SETERRQ(MEF90DefMechCtx%MEF90Ctx%Comm, PETSC_ERR_ARG_WRONG, IOBuffer)
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % damageLocal, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx % damageLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%damageLocal, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % cohesiveDisplacementScaling)
+      select case (MEF90DefMechGlobalOptions%cohesiveDisplacementScaling)
       case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx % cohesiveDisplacement, MEF90DefMechCtx % cohesiveDisplacementToIOSF, MEF90DefMechCtx % IOToCohesiveDisplacementSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim, ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%cohesiveDisplacement, MEF90DefMechCtx%cohesiveDisplacementToIOSF, MEF90DefMechCtx%IOToCohesiveDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % cohesiveDisplacement, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % cohesiveDisplacement, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx % cohesiveDisplacement, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%cohesiveDisplacement, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % displacementLowerBoundScaling)
+      select case (MEF90DefMechGlobalOptions%displacementLowerBoundScaling)
       case (MEF90Scaling_File)
          write (*, *) __FUNCT__, ": file scaling of displacement lower bound does not make any sense."
          stop
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementLowerBoundLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLowerBoundLocal, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementLowerBoundLocal, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementLowerBoundLocal, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx % displacementLowerBoundLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementLowerBoundLocal, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % displacementUpperBoundScaling)
+      select case (MEF90DefMechGlobalOptions%displacementUpperBoundScaling)
       case (MEF90Scaling_File)
          write (*, *) __FUNCT__, ": file scaling of displacement upper bound does not make any sense."
          stop
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementUpperBoundLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementUpperBoundLocal, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx % displacementUpperBoundLocal, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%displacementUpperBoundLocal, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx % displacementUpperBoundLocal, time, ierr))
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%displacementUpperBoundLocal, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % bodyForceScaling)
+      select case (MEF90DefMechGlobalOptions%bodyForceScaling)
       case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx % bodyForce, MEF90DefMechCtx % bodyForceToIOSF, MEF90DefMechCtx % IOToBodyForceSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim, ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%bodyForce, MEF90DefMechCtx%bodyForceToIOSF, MEF90DefMechCtx%IOToBodyForceSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % bodyForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % bodyForce, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx % bodyForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%bodyForce, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % boundaryForceScaling)
+      select case (MEF90DefMechGlobalOptions%boundaryForceScaling)
       case (MEF90Scaling_File)
          SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_LIB, "Boundary force from file not implemented yet "//__FUNCT__)
          ! PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%boundaryForce,MEF90DefMechCtx%boundaryForceToIOSF,MEF90DefMechCtx%IOToBoundaryForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,MEF90DefMechCtx%dim,ierr))
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % boundaryForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % boundaryForce, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%boundaryForce, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx % boundaryForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%boundaryForce, time, ierr))
       end select
 
-      select case (MEF90DefMechGlobalOptions % pressureForceScaling)
+      select case (MEF90DefMechGlobalOptions%pressureForceScaling)
       case (MEF90Scaling_File)
          SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_LIB, "Pressure force from file not implemented yet "//__FUNCT__)
          ! PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%pressureForce,MEF90DefMechCtx%pressureForceToIOSF,MEF90DefMechCtx%IOToPressureForceSF,MEF90DefMechCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       case (MEF90Scaling_Linear)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % pressureForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce, time, ierr))
       case (MEF90Scaling_CST)
-         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx % pressureForce, 1.0_kr, ierr))
+         PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%pressureForce, 1.0_kr, ierr))
       case (MEF90Scaling_Expr)
-         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx % pressureForce, time, ierr))
+         PetscCall(MEF90VecSetValuesFromOptionsExpr(MEF90DefMechCtx%pressureForce, time, ierr))
       end select
    end subroutine MEF90DefMechSetTransients
 
@@ -221,9 +221,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechOperatorDisplacement2D(snesTemp, x, residual, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechOperatorDisplacement3D(snesTemp, x, residual, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechOperatorDisplacement
@@ -245,9 +245,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechBilinearFormDisplacement2D(snesDispl, x, A, M, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechBilinearFormDisplacement3D(snesDispl, x, A, M, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechBilinearFormDisplacement
@@ -267,9 +267,9 @@ contains
       PetscReal, dimension(:), pointer                  :: bodyForceWork, boundaryForceWork
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechWork2D(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechWork3D(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr))
       end if
    end subroutine MEF90DefMechWork
@@ -289,9 +289,9 @@ contains
       PetscReal, dimension(:), pointer                  :: cohesiveEnergy
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechCohesiveEnergy2D(MEF90DefMechCtx, cohesiveEnergy, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechCohesiveEnergy3D(MEF90DefMechCtx, cohesiveEnergy, ierr))
       end if
    end subroutine MEF90DefMechCohesiveEnergy
@@ -311,9 +311,9 @@ contains
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechElasticEnergy2D(MEF90DefMechCtx, energy, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechElasticEnergy3D(MEF90DefMechCtx, energy, ierr))
       end if
    end subroutine MEF90DefMechElasticEnergy
@@ -335,9 +335,9 @@ contains
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          ! Call MEF90DefMechPlasticDissipation2D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          ! Call MEF90DefMechPlasticDissipation3D(x,MEF90DefMechCtx,plasticStrainOld,energy,ierr)
       end if
    end subroutine MEF90DefMechPlasticDissipation
@@ -357,9 +357,9 @@ contains
       type(tVec), intent(IN)                              :: stress
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechStress2D(MEF90DefMechCtx, stress, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechStress3D(MEF90DefMechCtx, stress, ierr))
       end if
    end subroutine MEF90DefMechStress
@@ -378,9 +378,9 @@ contains
       PetscReal, dimension(:), pointer                     :: CrackVolume
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechCrackVolume2D(MEF90DefMechCtx, CrackVolume, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechCrackVolume3D(MEF90DefMechCtx, CrackVolume, ierr))
       end if
    end subroutine MEF90DefMechCrackVolume
@@ -402,9 +402,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechOperatorDamage2D(snesDamage, damage, residual, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechOperatorDamage3D(snesDamage, damage, residual, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechOperatorDamage
@@ -425,9 +425,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOGradientDamage2D(taoDamage, damage, residual, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechTAOGradientDamage3D(taoDamage, damage, residual, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechTAOGradientDamage
@@ -449,9 +449,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechBilinearFormDamage2D(snesDamage, damage, A, M, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechBilinearFormDamage3D(snesDamage, damage, A, M, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechBilinearFormDamage
@@ -472,9 +472,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOHessianDamage2D(taoDamage, damage, A, M, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechTAOHessianDamage3D(taoDamage, damage, A, M, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechTAOHessianDamage
@@ -494,9 +494,9 @@ contains
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechSurfaceEnergy2D(MEF90DefMechCtx, energy, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechSurfaceEnergy3D(MEF90DefMechCtx, energy, ierr))
       end if
    end subroutine MEF90DefMechSurfaceEnergy
@@ -517,9 +517,9 @@ contains
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOObjectiveDamage2D(taoDamage, damage, energy, MEF90DefMechCtx, ierr))
-      else if (MEF90DefMechCtx % dim == 3) then
+      else if (MEF90DefMechCtx%dim == 3) then
          PetscCall(MEF90DefMechTAOObjectiveDamage3D(taoDamage, damage, energy, MEF90DefMechCtx, ierr))
       end if
    end subroutine MEF90DefMechTAOObjectiveDamage
@@ -543,54 +543,54 @@ contains
       type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
       PetscInt                                           :: numFields, offset
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
       allocate (nameG(0))
 
       numFields = 0
-      if (MEF90DefMechGlobalOptions % displacementExport) then
-         numFields = numFields + MEF90DefMechCtx % dim
+      if (MEF90DefMechGlobalOptions%displacementExport) then
+         numFields = numFields + MEF90DefMechCtx%dim
       end if
-      if (MEF90DefMechGlobalOptions % damageExport) then
+      if (MEF90DefMechGlobalOptions%damageExport) then
          numFields = numFields + 1
       end if
-      if (MEF90DefMechGlobalOptions % temperatureExport) then
+      if (MEF90DefMechGlobalOptions%temperatureExport) then
          numFields = numFields + 1
       end if
 
       allocate (nameN(numFields))
       offset = 1
-      if (MEF90DefMechGlobalOptions % displacementExport) then
+      if (MEF90DefMechGlobalOptions%displacementExport) then
          nameN(offset + 0) = "Displacement_X"
          nameN(offset + 1) = "Displacement_Y"
-         if (MEF90DefMechCtx % dim == 3) then
+         if (MEF90DefMechCtx%dim == 3) then
             nameN(offset + 2) = "Displacement_Z"
          end if
-         offset = offset + MEF90DefMechCtx % dim
+         offset = offset + MEF90DefMechCtx%dim
       end if
-      if (MEF90DefMechGlobalOptions % damageExport) then
+      if (MEF90DefMechGlobalOptions%damageExport) then
          nameN(offset) = "Damage"
          offset = offset + 1
       end if
-      if (MEF90DefMechGlobalOptions % temperatureExport) then
+      if (MEF90DefMechGlobalOptions%temperatureExport) then
          nameN(offset) = "Temperature"
          offset = offset + 1
       end if
 
       numFields = 0
-      if (MEF90DefMechGlobalOptions % stressExport) then
-         numFields = numFields + MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2
+      if (MEF90DefMechGlobalOptions%stressExport) then
+         numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2
       end if
-      if (MEF90DefMechGlobalOptions % plasticStrainExport) then
-         numFields = numFields + MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2
+      if (MEF90DefMechGlobalOptions%plasticStrainExport) then
+         numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2
       end if
-      if (MEF90DefMechGlobalOptions % cumulatedPlasticDissipationExport) then
-         numFields = numFields + MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2
+      if (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) then
+         numFields = numFields + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2
       end if
 
       allocate (nameC(numFields))
       offset = 1
-      if (MEF90DefMechGlobalOptions % stressExport) then
-         if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechGlobalOptions%stressExport) then
+         if (MEF90DefMechCtx%dim == 2) then
             nameC(offset + 0) = "Stress_XX"
             nameC(offset + 1) = "Stress_YY"
             nameC(offset + 2) = "Stress_XY"
@@ -602,11 +602,11 @@ contains
             nameC(offset + 4) = "Stress_XZ"
             nameC(offset + 5) = "Stress_XY"
          end if
-         offset = offset + MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2
+         offset = offset + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2
       end if
 
-      if (MEF90DefMechGlobalOptions % plasticStrainExport) then
-         if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechGlobalOptions%plasticStrainExport) then
+         if (MEF90DefMechCtx%dim == 2) then
             nameC(offset + 0) = "PlasticStrain_XX"
             nameC(offset + 1) = "PlasticStrain_YY"
             nameC(offset + 2) = "PlasticStrain_XY"
@@ -618,11 +618,11 @@ contains
             nameC(offset + 4) = "PlasticStrain_XZ"
             nameC(offset + 5) = "PlasticStrain_XY"
          end if
-         offset = offset + MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2
+         offset = offset + MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2
       end if
 
-      if (MEF90DefMechGlobalOptions % cumulatedPlasticDissipationExport) then
-         if (MEF90DefMechCtx % dim == 2) then
+      if (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) then
+         if (MEF90DefMechCtx%dim == 2) then
             nameC(offset + 0) = "CumulatedPlasticDissipation_XX"
             nameC(offset + 1) = "CumulatedPlasticDissipation_YY"
             nameC(offset + 2) = "CumulatedPlasticDissipation_XY"
@@ -635,7 +635,7 @@ contains
             nameC(offset + 5) = "CumulatedPlasticDissipation_XY"
          end if
       end if
-      PetscCall(MEF90EXOFormat(MEF90DefMechCtx % MEF90Ctx % resultViewer, nameG, nameC, nameN, time, ierr))
+      PetscCall(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer, nameG, nameC, nameN, time, ierr))
       deallocate (nameG)
       deallocate (nameN)
       deallocate (nameC)
@@ -658,22 +658,22 @@ contains
 
       type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
 
-      if (MEF90DefMechGlobalOptions % displacementExport) then
-         PetscCall(MEF90EXOVecView(MEF90DefMechCtx % displacementLocal, MEF90DefMechCtx % displacementToIOSF, MEF90DefMechCtx % IOToDisplacementSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim, ierr))
+      if (MEF90DefMechGlobalOptions%displacementExport) then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
       end if
-      if (MEF90DefMechGlobalOptions % damageExport) then
-         PetscCall(MEF90EXOVecView(MEF90DefMechCtx % damageLocal, MEF90DefMechCtx % damageToIOSF, MEF90DefMechCtx % IOToDamageSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, 1_ki, ierr))
+      if (MEF90DefMechGlobalOptions%damageExport) then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
       end if
-      if (MEF90DefMechGlobalOptions % stressExport) then
-         PetscCall(MEF90EXOVecView(MEF90DefMechCtx % stress, MEF90DefMechCtx % stressToIOSF, MEF90DefMechCtx % IOToStressSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2, ierr))
+      if (MEF90DefMechGlobalOptions%stressExport) then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%stress, MEF90DefMechCtx%stressToIOSF, MEF90DefMechCtx%IOToStressSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2, ierr))
       end if
-      if (MEF90DefMechGlobalOptions % plasticStrainExport) then
-         PetscCall(MEF90EXOVecView(MEF90DefMechCtx % plasticStrain, MEF90DefMechCtx % plasticStrainToIOSF, MEF90DefMechCtx % IOToPlasticStrainSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2, ierr))
+      if (MEF90DefMechGlobalOptions%plasticStrainExport) then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%plasticStrain, MEF90DefMechCtx%plasticStrainToIOSF, MEF90DefMechCtx%IOToPlasticStrainSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2, ierr))
       end if
-      if (MEF90DefMechGlobalOptions % cumulatedPlasticDissipationExport) then
-         PetscCall(MEF90EXOVecView(MEF90DefMechCtx % cumulatedPlasticDissipation, MEF90DefMechCtx % cumulatedPlasticDissToIOSF, MEF90DefMechCtx % IOToCumulatedPlasticDissSF, MEF90DefMechCtx % MEF90Ctx % resultViewer, step, MEF90DefMechCtx % dim * (MEF90DefMechCtx % dim + 1) / 2, ierr))
+      if (MEF90DefMechGlobalOptions%cumulatedPlasticDissipationExport) then
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%cumulatedPlasticDissipation, MEF90DefMechCtx%cumulatedPlasticDissToIOSF, MEF90DefMechCtx%IOToCumulatedPlasticDissSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2, ierr))
       end if
    end subroutine MEF90DefMechViewEXO
 
@@ -701,8 +701,8 @@ contains
       type(tVec)                                         :: gCoord
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx % displacementLocal, dm, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDisplacement, ierr))
       PetscCall(MatSetOptionsPrefix(matDisplacement, "Displacement_", ierr))
       PetscCall(MatSetOption(matDisplacement, MAT_SPD, PETSC_TRUE, ierr))
@@ -719,7 +719,7 @@ contains
       PetscCall(DMRestoreGlobalVector(dm, gCoord, ierr))
       PetscCall(MatSetFromOptions(matDisplacement, ierr))
 
-      PetscCall(SNESCreate(MEF90DefMechCtx % MEF90Ctx % Comm, snesDisplacement, ierr))
+      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm, snesDisplacement, ierr))
       PetscCall(SNESSetApplicationContext(snesDisplacement, MEF90DefMechCtx, ierr))
       PetscCall(SNESSetDM(snesDisplacement, dm, ierr))
       PetscCall(SNESSetType(snesDisplacement, SNESKSPONLY, ierr))
@@ -769,8 +769,8 @@ contains
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx % damageLocal, dm, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
@@ -779,7 +779,7 @@ contains
       PetscCall(MatSetOption(matDamage, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
       PetscCall(MatSetFromOptions(matDamage, ierr))
 
-      PetscCall(SNESCreate(MEF90DefMechCtx % MEF90Ctx % Comm, snesDamage, ierr))
+      PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm, snesDamage, ierr))
       PetscCall(SNESSetApplicationContext(snesDamage, MEF90DefMechCtx, ierr))
       PetscCall(SNESSetDM(snesDamage, dm, ierr))
       PetscCall(SNESSetType(snesDamage, SNESVINEWTONRSLS, ierr))
@@ -836,8 +836,8 @@ contains
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx % damageLocal, dm, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
@@ -846,7 +846,7 @@ contains
       PetscCall(MatSetOption(matDamage, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
       PetscCall(MatSetFromOptions(matDamage, ierr))
 
-      PetscCall(TAOCreate(MEF90DefMechCtx % MEF90Ctx % Comm, taoDamage, ierr))
+      PetscCall(TAOCreate(MEF90DefMechCtx%MEF90Ctx%Comm, taoDamage, ierr))
       PetscCall(TAOSetApplicationContext(taoDamage, MEF90DefMechCtx, ierr))
       ! PetscCall(TAOSetDM(taoDamage,dm,ierr))
       PetscCall(TAOSetType(taoDamage, TAOBNTR, ierr))
@@ -904,17 +904,17 @@ contains
       PetscInt                                           :: i
       type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
 
       PetscCall(VecSet(UB, 1.0_kr, ierr))
       PetscCall(VecCopy(alpha, LB, ierr))
-      if (MEF90DefMechGlobalOptions % irrevthres > 0.0_kr) then
+      if (MEF90DefMechGlobalOptions%irrevthres > 0.0_kr) then
          PetscCall(VecGetArray(LB, LBPtr, ierr))
          do i = 1, size(LBPtr)
-            if (LBPtr(i) <= MEF90DefMechGlobalOptions % irrevthres) then
+            if (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) then
                LBPtr(i) = 0.0_kr
             end if
          end do
@@ -947,17 +947,17 @@ contains
       PetscInt                                           :: i
       type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
 
       PetscCall(VecSet(UB, 1.0_kr, ierr))
       PetscCall(VecCopy(alpha, LB, ierr))
-      if (MEF90DefMechGlobalOptions % irrevthres > 0.0_kr) then
+      if (MEF90DefMechGlobalOptions%irrevthres > 0.0_kr) then
          PetscCall(VecGetArray(LB, LBPtr, ierr))
          do i = 1, size(LBPtr)
-            if (LBPtr(i) <= MEF90DefMechGlobalOptions % irrevthres) then
+            if (LBPtr(i) <= MEF90DefMechGlobalOptions%irrevthres) then
                LBPtr(i) = 0.0_kr
             end if
          end do
@@ -985,7 +985,7 @@ contains
       PetscErrorCode, intent(INOUT)                       :: ierr
 
       PetscInt                                           :: dim
-      PetscCall(DMGetDimension(MEF90DefMechCtx % megaDM, dim, ierr))
+      PetscCall(DMGetDimension(MEF90DefMechCtx%megaDM, dim, ierr))
       if (dim == 2) then
          ! Call MEF90DefMechPlasticStrainUpdate2D(MEF90DefMechCtx,plasticStrain,x,PlasticStrainOld,plasticStrainPrevious,cumulatedDissipatedPlasticEnergyVariation,cumulatedDissipatedPlasticEnergyOld,ierr)
       else if (dim == 3) then

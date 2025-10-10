@@ -185,7 +185,7 @@ program ThermoElastoPlasticity
 
    !!! Get all MEF90-wide options
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90DefaultGlobalOptions, ierr); CHKERRQ(ierr)
-   call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx % GlobalOptionsBag, MEF90GlobalOptions, ierr); CHKERRQ(ierr)
+   call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr); CHKERRQ(ierr)
 
    !!! Get DM from mesh
    call MEF90CtxGetDMMeshEXO(MEF90Ctx, Mesh, ierr); CHKERRQ(ierr)
@@ -205,21 +205,21 @@ program ThermoElastoPlasticity
       call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, MEF90DefMechDefaultGlobalOptions3D, &
                                          MEF90DefMechDefaultCellSetOptions, MEF90DefMechDefaultVertexSetOptions, ierr)
    end if
-   call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx % GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
+   call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
 
    !!! Create HeatXfer context, get all HeatXfer options
    call MEF90HeatXferCtxCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
    call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx, PETSC_NULL_CHARACTER, MEF90HeatXferDefaultGlobalOptions, &
                                        MEF90HeatXferDefaultCellSetOptions, MEF90HeatXferDefaultVertexSetOptions, ierr)
-   call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx % GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr); CHKERRQ(ierr)
+   call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr); CHKERRQ(ierr)
 
    !!! Get material properties bags
    if (dim == 2) then
-      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx % MaterialPropertiesBag, MEF90DefMechCtx % DMVect, MEF90Mathium2D, MEF90Ctx, ierr)
+      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%DMVect, MEF90Mathium2D, MEF90Ctx, ierr)
    else
-      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx % MaterialPropertiesBag, MEF90DefMechCtx % DMVect, MEF90Mathium3D, MEF90Ctx, ierr)
+      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%DMVect, MEF90Mathium3D, MEF90Ctx, ierr)
    end if
-   MEF90HeatXferCtx % MaterialPropertiesBag => MEF90DefMechCtx % MaterialPropertiesBag
+   MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
    !!! Create time array from global options
    call MEF90CtxGetTime(MEF90Ctx, time, ierr)
@@ -233,30 +233,30 @@ program ThermoElastoPlasticity
    call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx, ierr)
 
    !!! Link the temperature field from the DefMech context to that of the HeatXfer context
-   deallocate (MEF90DefMechCtx % temperature)
+   deallocate (MEF90DefMechCtx%temperature)
    !MEF90DefMechCtx%temperature => MEF90HeatXferCtx%temperature
 
    !!!
    !!! Create sections, vectors, and solvers for DefMech Context
    !!!
-   call VecDuplicate(MEF90DefMechCtx % displacement, residualDisp, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90DefMechCtx%displacement, residualDisp, ierr); CHKERRQ(ierr)
    call PetscObjectSetName(residualDisp, "residualDisp", ierr); CHKERRQ(ierr)
    call MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx, snesDisp, residualDisp, ierr)
-   call VecDuplicate(MEF90HeatXferCtx % temperature, residualTemp, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90HeatXferCtx%temperature, residualTemp, ierr); CHKERRQ(ierr)
    call PetscObjectSetName(residualTemp, "residualTemp", ierr); CHKERRQ(ierr)
       !!!cumulatedDissipatedPlasticEnergy Vectors
-   call VecDuplicate(MEF90DefMechCtx % cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
-   call VecDuplicate(MEF90DefMechCtx % cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyVariation, ierr); CHKERRQ(ierr)
-   call VecCopy(MEF90DefMechCtx % cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
-   call VecDuplicate(MEF90DefMechCtx % plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
-   call VecDuplicate(MEF90DefMechCtx % plasticStrain, plasticStrainPrevious, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90DefMechCtx%cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyVariation, ierr); CHKERRQ(ierr)
+   call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90DefMechCtx%plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
+   call VecDuplicate(MEF90DefMechCtx%plasticStrain, plasticStrainPrevious, ierr); CHKERRQ(ierr)
 
-   if (MEF90HeatXferGlobalOptions % timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) then
+   if (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) then
       call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx, ierr)
       call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx, ierr)
-      call VecDuplicate(MEF90HeatXferCtx % temperature, residualTemp, ierr); CHKERRQ(ierr)
+      call VecDuplicate(MEF90HeatXferCtx%temperature, residualTemp, ierr); CHKERRQ(ierr)
       call PetscObjectSetName(residualTemp, "residualTemp", ierr); CHKERRQ(ierr)
-      select case (MEF90HeatXferGlobalOptions % timeSteppingType)
+      select case (MEF90HeatXferGlobalOptions%timeSteppingType)
       case (MEF90HeatXFer_timeSteppingTypeSteadyState)
          call MEF90HeatXferCreateSNES(MEF90HeatXferCtx, snesTemp, residualTemp, ierr)
       case (MEF90HeatXFer_timeSteppingTypeTransient)
@@ -269,31 +269,31 @@ program ThermoElastoPlasticity
       end select
 
       !!! Link the temperature field in the DefMechContext with that of the HeatXfer
-      MEF90DefMechCtx % temperature => MEF90HeatXferCtx % temperature
+      MEF90DefMechCtx%temperature => MEF90HeatXferCtx%temperature
    end if
 
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(size(MEF90DefMechCtx % CellSetOptionsBag)))
+   allocate (energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
    energy = 0.0_kr
 
-   allocate (plasticDissipationvariation(size(MEF90DefMechCtx % CellSetOptionsBag)))
+   allocate (plasticDissipationvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
    plasticDissipationvariation = 0.0_kr
 
-   allocate (plasticDissipation(size(MEF90DefMechCtx % CellSetOptionsBag)))
+   allocate (plasticDissipation(size(MEF90DefMechCtx%CellSetOptionsBag)))
    plasticDissipation = 0.0_kr
 
-   allocate (work(size(MEF90DefMechCtx % CellSetOptionsBag)))
+   allocate (work(size(MEF90DefMechCtx%CellSetOptionsBag)))
    work = 0.0_kr
 
    !!!
    !!! Try to figure out if the file was formatted
    !!!
-   if (MEF90Ctx % rank == 0) then
-      call EXGVP(MEF90Ctx % fileExoUnit, "N", numfield, ierr)
+   if (MEF90Ctx%rank == 0) then
+      call EXGVP(MEF90Ctx%fileExoUnit, "N", numfield, ierr)
    end if
-   call MPI_Bcast(numfield, 1, MPIU_INTEGER, 0, MEF90Ctx % comm, ierr)
+   call MPI_Bcast(numfield, 1, MPIU_INTEGER, 0, MEF90Ctx%comm, ierr)
    if (numfield == 0) then
       call MEF90DefMechFormatEXO(MEF90DefMechCtx, time, ierr)
       !!! Will have to figure out this one
@@ -302,40 +302,40 @@ program ThermoElastoPlasticity
    !!!
    !!! Actual computations / time stepping
    !!!
-   if (MEF90DefMechGlobalOptions % timeSteppingType == MEF90DefMech_timeSteppingTypeQuasiStatic) then
-      do step = 1, MEF90GlobalOptions % timeNumStep
+   if (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_timeSteppingTypeQuasiStatic) then
+      do step = 1, MEF90GlobalOptions%timeNumStep
          write (IOBuffer, 100) step, time(step)
-         call PetscPrintf(MEF90Ctx % comm, IOBuffer, ierr); CHKERRQ(ierr)
+         call PetscPrintf(MEF90Ctx%comm, IOBuffer, ierr); CHKERRQ(ierr)
 
          !!! Solve for temperature
-         select case (MEF90HeatXferGlobalOptions % timeSteppingType)
+         select case (MEF90HeatXferGlobalOptions%timeSteppingType)
          case (MEF90HeatXFer_timeSteppingTypeSteadyState)
             !!! Update fields
             call MEF90HeatXferSetTransients(MEF90HeatXferCtx, step, time(step), ierr)
             !!! Solve SNES
-            call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx % temperature, MEF90HeatXferCtx, ierr); 
-            call SNESSolve(snesTemp, PETSC_NULL_OBJECT, MEF90HeatXferCtx % temperature, ierr); CHKERRQ(ierr)
+            call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature, MEF90HeatXferCtx, ierr); 
+            call SNESSolve(snesTemp, PETSC_NULL_OBJECT, MEF90HeatXferCtx%temperature, ierr); CHKERRQ(ierr)
 
             !!! Compute thermal energy
-            call MEF90HeatXFerEnergy(MEF90HeatXferCtx % temperature, time(step), MEF90HeatXferCtx, energy, work, ierr); CHKERRQ(ierr)
-            call DMmeshGetLabelIdIS(MEF90HeatXferCtx % DM, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
+            call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature, time(step), MEF90HeatXferCtx, energy, work, ierr); CHKERRQ(ierr)
+            call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call MEF90ISAllGatherMerge(PETSC_COMM_WORLD, CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call ISGetIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             do set = 1, size(setID)
                write (IOBuffer, 101) setID(set), energy(set), work(set), energy(set) - work(set)
-               call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+               call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
             end do
             call ISRestoreIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             call ISDestroy(CellSetGlobalIS, ierr); CHKERRQ(ierr)
             write (IOBuffer, 102) sum(energy), sum(work), sum(energy) - sum(work)
-            call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+            call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
             !!! Save results
             call MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
          case (MEF90HeatXFer_timeSteppingTypeTransient)
             if (step > 1) then
                !!! Update fields
                call MEF90HeatXferSetTransients(MEF90HeatXferCtx, step, time(step), ierr)
-               call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx % temperature, MEF90HeatXferCtx, ierr); 
+               call MEF90HeatXferUpdateboundaryTemperature(MEF90HeatXferCtx%temperature, MEF90HeatXferCtx, ierr); 
                !!! Make sure TS does not overstep
                call TSGetTime(tsTemp, t, ierr); CHKERRQ(ierr)
                if (t < time(step)) then
@@ -344,7 +344,7 @@ program ThermoElastoPlasticity
                   !!! replacing the constant 10000 with a variable leads to divergence of TSAdapt
                   !!! when using gcc
                   call TSSetDuration(tsTemp, 10000, time(step), ierr); CHKERRQ(ierr)
-                  call TSSolve(tsTemp, MEF90HeatXferCtx % temperature, time(step), ierr); CHKERRQ(ierr)
+                  call TSSolve(tsTemp, MEF90HeatXferCtx%temperature, time(step), ierr); CHKERRQ(ierr)
                   call TSGetTime(tsTemp, t, ierr); CHKERRQ(ierr)
                   time(step) = t
                else
@@ -354,61 +354,61 @@ program ThermoElastoPlasticity
             end if
 
             !!! Compute thermal energy
-            call MEF90HeatXFerEnergy(MEF90HeatXferCtx % temperature, time(step), MEF90HeatXferCtx, energy, work, ierr); CHKERRQ(ierr)
-            call DMmeshGetLabelIdIS(MEF90HeatXferCtx % DM, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
+            call MEF90HeatXFerEnergy(MEF90HeatXferCtx%temperature, time(step), MEF90HeatXferCtx, energy, work, ierr); CHKERRQ(ierr)
+            call DMmeshGetLabelIdIS(MEF90HeatXferCtx%DM, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call MEF90ISAllGatherMerge(PETSC_COMM_WORLD, CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call ISGetIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             do set = 1, size(setID)
                write (IOBuffer, 101) setID(set), energy(set), work(set), energy(set) - work(set)
-               call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+               call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
             end do
             call ISRestoreIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             call ISDestroy(CellSetGlobalIS, ierr); CHKERRQ(ierr)
             write (IOBuffer, 102) sum(energy), sum(work), sum(energy) - sum(work)
-            call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+            call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
             !!! Save results
             call MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
          end select
 
          !!! Solve for displacement
-         select case (MEF90DefMechGlobalOptions % timeSteppingType)
+         select case (MEF90DefMechGlobalOptions%timeSteppingType)
          case (MEF90DefMech_timeSteppingTypeQuasiStatic)
             !!! Update fields
             call MEF90DefMechSetTransients(MEF90DefMechCtx, step, time(step), ierr)
-            call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx % displacement, MEF90DefMechCtx, ierr)
+            call MEF90DefMechUpdateboundaryDisplacement(MEF90DefMechCtx%displacement, MEF90DefMechCtx, ierr)
 
             !!! beginning of the alternate minimization
 
-            AltMin: do AltMinIter = 1, MEF90DefMechGlobalOptions % maxit
-               call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+            AltMin: do AltMinIter = 1, MEF90DefMechGlobalOptions%maxit
+               call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
                !! Duplicated PlasticStraincumulated
                !Call VecDuplicate(MEF90DefMechCtx%plasticStrain,plasticStrainCumulatedDuringAltMin,ierr);CHKERRQ(ierr)
 
                !!! Solve SNES
-               call SNESSolve(snesDisp, PETSC_NULL_OBJECT, MEF90DefMechCtx % displacement, ierr); CHKERRQ(ierr)
+               call SNESSolve(snesDisp, PETSC_NULL_OBJECT, MEF90DefMechCtx%displacement, ierr); CHKERRQ(ierr)
                call SNESGetConvergedReason(snesDisp, snesDispConvergedReason, ierr); CHKERRQ(ierr)
                if (snesDispConvergedReason < 0) then
                   write (IOBuffer, *) "SNESConvergedReason returned ", snesDispConvergedReason, "\n"
-                  call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+                  call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
                end if
 
                !!! Save the PlasticStrainPrevious
-               call VecCopy(MEF90DefMechCtx % plasticStrain, plasticStrainPrevious, ierr); CHKERRQ(ierr)
+               call VecCopy(MEF90DefMechCtx%plasticStrain, plasticStrainPrevious, ierr); CHKERRQ(ierr)
                !!! Solve PlasticProjection
-               call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, MEF90DefMechCtx % PlasticStrain, MEF90DefMechCtx % displacement, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
+               call MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, MEF90DefMechCtx%PlasticStrain, MEF90DefMechCtx%displacement, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
                !!! add damage in DefMechPlasticStrainUpdate
 
-               call VecAxPy(plasticStrainPrevious, -1.0_kr, MEF90DefMechCtx % plasticStrain, ierr); CHKERRQ(ierr)
+               call VecAxPy(plasticStrainPrevious, -1.0_kr, MEF90DefMechCtx%plasticStrain, ierr); CHKERRQ(ierr)
                !!! Calculate the Infinity norm in error on PlasticStrain
                call VecNorm(plasticStrainPrevious, NORM_INFINITY, PlasticStrainMaxChange, ierr); CHKERRQ(ierr)
-               call VecWAXPY(MEF90DefMechCtx % cumulatedPlasticDissipation, 1.0_kr, cumulatedDissipatedPlasticEnergyOld, cumulatedDissipatedPlasticEnergyVariation, ierr); CHKERRQ(ierr)
+               call VecWAXPY(MEF90DefMechCtx%cumulatedPlasticDissipation, 1.0_kr, cumulatedDissipatedPlasticEnergyOld, cumulatedDissipatedPlasticEnergyVariation, ierr); CHKERRQ(ierr)
                !!! Sum The PlasticStrainPrevious with PlasticStrain
                !Call VecAxPy(MEF90DefMechCtx%plasticStrain,1.0_Kr,plasticStrainPrevious,ierr);CHKERRQ(ierr)
                !Call VecView(MEF90DefMechCtx%plasticStrain,PETSC_VIEWER_STDOUT_WORLD,ierr);CHKERRQ(ierr)
 
                write (*, *) 'PlasticStrainMaxChange:          ', PlasticStrainMaxChange
 
-               if (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions % plasticStrainATol) then
+               if (PlasticStrainMaxChange <= MEF90DefMechGlobalOptions%plasticStrainATol) then
                   exit
                end if
 
@@ -426,40 +426,40 @@ program ThermoElastoPlasticity
             energy = 0.0_kr
             plasticDissipationvariation = 0.0_kr
             work = 0.0_kr
-            call MEF90DefMechWork(MEF90DefMechCtx % displacement, MEF90DefMechCtx, work, ierr); CHKERRQ(ierr)
-            call MEF90DefMechElasticEnergy(MEF90DefMechCtx % displacement, MEF90DefMechCtx, energy, ierr); CHKERRQ(ierr)
+            call MEF90DefMechWork(MEF90DefMechCtx%displacement, MEF90DefMechCtx, work, ierr); CHKERRQ(ierr)
+            call MEF90DefMechElasticEnergy(MEF90DefMechCtx%displacement, MEF90DefMechCtx, energy, ierr); CHKERRQ(ierr)
 
-            call MEF90DefMechPlasticDissipation(MEF90DefMechCtx % displacement, MEF90DefMechCtx, plasticStrainOld, plasticDissipationvariation, ierr); CHKERRQ(ierr)
+            call MEF90DefMechPlasticDissipation(MEF90DefMechCtx%displacement, MEF90DefMechCtx, plasticStrainOld, plasticDissipationvariation, ierr); CHKERRQ(ierr)
 
-            call DMmeshGetLabelIdIS(MEF90DefMechCtx % DMVect, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
+            call DMmeshGetLabelIdIS(MEF90DefMechCtx%DMVect, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call MEF90ISAllGatherMerge(PETSC_COMM_WORLD, CellSetGlobalIS, ierr); CHKERRQ(ierr)
             call ISGetIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             do set = 1, size(setID)
                plasticDissipation(set) = plasticDissipation(set) + plasticDissipationvariation(set)
                write (IOBuffer, 201) setID(set), energy(set), work(set), energy(set) - work(set), plasticDissipation(set)
-               call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+               call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
             end do
 
             call ISRestoreIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
             call ISDestroy(CellSetGlobalIS, ierr); CHKERRQ(ierr)
             write (IOBuffer, 202) sum(energy), sum(work), sum(energy) - sum(work)
-            call PetscPrintf(MEF90Ctx % Comm, IOBuffer, ierr); CHKERRQ(ierr)
+            call PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr); CHKERRQ(ierr)
 
             !!! Save results and boundary Values
-            if (MEF90DefMechGlobalOptions % stressOffset > 0) then
-               call MEF90DefMechStress(MEF90DefMechCtx % displacement, MEF90DefMechCtx, MEF90DefMechCtx % stress, ierr)
+            if (MEF90DefMechGlobalOptions%stressOffset > 0) then
+               call MEF90DefMechStress(MEF90DefMechCtx%displacement, MEF90DefMechCtx, MEF90DefMechCtx%stress, ierr)
             end if
 
             call MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr)
 
             !!! Update plasticstrainold & cumulatedDissipatedPlasticEnergy
-            call VecCopy(MEF90DefMechCtx % plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
-            call VecCopy(MEF90DefMechCtx % cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
+            call VecCopy(MEF90DefMechCtx%plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
+            call VecCopy(MEF90DefMechCtx%cumulatedPlasticDissipation, cumulatedDissipatedPlasticEnergyOld, ierr); CHKERRQ(ierr)
 
          end select
 
          !!! update plasticstrainold
-         call VecCopy(MEF90DefMechCtx % plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
+         call VecCopy(MEF90DefMechCtx%plasticStrain, plasticStrainOld, ierr); CHKERRQ(ierr)
 
       end do !!step
    end if
@@ -470,13 +470,13 @@ program ThermoElastoPlasticity
 202 format("======= Total elastic energy: ", ES12.5, " work: ", ES12.5, " total: ", ES12.5, "\n")
 
    !!! Clean up and exit nicely
-   select case (MEF90DefMechGlobalOptions % timeSteppingType)
+   select case (MEF90DefMechGlobalOptions%timeSteppingType)
    case (MEF90DefMech_timeSteppingTypeQuasiStatic)
       call SNESDestroy(snesDisp, ierr); CHKERRQ(ierr)
       call VecDestroy(residualDisp, ierr); CHKERRQ(ierr)
    end select
 
-   select case (MEF90HeatXferGlobalOptions % timeSteppingType)
+   select case (MEF90HeatXferGlobalOptions%timeSteppingType)
    case (MEF90HeatXFer_timeSteppingTypeSteadyState)
       call SNESDestroy(snesTemp, ierr); CHKERRQ(ierr)
    case (MEF90HeatXFer_timeSteppingTypeTransient)
@@ -484,7 +484,7 @@ program ThermoElastoPlasticity
    end select
 
    call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx, ierr)
-   nullify (MEF90HeatXferCtx % temperature)
+   nullify (MEF90HeatXferCtx%temperature)
    call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx, ierr)
    call VecDestroy(residualDisp, ierr); CHKERRQ(ierr)
    call VecDestroy(residualTemp, ierr); CHKERRQ(ierr)
@@ -504,7 +504,7 @@ program ThermoElastoPlasticity
    call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
    call MEF90CtxCloseEXO(MEF90Ctx, ierr)
 
-   call PetscViewerASCIIOpen(MEF90Ctx % comm, trim(MEF90FilePrefix(MEF90Ctx % resultFile))//'.log', logViewer, ierr); CHKERRQ(ierr)
+   call PetscViewerASCIIOpen(MEF90Ctx%comm, trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log', logViewer, ierr); CHKERRQ(ierr)
    call PetscLogView(logViewer, ierr); CHKERRQ(ierr)
    call PetscViewerDestroy(logViewer, ierr); CHKERRQ(ierr)
    call MEF90CtxDestroy(MEF90Ctx, ierr)

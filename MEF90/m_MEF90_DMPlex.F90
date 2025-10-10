@@ -106,12 +106,12 @@ contains
       MPI_Comm                                :: comm
       PetscInt                                :: set
       PetscEnum                               :: setType
-      PetscInt, dimension(:), pointer           :: setID, pointID
+      PetscInt, dimension(:), pointer         :: setID, pointID
       type(tIS)                               :: setIS, pointIS
       type(MEF90ElementType)                  :: elemType
       DMPolytopeType                          :: cellType
-      PetscBool, dimension(:, :), pointer        :: constraintTruthTable
-      PetscBool, dimension(:), pointer          :: setConstraints
+      PetscBool, dimension(:, :), pointer     :: constraintTruthTable
+      PetscBool, dimension(:), pointer        :: setConstraints
       PetscInt                                :: numBC
       PetscBool                               :: flg
       character(len=MEF90MXSTRLEN)            :: BCOptionName
@@ -586,9 +586,9 @@ contains
             PetscCall(DMPlexGetTransitiveClosure(dm, setPointID(point), PETSC_TRUE, PETSC_NULL_INTEGER, closure, ierr))
             do p = 1, size(closure), 2
                PetscCall(DMPlexGetPointDepth(dm, closure(p), depth, ierr))
-               if (elemType % numDofs(depth + 1) > 0) then
-                  PetscCall(PetscSectionSetDof(section, closure(p), elemType % numDofs(depth + 1) * numComponents, ierr))
-                  PetscCall(PetscSectionSetFieldDof(section, closure(p), field, elemType % numDofs(depth + 1) * numComponents, ierr))
+               if (elemType%numDofs(depth + 1) > 0) then
+                  PetscCall(PetscSectionSetDof(section, closure(p), elemType%numDofs(depth + 1) * numComponents, ierr))
+                  PetscCall(PetscSectionSetFieldDof(section, closure(p), field, elemType%numDofs(depth + 1) * numComponents, ierr))
                end if
             end do! p
             PetscCall(DMPlexRestoreTransitiveClosure(dm, setPointID(point), PETSC_TRUE, PETSC_NULL_INTEGER, closure, ierr))
@@ -664,15 +664,15 @@ contains
       type(tPetscSection), intent(INOUT)  :: section
       PetscEnum, intent(IN)               :: setType
       PetscInt, intent(IN)                :: setID
-      PetscBool, dimension(:), pointer     :: constraints
-      PetscBool, dimension(:, :), pointer   :: table
+      PetscBool, dimension(:), pointer    :: constraints
+      PetscBool, dimension(:, :), pointer :: table
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      type(tIS)                          :: setPointIS
-      PetscInt, dimension(:), pointer      :: setPointID
-      PetscInt                           :: point, numDof
-      PetscInt, dimension(:), pointer      :: closure
-      PetscInt                           :: p
+      type(tIS)                           :: setPointIS
+      PetscInt, dimension(:), pointer     :: setPointID
+      PetscInt                            :: point, numDof
+      PetscInt, dimension(:), pointer     :: closure
+      PetscInt                            :: p
 
       PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
       if (.not. PetscObjectIsNull(setPOintIS)) then
@@ -706,13 +706,13 @@ contains
 
    subroutine MEF90SectionAllocateConstraint(dm, table, section, ierr)
       type(tDM), intent(IN)               :: dm
-      logical, dimension(:, :), pointer     :: table
+      PetscBool, dimension(:, :), pointer :: table
       type(tPetscSection), intent(INOUT)  :: section
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      PetscInt                           :: p, i, pStart, pEnd, numConstraints, numComponents
-      PetscInt, dimension(:), pointer      :: constraints
-      PetscInt                           :: field = 0
+      PetscInt                            :: p, i, pStart, pEnd, numConstraints, numComponents
+      PetscInt, dimension(:), pointer     :: constraints
+      PetscInt                            :: field = 0
 
       PetscCall(DMPlexGetChart(dm, pStart, pEnd, ierr))
       do p = 1, pEnd
@@ -786,7 +786,7 @@ contains
       PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx, dm, lcgSF, ierr))
       PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx, dm, cglSF, ierr))
       PetscCall(PetscObjectGetName(v, vecname, ierr))
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx, dm, ioSF, ierr))
          PetscCall(DMGetNaturalSF(dm, naturalSF, ierr))
          PetscCall(PetscSFCompose(lcgSF, naturalSF, tempSF, ierr))
@@ -833,7 +833,7 @@ contains
       PetscCall(CreateCGlobalToLocalSF_Private(MEF90Ctx, dm, cglSF, ierr))
       PetscCall(CreateSideSF_Private(MEF90Ctx, dm, iosideSF, sideioSF, ierr))
       PetscCall(PetscObjectGetName(v, vecname, ierr))
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCall(CreateNaturalToIOSF_Private(MEF90Ctx, dm, ioSF, ierr))
          PetscCall(DMGetNaturalSF(dm, naturalSF, ierr))
          PetscCall(PetscSFCompose(lcgSF, naturalSF, tempSF, ierr))
@@ -909,15 +909,15 @@ contains
             if (coff >= 0) then
                do d = 1, cdof
                   local(nsize + 1) = coff + cindices(d)
-                  remote(nsize + 1) % rank = MEF90Ctx % rank
-                  remote(nsize + 1) % index = loff + cindices(d)
+                  remote(nsize + 1)%rank = MEF90Ctx%rank
+                  remote(nsize + 1)%index = loff + cindices(d)
                   nsize = nsize + 1
                end do ! d
             end if ! coff
             PetscCall(PetscSectionRestoreConstraintIndices(locBSection, p, cindices, ierr))
          end if ! cdof
       end do
-      PetscCall(PetscSFCreate(MEF90Ctx % Comm, sf, ierr))
+      PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
       PetscCall(PetscSFSetFromOptions(sf, ierr))
       PetscCall(PetscSFSetGraph(sf, nroots, nleaves, local, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
       deallocate (remote)
@@ -1211,7 +1211,7 @@ contains
                         !!! create parsers
                   do c = 1, bs
                      exprs(c) = parse(ExprStrComp(c))
-                     exprs(c) = exprs(c) % subs(Symbol("t"), RealDouble(t))
+                     exprs(c) = exprs(c)%subs(Symbol("t"), RealDouble(t))
                   end do
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
                         !!! Set the values on the closure of the current point
@@ -1236,10 +1236,10 @@ contains
                                  do c = 1, bs
                                     tmpExpr = Exprs(c)
                                     do i = 1, dim
-                                       tmpExpr = tmpExpr % subs(vars(i), RealDouble(xyz(i)))
+                                       tmpExpr = tmpExpr%subs(vars(i), RealDouble(xyz(i)))
                                     end do ! i
-                                    tmpExpr = tmpExpr % evalf()
-                                    vArray((dof - 1) * bs + c) = tmpExpr % dbl()
+                                    tmpExpr = tmpExpr%evalf()
+                                    vArray((dof - 1) * bs + c) = tmpExpr%dbl()
                                  end do ! c
                               end if !bnumDof
                            end do !p
@@ -1340,7 +1340,7 @@ contains
                         !!! create parsers
                   do c = 1, bs
                      exprs(c) = parse(ExprStrComp(c))
-                     exprs(c) = exprs(c) % subs(Symbol("t"), RealDouble(t))
+                     exprs(c) = exprs(c)%subs(Symbol("t"), RealDouble(t))
                   end do
 
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
@@ -1367,10 +1367,10 @@ contains
                                     if (setBC(c)) then
                                        tmpExpr = Exprs(c)
                                        do i = 1, dim
-                                          tmpExpr = tmpExpr % subs(vars(i), RealDouble(xyz(i)))
+                                          tmpExpr = tmpExpr%subs(vars(i), RealDouble(xyz(i)))
                                        end do ! i
-                                       tmpExpr = tmpExpr % evalf()
-                                       vArray((dof - 1) * bs + c) = tmpExpr % dbl()
+                                       tmpExpr = tmpExpr%evalf()
+                                       vArray((dof - 1) * bs + c) = tmpExpr%dbl()
                                     end if
                                  end do ! c
                               end if !bnumDof
@@ -1423,7 +1423,7 @@ contains
       PetscCall(DMPlexCreateNaturalVector(dm, vnat, ierr))
       PetscCall(VecGetSize(vnat, globalSize, ierr))
       PetscCall(VecGetBlockSize(vnat, bs, ierr))
-      PetscCall(VecCreate(MEF90Ctx % Comm, vio, ierr))
+      PetscCall(VecCreate(MEF90Ctx%Comm, vio, ierr))
       PetscCall(VecSetBlockSize(vio, bs, ierr))
       PetscCall(VecSetSizes(vio, PETSC_DETERMINE, globalSize, ierr))
       PetscCall(VecSetFromOptions(vio, ierr))
@@ -1434,11 +1434,11 @@ contains
       PetscCall(PetscLayoutGetRanges(ioMap, ioRange, ierr))
       allocate (remote(nleaves))
       do i = 0, nleaves - 1
-         globalIndex = ioRange(MEF90Ctx % rank + 1) + i
-         remote(i + 1) % rank = 0
-         remote(i + 1) % index = globalIndex
+         globalIndex = ioRange(MEF90Ctx%rank + 1) + i
+         remote(i + 1)%rank = 0
+         remote(i + 1)%index = globalIndex
       end do
-      PetscCall(PetscSFCreate(MEF90Ctx % Comm, sf, ierr))
+      PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
       ! PetscCall(PetscObjectSetName(sf,"Natural-To-IO SF",ierr))
       PetscCall(PetscSFSetFromOptions(sf, ierr))
       PetscCall(PetscSFSetGraph(sf, nroots, nleaves, PETSC_NULL_INTEGER_ARRAY, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
@@ -1477,10 +1477,10 @@ contains
       n = pEnd - pStart
       allocate (remote(n))
       do p = 1, n
-         remote(p) % rank = MEF90Ctx % rank
-         remote(p) % index = p - 1
+         remote(p)%rank = MEF90Ctx%rank
+         remote(p)%index = p - 1
       end do
-      PetscCall(PetscSFCreate(MEF90Ctx % Comm, idSF, ierr))
+      PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
       PetscCall(PetscSFSetFromOptions(idSF, ierr))
       PetscCall(PetscSFSetGraph(idSF, n, n, PETSC_NULL_INTEGER_ARRAY, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
       PetscCall(PetscSFSetUp(idSF, ierr))
@@ -1526,10 +1526,10 @@ contains
       n = pEnd - pStart
       allocate (remote(n))
       do p = 1, n
-         remote(p) % rank = MEF90Ctx % rank
-         remote(p) % index = p - 1
+         remote(p)%rank = MEF90Ctx%rank
+         remote(p)%index = p - 1
       end do
-      PetscCall(PetscSFCreate(MEF90Ctx % Comm, idSF, ierr))
+      PetscCall(PetscSFCreate(MEF90Ctx%Comm, idSF, ierr))
       PetscCall(PetscSFSetFromOptions(idSF, ierr))
       PetscCall(PetscSFSetGraph(idSF, n, n, PETSC_NULL_INTEGER_ARRAY, PETSC_COPY_VALUES, remote, PETSC_COPY_VALUES, ierr))
       PetscCall(PetscSFSetUp(idSF, ierr))
@@ -1538,7 +1538,7 @@ contains
       PetscCall(PetscSFCreateInverseSF(tempSF, sf, ierr))
       PetscCall(PetscSFDestroyRemoteOffsets(remoteOffsets, ierr))
       PetscCall(PetscSFDestroy(tempSF, ierr))
-      if (MEF90Ctx % NumProcs > 1) then
+      if (MEF90Ctx%NumProcs > 1) then
          PetscCall(PetscSFGetGraph(sf, lgNRoots, lgNLeaves, lgLocal, lgRemote, ierr))
          PetscCall(PetscSFCreateRemoteOffsets(overlapSF, locSection, gSection, remoteOffsets, ierr))
          PetscCall(PetscSFCreateSectionSF(overlapSF, locSection, remoteOffsets, gSection, ttempSF, ierr))
@@ -1553,31 +1553,31 @@ contains
          if (loc(lgLocal) /= loc(PETSC_NULL_INTEGER)) then
             do p = 1, lgNLeaves
                glLocal(p) = lgLocal(p)
-               glRemote(p) % rank = lgRemote(p) % rank
-               glRemote(p) % index = lgRemote(p) % index
+               glRemote(p)%rank = lgRemote(p)%rank
+               glRemote(p)%index = lgRemote(p)%index
             end do
          else
             do p = 1, lgNLeaves
                glLocal(p) = p - 1
-               glRemote(p) % rank = lgRemote(p) % rank
-               glRemote(p) % index = lgRemote(p) % index
+               glRemote(p)%rank = lgRemote(p)%rank
+               glRemote(p)%index = lgRemote(p)%index
             end do
          end if
          if (loc(tempLocal) /= loc(PETSC_NULL_INTEGER)) then
             do p = 1, tempNLeaves
                glLocal(p + lgNLeaves) = tempLocal(p)
-               glRemote(p + lgNLeaves) % rank = tempRemote(p) % rank
-               glRemote(p + lgNLeaves) % index = tempRemote(p) % index
+               glRemote(p + lgNLeaves)%rank = tempRemote(p)%rank
+               glRemote(p + lgNLeaves)%index = tempRemote(p)%index
             end do
          else
             do p = 1, tempNLeaves
                glLocal(p + lgNLeaves) = p + lgNLeaves - 1
-               glRemote(p + lgNLeaves) % rank = tempRemote(p) % rank
-               glRemote(p + lgNLeaves) % index = tempRemote(p) % index
+               glRemote(p + lgNLeaves)%rank = tempRemote(p)%rank
+               glRemote(p + lgNLeaves)%index = tempRemote(p)%index
             end do
          end if
          PetscCall(PetscSFDestroy(sf, ierr))
-         PetscCall(PetscSFCreate(MEF90Ctx % Comm, sf, ierr))
+         PetscCall(PetscSFCreate(MEF90Ctx%Comm, sf, ierr))
          PetscCall(PetscSFSetFromOptions(sf, ierr))
          PetscCall(PetscSFSetGraph(sf, glNRoots, glNLeaves, glLocal, PETSC_COPY_VALUES, glRemote, PETSC_COPY_VALUES, ierr))
          PetscCall(PetscSFSetUp(sf, ierr))
@@ -1622,7 +1622,7 @@ contains
       nleaves = 0_ki
       totalleaves = 0_ki
       PetscCall(DMGetLabelIdIS(dm, "Face Sets", gssIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx % comm, gssIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, gssIS, ierr))
       PetscCall(ISGetSize(gssIS, numSS, ierr))
       PetscCall(DMGetLabelIdIS(dm, "Face Sets", ssIS, ierr))
       PetscCall(DMPlexGetMigrationSF(dm, migrationSF, ierr))
@@ -1649,16 +1649,16 @@ contains
          allocate (ilocal(numFaces))
          allocate (iremote(numFaces))
          do face = 1, numFaces
-            iremote(face) % rank = MEF90Ctx % Rank
-            iremote(face) % index = face - 1
+            iremote(face)%rank = MEF90Ctx%Rank
+            iremote(face)%index = face - 1
             ilocal(face) = faceID(face)
          end do
-         PetscCall(PetscSFCreate(MEF90Ctx % Comm, tempSF, ierr))
+         PetscCall(PetscSFCreate(MEF90Ctx%Comm, tempSF, ierr))
          PetscCall(PetscSFSetFromOptions(tempSF, ierr))
 
          PetscCall(PetscSFSetGraph(tempSF, numFaces, numFaces, ilocal, PETSC_COPY_VALUES, iremote, PETSC_COPY_VALUES, ierr))
          PetscCall(PetscSFSetUp(tempSF, ierr))
-         if (MEF90Ctx % NumProcs > 1) then
+         if (MEF90Ctx%NumProcs > 1) then
             PetscCall(PetscSFComposeInverse(migrationSF, tempSF, sf, ierr))
             PetscCall(PetscSFDestroy(tempSF, ierr))
          else
@@ -1676,20 +1676,20 @@ contains
          PetscCall(PetscSFGetGraph(sf, nroots, nleaves, emptyInd, iremote, ierr))
          allocate (ilocal(nleaves))
          do i = 1, nleaves
-            ilocal(i) = iremote(i) % index
+            ilocal(i) = iremote(i)%index
          end do
-         PetscCall(ISCreateGeneral(MEF90Ctx % comm, nleaves, ilocal, PETSC_COPY_VALUES, locfacesIS(set), ierr))
+         PetscCall(ISCreateGeneral(MEF90Ctx%comm, nleaves, ilocal, PETSC_COPY_VALUES, locfacesIS(set), ierr))
          PetscCall(ISDestroy(faceIS, ierr))
          PetscCall(PetscSFDestroy(sf, ierr))
          deallocate (ilocal)
          PetscCall(PetscSFRestoreGraph(sf, nroots, nleaves, emptyInd, iremote, ierr))
       end do
       do set = 1, numSS
-         PetscCall(MEF90ISAllGatherMerge(MEF90Ctx % comm, locfacesIS(set), ierr))
+         PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, locfacesIS(set), ierr))
       end do
-      PetscCall(ISConcatenate(MEF90Ctx % comm, numSS, locfacesIS, facesIS, ierr))
+      PetscCall(ISConcatenate(MEF90Ctx%comm, numSS, locfacesIS, facesIS, ierr))
       PetscCall(ISGetIndices(facesIS, faceID, ierr))
-      if (MEF90Ctx % rank == 0) then
+      if (MEF90Ctx%rank == 0) then
          totalleaves = size(faceID)
       end if
       allocate (facesID(totalleaves))
@@ -1703,7 +1703,7 @@ contains
       PetscCall(PetscSortIntWithPermutation(totalleaves, facesID, permIndices, ierr))
       PetscCall(DMGetLocalVector(dm, localVec, ierr))
       PetscCall(VecGetBlockSize(localVec, numComponent, ierr))
-      PetscCall(MPI_Allreduce(numComponent, uNumComponent, 1, MPIU_INTEGER, MPI_MAX, MEF90Ctx % comm, ierr))
+      PetscCall(MPI_Allreduce(numComponent, uNumComponent, 1, MPIU_INTEGER, MPI_MAX, MEF90Ctx%comm, ierr))
       if ((numComponent == 1) .and. (uNumComponent > 1)) then
          numComponent = uNumComponent
       end if
@@ -1713,11 +1713,11 @@ contains
       do i = 1, totalleaves
          do j = 1, numComponent
             ilocal((i - 1) * numComponent + j) = (i - 1) * numComponent + j - 1
-            iremote((i - 1) * numComponent + j) % rank = MEF90Ctx % rank
-            iremote((i - 1) * numComponent + j) % index = numComponent * permIndices(i) + j - 1
+            iremote((i - 1) * numComponent + j)%rank = MEF90Ctx%rank
+            iremote((i - 1) * numComponent + j)%index = numComponent * permIndices(i) + j - 1
          end do
       end do
-      PetscCall(PetscSFCreate(MEF90Ctx % Comm, invSF, ierr))
+      PetscCall(PetscSFCreate(MEF90Ctx%Comm, invSF, ierr))
       PetscCall(PetscSFSetFromOptions(invSF, ierr))
       PetscCall(PetscSFSetGraph(invSF, numComponent * totalleaves, numComponent * totalleaves, ilocal, PETSC_COPY_VALUES, iremote, PETSC_COPY_VALUES, ierr))
       PetscCall(PetscSFSetUp(invSF, ierr))
