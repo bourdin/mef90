@@ -49,24 +49,27 @@ program vDef
    PetscReal                                          :: temperatureInitialTimeStep, temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
    PetscLogStage                                      :: logStageHeatXfer, logStageDamage, logStageDisplacement, logStageEnergy, logStageIO
+   PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO,logStageSetup
 
    PetscBool                                          :: flg, EXONeedsFormatting = PETSC_FALSE
    character(len=MEF90MXSTRLEN)                       :: IOBuffer
-   ! Type(tPetscViewer)                                 :: logViewer
+   Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
    PetscInt                                           :: AltMinIter, AltMinStep = 0_ki
    PetscReal                                          :: damageMaxChange, damageMin, damageMax
 
    !!! Initialize MEF90
-   PetscCallA(PetscInitialize(ierr))
-   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
-   PetscCallA(PetscLogStageRegister('HeatXfer    ', logStageHeatXfer, ierr))
-   PetscCallA(PetscLogStageRegister('Damage      ', logStageDamage, ierr))
-   PetscCallA(PetscLogStageRegister('Displacement', logStageDisplacement, ierr))
-   PetscCallA(PetscLogStageRegister('Energy      ', logStageEnergy, ierr))
-   PetscCallA(PetscLogStageRegister('IO          ', logStageIO, ierr))
+   PetscCallA(PetscInitialize(PETSC_NULL_CHARACTER,ierr))
+   PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
+   PetscCallA(PetscLogStageRegister('HeatXfer    ',logStageHeatXfer,ierr))
+   PetscCallA(PetscLogStageRegister('Damage      ',logStageDamage,ierr))
+   PetscCallA(PetscLogStageRegister('Displacement',logStageDisplacement,ierr))
+   PetscCallA(PetscLogStageRegister('Energy      ',logStageEnergy,ierr))
+   PetscCallA(PetscLogStageRegister('IO          ',logStageIO,ierr))
+   PetscCallA(PetscLogStageRegister('Setup       ',logStageSetup,ierr))
 
+   PetscCallA(PetscLogStagePush(logStageSetup,ierr))
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90CtxDefaultGlobalOptions, ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
@@ -224,6 +227,7 @@ program vDef
    if (MEF90GlobalOptions%verbose > 1) then
       PetscCallA(PetscViewerView(MEF90Ctx%resultViewer, PETSC_VIEWER_STDOUT_WORLD, ierr))
    end if
+   PetscCallA(PetscLogStagePop(ierr))
 
    !!!
    !!! Actual computations / time stepping
@@ -503,9 +507,9 @@ program vDef
             PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr))
             PetscCallA(PetscLogStagePop(ierr))
 
-            ! PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-            ! PetscCallA(PetscLogView(logViewer,ierr))
-            ! PetscCallA(PetscViewerDestroy(logViewer,ierr))
+            PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+            PetscCallA(PetscLogView(logViewer,ierr))
+            PetscCallA(PetscViewerDestroy(logViewer,ierr))
          end select ! timeStepingType
 
          if (step == MEF90GlobalOptions%timeNumStep) then
@@ -579,11 +583,11 @@ program vDef
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr))
 
    PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer, ierr))
-   ! If (.NOT. MEF90GlobalOptions%dryrun) Then
-   !    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
-   !    PetscCallA(PetscLogView(logViewer,ierr))
-   !    PetscCallA(PetscViewerDestroy(logViewer,ierr))
-   ! End If
+   If (.NOT. MEF90GlobalOptions%dryrun) Then
+      PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))
+      PetscCallA(PetscLogView(logViewer,ierr))
+      PetscCallA(PetscViewerDestroy(logViewer,ierr))
+   End If
    PetscCallA(MEF90CtxDestroy(MEF90Ctx, ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

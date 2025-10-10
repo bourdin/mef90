@@ -5,53 +5,53 @@ module m_MEF90_DefMechCtx_Type
 
    type MEF90DefMechCtx_Type
       type(MEF90Ctx_Type), pointer             :: MEF90Ctx => null()
-      type(tDM)                               :: megaDM
-      PetscInt                                :: dim
-      PetscReal                               :: analysisTime, timeStep
+      type(tDM)                                :: megaDM
+      PetscInt                                 :: dim
+      PetscReal                                :: analysisTime, timeStep
 
       !!!  vertex based vec
-      type(tVec), pointer                      :: displacementLocal => null()
-      type(tVec), pointer                      :: displacementPreviousStepLocal => null()
-      type(tVec), pointer                      :: damageLocal => null()
-      type(tVec), pointer                      :: damagePreviousStepLocal => null()
-      type(tVec), pointer                      :: displacementLowerBoundLocal => null()
-      type(tVec), pointer                      :: displacementUpperBoundLocal => null()
-      type(tVec), pointer                      :: temperatureLocal => null()
+      type(tVec), pointer                       :: displacementLocal => null()
+      type(tVec), pointer                       :: displacementPreviousStepLocal => null()
+      type(tVec), pointer                       :: damageLocal => null()
+      type(tVec), pointer                       :: damagePreviousStepLocal => null()
+      type(tVec), pointer                       :: displacementLowerBoundLocal => null()
+      type(tVec), pointer                       :: displacementUpperBoundLocal => null()
+      type(tVec), pointer                       :: temperatureLocal => null()
 
       !!! cell based vec
-      type(tVec), pointer                      :: bodyForce => null()
-      type(tVec), pointer                      :: boundaryForce => null()
-      type(tVec), pointer                      :: pressureForce => null()
-      !Type(tVec),pointer                      :: crackPressure => null()
-      type(tVec), pointer                      :: cohesiveDisplacement => null()
-      type(tVec), pointer                      :: plasticStrain => null()
-      type(tVec), pointer                      :: cumulatedPlasticDissipation => null()
-      type(tVec), pointer                      :: stress => null()
+      type(tVec), pointer                       :: bodyForce => null()
+      type(tVec), pointer                       :: boundaryForce => null()
+      type(tVec), pointer                       :: pressureForce => null()
+      !Type(tVec),pointer                       :: crackPressure => null()
+      type(tVec), pointer                       :: cohesiveDisplacement => null()
+      type(tVec), pointer                       :: plasticStrain => null()
+      type(tVec), pointer                       :: cumulatedPlasticDissipation => null()
+      type(tVec), pointer                       :: stress => null()
 
-      type(tPetscSF)                          :: displacementToIOSF, IOToDisplacementSF
-      type(tPetscSF)                          :: cohesiveDisplacementToIOSF, IOToCohesiveDisplacementSF
-      type(tPetscSF)                          :: displacementConstraintsSF
-      type(tPetscSF)                          :: damageToIOSF, IOToDamageSF
-      type(tPetscSF)                          :: damageConstraintsSF
-      type(tPetscSF)                          :: temperatureToIOSF, IOToTemperatureSF
-      type(tPetscSF)                          :: bodyForceToIOSF, IOToBodyForceSF
-      type(tPetscSF)                          :: boundaryForceToIOSF, IOToBoundaryForceSF
-      type(tPetscSF)                          :: pressureForceToIOSF, IOToPressureForceSF
-      type(tPetscSF)                          :: stressToIOSF, IOToStressSF
-      type(tPetscSF)                          :: plasticStrainToIOSF, IOToPlasticStrainSF
-      type(tPetscSF)                          :: cumulatedPlasticDissToIOSF, IOToCumulatedPlasticDissSF
+      type(tPetscSF)                            :: displacementToIOSF, IOToDisplacementSF
+      type(tPetscSF)                            :: cohesiveDisplacementToIOSF, IOToCohesiveDisplacementSF
+      type(tPetscSF)                            :: displacementConstraintsSF
+      type(tPetscSF)                            :: damageToIOSF, IOToDamageSF
+      type(tPetscSF)                            :: damageConstraintsSF
+      type(tPetscSF)                            :: temperatureToIOSF, IOToTemperatureSF
+      type(tPetscSF)                            :: bodyForceToIOSF, IOToBodyForceSF
+      type(tPetscSF)                            :: boundaryForceToIOSF, IOToBoundaryForceSF
+      type(tPetscSF)                            :: pressureForceToIOSF, IOToPressureForceSF
+      type(tPetscSF)                            :: stressToIOSF, IOToStressSF
+      type(tPetscSF)                            :: plasticStrainToIOSF, IOToPlasticStrainSF
+      type(tPetscSF)                            :: cumulatedPlasticDissToIOSF, IOToCumulatedPlasticDissSF
 
-      type(tPetscBag)                         :: GlobalOptionsBag
+      type(tPetscBag)                           :: GlobalOptionsBag
       type(tPetscBag), dimension(:), pointer    :: CellSetOptionsBag => null()
       type(tPetscBag), dimension(:), pointer    :: FaceSetOptionsBag => null()
       type(tPetscBag), dimension(:), pointer    :: VertexSetOptionsBag => null()
       type(tPetscBag), dimension(:), pointer    :: MaterialPropertiesBag => null()
 
-      type(tPetscViewer)                      :: globalEnergyViewer
+      type(tPetscViewer)                        :: globalEnergyViewer
       type(tPetscViewer), dimension(:), pointer :: setEnergyViewer => null()
 
-      PetscBool                               :: hasDisplacementBounds
-      PetscBool                               :: hasUnilateralContact
+      PetscBool                                 :: hasDisplacementBounds
+      PetscBool                                 :: hasUnilateralContact
    end type MEF90DefMechCtx_Type
 
    type MEF90DefMechGlobalOptions_Type
@@ -93,35 +93,35 @@ module m_MEF90_DefMechCtx_Type
 
    type MEF90DefMechCellSetOptions_Type
       PetscReal, dimension(3)                 :: bodyforce
-      PetscReal                              :: crackPressure
-      PetscEnum                              :: damageType
-      PetscEnum                              :: plasticityType
-      PetscEnum                              :: unilateralContactType
-      PetscReal                              :: unilateralContactHydrostaticDeviatoricGamma
-      PetscBool                              :: unilateralContactHybrid
-      PetscReal                              :: DamageATLinSoftk
-      PetscReal                              :: DamageAT1expb
-      PetscEnum                              :: drivingForceType
+      PetscReal                               :: crackPressure
+      PetscEnum                               :: damageType
+      PetscEnum                               :: plasticityType
+      PetscEnum                               :: unilateralContactType
+      PetscReal                               :: unilateralContactHydrostaticDeviatoricGamma
+      PetscBool                               :: unilateralContactHybrid
+      PetscReal                               :: DamageATLinSoftk
+      PetscReal                               :: DamageAT1expb
+      PetscEnum                               :: drivingForceType
       PetscReal, dimension(3)                 :: cohesiveDisplacement
       PetscBool, dimension(3)                 :: Has_displacementBC
       PetscReal, dimension(3)                 :: boundaryDisplacement
       PetscReal, dimension(3)                 :: displacementLowerBound
       PetscReal, dimension(3)                 :: displacementUpperBound
-      PetscBool                              :: Has_damageBC
-      PetscReal                              :: boundaryDamage
-      PetscBool                              :: CrackVolumeControlled
-      PetscBool                              :: WorkControlled
+      PetscBool                               :: Has_damageBC
+      PetscReal                               :: boundaryDamage
+      PetscBool                               :: CrackVolumeControlled
+      PetscBool                               :: WorkControlled
    end type MEF90DefMechCellSetOptions_Type
 
    type MEF90DefMechFaceSetOptions_Type
       PetscReal, dimension(3)                 :: boundaryforce
-      PetscReal                              :: pressureForce
+      PetscReal                               :: pressureForce
       PetscBool, dimension(3)                 :: Has_displacementBC
       PetscReal, dimension(3)                 :: boundaryDisplacement
       PetscReal, dimension(3)                 :: displacementLowerBound
       PetscReal, dimension(3)                 :: displacementUpperBound
-      PetscBool                              :: Has_damageBC
-      PetscReal                              :: boundaryDamage
+      PetscBool                               :: Has_damageBC
+      PetscReal                               :: boundaryDamage
    end type MEF90DefMechFaceSetOptions_Type
 
    type MEF90DefMechVertexSetOptions_Type
@@ -129,8 +129,8 @@ module m_MEF90_DefMechCtx_Type
       PetscReal, dimension(3)                 :: boundaryDisplacement
       PetscReal, dimension(3)                 :: displacementLowerBound
       PetscReal, dimension(3)                 :: displacementUpperBound
-      PetscBool                              :: Has_damageBC
-      PetscReal                              :: boundaryDamage
+      PetscBool                               :: Has_damageBC
+      PetscReal                               :: boundaryDamage
    end type MEF90DefMechVertexSetOptions_Type
 end module m_MEF90_DefMechCtx_Type
 
@@ -149,7 +149,7 @@ module m_MEF90DefMechGlobalOptions_Private
          use m_MEF90_DefMechCtx_Type
          implicit none(type)
          type(tPetscBag)                                       :: bag
-         type(MEF90DefMechGlobalOptions_Type), pointer          :: data
+         type(MEF90DefMechGlobalOptions_Type), pointer         :: data
          PetscErrorCode                                        :: ierr
       end subroutine PetscBagGetData
    end interface
@@ -297,33 +297,33 @@ module m_MEF90_DefMechCtx
    PetscSizeT, protected   :: sizeofMEF90DefMechVertexSetOptions
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_SolverTypeAltMin = 0, &
+      enumerator :: MEF90DefMech_SolverTypeAltMin = 0, &
          MEF90DefMech_SolverTypeQuasiNewton1, &
          MEF90DefMech_SolverTypeQuasiNewton2
    end enum
    character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90DefMech_SolverTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_TimeSteppingTypeNULL = 0, &
+      enumerator :: MEF90DefMech_TimeSteppingTypeNULL = 0, &
          MEF90DefMech_TimeSteppingTypeQuasiStatic
    end enum
    character(len=MEF90MXSTRLEN), dimension(5), protected   :: MEF90DefMech_TimeSteppingTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_DamageSolverTypeSNES = 0, &
+      enumerator :: MEF90DefMech_DamageSolverTypeSNES = 0, &
          MEF90DefMech_DamageSolverTypeTAO
    end enum
    character(len=MEF90MXSTRLEN), dimension(5), protected   :: MEF90DefMech_DamageSolverTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_BTTypeNULL = 0, &
+      enumerator :: MEF90DefMech_BTTypeNULL = 0, &
          MEF90DefMech_BTTypeBackward, &
          MEF90DefMech_BTTypeForward
    end enum
    character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90DefMech_BTTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_damageTypeAT1 = 0, &
+      enumerator :: MEF90DefMech_damageTypeAT1 = 0, &
          MEF90DefMech_damageTypeAT1exp, &
          MEF90DefMech_damageTypeAT2, &
          MEF90DefMech_damageTypeLinSoft, &
@@ -338,7 +338,7 @@ module m_MEF90_DefMechCtx
    character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_damageTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_plasticityTypeNone = 0, &
+      enumerator :: MEF90DefMech_plasticityTypeNone = 0, &
          MEF90DefMech_plasticityTypeTresca, &
          MEF90DefMech_plasticityTypeVonMises, &
          MEF90DefMech_plasticityTypeVonMisesPlaneTheory, &
@@ -352,7 +352,7 @@ module m_MEF90_DefMechCtx
    character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_plasticityTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_unilateralContactTypeNone = 0, &
+      enumerator :: MEF90DefMech_unilateralContactTypeNone = 0, &
          MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric, &
          MEF90DefMech_unilateralContactTypeHydrostatic, &
          MEF90DefMech_unilateralContactTypeDeviatoric, &
@@ -362,7 +362,7 @@ module m_MEF90_DefMechCtx
    character(len=MEF90MXSTRLEN), dimension(9), protected   :: MEF90DefMech_unilateralContactTypeList
 
    enum, bind(c)
-      enumerator  :: MEF90DefMech_drivingForceTypeNone = 0, &
+      enumerator :: MEF90DefMech_drivingForceTypeNone = 0, &
          MEF90_DefMechDrivingForceTypeDruckerPrager, &
          MEF90DefMech_drivingForceTypeDruckerPrager2
    end enum
@@ -385,7 +385,7 @@ contains
       type(MEF90DefMechCellSetOptions_Type)              :: DefMechCellSetOptions
       type(MEF90DefMechFaceSetOptions_Type)              :: DefMechFaceSetOptions
       type(MEF90DefMechVertexSetOptions_Type)            :: DefMechVertexSetOptions
-      character(len=1), pointer                           :: dummychar(:)
+      character(len=1), pointer                          :: dummychar(:)
       PetscSizeT                                         :: sizeofchar
 
       PetscCall(PetscDataTypeGetSize(PETSC_CHAR, sizeofchar, ierr))
@@ -478,18 +478,18 @@ contains
 
    subroutine MEF90DefMechCtxCreate(DefMechCtx, dm, MEF90Ctx, ierr)
       type(MEF90DefMechCtx_Type), intent(OUT)                   :: DefMechCtx
-      type(tDM), target, intent(IN)                              :: dm
-      type(MEF90Ctx_Type), target, intent(IN)                    :: MEF90Ctx
+      type(tDM), target, intent(IN)                             :: dm
+      type(MEF90Ctx_Type), target, intent(IN)                   :: MEF90Ctx
       PetscErrorCode, intent(INOUT)                             :: ierr
 
       type(MEF90CtxGlobalOptions_Type), pointer                 :: MEF90CtxGlobalOptions
-      type(tIS)                                                :: setIS
-      PetscInt                                                 :: set, numSet
-      PetscInt, dimension(:), pointer                            :: setID
-      character(len=MEF90MXSTRLEN)                             :: filename, IOBuffer
-      character(len=MEF90MXSTRLEN)                             :: vecName
-      type(tDM), dimension(:), pointer                           :: dmList
-      type(tPetscSF)                                           :: dummySF
+      type(tIS)                                                 :: setIS
+      PetscInt                                                  :: set, numSet
+      PetscInt, dimension(:), pointer                           :: setID
+      character(len=MEF90MXSTRLEN)                              :: filename, IOBuffer
+      character(len=MEF90MXSTRLEN)                              :: vecName
+      type(tDM), dimension(:), pointer                          :: dmList
+      type(tPetscSF)                                            :: dummySF
 
       PetscCall(MEF90DefMechCtxInitialize_Private(ierr))
       DefMechCtx%MEF90Ctx => MEF90Ctx

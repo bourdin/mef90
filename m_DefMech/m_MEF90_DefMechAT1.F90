@@ -61,7 +61,7 @@ contains
 !!!
    PetscReal function DaAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                          :: alpha
 
       DaAT1 = -2.0_kr * (1.0_kr - alpha)
    end function DaAT1
@@ -75,7 +75,7 @@ contains
 !!!
    PetscReal function D2aAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
       D2aAT1 = 2.0_kr
    end function D2aAT1
@@ -89,7 +89,7 @@ contains
 !!!
    PetscReal function wAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
       wAT1 = alpha
    end function wAT1
@@ -103,7 +103,7 @@ contains
 !!!
    PetscReal function DwAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
       DwAT1 = 1.0_kr
    end function DwAT1
@@ -117,7 +117,7 @@ contains
 !!!
    PetscReal function D2wAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
       D2wAT1 = 0.0_kr
    end function D2wAT1
