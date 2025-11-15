@@ -48,7 +48,6 @@ program vDef
 
    PetscReal                                          :: temperatureInitialTimeStep, temperatureInitialTime
    !PetscInt                                           :: tsTemperatureMaxIter
-   PetscLogStage                                      :: logStageHeatXfer, logStageDamage, logStageDisplacement, logStageEnergy, logStageIO
    PetscLogStage                                      :: logStageHeatXfer,logStageDamage,logStageDisplacement,logStageEnergy,logStageIO,logStageSetup
 
    PetscBool                                          :: flg, EXONeedsFormatting = PETSC_FALSE
