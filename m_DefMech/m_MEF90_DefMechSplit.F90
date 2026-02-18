@@ -4,20 +4,18 @@ module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
-!use MEF90_APPEND(m_MEF90_DefMechSplitMasonry,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
+! use MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
+! use MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
+! use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
 use m_MEF90_DefMechCtx
 
 implicit none(type, external)
 ! private
 public :: MEF90DefMechGetSplit
 public :: MEF90_DEFMECHSPLIT
-public :: MEF90_DEFMECHSPLITDEVIATORIC
-public :: MEF90_DEFMECHSPLITHD
-public :: MEF90_DEFMECHSPLITHYDROSTATIC
-! public :: MEF90_DEFMECHSPLITMASONRY
+! public :: MEF90_DEFMECHSPLITDEVIATORIC
+! public :: MEF90_DEFMECHSPLITHD
+! public :: MEF90_DEFMECHSPLITHYDROSTATIC
 public :: MEF90_DEFMECHSPLITNONE
 
 contains

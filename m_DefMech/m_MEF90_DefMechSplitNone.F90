@@ -4,6 +4,7 @@ module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
 use m_MEF90_Materials
+use m_MEF90_HookesLaw
 #define MEF90_DEFMECHSPLITNONE_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitNone_Constructor,MEF90_DIM)D
 implicit none(type)
 private
@@ -44,10 +45,11 @@ end function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 subroutine EEDNone(self, Strain, HookesLaw, EEDPlus, EEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)           :: self
-   type(MEF90_MATS), intent(IN)                        :: Strain
-   type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   PetscReal, intent(OUT)                              :: EEDPlus, EEDMinus
+   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
+   type(MEF90_MATS), intent(IN)                   :: Strain
+   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
+   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw
+   PetscReal, intent(OUT)                         :: EEDPlus, EEDMinus
 
    EEDPlus = ((HookesLaw * Strain) .dotP.Strain) * 0.5_kr
    EEDMinus = 0.0_kr
@@ -65,10 +67,11 @@ end subroutine EEDNone
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 subroutine DEEDNone(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)           :: self
-   type(MEF90_MATS), intent(IN)                        :: Strain
-   type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   type(MEF90_MATS), intent(OUT)                       :: DEEDPlus, DEEDMinus
+   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
+   type(MEF90_MATS), intent(IN)                   :: Strain
+   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
+   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw
+   type(MEF90_MATS), intent(OUT)                  :: DEEDPlus, DEEDMinus
 
    DEEDPlus = HookesLaw * Strain
    DEEDMinus = 0.0_kr
@@ -84,28 +87,30 @@ end subroutine DEEDNone
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 subroutine D2EEDNone(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)           :: self
-   type(MEF90_MATS), intent(IN)                        :: Strain
-   type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   type(MEF90_HOOKESLAW), intent(OUT)                  :: D2EEDPlus, D2EEDMinus
+   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
+   type(MEF90_MATS), intent(IN)                   :: Strain
+   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw, D2EEDPlus, D2EEDMinus
+
+   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
+   ! type(MEF90_HOOKESLAW), intent(OUT)                  :: D2EEDPlus, D2EEDMinus
 
    D2EEDPlus = HookesLaw
 
-#if MEF90_DIM==2
-   D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
-#endif
-   D2EEDMinus%type = HookesLaw%type
-   select case (HookesLaw%type)
-   case (MEF90HookesLawTypeIsotropic)
-      D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
-      D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
-      D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
-      D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
-      D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
-   case (MEF90HookesLawTypeFull)
-      D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
-      D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
-   end select !HookesLaw%type
+! #if MEF90_DIM==2
+!    D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
+! #endif
+!    D2EEDMinus%type = HookesLaw%type
+!    select case (HookesLaw%type)
+!    case (MEF90HookesLawTypeIsotropic)
+!       D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
+!       D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
+!       D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
+!       D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
+!       D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
+!    case (MEF90HookesLawTypeFull)
+!       D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
+!       D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
+!    end select !HookesLaw%type
 end subroutine D2EEDNone
 
 end module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D

@@ -5,12 +5,7 @@ module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityNone,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityCap,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalBCC,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechPlasticityCrystalSingleSlip,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityDruckerPragerCap,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechPlasticityGreen,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechPlasticityGurson,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechPlasticityHill,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
 use MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D
 use m_MEF90_DefMechCtx

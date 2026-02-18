@@ -50,11 +50,11 @@ m_MEF90_DefMechSplitClass3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitClass.F90 m_MEF90
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
-m_MEF90_DefMechSplit2D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitHD2D.o m_MEF90_DefMechSplitNone2D.o m_MEF90_DefMechSplitDeviatoric2D.o m_MEF90_DefMechSplitHydrostatic2D.o m_MEF90_DefMechSplitMasonry2D.o 
+m_MEF90_DefMechSplit2D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitNone2D.o #m_MEF90_DefMechSplitHD2D.o  m_MEF90_DefMechSplitDeviatoric2D.o m_MEF90_DefMechSplitHydrostatic2D.o 
 	@echo "      $< MEF90_DIM=2"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
-m_MEF90_DefMechSplit3D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitHD3D.o m_MEF90_DefMechSplitNone3D.o m_MEF90_DefMechSplitDeviatoric3D.o m_MEF90_DefMechSplitHydrostatic3D.o m_MEF90_DefMechSplitMasonry3D.o 
+m_MEF90_DefMechSplit3D.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitNone3D.o #m_MEF90_DefMechSplitHD3D.o  m_MEF90_DefMechSplitDeviatoric3D.o m_MEF90_DefMechSplitHydrostatic3D.o 
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
@@ -63,14 +63,6 @@ m_MEF90_DefMechSplitNone2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitNone.F90 m_MEF90_D
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF90_DefMechSplitNone3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitNone.F90 m_MEF90_DefMechSplitClass3D.o
-	@echo "      $< MEF90_DIM=3"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
-m_MEF90_DefMechSplitMasonry2D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechSplitClass2D.o
-	@echo "      $< MEF90_DIM=2"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechSplitMasonry3D.o: ${BASE_DIR}/m_MEF90_DefMechSplitMasonry.F90 m_MEF90_DefMechSplitClass3D.o
 	@echo "      $< MEF90_DIM=3"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
@@ -111,16 +103,14 @@ m_MEF90_DefMechCtx.o: ${BASE_DIR}/m_MEF90_DefMechCtx.F90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 	
 m_MEF90_DefMechPlasticity2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticity.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityNone2D.o \
-                   m_MEF90_DefMechPlasticityCap2D.o m_MEF90_DefMechPlasticityCrystalBCC2D.o m_MEF90_DefMechPlasticityCrystalSingleSlip2D.o m_MEF90_DefMechPlasticityDruckerPragerCap2D.o m_MEF90_DefMechPlasticityGreen2D.o \
-				   m_MEF90_DefMechPlasticityGurson2D.o m_MEF90_DefMechPlasticityHill2D.o \
+                   m_MEF90_DefMechPlasticityCap2D.o m_MEF90_DefMechPlasticityDruckerPragerCap2D.o \
 				   m_MEF90_DefMechPlasticityTresca2D.o \
 				   m_MEF90_DefMechPlasticityVonMises2D.o
 	@echo "      $< MEF90_DIM=2"
 	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF90_DefMechPlasticity3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticity.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityNone3D.o \
-                   m_MEF90_DefMechPlasticityCap3D.o m_MEF90_DefMechPlasticityCrystalBCC3D.o m_MEF90_DefMechPlasticityCrystalSingleSlip3D.o m_MEF90_DefMechPlasticityDruckerPragerCap3D.o m_MEF90_DefMechPlasticityGreen3D.o \
-				   m_MEF90_DefMechPlasticityGurson3D.o m_MEF90_DefMechPlasticityHill3D.o \
+                   m_MEF90_DefMechPlasticityCap3D.o m_MEF90_DefMechPlasticityDruckerPragerCap3D.o \
 				   m_MEF90_DefMechPlasticityTresca3D.o \
 				   m_MEF90_DefMechPlasticityVonMises3D.o
 	@echo "      $< MEF90_DIM=3"
@@ -150,51 +140,11 @@ m_MEF90_DefMechPlasticityCap3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCap.F90 m
 	@echo "      $< MEF90_DIM=3"
 	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 
-m_MEF90_DefMechPlasticityCrystalBCC2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCrystalBCC.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
-	@echo "      $< MEF90_DIM=2"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityCrystalBCC3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCrystalBCC.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
-	@echo "      $< MEF90_DIM=3"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityCrystalSingleSlip2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCrystalSingleSlip.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
-	@echo "      $< MEF90_DIM=2"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityCrystalSingleSlip3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCrystalSingleSlip.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
-	@echo "      $< MEF90_DIM=3"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
 m_MEF90_DefMechPlasticityDruckerPragerCap2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityDruckerPragerCap.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
 	@echo "      $< MEF90_DIM=2"
 	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 m_MEF90_DefMechPlasticityDruckerPragerCap3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityDruckerPragerCap.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
-	@echo "      $< MEF90_DIM=3"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityHill2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityHill.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
-	@echo "      $< MEF90_DIM=2"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityHill3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityHill.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
-	@echo "      $< MEF90_DIM=3"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityGreen2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityGreen.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
-	@echo "      $< MEF90_DIM=2"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityGreen3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityGreen.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
-	@echo "      $< MEF90_DIM=3"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityGurson2D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityGurson.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx2D.o
-	@echo "      $< MEF90_DIM=2"
-	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
-
-m_MEF90_DefMechPlasticityGurson3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityGurson.F90 m_MEF90_DefMechCtx.o m_MEF90_DefMechPlasticityCtx3D.o
 	@echo "      $< MEF90_DIM=3"
 	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=3 -c -o $@ $<
 

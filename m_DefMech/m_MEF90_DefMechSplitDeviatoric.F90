@@ -45,9 +45,9 @@ end function MEF90_DEFMECHSPLITDEVIATORIC_CONSTRUCTOR
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 subroutine EEDDeviatoric(self, Strain, HookesLaw, EEDPlus, EEDMinus)
-   class(MEF90_DEFMECHSPLITDEVIATORIC), intent(IN)   :: self
-   type(MEF90_MATS), intent(IN)                      :: Strain
-   type(MEF90_HOOKESLAW), intent(IN)                 :: HookesLaw
+   class(MEF90_DEFMECHSPLITDEVIATORIC), intent(IN)  :: self
+   type(MEF90_MATS), intent(IN)                     :: Strain
+   type(MEF90_HOOKESLAW), intent(IN)                :: HookesLaw
    PetscReal, intent(OUT)                           :: EEDPlus, EEDMinus
 
    PetscErrorCode                                   :: ierr
@@ -101,10 +101,10 @@ end subroutine
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 subroutine D2EEDDeviatoric(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
-   class(MEF90_DEFMECHSPLITDEVIATORIC), intent(IN)   :: self
-   type(MEF90_MATS), intent(IN)                      :: Strain
-   type(MEF90_HOOKESLAW), intent(IN)                 :: HookesLaw
-   type(MEF90_HOOKESLAW), intent(OUT)                :: D2EEDPlus, D2EEDMinus
+   class(MEF90_DEFMECHSPLITDEVIATORIC), intent(IN)  :: self
+   type(MEF90_MATS), intent(IN)                     :: Strain
+   type(MEF90_HOOKESLAW), intent(IN)                :: HookesLaw
+   type(MEF90_HOOKESLAW), intent(OUT)               :: D2EEDPlus, D2EEDMinus
 
    PetscErrorCode                                   :: ierr
    character(len=MEF90MXSTRLEN)                     :: IOBuffer

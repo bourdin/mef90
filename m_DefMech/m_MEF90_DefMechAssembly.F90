@@ -8,6 +8,7 @@ use petscsnes
 use petsctao
 use m_MEF90_DefMechCtx
 use m_MEF90_Materials
+use m_MEF90_HookesLaw
 use MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
 use m_MEF90_DefMechAT
 
@@ -75,6 +76,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    type(MEF90_VECT)                                    :: U0Gauss, bodyForce, boundaryForce, pressureForce
    PetscReal                                           :: damageGauss, temperatureGauss
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
    character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
@@ -182,7 +184,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  call Split%DEED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, stressGaussPlus, stressGaussMinus)
+                  call MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr)
+                  call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
                   if (ATModel%isElastic) then
                      stressGauss = stressGaussPlus + stressGaussMinus
                   else
@@ -395,7 +398,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscReal, dimension(:,:), pointer                  :: matDof
    PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   type(MEF90_HOOKESLAW)                               :: AGaussPlus, AGaussMinus, AGauss
+   class(MEF90HookesLaw_Type), allocatable             :: AGaussPlus, AGaussMinus, AGauss
    type(MEF90_MATS)                                    :: totalStrainGauss, plasticStrainCell, AGradS_BF
    type(MEF90_VECT)                                    :: U0Gauss
    type(MEF90_MATPROP), pointer                        :: matpropSet
@@ -409,6 +412,8 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90_DEFMECHSPLIT), allocatable              :: Split
    character(len=MEF90MXSTRLEN)                        :: prefix
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
+
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -502,10 +507,11 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
+                  call MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr)
                   if (ATModel%isElastic) then
-                     AGauss = matpropSet%HookesLaw
+                     AGauss = HookesLaw
                   else
-                     call Split%D2EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, AGaussPlus, AGaussMinus)
+                     call Split%D2EED(totalStrainGauss - plasticStrainCell, HookesLaw, AGaussPlus, AGaussMinus)
                      AGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * AGaussPlus + AGaussMinus
                   end if
                   do iDof = 1, numDofDisplacement
@@ -877,6 +883,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    PetscReal                                           :: damageGauss, temperatureGauss, myEnergy, EEDPlus, EEDMinus, elasticEnergyDensityGauss
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -962,7 +969,8 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 ! End If
 ! #endif
 
-                  call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDPlus, EEDMinus)
+                  call MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr)
+                  call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDPlus, EEDMinus)
                   if (ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
@@ -1028,6 +1036,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    PetscReal                                           :: damageGauss, temperatureGauss, cellSize
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1119,7 +1128,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  call Split%DEED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, stressGaussPlus, stressGaussMinus)
+                  call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
                   if (ATModel%isElastic) then
                      stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlus + stressGaussMinus)
                   else
@@ -1192,6 +1201,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    PetscReal                                           :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1288,8 +1298,9 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
+
                   if (.not. ATModel%isElastic) then
-                     call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDGaussPlus, EEDGaussMinus)
+                     call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDGaussPlus, EEDGaussMinus)
                   else
                      EEDGaussPlus = 0.0_kr
                   end if
@@ -1423,6 +1434,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    PetscReal                                           :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
    PetscInt                                            :: iDof, jDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
+   class(MEF90HookesLaw_Type), allocatable             :: HookesLaw
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1516,8 +1528,9 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
+                  call MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr)
                   if (.not. ATModel%isElastic) then
-                     call Split%EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, EEDGaussPlus, EEDGaussMinus)
+                     call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDGaussPlus, EEDGaussMinus)
                   else
                      EEDGaussPlus = 0.0_kr
                   end if

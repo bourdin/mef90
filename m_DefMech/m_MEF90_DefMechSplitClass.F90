@@ -40,7 +40,9 @@ abstract interface
 
       class(MEF90_DEFMECHSPLIT), intent(IN)          :: self
       type(MEF90_MATS), intent(IN)                   :: Strain
-      type(MEF90_HOOKESLAW), intent(IN)              :: HookesLaw
+      ! type(MEF90_HOOKESLAW), intent(IN)              :: HookesLaw
+      class(MEF90HookesLaw_Type), allocatable        :: HookesLaw
+
       PetscReal, intent(OUT)                         :: EEDPlus, EEDMinus
    end subroutine EEDINTERFACE
 
@@ -51,8 +53,10 @@ abstract interface
 
       class(MEF90_DEFMECHSPLIT), intent(IN)           :: self
       type(MEF90_MATS), intent(IN)                    :: Strain
-      type(MEF90_HOOKESLAW), intent(IN)               :: HookesLaw
+      ! type(MEF90_HOOKESLAW), intent(IN)               :: HookesLaw
       type(MEF90_MATS), intent(OUT)                   :: DEEDPlus, DEEDMinus
+      class(MEF90HookesLaw_Type), allocatable         :: HookesLaw
+
    end subroutine DEEDINTERFACE
 
    subroutine D2EEDINTERFACE(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
@@ -62,8 +66,7 @@ abstract interface
 
       class(MEF90_DEFMECHSPLIT), intent(IN)           :: self
       type(MEF90_MATS), intent(IN)                    :: Strain
-      type(MEF90_HOOKESLAW), intent(IN)               :: HookesLaw
-      type(MEF90_HOOKESLAW), intent(OUT)              :: D2EEDPlus, D2EEDMinus
+      class(MEF90HookesLaw_Type), allocatable         :: HookesLaw, D2EEDPlus, D2EEDMinus
    end subroutine D2EEDINTERFACE
 end interface
 

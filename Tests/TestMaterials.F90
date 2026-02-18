@@ -7,9 +7,9 @@ program TestMaterials
 
    PetscInt                            :: i, numMat = 1
    PetscBool                           :: flg
-   PetscBag, dimension(:), pointer       :: matBag2D, matBag3D
-   type(MEF90MatProp2D_Type), pointer   :: matProp2D
-   type(MEF90MatProp3D_Type), pointer   :: matProp3D
+   PetscBag, dimension(:), pointer     :: matBag2D, matBag3D
+   type(MEF90MatProp2D_Type), pointer  :: matProp2D
+   type(MEF90MatProp3D_Type), pointer  :: matProp3D
    type(MatS2D)                        :: E2D
    character(len=256)                  :: IOBuffer
    character(len=80)                   :: name, prefix
