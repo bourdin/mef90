@@ -2,7 +2,6 @@
 #include "mef90DefMech.inc"
 module m_MEF90_DefMechAT2
 #include "petsc/finclude/petsc.h"
-   ! Use m_MEF90
    use m_MEF90_DefMechAT_class
    implicit none(type, external)
    private

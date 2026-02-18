@@ -44,6 +44,7 @@ contains
 !!!  MEF90HookesLaw_setFromOptions: initializes a MEF90_DefMechAT_Type from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
+
    subroutine MEF90HookesLaw_setFromOptions(self,ierr)
       class(MEF90HookesLaw_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr

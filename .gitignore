@@ -9,6 +9,7 @@ _minted*
 mef90version.h
 .vscode
 .venv
+**/.snakemake
 
 Tests/TestConstraints
 Tests/TestSection

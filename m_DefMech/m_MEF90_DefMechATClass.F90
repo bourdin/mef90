@@ -96,6 +96,8 @@ contains
 !!!
 !!!
 !!!  MEF90DefMechAT_setFromOptions: initializes a MEF90_DefMechAT_Type from options
+!!!                                 subclasses may implement their own setFromOptions if they have additional 
+!!!                                 parameters, but it is expected that these will call MEF90DefMechAT_setFromOptions
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT_setFromOptions(self,ierr)

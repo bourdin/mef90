@@ -31,6 +31,7 @@ contains
 !!!  MEF90HookesLawIsotropic2D_setFromOptions: initializes a MEF90HookesLawIsotropic2D_type from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
+
    subroutine MEF90HookesLawIsotropic2D_setFromOptions(self,ierr)
       class(MEF90HookesLawIsotropic2D_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
@@ -64,7 +65,8 @@ contains
 !!!  MEF90HookesLawIsotropic2D_view: the default viewer for a MEF90_DefMechAT_Type
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine MEF90HookesLawIsotropic2D_View(self,viewer,ierr)
+
+subroutine MEF90HookesLawIsotropic2D_View(self,viewer,ierr)
       class(MEF90HookesLawIsotropic2D_Type), intent(in) :: self
       type(tPetscViewer), intent(in) :: viewer
       PetscErrorCode, intent(inout) :: ierr
@@ -150,6 +152,7 @@ contains
 !!!  MEF90HookesLawIsotropic3D_setFromOptions: initializes a MEF90HookesLawIsotropic3D_type from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
+
    subroutine MEF90HookesLawIsotropic3D_setFromOptions(self,ierr)
       class(MEF90HookesLawIsotropic3D_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
@@ -176,6 +179,7 @@ contains
 !!!  MEF90HookesLawIsotropic3D_view: the default viewer for a MEF90_DefMechAT_Type
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
+
    subroutine MEF90HookesLawIsotropic3D_View(self,viewer,ierr)
       class(MEF90HookesLawIsotropic3D_Type), intent(in) :: self
       type(tPetscViewer), intent(in) :: viewer
@@ -201,6 +205,13 @@ contains
       end if
    end subroutine MEF90HookesLawIsotropic3D_View
 
+#undef __FUNCT__
+#define __FUNCT__ "MEF90HookesLawIsotropic3D_mult"
+!!!
+!!!
+!!!  MEF90HookesLawIsotropic3D_mult: Multiplies a MatS by a HookesLaw
+!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
+!!!
    subroutine MEF90HookesLawIsotropic3D_mult(A, e, Ae, ierr)
       class(MEF90HookesLawIsotropic3D_Type), intent(in) :: A
       class(mef90Mat), intent(in) :: e
@@ -212,8 +223,7 @@ contains
          type is (MatS3D)
             select type (Ae3D => Ae)
                type is (MatS3D)
-                  Ae3D = A%lambda * trace(e3D) * MEF90Mat3DIdentity
-                  Ae3D = Ae3D + 2.0_Kr * A%mu * e3D
+                  Ae3D = A%lambda * trace(e3D) * MEF90MatS3DIdentity + 2.0_Kr * A%mu * e3D
                class default
                   write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
                   PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))

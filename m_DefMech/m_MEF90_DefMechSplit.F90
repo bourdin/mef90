@@ -31,7 +31,7 @@ contains
 !!!
 subroutine MEF90DefMechGetSplit(cellSetOptions, Split, ierr)
    type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   class(MEF90_DEFMECHSPLIT), allocatable, intent(OUT)  :: Split
+   class(MEF90_DEFMECHSPLIT), allocatable, intent(OUT) :: Split
    PetscErrorCode, intent(INOUT)                       :: ierr
 
    select case (cellSetOptions%unilateralContactType)
