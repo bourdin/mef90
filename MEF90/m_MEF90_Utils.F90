@@ -22,13 +22,13 @@ contains
 !!!
 
    subroutine MEF90ISAllGatherMerge(Comm, is, ierr)
-      MPI_Comm, intent(IN)              :: Comm
+      MPIU_Comm, intent(IN)             :: Comm
       type(tIS), intent(INOUT)          :: is
       PetscErrorCode, intent(INOUT)     :: ierr
 
-      type(tIS)                        :: tmpIS
-      PetscInt, dimension(:), pointer    :: indices
-      PetscInt                         :: sz
+      type(tIS)                         :: tmpIS
+      PetscInt, dimension(:), pointer   :: indices
+      PetscInt                          :: sz
 
       PetscCall(ISGetIndices(is, indices, ierr))
       sz = size(indices)

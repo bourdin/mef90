@@ -40,7 +40,7 @@ export PATH=$PATH:$VISIT_DIR/bin
 export SYMENGINE_ROOT=/opt/HPC/symengine
 export SYMENGINE_LIBDIR=${SYMENGINE_ROOT}/lib64
 export SYMENGINEF90_ROOT=/opt/HPC/symengine-f90
-# I really don;t understand why this is needed
+# I really don't understand why this is needed
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${SYMENGINE_LIBDIR}
 
 mkdir -p /opt/HPC/src

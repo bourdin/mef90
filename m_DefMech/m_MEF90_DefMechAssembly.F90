@@ -507,12 +507,10 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                      call Split%D2EED(totalStrainGauss - plasticStrainCell, matpropSet%HookesLaw, AGaussPlus, AGaussMinus)
                      AGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * AGaussPlus + AGaussMinus
                   end if
-                  do jDof = 0, numDofDisplacement - 1
-                     do iDof = 1, numDofDisplacement
-                        AGradS_BF = AGauss * elemVect(cell)%GradS_BF(iDof, iGauss)
-                        matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof + 1, iGauss))
-!!! Flip this loop!
-!!! Make bounds consistent
+                  do iDof = 1, numDofDisplacement
+                     AGradS_BF = AGauss * elemVect(cell)%GradS_BF(iDof, iGauss)
+                     do jDof = 1, numDofDisplacement
+                        matDof(jDof * numDofDisplacement + iDof) = matDof((jDof-1) * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof, iGauss))
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
                end do ! iGauss
@@ -540,12 +538,12 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                do cell = 1, size(setPointID)
                   matDof = 0.0_kr
                   do iGauss = 1, numGauss
-                     do jDof = 0, numDofDisplacement - 1
-                        do iDof = 1, numDofDisplacement
-                           U0Gauss = matpropSet%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
-                           matDof(jDof * numDofDisplacement + iDof) = matDof(jDof * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof + 1, iGauss))
-                        end do ! iDof numDofDisplacement
-                     end do ! jDof numDofDisplacement
+                    do iDof = 1, numDofDisplacement
+                       U0Gauss = matpropSet%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
+                       do jDof = 1, numDofDisplacement
+                           matDof(jDof * numDofDisplacement + iDof) = matDof((jDof-1) * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof, iGauss))
+                        end do ! jDof numDofDisplacement
+                     end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexMatSetClosure(dmDisplacement, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), matDof, ADD_VALUES, ierr))
                end do ! cell
@@ -575,7 +573,7 @@ end subroutine MEF90DefMechBilinearFormDisplacement
 !!!  MEF90DefMechWork:
 !!!
 !!!  (c) 2014-2022 Blaise Bourdin bourdin@lsu.edu
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
@@ -1240,7 +1238,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             else
                PetscCall(MEF90DefMechGetSplit(cellSetOptions, Split, ierr))
             end if
-            
+
             !!! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))

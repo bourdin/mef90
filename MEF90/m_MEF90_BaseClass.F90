@@ -16,7 +16,7 @@ module m_MEF90_baseClass
 !!!
 
    type, abstract :: MEF90Object_Type
-      MPI_Comm :: comm
+      MPIU_Comm :: comm
       character(len=MEF90MXSTRLEN, kind=c_char) :: prefix
    contains
       procedure(MEF90Object_SetFromOptionsInterface), pass(self), deferred :: setFromOptions

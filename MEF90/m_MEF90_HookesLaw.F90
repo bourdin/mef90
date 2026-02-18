@@ -40,7 +40,7 @@ contains
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90GetHookesLaw(comm, prefix, dim, HookesLaw, ierr)
-      MPI_Comm, intent(in) :: comm
+      MPIU_Comm, intent(in) :: comm
       character(len = MEF90MXSTRLEN), intent(in) :: prefix
       PetscInt, intent(IN) :: dim
       class(MEF90HookesLaw_Type), allocatable, intent(out) :: HookesLaw
@@ -58,7 +58,7 @@ contains
             select case(dim)
                case(2)
                   HookesLaw = MEF90HookesLawIsotropic2D_type(comm = comm, prefix = prefix)
-                  !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawIsotropic2D_type extends 
+                  !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawIsotropic2D_type extends
                   !!! MEF90Object_Type, so that the order of positional arguments is not clear.
                case(3)
                   HookesLaw = MEF90HookesLawIsotropic3D_type(comm = comm, prefix = prefix)

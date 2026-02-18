@@ -28,8 +28,8 @@ contains
 !!!
 
    subroutine MEF90Initialize(comm, ierr)
-      MPI_Comm, intent(IN)                              :: comm
-      PetscErrorCode, intent(INOUT)                      :: ierr
+      MPIU_Comm, intent(IN)                             :: comm
+      PetscErrorCode, intent(INOUT)                     :: ierr
 
       character(len=MEF90MXSTRLEN)                      :: IOBuffer
 

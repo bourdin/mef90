@@ -62,7 +62,7 @@ contains
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechGetATModel(comm, prefix, dim, ATModel, ierr)
-      MPI_Comm, intent(in) :: comm
+      MPIU_Comm, intent(in) :: comm
       character(len = MEF90MXSTRLEN), intent(in) :: prefix
       PetscInt, intent(IN) :: dim
       class(MEF90DefMechAT_Type), allocatable, intent(out) :: ATModel

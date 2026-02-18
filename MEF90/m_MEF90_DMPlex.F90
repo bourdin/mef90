@@ -99,23 +99,23 @@ contains
       type(tVec), intent(OUT)                  :: V
       PetscErrorCode, intent(INOUT)            :: ierr
 
-      type(tPetscSection)                     :: sectionV
-      type(tDM)                               :: dmV
-      PetscInt                                :: fieldV = 0
-      PetscInt                                :: pStart, pEnd
-      MPI_Comm                                :: comm
-      PetscInt                                :: set
-      PetscEnum                               :: setType
-      PetscInt, dimension(:), pointer           :: setID, pointID
-      type(tIS)                               :: setIS, pointIS
-      type(MEF90ElementType)                  :: elemType
-      DMPolytopeType                          :: cellType
-      PetscBool, dimension(:, :), pointer        :: constraintTruthTable
-      PetscBool, dimension(:), pointer          :: setConstraints
-      PetscInt                                :: numBC
-      PetscBool                               :: flg
-      character(len=MEF90MXSTRLEN)            :: BCOptionName
-      type(tPetscSF)                          :: naturalPointSF, naturalSF
+      type(tPetscSection)                      :: sectionV
+      type(tDM)                                :: dmV
+      PetscInt                                 :: fieldV = 0
+      PetscInt                                 :: pStart, pEnd
+      MPIU_Comm                                :: comm
+      PetscInt                                 :: set
+      PetscEnum                                :: setType
+      PetscInt, dimension(:), pointer          :: setID, pointID
+      type(tIS)                                :: setIS, pointIS
+      type(MEF90ElementType)                   :: elemType
+      DMPolytopeType                           :: cellType
+      PetscBool, dimension(:, :), pointer      :: constraintTruthTable
+      PetscBool, dimension(:), pointer         :: setConstraints
+      PetscInt                                 :: numBC
+      PetscBool                                :: flg
+      character(len=MEF90MXSTRLEN)             :: BCOptionName
+      type(tPetscSF)                           :: naturalPointSF, naturalSF
 
       PetscCall(DMClone(dm, dmV, ierr))
       PetscCall(PetscObjectSetName(dmv, name, ierr))
@@ -220,18 +220,18 @@ contains
       type(tVec), intent(OUT)                  :: V
       PetscErrorCode, intent(INOUT)            :: ierr
 
-      PetscInt                                :: dim
-      type(tPetscSection)                     :: sectionV
-      type(tDM)                               :: dmV
-      PetscInt                                :: fieldV = 0
-      PetscInt                                :: pStart, pEnd
-      MPI_Comm                                :: comm
-      PetscInt                                :: set
-      PetscInt, dimension(:), pointer           :: setID
-      type(tIS)                               :: setIS
-      type(MEF90ElementType)                  :: elemType
-      PetscBool                               :: flg
-      type(tPetscSF)                          :: naturalPointSF, naturalSF
+      PetscInt                                 :: dim
+      type(tPetscSection)                      :: sectionV
+      type(tDM)                                :: dmV
+      PetscInt                                 :: fieldV = 0
+      PetscInt                                 :: pStart, pEnd
+      MPIU_Comm                                :: comm
+      PetscInt                                 :: set
+      PetscInt, dimension(:), pointer          :: setID
+      type(tIS)                                :: setIS
+      type(MEF90ElementType)                   :: elemType
+      PetscBool                                :: flg
+      type(tPetscSF)                           :: naturalPointSF, naturalSF
 
       PetscCall(DMClone(dm, dmV, ierr))
       PetscCall(PetscObjectSetName(dmv, name, ierr))
@@ -316,22 +316,22 @@ contains
       type(tVec), intent(OUT)                  :: V
       PetscErrorCode, intent(INOUT)            :: ierr
 
-      type(tPetscSection)                     :: sectionV
-      type(tDM)                               :: dmV
-      PetscInt                                :: fieldV = 0
-      PetscInt                                :: pStart, pEnd
-      MPI_Comm                                :: comm
-      PetscInt                                :: set
-      PetscEnum                               :: setType
-      PetscInt, dimension(:), pointer           :: setID, pointID
-      type(tIS)                               :: setIS, pointIS
-      type(MEF90ElementType)                  :: elemType
-      DMPolytopeType                          :: cellType
-      PetscBool, dimension(:, :), pointer        :: constraintTruthTable
-      PetscBool, dimension(:), pointer          :: setConstraints
-      PetscInt                                :: numBC
-      PetscBool                               :: flg
-      character(len=MEF90MXSTRLEN)            :: BCOptionName
+      type(tPetscSection)                      :: sectionV
+      type(tDM)                                :: dmV
+      PetscInt                                 :: fieldV = 0
+      PetscInt                                 :: pStart, pEnd
+      MPIU_Comm                                :: comm
+      PetscInt                                 :: set
+      PetscEnum                                :: setType
+      PetscInt, dimension(:), pointer          :: setID, pointID
+      type(tIS)                                :: setIS, pointIS
+      type(MEF90ElementType)                   :: elemType
+      DMPolytopeType                           :: cellType
+      PetscBool, dimension(:, :), pointer      :: constraintTruthTable
+      PetscBool, dimension(:), pointer         :: setConstraints
+      PetscInt                                 :: numBC
+      PetscBool                                :: flg
+      character(len=MEF90MXSTRLEN)             :: BCOptionName
 
       PetscCall(DMClone(dm, dmV, ierr))
       PetscCall(PetscObjectSetName(dmv, name, ierr))
@@ -424,17 +424,17 @@ contains
       type(tVec), intent(OUT)                  :: V
       PetscErrorCode, intent(INOUT)            :: ierr
 
-      PetscInt                                :: dim
-      type(tPetscSection)                     :: sectionV
-      type(tDM)                               :: dmV
-      PetscInt                                :: fieldV = 0
-      PetscInt                                :: pStart, pEnd
-      MPI_Comm                                :: comm
-      PetscInt                                :: set
-      PetscInt, dimension(:), pointer           :: setID
-      type(tIS)                               :: setIS
-      type(MEF90ElementType)                  :: elemType
-      PetscBool                               :: flg
+      PetscInt                                 :: dim
+      type(tPetscSection)                      :: sectionV
+      type(tDM)                                :: dmV
+      PetscInt                                 :: fieldV = 0
+      PetscInt                                 :: pStart, pEnd
+      MPIU_Comm                                :: comm
+      PetscInt                                 :: set
+      PetscInt, dimension(:), pointer          :: setID
+      type(tIS)                                :: setIS
+      type(MEF90ElementType)                   :: elemType
+      PetscBool                                :: flg
 
       PetscCall(DMClone(dm, dmV, ierr))
       PetscCall(PetscObjectSetName(dmv, name, ierr))
@@ -973,13 +973,13 @@ contains
 !!!
 
    subroutine MEF90VecCreateIO(v, bs, sf, ierr)
-      type(tPetscSF), intent(IN)               :: sf
-      type(tVec), intent(INOUT)                :: v
-      PetscInt, intent(IN)                     :: bs
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tPetscSF), intent(IN)                :: sf
+      type(tVec), intent(INOUT)                 :: v
+      PetscInt, intent(IN)                      :: bs
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      MPI_Comm                                :: comm
-      PetscInt                                :: nroots, nleaves
+      MPIU_Comm                                 :: comm
+      PetscInt                                  :: nroots, nleaves
       type(sPetscSFNode), dimension(:), pointer :: iremote
       PetscInt, dimension(:), pointer           :: ilocal
 

@@ -12,7 +12,7 @@ module m_MEF90_Ctx_Type
    public :: MEF90CtxGlobalOptions_Type
 
    type MEF90Ctx_Type
-      MPI_Comm                                        :: comm
+      MPIU_Comm                                        :: comm
       PetscMPIInt                                     :: rank, numProcs
       character(len=MEF90MXSTRLEN, kind=c_char)       :: geometryfile, resultfile
       type(tPetscBag)                                 :: GlobalOptionsBag
@@ -52,10 +52,6 @@ module m_MEF90_Ctx
    public :: MEF90CtxGetTime
    public :: sizeofMEF90CtxGlobalOptions
 
-   private :: PetscBagGetData
-   !!! Very important. PetscGetData must remain private to this module or others will not be able to declare their own interface
-   !!! for other derived type
-
    PetscSizeT, protected    :: sizeofMEF90CtxGlobalOptions
 
    enum, bind(c)
@@ -74,17 +70,6 @@ module m_MEF90_Ctx
          MEF90TimeInterpolation_exo
    end enum
    character(len=MEF90MXSTRLEN), dimension(7), protected  :: MEF90TimeInterpolationList
-
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use m_MEF90_Ctx_Type
-         use petscbag
-         implicit none(type)
-         type(tPetscBag), intent(IN)                           :: bag
-         type(MEF90CtxGlobalOptions_Type), pointer, intent(OUT) :: data
-         PetscErrorCode, intent(INOUT)                         :: ierr
-      end subroutine PetscBagGetData
-   end interface PetscBagGetData
 
 contains
 #undef __FUNCT__
@@ -187,18 +172,18 @@ contains
 !!!
 
    subroutine MEF90CtxCreate(comm, MEF90Ctx, default, ierr)
-      MPI_Comm, intent(IN)                          :: comm
+      MPIU_Comm, intent(IN)                         :: comm
       type(MEF90Ctx_type), intent(OUT)              :: MEF90Ctx
       type(MEF90CtxGlobalOptions_Type), intent(IN)  :: default
       PetscErrorCode, intent(INOUT)                 :: ierr
 
       type(MEF90CtxGlobalOptions_Type), pointer     :: GlobalOptions
-      character(len=MEF90MXSTRLEN)                 :: IOBuffer, tmpPrefix
-      PetscBool                                    :: hasPrefix, hasGeometry, hasResult
+      character(len=MEF90MXSTRLEN)                  :: IOBuffer, tmpPrefix
+      PetscBool                                     :: hasPrefix, hasGeometry, hasResult
 
 #ifdef PETSC_USE_DEBUG
-      character(len=MPI_MAX_PROCESSOR_NAME)        :: procName
-      integer                                      :: procNameLength
+      character(len=MPI_MAX_PROCESSOR_NAME)         :: procName
+      integer                                       :: procNameLength
 #endif
 
       MEF90Ctx%comm = comm
