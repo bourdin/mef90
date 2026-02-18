@@ -75,15 +75,6 @@ module m_MEF90HeatXferGlobalOptions_Private
    private
    public :: PetscBagGetDataMEF90HeatXferCtxGlobalOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_HeatXferCtx_Type
-         type(tPetscBag)                                    :: bag
-         type(MEF90HeatXferGlobalOptions_Type), pointer      :: data
-         PetscErrorCode                                     :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 
 #undef __FUNCT__
@@ -110,15 +101,6 @@ module m_MEF90HeatXferCellSetOptions_Private
    private
    public :: PetscBagGetDataMEF90HeatXferCtxCellSetOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_HeatXferCtx_Type
-         type(tPetscBag)                                    :: bag
-         type(MEF90HeatXferCellSetOptions_Type), pointer     :: data
-         PetscErrorCode                                     :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 
 #undef __FUNCT__
@@ -145,15 +127,6 @@ module m_MEF90HeatXferFaceSetOptions_Private
    private
    public :: PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_HeatXferCtx_Type
-         type(tPetscBag)                                    :: bag
-         type(MEF90HeatXferFaceSetOptions_Type), pointer     :: data
-         PetscErrorCode                                     :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 
 #undef __FUNCT__
@@ -179,16 +152,6 @@ module m_MEF90HeatXferVertexSetOptions_Private
 
    private
    public :: PetscBagGetDataMEF90HeatXferCtxVertexSetOptions
-
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_HeatXferCtx_Type
-         type(tPetscBag)                                    :: bag
-         type(MEF90HeatXferVertexSetOptions_Type), pointer   :: data
-         PetscErrorCode                                     :: ierr
-      end subroutine PetscBagGetData
-   end interface
 
 contains
 #undef __FUNCT__

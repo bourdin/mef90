@@ -87,18 +87,18 @@ module m_MEF90_LinAlg
  !!          and naming to be consistent with Voigt notations
    type, extends(mef90Tens4OS) :: Tens4OS2D
       PetscReal          :: XXXX, XXYY, XXXY
-      PetscReal          ::      YYYY, YYXY
-      PetscReal          ::           XYXY
+      PetscReal          ::       YYYY, YYXY
+      PetscReal          ::             XYXY
 
    end type Tens4OS2D
 
    type, extends(mef90Tens4OS) :: Tens4OS3D
       PetscReal          :: XXXX, XXYY, XXZZ, XXYZ, XXXZ, XXXY
-      PetscReal          ::      YYYY, YYZZ, YYYZ, YYXZ, YYXY
-      PetscReal          ::           ZZZZ, ZZYZ, ZZXZ, ZZXY
-      PetscReal          ::                YZYZ, YZXZ, YZXY
-      PetscReal          ::                     XZXZ, XZXY
-      PetscReal          ::                          XYXY
+      PetscReal          ::       YYYY, YYZZ, YYYZ, YYXZ, YYXY
+      PetscReal          ::             ZZZZ, ZZYZ, ZZXZ, ZZXY
+      PetscReal          ::                   YZYZ, YZXZ, YZXY
+      PetscReal          ::                         XZXZ, XZXY
+      PetscReal          ::                               XYXY
    end type Tens4OS3D
 
    type(Vect2D), parameter    :: MEF90Vect2De1 = Vect2D(1.0_kr, 0.0_kr)

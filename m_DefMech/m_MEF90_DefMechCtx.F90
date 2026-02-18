@@ -143,17 +143,7 @@ module m_MEF90DefMechGlobalOptions_Private
    private
    public :: PetscBagGetDataMEF90DefMechCtxGlobalOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_DefMechCtx_Type
-         implicit none(type)
-         type(tPetscBag)                                       :: bag
-         type(MEF90DefMechGlobalOptions_Type), pointer         :: data
-         PetscErrorCode                                        :: ierr
-      end subroutine PetscBagGetData
-   end interface
-contains
+   contains
 
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagGetDataMEF90DefMechCtxGlobalOptions"
@@ -179,17 +169,6 @@ module m_MEF90DefMechCellSetOptions_Private
    private
    public :: PetscBagGetDataMEF90DefMechCtxCellSetOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_DefMechCtx_Type
-         implicit none(type, external)
-
-         type(tPetscBag)                                       :: bag
-         type(MEF90DefMechCellSetOptions_Type), pointer         :: data
-         PetscErrorCode                                        :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 
 #undef __FUNCT__
@@ -216,17 +195,6 @@ module m_MEF90DefMechFaceSetOptions_Private
    private
    public :: PetscBagGetDataMEF90DefMechCtxFaceSetOptions
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_DefMechCtx_Type
-         implicit none(type, external)
-
-         type(tPetscBag)                                       :: bag
-         type(MEF90DefMechFaceSetOptions_Type), pointer         :: data
-         PetscErrorCode                                        :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 
 #undef __FUNCT__
@@ -252,18 +220,6 @@ module m_MEF90DefMechVertexSetOptions_Private
 
    private
    public :: PetscBagGetDataMEF90DefMechCtxVertexSetOptions
-
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use petscbag
-         use m_MEF90_DefMechCtx_Type
-         implicit none(type, external)
-
-         type(tPetscBag)                                       :: bag
-         type(MEF90DefMechVertexSetOptions_Type), pointer       :: data
-         PetscErrorCode, intent(INOUT)                          :: ierr
-      end subroutine PetscBagGetData
-   end interface
 
 contains
 #undef __FUNCT__

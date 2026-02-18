@@ -275,15 +275,6 @@ module m_MEF90_Materials_Interface2D
    private
    public :: PetscBagGetDataMEF90MatProp2D
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use m_MEF90_Materials_Types
-         implicit none(type)
-         PetscBag                             :: bag
-         type(MEF90MatProp2D_Type), pointer   :: data
-         PetscErrorCode                       :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagGetDataMEF90MatProp2D"
@@ -351,15 +342,6 @@ module m_MEF90_Materials_Interface3D
    private
    public :: PetscBagGetDataMEF90MatProp3D
 
-   interface PetscBagGetData
-      subroutine PetscBagGetData(bag, data, ierr)
-         use m_MEF90_Materials_Types
-         implicit none(type)
-         PetscBag                             :: bag
-         type(MEF90MatProp3D_Type), pointer   :: data
-         PetscErrorCode                       :: ierr
-      end subroutine PetscBagGetData
-   end interface
 contains
 #undef __FUNCT__
 #define __FUNCT__ "PetscBagGetDataMEF90MatProp3D"

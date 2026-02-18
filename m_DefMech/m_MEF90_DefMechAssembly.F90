@@ -393,7 +393,8 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscInt                                            :: numDofDisplacement, numDofDamage, numGauss, set, cell, iGauss, iDof, jDof, QuadratureOrder, dim, vecOffset
    PetscReal                                           :: damageGauss, temperatureGauss
    PetscInt, dimension(:), pointer                     :: setID, setPointID
-   PetscReal, dimension(:), pointer                    :: matDof, displacementDof, damageDof, temperatureDof, plasticStrainArray
+   PetscReal, dimension(:,:), pointer                  :: matDof
+   PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
    type(MEF90_HOOKESLAW)                               :: AGaussPlus, AGaussMinus, AGauss
    type(MEF90_MATS)                                    :: totalStrainGauss, plasticStrainCell, AGradS_BF
    type(MEF90_VECT)                                    :: U0Gauss
@@ -460,7 +461,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             numDofDamage = size(elemScal(1)%BF(:, 1))
             numGauss = size(elemVect(1)%Gauss_C)
 
-            allocate (matDof(numDofDisplacement * numDofDisplacement))
+            allocate (matDof(numDofDisplacement, numDofDisplacement))
 
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
@@ -510,11 +511,11 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   do iDof = 1, numDofDisplacement
                      AGradS_BF = AGauss * elemVect(cell)%GradS_BF(iDof, iGauss)
                      do jDof = 1, numDofDisplacement
-                        matDof(jDof * numDofDisplacement + iDof) = matDof((jDof-1) * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof, iGauss))
+                        matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (AGradS_BF .DotP. elemVect(cell)%GradS_BF(jDof, iGauss))
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
                end do ! iGauss
-               PetscCall(DMPlexMatSetClosure(dmDisplacement, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), matDof, ADD_VALUES, ierr))
+               PetscCall(DMPlexMatSetClosure(dmDisplacement, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDisplacement*numDofDisplacement]), ADD_VALUES, ierr))
             end do ! cell
 
             ! !!! Damping
@@ -541,11 +542,11 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                     do iDof = 1, numDofDisplacement
                        U0Gauss = matpropSet%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
                        do jDof = 1, numDofDisplacement
-                           matDof(jDof * numDofDisplacement + iDof) = matDof((jDof-1) * numDofDisplacement + iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof, iGauss))
+                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof, iGauss))
                         end do ! jDof numDofDisplacement
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
-                  PetscCall(DMPlexMatSetClosure(dmDisplacement, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), matDof, ADD_VALUES, ierr))
+                  PetscCall(DMPlexMatSetClosure(dmDisplacement, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDisplacement*numDofDisplacement]), ADD_VALUES, ierr))
                end do ! cell
             end if ! cohesiveDisplacement
 
@@ -1411,7 +1412,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
    type(MEF90ElementType)                              :: elemVectType, elemScalType
-   PetscReal, dimension(:), pointer                    :: matDof
+   PetscReal, dimension(:,:), pointer                  :: matDof
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
@@ -1476,7 +1477,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             numDofDamage = size(elemScal(1)%BF(:, 1))
             numGauss = size(elemScal(1)%Gauss_C)
 
-            allocate (matDof(numDofDamage * numDofDamage))
+            allocate (matDof(numDofDamage, numDofDamage))
 
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
@@ -1530,17 +1531,16 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   end select
                   !!! end ugly hack
                   C3 = ATModel%D2a(damageGauss) * EEDGaussPlus + C1 * ATModel%D2w(damageGauss)
-                  do jDof = 0, numDofDamage - 1
+                  do jDof = 1, numDofDamage
                      do iDof = 1, numDofDamage
-                        matDof(jDof * numDofDamage + iDof) = matDof(jDof * numDofDamage + iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                                             C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof + 1, iGauss) + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP. elemScal(cell)%Grad_BF(jDof + 1, iGauss)))
+                        matDof(jDof, iDof) = matDof(jDof, iDof) + elemScal(cell)%Gauss_C(iGauss) * ( C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof, iGauss) + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP. elemScal(cell)%Grad_BF(jDof, iGauss)))
                      end do ! iDof numDofDamage
                   end do ! jDof numDofDamage
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
-               PetscCall(DMPlexMatSetClosure(dmDamage, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), matDof, ADD_VALUES, ierr))
+               PetscCall(DMPlexMatSetClosure(dmDamage, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDamage,numDofDamage]), ADD_VALUES, ierr))
             end do ! cell
 
             deallocate (matDof)
@@ -1615,9 +1615,8 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
-   type(MEF90_MATS)                                    :: C2
    type(MEF90_VECT)                                    :: gradDamageGauss
-   PetscReal                                           :: damageGauss, C1, myEnergy
+   PetscReal                                           :: damageGauss, myEnergy, C1, C2
    PetscInt                                            :: iDof, iGauss, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
 
@@ -1657,15 +1656,8 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             numGauss = size(elemScal(1)%Gauss_C)
 
             C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
-            ! C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * matpropSet%toughnessAnisotropyMatrix
-            !!! begin ugly hack
-            !!! The following won't work until I overload the LinAlg operations to work with the parent classes
-            ! C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
-            select type (k => ATModel%toughnessAnisotropyMatrix)
-               type is (MEF90_MATS)
-                  C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength * k
-            end select
-            !!! end ugly hack
+            C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength
+
             do cell = 1, size(setPointID)
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                do iGauss = 1, numGauss
@@ -1677,8 +1669,13 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
                      end do ! iDof numDofDamage
                   end if
-                  myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * &
-                             (C1 * ATModel%w(damageGauss) + (C2 * gradDamageGauss .DotP. gradDamageGauss))
+                  
+                  !!! UGLY but until I can figure out how to handle polymorphism, this has to be this way:
+                  select type (k => ATModel%toughnessAnisotropyMatrix)
+                     type is (MEF90_MATS)
+                        myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * &
+                                 (C1 * ATModel%w(damageGauss) + C2 * ((k * gradDamageGauss) .DotP. gradDamageGauss))
+                  end select 
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
             end do ! cell

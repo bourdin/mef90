@@ -47,7 +47,7 @@ subroutine EEDNone(self, Strain, HookesLaw, EEDPlus, EEDMinus)
    class(MEF90_DEFMECHSPLITNONE), intent(IN)           :: self
    type(MEF90_MATS), intent(IN)                        :: Strain
    type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   PetscReal, intent(OUT)                             :: EEDPlus, EEDMinus
+   PetscReal, intent(OUT)                              :: EEDPlus, EEDMinus
 
    EEDPlus = ((HookesLaw * Strain) .dotP.Strain) * 0.5_kr
    EEDMinus = 0.0_kr
