@@ -21,7 +21,7 @@ module m_MEF90_DefMechAT_class
 !!!      2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   type, abstract, extends(MEF90Object_Type) :: MEF90DefMechAT_Type
+   type, abstract, extends(MEF90Object) :: MEF90DefMechAT_Type
       PetscReal                                        :: fractureToughness = 0.0_Kr
       class(mef90Mat), allocatable                     :: toughnessAnisotropyMatrix
       PetscReal                                        :: internalLength = -1.0_Kr

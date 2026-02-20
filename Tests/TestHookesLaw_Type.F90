@@ -7,7 +7,7 @@ program TestHookesLaw_Type
 
    character(len = MEF90MXSTRLEN) :: prefix1 = 'cs0001_'
    character(len = MEF90MXSTRLEN) :: prefix2 = 'cs0002_'
-   class(MEF90HookesLaw_Type), allocatable :: HookesLaw1, HookesLaw2, HookesLaw3
+   class(MEF90HookesLaw), allocatable :: HookesLaw1, HookesLaw2, HookesLaw3
    PetscErrorCode :: ierr
 
    PetscCallA(PetscInitialize(ierr))

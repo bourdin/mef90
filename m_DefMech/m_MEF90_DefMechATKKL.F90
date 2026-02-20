@@ -1,5 +1,4 @@
 #include "../MEF90/mef90.inc"
-#include "mef90DefMech.inc"
 !!!
 !!! KKL (v2) model, which can be rewritten as a regular GD model with
 !!!  a(\alpha) = g(\alpha) and w(\alpha) = 1-g(\alpha)

@@ -8,32 +8,44 @@ module m_MEF90_HookesLaw_class
 
    implicit none(type, external)
    private
-   public :: MEF90HookesLaw_Type
+   public :: MEF90HookesLaw
    public :: MEF90HookesLaw_setFromOptions
 
 !!!
 !!!
-!!!  MEF90HookesLaw_Type: The abstract class used to define a stress-strain relation
+!!!  MEF90HookesLaw: The abstract class used to define a stress-strain relation
 !!!
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   type, abstract, extends(MEF90Object_Type) :: MEF90HookesLaw_Type
+   type, abstract, extends(MEF90Object) :: MEF90HookesLaw
    contains
-      procedure(HookesLawInterface), deferred :: mult
-   end type MEF90HookesLaw_Type
+      procedure(HookesLawMultInterface), deferred     :: mult
+      procedure(HookesLawMultMultInterface), deferred :: multmult
+   end type MEF90HookesLaw
 
    abstract interface
-      subroutine HookesLawInterface(A, e, Ae, ierr)
+      subroutine HookesLawMultInterface(A, phi, Aphi, ierr)
          use m_MEF90_LinAlg_class
          use petscsys
-         import :: MEF90HookesLaw_Type
+         import :: MEF90HookesLaw
 
-         class(MEF90HookesLaw_Type), intent(in) :: A
-         class(mef90Mat), intent(in) :: e
-         class(mef90Mat), intent(inout) :: Ae
-         PetscErrorCode, intent(inout) :: ierr
-      end subroutine HookesLawInterface
+         class(MEF90HookesLaw), intent(in) :: A
+         class(mef90Mat), intent(in)       :: phi
+         class(mef90Mat), intent(out)      :: Aphi
+         PetscErrorCode, intent(inout)     :: ierr
+      end subroutine HookesLawMultInterface
+
+      subroutine HookesLawMultMultInterface(A, phi, psi, Aphipsi, ierr)
+         use m_MEF90_LinAlg_class
+         use petscsys
+         import :: MEF90HookesLaw
+
+         class(MEF90HookesLaw), intent(in) :: A
+         class(mef90Mat), intent(in)       :: phi, psi
+         PetscReal, intent(out)            :: Aphipsi
+         PetscErrorCode, intent(inout)     :: ierr
+      end subroutine HookesLawMultMultInterface
    end interface
 
 contains
@@ -41,12 +53,12 @@ contains
 #define __FUNCT__ "MEF90HookesLaw_setFromOptions"
 !!!
 !!!
-!!!  MEF90HookesLaw_setFromOptions: initializes a MEF90_DefMechAT_Type from options
+!!!  MEF90HookesLaw_setFromOptions: initializes a MEF90Hookes from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HookesLaw_setFromOptions(self,ierr)
-      class(MEF90HookesLaw_Type), intent(inout) :: self
+   subroutine MEF90HookesLaw_setFromOptions(self, ierr)
+      class(MEF90HookesLaw), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
 
       PetscBool :: printHelp

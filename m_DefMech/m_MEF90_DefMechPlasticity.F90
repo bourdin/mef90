@@ -1,5 +1,4 @@
 #include "../MEF90/mef90.inc"
-#include "mef90DefMech.inc"
 module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 use MEF90_APPEND(m_MEF90_DefMechPlasticityCtx,MEF90_DIM)D

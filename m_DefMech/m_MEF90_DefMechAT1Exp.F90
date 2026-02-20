@@ -1,5 +1,4 @@
 #include "../MEF90/mef90.inc"
-#include "mef90DefMech.inc"
 module m_MEF90_DefMechAT1exp
 #include "petsc/finclude/petsc.h"
    ! Use m_MEF90

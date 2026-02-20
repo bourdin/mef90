@@ -1,39 +1,72 @@
 #include "../MEF90/mef90.inc"
-#include "mef90DefMech.inc"
-module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
+module m_MEF90_DefMechSplitNone
 #include "petsc/finclude/petsc.h"
-use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
+use m_MEF90_DefMechSplit_class
 use m_MEF90_Materials
 use m_MEF90_HookesLaw
-#define MEF90_DEFMECHSPLITNONE_CONSTRUCTOR MEF90_APPEND(m_MEF90_DefMechSplitNone_Constructor,MEF90_DIM)D
 implicit none(type)
 private
-public :: MEF90_DEFMECHSPLITNONE
+public :: MEF90DefMechSplitNone
 
-type, extends(MEF90_DEFMECHSPLIT)                   :: MEF90_DEFMECHSPLITNONE
+type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitNone
 contains
-   procedure, pass(self)                            :: EED => EEDNone
-   procedure, pass(self)                            :: DEED => DEEDNone
-   procedure, pass(self)                            :: D2EED => D2EEDNone
-end type MEF90_DEFMECHSPLITNONE
+   procedure              :: setFromOptions => MEF90DefMechSplitNone_setFromOptions
+   procedure              :: view => MEF90DefMechSplitNone_view
+   procedure, pass(self)  :: EED => EEDNone
+   procedure, pass(self)  :: DEED => DEEDNone
+   procedure, pass(self)  :: D2EED => D2EEDNone
+end type MEF90DefMechSplitNone
 
-interface MEF90_DEFMECHSPLITNONE
-   module procedure MEF90_DEFMECHSPLITNONE_CONSTRUCTOR
-end interface
 
 contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90_DEFMECHSPLITNONE_CONSTRUCTOR"
+#define __FUNCT__ "MEF90DefMechSplitNone_setFromOptions"
 !!!
 !!!
-!!!  MEF90_DEFMECHSPLITNONE_CONSTRUCTOR: the default constructor for a MEF90_DEFMECHSPLITNONE
+!!!  MEF90DefMechSplitNone_setFromOptions: the default constructor for a MEF90DefMechSplitNone
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-type(MEF90_DEFMECHSPLITNONE) function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR()
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%damageOrder = 0
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%strainOrder = 2
-   MEF90_DEFMECHSPLITNONE_CONSTRUCTOR%type = 'MEF90DefMech_unilateralContactTypeNone'
-end function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR
+   subroutine MEF90DefMechSplitNone_setFromOptions(self, ierr)
+      class(MEF90DefMechSplitNone), intent(inout) :: self
+      PetscErrorCode, intent(inout)               :: ierr
+      PetscBool                                   :: printHelp
+
+      self%damageOrder = 0
+      self%strainOrder = 2
+      self%type = 'MEF90DefMechSplitNone'
+
+      !!! MEF90DefMechSplitNone has no options
+      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp) then
+         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      end if
+
+   end subroutine MEF90DefMechSplitNone_setFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechSplitNone_view"
+!!!
+!!!
+!!!  MEF90DefMechSplitNone_view: view a MEF90DefMechSplitNone
+!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine MEF90DefMechSplitNone_view(self, viewer, ierr)
+      class(MEF90DefMechSplitNone), intent(in)    :: self
+      type(tPetscViewer), intent(in)              :: viewer
+      PetscErrorCode,intent(inout)                :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)   :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)   :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType == 'ascii') then
+         write(IOBuffer, "(A,': Options for MEF90DefMechSplitNone\n')") trim(self%prefix)
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         No options\n')")
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+      end if
+   end subroutine MEF90DefMechSplitNone_view
 
 #undef __FUNCT__
 #define __FUNCT__ "EEDNone"
@@ -43,17 +76,21 @@ end function MEF90_DEFMECHSPLITNONE_CONSTRUCTOR
 !!!           without a split, we have EEDPlus  = 1/2 HookesLaw Strain \cdot Strain
 !!!                                    EEDMinus = 0
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-subroutine EEDNone(self, Strain, HookesLaw, EEDPlus, EEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
-   type(MEF90_MATS), intent(IN)                   :: Strain
-   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw
-   PetscReal, intent(OUT)                         :: EEDPlus, EEDMinus
+   subroutine EEDNone(self, Strain, HookesLaw, EEDPlus, EEDMinus)
+      class(MEF90DefMechSplitNone), intent(IN)      :: self
+      class(mef90Mat), intent(IN)                   :: Strain
+      class(MEF90HookesLaw), allocatable            :: HookesLaw
+      PetscReal, intent(OUT)                        :: EEDPlus, EEDMinus
 
-   EEDPlus = ((HookesLaw * Strain) .dotP.Strain) * 0.5_kr
-   EEDMinus = 0.0_kr
-end subroutine EEDNone
+      PetscErrorCode                                :: ierr
+      type(mef90Mat)                                :: Stress
+
+      Call HookesLaw%multmult(Strain, Stress, EEDPlus, ierr)
+      EEDPlus = EEDPlus * 0.5_kr
+      EEDMinus = 0.0_kr
+   end subroutine EEDNone
 
 #undef __FUNCT__
 #define __FUNCT__ "DEEDNone"
@@ -65,17 +102,24 @@ end subroutine EEDNone
 !!!                                    DEEDMinus = 0
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-subroutine DEEDNone(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
-   type(MEF90_MATS), intent(IN)                   :: Strain
-   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw
-   type(MEF90_MATS), intent(OUT)                  :: DEEDPlus, DEEDMinus
+   subroutine DEEDNone(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
+      class(MEF90DefMechSplitNone), intent(IN)      :: self
+      class(mef90Mat), intent(IN)                   :: Strain
+      class(MEF90HookesLaw), allocatable            :: HookesLaw
+      class(mef90Mat), allocatable, intent(OUT)     :: DEEDPlus, DEEDMinus
 
-   DEEDPlus = HookesLaw * Strain
-   DEEDMinus = 0.0_kr
-end subroutine DEEDNone
+      PetscErrorCode                                :: ierr
+
+      call HookesLaw%mult(Strain, DEEDPlus, ierr)
+      select type (e => Strain)
+         type is (MatS2D)
+            DEEDMinus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
+         type is (MatS3D)
+            DEEDMinus = MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr)
+      end select
+   end subroutine DEEDNone
 
 #undef __FUNCT__
 #define __FUNCT__ "D2EEDNone"
@@ -86,31 +130,34 @@ end subroutine DEEDNone
 !!!               without a split, D2EEDPlus = HookesLaw, D2EEDMinus = 0
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-subroutine D2EEDNone(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
-   class(MEF90_DEFMECHSPLITNONE), intent(IN)      :: self
-   type(MEF90_MATS), intent(IN)                   :: Strain
-   class(MEF90HookesLaw_Type), allocatable        :: HookesLaw, D2EEDPlus, D2EEDMinus
+   subroutine D2EEDNone(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
+      class(MEF90DefMechSplitNone), intent(IN)        :: self
+      class(mef90Mat), intent(IN)                     :: Strain
+      class(MEF90HookesLaw), allocatable, intent(IN)  :: HookesLaw
+      class(MEF90HookesLaw), allocatable, intent(OUT) :: D2EEDPlus, D2EEDMinus
 
-   ! type(MEF90_HOOKESLAW), intent(IN)                   :: HookesLaw
-   ! type(MEF90_HOOKESLAW), intent(OUT)                  :: D2EEDPlus, D2EEDMinus
-
-   D2EEDPlus = HookesLaw
-
-! #if MEF90_DIM==2
-!    D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
-! #endif
-!    D2EEDMinus%type = HookesLaw%type
-!    select case (HookesLaw%type)
-!    case (MEF90HookesLawTypeIsotropic)
-!       D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
-!       D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
-!       D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
-!       D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
-!       D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
-!    case (MEF90HookesLawTypeFull)
-!       D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
-!       D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
-!    end select !HookesLaw%type
-end subroutine D2EEDNone
-
-end module MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
+      !!! Define zero Hooke Laws later
+      D2EEDPlus = HookesLaw
+      select type(Strain)
+         type is (MatS2D)
+            D2EEDMinus = MEF90HookesLawNull2D(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
+         type is (MatS3D)
+            D2EEDMinus = MEF90HookesLawNull3D(comm = HookesLaw%comm, prefix = HookesLaw%prefix)
+   end select
+   ! #if MEF90_DIM==2
+   !    D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
+   ! #endif
+   !    D2EEDMinus%type = HookesLaw%type
+   !    select case (HookesLaw%type)
+   !    case (MEF90HookesLawTypeIsotropic)
+   !       D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
+   !       D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
+   !       D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
+   !       D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
+   !       D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
+   !    case (MEF90HookesLawTypeFull)
+   !       D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
+   !       D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
+   !    end select !HookesLaw%type
+   end subroutine D2EEDNone
+end module m_MEF90_DefMechSplitNone

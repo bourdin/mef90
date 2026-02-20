@@ -1,22 +1,38 @@
 #include "../MEF90/mef90.inc"
-#include "mef90DefMech.inc"
-module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
+module m_MEF90_DefMechSplit
 #include "petsc/finclude/petsc.h"
-use MEF90_APPEND(m_MEF90_DefMechSplit_class,MEF90_DIM)D
-use MEF90_APPEND(m_MEF90_DefMechSplitNone,MEF90_DIM)D
-! use MEF90_APPEND(m_MEF90_DefMechSplitHD,MEF90_DIM)D
-! use MEF90_APPEND(m_MEF90_DefMechSplitDeviatoric,MEF90_DIM)D
-! use MEF90_APPEND(m_MEF90_DefMechSplitHydrostatic,MEF90_DIM)D
+use m_MEF90_DefMechSplit_class
+use m_MEF90_DefMechSplitNone
+! use m_MEF90_DefMechSplitHD
+! use m_MEF90_DefMechSplitDeviatoric
+! use m_MEF90_DefMechSplitHydrostatic
 use m_MEF90_DefMechCtx
+use petscsys
 
-implicit none(type, external)
+implicit none(type)
 ! private
 public :: MEF90DefMechGetSplit
-public :: MEF90_DEFMECHSPLIT
-! public :: MEF90_DEFMECHSPLITDEVIATORIC
-! public :: MEF90_DEFMECHSPLITHD
-! public :: MEF90_DEFMECHSPLITHYDROSTATIC
-public :: MEF90_DEFMECHSPLITNONE
+! public :: MEF90DefMechSplitDeviatoric
+! public :: MEF90DefMechSplitHD
+! public :: MEF90DefMechSplitHydrostatic
+public :: MEF90DefMechSplitNone
+
+enum, bind(c)
+   enumerator :: MEF90DefMechSplitEnumNone = 0, &
+      MEF90DefMechSplitEnumHydrostaticDeviatoric, &
+      MEF90DefMechSplitEnumHydrostatic, &
+      MEF90DefMechSplitEnumDeviatoric
+end enum
+character(len=MEF90MXSTRLEN), dimension(4), protected :: MEF90DefMechSplitEnumList = [ &
+         'None                      ', &
+         ! 'HydrostaticDeviatoric     ', &
+         ! 'Hydrostatic               ', &
+         ! 'Deviatoric                ', &
+         'MEF90DefMechSplitEnumList ', &
+         '_MEF90DefMechSplitEnumList', &
+         '                          '  &
+      ]
+
 
 contains
 #undef __FUNCT__
@@ -26,26 +42,33 @@ contains
 !!!  MEF90DefMechGetSplit: Return the split object from the cell set options
 !!!
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-subroutine MEF90DefMechGetSplit(cellSetOptions, Split, ierr)
-   type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
-   class(MEF90_DEFMECHSPLIT), allocatable, intent(OUT) :: Split
-   PetscErrorCode, intent(INOUT)                       :: ierr
+   subroutine MEF90DefMechGetSplit(comm, prefix, split, ierr)
+      MPIU_Comm, intent(in)                              :: comm
+      character(len = MEF90MXSTRLEN), intent(in)         :: prefix
+      class(MEF90DefMechSplit), allocatable, intent(out) :: split
+      PetscErrorCode, intent(inout)                      :: ierr
 
-   select case (cellSetOptions%unilateralContactType)
-   case (MEF90DefMech_unilateralContactTypeNone)
-      Split = MEF90_DEFMECHSPLITNONE()
-      !Case(MEF90DefMech_unilateralContactTypeMasonry)
-      !   Split = MEF90_DEFMECHSPLITMASONRY()
-   case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
-      Split = MEF90_DEFMECHSPLITHD(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
-   case (MEF90DefMech_unilateralContactTypeDeviatoric)
-      Split = MEF90_DEFMECHSPLITDEVIATORIC()
-   case (MEF90DefMech_unilateralContactTypeHydrostatic)
-      Split = MEF90_DEFMECHSPLITHYDROSTATIC(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
-   case default
-      print *, __FUNCT__, ': Unimplemented split Type', cellSetOptions%unilateralContactType
-      stop
-   end select
-end subroutine MEF90DefMechGetSplit
-end module MEF90_APPEND(m_MEF90_DefMechSplit,MEF90_DIM)D
+      PetscEnum :: splitType
+
+      splitType = MEF90DefMechSplitEnumNone
+      PetscCall(PetscOptionsBegin(comm, trim(prefix), "Options for MEF90DefMechSplit", "MEF90", ierr))
+         PetscCall(PetscOptionsEnum("-unilateralContact_type", "unilateral contact type", "MEF90", MEF90DefMechSplitEnumList, MEF90DefMechSplitEnumNone, splitType, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsEnd(ierr))
+
+      select case (splitType)
+      case (MEF90DefMechSplitEnumNone)
+         Split = MEF90DefMechSplitNone(comm = comm, prefix = prefix)
+      ! case (MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric)
+      !    Split = MEF90DefMechSplitHD(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
+      ! case (MEF90DefMech_unilateralContactTypeDeviatoric)
+      !    Split = MEF90DefMechSplitDeviatoric()
+      ! case (MEF90DefMech_unilateralContactTypeHydrostatic)
+      !    Split = MEF90DefMechSplitHydrostatic(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
+      case default
+         print *, __FUNCT__, ': Unimplemented split Type', MEF90DefMechSplitEnumNone
+         stop
+      end select
+   end subroutine MEF90DefMechGetSplit
+end module m_MEF90_DefMechSplit

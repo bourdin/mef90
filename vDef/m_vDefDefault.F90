@@ -61,7 +61,6 @@ module m_vDefDefault
                                                           MEF90DefMech_unilateralContactTypeNone, & ! unilateralContactType
                                                           1.0e-5, & ! unilateralContactHydrostaticDeviatoricGamma
                                                           PETSC_FALSE, & ! unilateralContactHybrid
-                                                          MEF90DefMech_drivingForceTypeNone, & ! drivingForceType
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! cohesiveDisplacement
                                                           [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE], & ! hasDisplacementBC
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! boundaryDisplacement

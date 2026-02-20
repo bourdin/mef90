@@ -101,7 +101,6 @@ module m_MEF90_DefMechCtx_Type
       PetscBool                               :: unilateralContactHybrid
       ! PetscReal                               :: DamageATLinSoftk
       ! PetscReal                               :: DamageAT1expb
-      PetscEnum                               :: drivingForceType
       PetscReal, dimension(3)                 :: cohesiveDisplacement
       PetscBool, dimension(3)                 :: Has_displacementBC
       PetscReal, dimension(3)                 :: boundaryDisplacement
@@ -317,12 +316,6 @@ module m_MEF90_DefMechCtx
    end enum
    character(len=MEF90MXSTRLEN), dimension(9), protected   :: MEF90DefMech_unilateralContactTypeList
 
-   enum, bind(c)
-      enumerator :: MEF90DefMech_drivingForceTypeNone = 0, &
-         MEF90_DefMechDrivingForceTypeDruckerPrager, &
-         MEF90DefMech_drivingForceTypeDruckerPrager2
-   end enum
-   character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90DefMech_drivingForceTypeList
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCtxInitialize_Private"
@@ -413,13 +406,6 @@ contains
       MEF90DefMech_unilateralContactTypeList(7) = 'MEF90DefMech_unilateralContactTypeList'
       MEF90DefMech_unilateralContactTypeList(8) = '_MEF90DefMech_unilateralContactTypeList'
       MEF90DefMech_unilateralContactTypeList(9) = ''
-
-      MEF90DefMech_drivingForceTypeList(1) = 'None'
-      MEF90DefMech_drivingForceTypeList(2) = 'DruckerPrager'
-      MEF90DefMech_drivingForceTypeList(3) = 'DruckerPrager2'
-      MEF90DefMech_drivingForceTypeList(4) = 'MEF90DefMech_drivingForceTypeList'
-      MEF90DefMech_drivingForceTypeList(5) = '_MEF90DefMech_drivingForceTypeList'
-      MEF90DefMech_drivingForceTypeList(6) = ''
    end subroutine MEF90DefMechCtxInitialize_Private
 
 #undef __FUNCT__
@@ -836,7 +822,6 @@ contains
       PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%unilateralContactType, MEF90DefMech_unilateralContactTypeList, default%unilateralContactType, 'unilateralContact_type', 'Type of handling of unilateral contact', ierr))
       PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma, default%unilateralContactHydrostaticDeviatoricGamma, 'unilateralContact_hydrostaticDeviatoric_gamma', '[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter', ierr))
       PetscCall(PetscBagRegisterBool(bag, DefMechCellSetOptions%unilateralContactHybrid, default%unilateralContactHybrid, 'unilateralContact_hybrid', 'Use hybrid unilateral contact formulation (Y/N)', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%drivingForceType, MEF90DefMech_drivingForceTypeList, default%drivingForceType, 'drivingForce_type', 'Type of nucleation driving force', ierr))
       PetscCall(PetscBagRegisterRealArray(bag, DefMechCellSetOptions%cohesiveDisplacement, 3_ki, 'cohesiveDisplacement', '[m] (U): Cohesive displacement value', ierr))
       PetscCall(PetscBagRegisterBoolArray(bag, DefMechCellSetOptions%Has_displacementBC, 3_ki, 'DisplacementBC', 'Displacement has Dirichlet boundary Condition (Y/N)', ierr))
       PetscCall(PetscBagRegisterRealArray(bag, DefMechCellSetOptions%boundaryDisplacement, 3_ki, 'boundaryDisplacement', '[m] (U): Displacement boundary value', ierr))
