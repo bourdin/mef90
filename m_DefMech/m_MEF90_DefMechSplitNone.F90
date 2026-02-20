@@ -61,7 +61,9 @@ contains
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90DefMechSplitNone\n')") trim(self%prefix)
+         write(IOBuffer, "(A,': Options for MEF90DefMechSplit\n')") trim(self%prefix) // "split"
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         type: none\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         No options\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
@@ -113,11 +115,11 @@ contains
 
       select type (Strain)
          type is (MatS2D)
-            DEEDMinus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
-            DEEDPlus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
+            DEEDMinus = MatS2D()
+            DEEDPlus = MatS2D()
          type is (MatS3D)
-            DEEDMinus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
-            DEEDPlus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
+            DEEDMinus = MatS3D()
+            DEEDPlus = MatS3D()
       end select
       call HookesLaw%mult(Strain, DEEDPlus, ierr)
    end subroutine DEEDNone
@@ -138,11 +140,6 @@ contains
       class(MEF90HookesLaw), allocatable, intent(OUT) :: D2EEDPlus, D2EEDMinus
 
       D2EEDPlus = HookesLaw
-      select type(Strain)
-         type is (MatS2D)
-            D2EEDMinus = MEF90HookesLawZero2D(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
-         type is (MatS3D)
-            D2EEDMinus = MEF90HookesLawZero3D(comm = HookesLaw%comm, prefix = HookesLaw%prefix)
-      end select
+      D2EEDMinus = MEF90HookesLawZero(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
    end subroutine D2EEDNone
 end module m_MEF90_DefMechSplitNone

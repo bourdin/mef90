@@ -1,4 +1,4 @@
-module m_MEF90_HookesLawZero2D
+module m_MEF90_HookesLawZero
 #include "petsc/finclude/petsc.h"
    use m_MEF90_Parameters
    use m_MEF90_Utils
@@ -8,27 +8,27 @@ module m_MEF90_HookesLawZero2D
 
    implicit none(type)
    private
-   public :: MEF90HookesLawZero2D
+   public :: MEF90HookesLawZero
 
-   type, extends(MEF90HookesLaw) :: MEF90HookesLawZero2D
+   type, extends(MEF90HookesLaw) :: MEF90HookesLawZero
    contains
-         procedure :: setFromOptions => MEF90HookesLawZero2D_setFromOptions
-         procedure :: view => MEF90HookesLawZero2D_view
-         procedure :: mult => MEF90HookesLawZero2D_mult
-         procedure :: multmult => MEF90HookesLawZero2D_multmult
-   end type MEF90HookesLawZero2D
+         procedure :: setFromOptions => MEF90HookesLawZero_setFromOptions
+         procedure :: view => MEF90HookesLawZero_view
+         procedure :: mult => MEF90HookesLawZero_mult
+         procedure :: multmult => MEF90HookesLawZero_multmult
+   end type MEF90HookesLawZero
 
 contains
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HookesLawZero2D_setFromOptions"
+#define __FUNCT__ "MEF90HookesLawZero_setFromOptions"
 !!!
 !!!
-!!!  MEF90HookesLawZero2D_setFromOptions: initializes a MEF90HookesLawZero2D from options
+!!!  MEF90HookesLawZero_setFromOptions: initializes a MEF90HookesLawZero from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HookesLawZero2D_setFromOptions(self, ierr)
-      class(MEF90HookesLawZero2D), intent(inout)      :: self
+   subroutine MEF90HookesLawZero_setFromOptions(self, ierr)
+      class(MEF90HookesLawZero), intent(inout)        :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
       PetscBool                                       :: printHelp
@@ -38,18 +38,18 @@ contains
       if (printHelp) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
-   end subroutine MEF90HookesLawZero2D_setFromOptions
+   end subroutine MEF90HookesLawZero_setFromOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HookesLawZero2D_view"
+#define __FUNCT__ "MEF90HookesLawZero_view"
 !!!
 !!!
-!!!  MEF90HookesLawZero2D_view: the default viewer for a MEF90_DefMechAT_Type
+!!!  MEF90HookesLawZero_view: the default viewer for a MEF90_DefMechAT_Type
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-subroutine MEF90HookesLawZero2D_View(self, viewer, ierr)
-      class(MEF90HookesLawZero2D), intent(in)      :: self
+subroutine MEF90HookesLawZero_View(self, viewer, ierr)
+      class(MEF90HookesLawZero), intent(in)        :: self
       type(tPetscViewer), intent(in)               :: viewer
       PetscErrorCode, intent(inout)                :: ierr
 
@@ -58,181 +58,39 @@ subroutine MEF90HookesLawZero2D_View(self, viewer, ierr)
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90HookesLawZero2D\n')") trim(self%prefix)
+         write(IOBuffer, "(A,': Options for MEF90HookesLaw\n')") trim(self%prefix)//"HookesLaw"
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         Type: Zero\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
       end if
-   end subroutine MEF90HookesLawZero2D_View
+   end subroutine MEF90HookesLawZero_View
 
-   subroutine MEF90HookesLawZero2D_mult(A, phi, Aphi, ierr)
-      class(MEF90HookesLawZero2D), intent(in)      :: A
+   subroutine MEF90HookesLawZero_mult(A, phi, Aphi, ierr)
+      class(MEF90HookesLawZero), intent(in)        :: A
       class(mef90Mat), intent(in)                  :: phi
-      class(mef90Mat), intent(out)                 :: Aphi
+      class(mef90Mat), allocatable, intent(out)    :: Aphi
       character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
       PetscErrorCode, intent(inout)                :: ierr
 
-      select type (phi2D => phi)
+      select type (phinD => phi)
          type is (MatS2D)
-            select type (Aphi2D => Aphi)
-               type is (MatS2D)
-                  Aphi2D = MatS2D(0.0_kr, 0.0_kr, 0.0_kr)
-               class default
-                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-            end select ! Aphi
+            Aphi = MatS2D()
+         type is (MatS3D)
+            Aphi = MatS3D()
          class default
             write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
             PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
             SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
       end select ! phi
-   end subroutine MEF90HookesLawZero2D_mult
+   end subroutine MEF90HookesLawZero_mult
 
-   subroutine MEF90HookesLawZero2D_multmult(A, phi, psi, Aphipsi, ierr)
-      class(MEF90HookesLawZero2D), intent(in)      :: A
+   subroutine MEF90HookesLawZero_multmult(A, phi, psi, Aphipsi, ierr)
+      class(MEF90HookesLawZero), intent(in)        :: A
       class(mef90Mat), intent(in)                  :: phi, psi
       PetscReal, intent(out)                       :: Aphipsi
       PetscErrorCode, intent(inout)                :: ierr
 
       Aphipsi = 0.0_Kr
 
-   end subroutine MEF90HookesLawZero2D_multmult
-end module m_MEF90_HookesLawZero2D
-
-module m_MEF90_HookesLawZero3D
-#include "petsc/finclude/petsc.h"
-   use m_MEF90_Parameters
-   use m_MEF90_Utils
-   use m_MEF90_LinAlg
-   use m_MEF90_HookesLaw_Class
-   use iso_c_binding
-
-   implicit none(type)
-   private
-
-   public :: MEF90HookesLawZero3D
-
-   type, extends(MEF90HookesLaw) :: MEF90HookesLawZero3D
-      PetscReal :: YoungsModulus = 1.0_Kr
-      PetscReal :: PoissonRatio = 0.3_Kr
-      PetscReal :: lambda = 0.0_Kr 
-      PetscReal :: mu = 0.0_Kr
-      PetscReal :: BulkModulus = 0.0_Kr
-   contains
-         procedure, pass(self) :: setFromOptions => MEF90HookesLawZero3D_setFromOptions
-         procedure, pass(self) :: view => MEF90HookesLawZero3D_view
-         procedure             :: mult => MEF90HookesLawZero3D_mult
-         procedure             :: multmult => MEF90HookesLawZero3D_multmult
-   end type MEF90HookesLawZero3D
-
-contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90HookesLawZero3D_setFromOptions"
-!!!
-!!!
-!!!  MEF90HookesLawZero3D_setFromOptions: initializes a MEF90HookesLawZero3D_type from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
-!!!
-
-   subroutine MEF90HookesLawZero3D_setFromOptions(self,ierr)
-      class(MEF90HookesLawZero3D), intent(inout) :: self
-      PetscErrorCode,intent(inout)                    :: ierr
-
-      PetscBool :: printHelp
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Zero", "Options for MEF90HookesLawZero3D_Type", "mef90HookesLaw", ierr))
-         PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
-      PetscCall(PetscOptionsEnd(ierr))
-      self%lambda = self%YoungsModulus * self%PoissonRatio / (1.0_kr + self%PoissonRatio) / (1.0_kr - 2.0_kr * self%PoissonRatio)
-      self%mu = self%YoungsModulus / (1.0_kr + self%PoissonRatio)*.5_kr
-      self%BulkModulus = self%lambda + 2.0_kr * self%mu / 3.0_kr
-
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
-         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
-      end if
-   end subroutine MEF90HookesLawZero3D_setFromOptions
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90HookesLawZero3D_view"
-!!!
-!!!
-!!!  MEF90HookesLawZero3D_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
-!!!
-
-   subroutine MEF90HookesLawZero3D_View(self,viewer,ierr)
-      class(MEF90HookesLawZero3D), intent(in) :: self
-      type(tPetscViewer), intent(in)               :: viewer
-      PetscErrorCode, intent(inout)                :: ierr
-
-      character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
-      character(len=MEF90MXSTRLEN, kind=c_char)    :: viewerType
-
-      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
-      if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90HookesLawZero3D_type\n')") trim(self%prefix)
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         Youngs modulus (E): ',ES12.5,' [Pa]\n')") self%YoungsModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         Poisson ratio (nu): ',ES12.5,' []\n')") self%PoissonRatio
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         Bulk modulus (\kappa): ',ES12.5,' [Pa]\n')") self%BulkModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         Lame coefficient (\lambda): ',ES12.5,' [Pa]\n')") self%lambda
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         Shear modulus (\mu): ',ES12.5,' [Pa]\n')") self%mu
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-      end if
-   end subroutine MEF90HookesLawZero3D_View
-
-   subroutine MEF90HookesLawZero3D_mult(A, phi, Aphi, ierr)
-      class(MEF90HookesLawZero3D), intent(in) :: A
-      class(mef90Mat), intent(in)                  :: phi
-      class(mef90Mat), intent(out)                 :: Aphi
-      character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
-      PetscErrorCode, intent(inout)                :: ierr
-
-      select type (phi3D => phi)
-         type is (MatS3D)
-            select type (Aphi3D => Aphi)
-               type is (MatS3D)
-                  Aphi3D = A%lambda * trace(phi3D) * MEF90Mat3DIdentity
-                  Aphi3D = Aphi3D + 2.0_Kr * A%mu * phi3D
-               class default
-                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-            end select ! Aphi
-         class default
-            write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-            PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-      end select ! phi
-   end subroutine MEF90HookesLawZero3D_mult
-
-   subroutine MEF90HookesLawZero3D_multmult(A, phi, psi, Aphipsi, ierr)
-      class(MEF90HookesLawZero3D), intent(in) :: A
-      class(mef90Mat), intent(in)                  :: phi, psi
-      PetscReal, intent(out)                       :: Aphipsi
-      character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
-      PetscErrorCode, intent(inout)                :: ierr
-
-      !!! This is really absurd
-      select type (phi3D => phi)
-         type is (MatS3D)
-         select type (psi3D => psi)
-            type is (MatS3D)
-               Aphipsi = A%lambda * trace(phi3D) * trace(psi3D) &
-                         + 2.0_Kr * A%mu * (phi3D .dotP. psi3D)
-            class default
-               write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-               PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-               SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-            end select ! psi
-         class default
-            write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-            PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-            SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-      end select ! phi
-   end subroutine MEF90HookesLawZero3D_multmult
-end module m_MEF90_HookesLawZero3D
+   end subroutine MEF90HookesLawZero_multmult
+end module m_MEF90_HookesLawZero

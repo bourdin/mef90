@@ -78,7 +78,9 @@ subroutine MEF90HookesLawIsotropic2D_View(self, viewer, ierr)
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90HookesLawIsotropic2D\n')") trim(self%prefix)
+         write(IOBuffer, "(A,': Options for MEF90HookesLaw\n')") trim(self%prefix)//"HookesLaw"
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         Type: Isotropic\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         Youngs modulus (E): ',ES12.5,' [Pa]\n')") self%YoungsModulus
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
@@ -98,21 +100,13 @@ subroutine MEF90HookesLawIsotropic2D_View(self, viewer, ierr)
    subroutine MEF90HookesLawIsotropic2D_mult(A, phi, Aphi, ierr)
       class(MEF90HookesLawIsotropic2D), intent(in) :: A
       class(mef90Mat), intent(in)                  :: phi
-      class(mef90Mat), intent(out)                 :: Aphi
+      class(mef90Mat), allocatable, intent(out)    :: Aphi
       character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
       PetscErrorCode, intent(inout)                :: ierr
 
       select type (phi2D => phi)
          type is (MatS2D)
-            select type (Aphi2D => Aphi)
-               type is (MatS2D)
-                  Aphi2D = A%lambda * trace(phi2D) * MEF90Mat2DIdentity
-                  Aphi2D = Aphi2D + 2.0_Kr * A%mu * phi2D
-               class default
-                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-            end select ! Aphi
+            Aphi = A%lambda * trace(phi2D) * MEF90MatS2DIdentity + 2.0_Kr * A%mu * phi2D
          class default
             write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
             PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
@@ -219,7 +213,9 @@ contains
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90HookesLawIsotropic3D_type\n')") trim(self%prefix)
+         write(IOBuffer, "(A,': Options for MEF90HookesLaw\n')") trim(self%prefix)//"HookesLaw"
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         Type: Isotropic\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         Youngs modulus (E): ',ES12.5,' [Pa]\n')") self%YoungsModulus
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
@@ -237,21 +233,13 @@ contains
    subroutine MEF90HookesLawIsotropic3D_mult(A, phi, Aphi, ierr)
       class(MEF90HookesLawIsotropic3D), intent(in) :: A
       class(mef90Mat), intent(in)                  :: phi
-      class(mef90Mat), intent(out)                 :: Aphi
+      class(mef90Mat), allocatable, intent(out)    :: Aphi
       character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
       PetscErrorCode, intent(inout)                :: ierr
 
       select type (phi3D => phi)
          type is (MatS3D)
-            select type (Aphi3D => Aphi)
-               type is (MatS3D)
-                  Aphi3D = A%lambda * trace(phi3D) * MEF90Mat3DIdentity
-                  Aphi3D = Aphi3D + 2.0_Kr * A%mu * phi3D
-               class default
-                  write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
-                  PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))
-                  SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP, IOBuffer)
-            end select ! Aphi
+            Aphi = A%lambda * trace(phi3D) * MEF90MatS3DIdentity + 2.0_Kr * A%mu * phi3D
          class default
             write (IOBuffer, *) "Incompatible arguments in "//__FUNCT__//'\n'
             PetscCall(PetscPrintf(PETSC_COMM_SELF, IOBuffer, ierr))

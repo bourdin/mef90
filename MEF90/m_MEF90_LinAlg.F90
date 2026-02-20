@@ -36,48 +36,48 @@ module m_MEF90_LinAlg
    external :: dgetri
 
    type, extends(mef90Vect) :: Vect2D
-      PetscReal          :: X
-      PetscReal          :: Y
+      PetscReal          :: X = 0.0_Kr
+      PetscReal          :: Y = 0.0_Kr
    end type Vect2D
 
    type, extends(mef90Vect) :: Vect3D
-      PetscReal          :: X
-      PetscReal          :: Y
-      PetscReal          :: Z
+      PetscReal          :: X = 0.0_Kr
+      PetscReal          :: Y = 0.0_Kr
+      PetscReal          :: Z = 0.0_Kr
    end type Vect3D
 
    type, extends(mef90Mat) :: Mat2D
-      PetscReal          :: XX
-      PetscReal          :: XY
-      PetscReal          :: YX
-      PetscReal          :: YY
+      PetscReal          :: XX = 0.0_Kr
+      PetscReal          :: XY = 0.0_Kr
+      PetscReal          :: YX = 0.0_Kr
+      PetscReal          :: YY = 0.0_Kr
    end type Mat2D
 
    type, extends(mef90Mat) :: MatS2D
-      PetscReal          :: XX
-      PetscReal          :: YY
-      PetscReal          :: XY
+      PetscReal          :: XX = 0.0_Kr
+      PetscReal          :: YY = 0.0_Kr
+      PetscReal          :: XY = 0.0_Kr
    end type MatS2D
 
    type, extends(mef90Mat) :: Mat3D
-      PetscReal          :: XX
-      PetscReal          :: XY
-      PetscReal          :: XZ
-      PetscReal          :: YX
-      PetscReal          :: YY
-      PetscReal          :: YZ
-      PetscReal          :: ZX
-      PetscReal          :: ZY
-      PetscReal          :: ZZ
+      PetscReal          :: XX = 0.0_Kr
+      PetscReal          :: XY = 0.0_Kr
+      PetscReal          :: XZ = 0.0_Kr
+      PetscReal          :: YX = 0.0_Kr
+      PetscReal          :: YY = 0.0_Kr
+      PetscReal          :: YZ = 0.0_Kr
+      PetscReal          :: ZX = 0.0_Kr
+      PetscReal          :: ZY = 0.0_Kr
+      PetscReal          :: ZZ = 0.0_Kr
    end type Mat3D
 
    type, extends(mef90Mat) :: MatS3D
-      PetscReal          :: XX
-      PetscReal          :: YY
-      PetscReal          :: ZZ
-      PetscReal          :: YZ
-      PetscReal          :: XZ
-      PetscReal          :: XY
+      PetscReal          :: XX = 0.0_Kr
+      PetscReal          :: YY = 0.0_Kr
+      PetscReal          :: ZZ = 0.0_Kr
+      PetscReal          :: YZ = 0.0_Kr
+      PetscReal          :: XZ = 0.0_Kr
+      PetscReal          :: XY = 0.0_Kr
    end type MatS3D
 
  !! After much hesitation,

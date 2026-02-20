@@ -30,10 +30,10 @@ module m_MEF90_HookesLaw_class
          use petscsys
          import :: MEF90HookesLaw
 
-         class(MEF90HookesLaw), intent(in) :: A
-         class(mef90Mat), intent(in)       :: phi
-         class(mef90Mat), intent(out)      :: Aphi
-         PetscErrorCode, intent(inout)     :: ierr
+         class(MEF90HookesLaw), intent(in)         :: A
+         class(mef90Mat), intent(in)               :: phi
+         class(mef90Mat), allocatable, intent(out) :: Aphi
+         PetscErrorCode, intent(inout)             :: ierr
       end subroutine HookesLawMultInterface
 
       subroutine HookesLawMultMultInterface(A, phi, psi, Aphipsi, ierr)
@@ -41,10 +41,10 @@ module m_MEF90_HookesLaw_class
          use petscsys
          import :: MEF90HookesLaw
 
-         class(MEF90HookesLaw), intent(in) :: A
-         class(mef90Mat), intent(in)       :: phi, psi
-         PetscReal, intent(out)            :: Aphipsi
-         PetscErrorCode, intent(inout)     :: ierr
+         class(MEF90HookesLaw), intent(in)        :: A
+         class(mef90Mat), intent(in)              :: phi, psi
+         PetscReal, intent(out)                   :: Aphipsi
+         PetscErrorCode, intent(inout)            :: ierr
       end subroutine HookesLawMultMultInterface
    end interface
 

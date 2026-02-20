@@ -69,7 +69,7 @@ contains
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
-         write(IOBuffer, "(A,': Options for MEF90DefMechAT_type\n')") trim(self%prefix)
+         write(IOBuffer, "(A,': Options for MEF90DefMechAT_type\n')") trim(self%prefix) // "_damage"
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         type: ',A,'\n')") trim(self%type)
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
