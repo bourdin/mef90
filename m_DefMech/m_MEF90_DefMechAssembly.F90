@@ -1147,6 +1147,9 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
                   !!! This is ridiculous. There has to be a better way...
+!!! This is becasue DEED assumes that these are allocated...
+                  stressGaussPlus = totalStrainGauss
+                  stressGaussMinus = totalStrainGauss
                   call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
                   select type(stressGaussPlusnD => stressGaussPlus)
                      type is (MEF90_MATS)

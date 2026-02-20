@@ -6,8 +6,8 @@ module m_MEF90_HookesLaw
    use m_MEF90_HookesLaw_class
    use m_MEF90_HookesLawIsotropic2D
    use m_MEF90_HookesLawIsotropic3D
-   use m_MEF90_HookesLawNull2D
-   use m_MEF90_HookesLawNull3D
+   use m_MEF90_HookesLawZero2D
+   use m_MEF90_HookesLawZero3D
    use petscsys
    implicit none(type)
 
@@ -16,21 +16,21 @@ module m_MEF90_HookesLaw
    public :: MEF90HookesLaw
    public :: MEF90HookesLawIsotropic2D
    public :: MEF90HookesLawIsotropic3D
-   public :: MEF90HookesLawNull2D
-   public :: MEF90HookesLawNull3D
+   public :: MEF90HookesLawZero2D
+   public :: MEF90HookesLawZero3D
    ! public :: MEF90HookesLawSum
 
 
    enum, bind(c)
       enumerator :: MEF90HookesLawEnumIsotropic = 0, &
          MEF90HookesLawEnumFull, &
-         MEF90HookesLawEnumNull
+         MEF90HookesLawEnumZero
    end enum
 
    character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90HookesLawEnumList = [ &
       'Isotropic           ', &
       'Full                ', &
-      'Null                ', &
+      'Zero                ', &
       'MEF90HookesLaw_Type ', &
       '_MEF90HookesLaw_Type', &
       '                    '  &
@@ -72,14 +72,14 @@ contains
                   write(*,"('In ', A, ' dim = ', I2, 'and should be 2 or 3')") __FUNCT__, dim
                   STOP
             end select
-         case (MEF90HookesLawEnumNull)
+         case (MEF90HookesLawEnumZero)
             select case(dim)
                case(2)
-                  HookesLaw = MEF90HookesLawNull2D(comm = comm, prefix = prefix)
+                  HookesLaw = MEF90HookesLawZero2D(comm = comm, prefix = prefix)
                   !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawNul2D_type extends
                   !!! MEF90Object_Type, so that the order of positional arguments is not clear.
                case(3)
-                  HookesLaw = MEF90HookesLawNull3D(comm = comm, prefix = prefix)
+                  HookesLaw = MEF90HookesLawZero3D(comm = comm, prefix = prefix)
                case default
                   write(*,"('In ', A, ' dim = ', I2, 'and should be 2 or 3')") __FUNCT__, dim
                   STOP

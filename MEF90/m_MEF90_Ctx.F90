@@ -279,18 +279,17 @@ contains
 !!!
 
    subroutine MEF90CtxGetTime(MEF90Ctx, t, ierr)
-      type(MEF90Ctx_Type), intent(INOUT)               :: MEF90Ctx
-      PetscReal, dimension(:), pointer                  :: t
-      PetscErrorCode, intent(OUT)                      :: ierr
+      type(MEF90Ctx_Type), intent(INOUT)              :: MEF90Ctx
+      PetscReal, dimension(:), pointer                :: t
+      PetscErrorCode, intent(OUT)                     :: ierr
 
       PetscReal                                       :: dt
-      integer                                         :: i
       real                                            :: dummyR
       character(len=1)                                :: dummyS
       PetscErrorCode                                  :: exoErr
       integer                                         :: exoUnit
-      type(MEF90CtxGlobalOptions_Type), pointer        :: GlobalOptions
-      integer                                         :: j, CycleLength
+      type(MEF90CtxGlobalOptions_Type), pointer       :: GlobalOptions
+      PetscInt                                        :: i, j, CycleLength
       character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       i = 0 ! silence gfortran silly warning
@@ -302,7 +301,7 @@ contains
          if (GlobalOptions%timeNumStep > 1) then
             dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1.0_kr)
          end if
-         t = [(GlobalOptions%timeMin + real(i) * dt, i=0, GlobalOptions%timeNumStep - 1)]
+         t = [(GlobalOptions%timeMin + i * dt, i = 0, GlobalOptions%timeNumStep - 1)]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax
 
       case (MEF90TimeInterpolation_Vcycle)

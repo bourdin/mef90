@@ -85,9 +85,8 @@ contains
       PetscReal, intent(OUT)                        :: EEDPlus, EEDMinus
 
       PetscErrorCode                                :: ierr
-      type(mef90Mat)                                :: Stress
 
-      Call HookesLaw%multmult(Strain, Stress, EEDPlus, ierr)
+      Call HookesLaw%multmult(Strain, Strain, EEDPlus, ierr)
       EEDPlus = EEDPlus * 0.5_kr
       EEDMinus = 0.0_kr
    end subroutine EEDNone
@@ -112,13 +111,15 @@ contains
 
       PetscErrorCode                                :: ierr
 
-      call HookesLaw%mult(Strain, DEEDPlus, ierr)
-      select type (e => Strain)
+      select type (Strain)
          type is (MatS2D)
             DEEDMinus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
+            DEEDPlus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
          type is (MatS3D)
-            DEEDMinus = MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr)
+            DEEDMinus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
+            DEEDPlus = MatS2D(0.0_Kr, 0.0_Kr, 0.0_Kr)
       end select
+      call HookesLaw%mult(Strain, DEEDPlus, ierr)
    end subroutine DEEDNone
 
 #undef __FUNCT__
@@ -136,28 +137,12 @@ contains
       class(MEF90HookesLaw), allocatable, intent(IN)  :: HookesLaw
       class(MEF90HookesLaw), allocatable, intent(OUT) :: D2EEDPlus, D2EEDMinus
 
-      !!! Define zero Hooke Laws later
       D2EEDPlus = HookesLaw
       select type(Strain)
          type is (MatS2D)
-            D2EEDMinus = MEF90HookesLawNull2D(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
+            D2EEDMinus = MEF90HookesLawZero2D(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
          type is (MatS3D)
-            D2EEDMinus = MEF90HookesLawNull3D(comm = HookesLaw%comm, prefix = HookesLaw%prefix)
-   end select
-   ! #if MEF90_DIM==2
-   !    D2EEDMinus%isPlaneStress = HookesLaw%isPlaneStress
-   ! #endif
-   !    D2EEDMinus%type = HookesLaw%type
-   !    select case (HookesLaw%type)
-   !    case (MEF90HookesLawTypeIsotropic)
-   !       D2EEDMinus%YoungsModulus = 0.0_kr * HookesLaw%YoungsModulus
-   !       D2EEDMinus%PoissonRatio = 0.0_kr * HookesLaw%PoissonRatio
-   !       D2EEDMinus%lambda = 0.0_kr * HookesLaw%lambda
-   !       D2EEDMinus%mu = 0.0_kr * HookesLaw%mu
-   !       D2EEDMinus%BulkModulus = 0.0_kr * HookesLaw%BulkModulus
-   !    case (MEF90HookesLawTypeFull)
-   !       D2EEDMinus%FullTensor = 0.0_kr * HookesLaw%FullTensor
-   !       D2EEDMinus%fullTensorLocal = 0.0_kr * HookesLaw%fullTensorLocal
-   !    end select !HookesLaw%type
+            D2EEDMinus = MEF90HookesLawZero3D(comm = HookesLaw%comm, prefix = HookesLaw%prefix)
+      end select
    end subroutine D2EEDNone
 end module m_MEF90_DefMechSplitNone

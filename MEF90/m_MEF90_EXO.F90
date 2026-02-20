@@ -30,10 +30,10 @@ contains
 !!!      2022 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90CtxOpenEXO(MEF90Ctx, Viewer, mode, ierr)
-      type(MEF90Ctx_Type), intent(IN)                  :: MEF90Ctx
+      type(MEF90Ctx_Type), intent(IN)                 :: MEF90Ctx
       type(tPetscViewer), intent(INOUT)               :: Viewer
-      type(ePetscFileMode), intent(IN)                 :: mode
-      PetscErrorCode, intent(INOUT)                    :: ierr
+      type(ePetscFileMode), intent(IN)                :: mode
+      PetscErrorCode, intent(INOUT)                   :: ierr
 
       integer                                         :: opts
 
@@ -73,17 +73,17 @@ contains
 !!!           2024 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90EXOFormat(Viewer, nameG, nameC, nameV, time, ierr)
-      type(tPetscViewer), intent(IN)                         :: Viewer
-      character(len=*), dimension(:), intent(IN)              :: nameG, nameC, nameV
-      PetscReal, dimension(:), pointer                        :: time
-      PetscErrorCode, intent(INOUT)                          :: ierr
+      type(tPetscViewer), intent(IN)                        :: Viewer
+      character(len=*), dimension(:), intent(IN)            :: nameG, nameC, nameV
+      PetscReal, dimension(:), pointer                      :: time
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       PetscInt                                              :: numCS, numC
       integer                                               :: i, exoid
       PetscInt                                              :: step
       character(len=MXSTLN)                                 :: sJunk
       PetscReal                                             :: rJunk
-      logical, dimension(:, :), pointer                        :: truthtable
+      logical, dimension(:, :), pointer                     :: truthtable
 
       if (size(nameV) > 0) then
          PetscCall(PetscViewerExodusIISetNodalVariable(Viewer, size(nameV), ierr))
@@ -136,7 +136,7 @@ contains
       PetscInt, intent(IN)                                :: order
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      character(len=PETSC_MAX_PATH_LEN)                  :: IOBuffer
+      character(len=PETSC_MAX_PATH_LEN)                   :: IOBuffer
 
       if ((order > 2) .or. (order < 1)) then
          write (IOBuffer, '("Unsupported polynomial order ", I2, " not in [1,2]")') order
@@ -157,12 +157,12 @@ contains
 !!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90EXOVecView(v, sf, invSF, Viewer, step, bs, ierr)
-      type(tVec), intent(IN)                              :: v
-      type(tPetscSF), intent(IN)                          :: sf, invSF
-      type(tPetscViewer), intent(IN)                      :: Viewer
-      PetscInt, intent(IN)                                :: step
-      PetscInt, intent(IN)                                :: bs
-      PetscErrorCode, intent(INOUT)                       :: ierr
+      type(tVec), intent(IN)                             :: v
+      type(tPetscSF), intent(IN)                         :: sf, invSF
+      type(tPetscViewer), intent(IN)                     :: Viewer
+      PetscInt, intent(IN)                               :: step
+      PetscInt, intent(IN)                               :: bs
+      PetscErrorCode, intent(INOUT)                      :: ierr
 
       integer                                            :: exoid
       integer                                            :: offsetN, offsetZ
@@ -201,12 +201,12 @@ contains
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
    subroutine MEF90EXOVecLoad(v, sf, invSF, Viewer, step, bs, ierr)
-      type(tVec), intent(INOUT)                           :: v
-      type(tPetscSF), intent(IN)                          :: sf, invSF
-      type(tPetscViewer), intent(IN)                      :: Viewer
-      PetscInt, intent(IN)                                :: step
-      PetscInt, intent(IN)                                :: bs
-      PetscErrorCode, intent(INOUT)                       :: ierr
+      type(tVec), intent(INOUT)                          :: v
+      type(tPetscSF), intent(IN)                         :: sf, invSF
+      type(tPetscViewer), intent(IN)                     :: Viewer
+      PetscInt, intent(IN)                               :: step
+      PetscInt, intent(IN)                               :: bs
+      PetscErrorCode, intent(INOUT)                      :: ierr
 
       integer                                            :: exoid
       integer                                            :: offsetN, offsetZ
@@ -250,17 +250,16 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewNodal_Private"
    subroutine MEF90EXOVecViewNodal_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step
-      integer, intent(IN)               :: offset
-      type(tVec), intent(IN)            :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step
+      integer, intent(IN)                :: offset
+      type(tVec), intent(IN)             :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs
-      integer                          :: c
+      PetscInt                           :: c, xs, xe, bs
       PetscScalar, dimension(:), pointer :: varray
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
 
       PetscCall(VecGetOwnershipRange(v, xs, xe, ierr))
       PetscCall(VecGetBlockSize(v, bs, ierr))
@@ -286,17 +285,16 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoadNodal_Private"
    subroutine MEF90EXOVecLoadNodal_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step
-      integer, intent(IN)               :: offset
-      type(tVec), intent(INOUT)         :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step
+      integer, intent(IN)                :: offset
+      type(tVec), intent(INOUT)          :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs
-      integer                          :: c
+      PetscInt                           :: c, xs, xe, bs
       PetscScalar, dimension(:), pointer :: varray
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
 
       PetscCall(VecGetOwnershipRange(v, xs, xe, ierr))
       PetscCall(VecGetBlockSize(v, bs, ierr))
@@ -322,20 +320,19 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewZonal_Private"
    subroutine MEF90EXOVecViewZonal_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step
-      integer, intent(IN)               :: offset
-      type(tVec), intent(IN)            :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step
+      integer, intent(IN)                :: offset
+      type(tVec), intent(IN)             :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs, numCS, set, csLocalSize, csxs
-      integer                          :: c
+      PetscInt                           :: c, xs, xe, bs, numCS, set, csLocalSize, csxs
       PetscScalar, dimension(:), pointer :: varray
       PetscInt, dimension(:), pointer    :: csID, csSize
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
-      character(len=MXSTLN)            :: elemType
-      PetscMPIInt                      :: rank
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
+      character(len=MXSTLN)              :: elemType
+      PetscMPIInt                        :: rank
 
       csxs = 0_ki
       PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, rank, ierr))
@@ -382,20 +379,19 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoadZonal_Private"
    subroutine MEF90EXOVecLoadZonal_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step
-      integer, intent(IN)               :: offset
-      type(tVec), intent(INOUT)         :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step
+      integer, intent(IN)                :: offset
+      type(tVec), intent(INOUT)          :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs, numCS, set, csLocalSize, csxs
-      integer                          :: c
+      PetscInt                           :: c, xs, xe, bs, numCS, set, csLocalSize, csxs
       PetscScalar, dimension(:), pointer :: varray
       PetscInt, dimension(:), pointer    :: csID, csSize
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
-      character(len=MXSTLN)            :: elemType
-      PetscMPIInt                      :: rank
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
+      character(len=MXSTLN)              :: elemType
+      PetscMPIInt                        :: rank
 
       csxs = 0_ki
       PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, rank, ierr))
@@ -444,17 +440,17 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecViewSide_Private"
    subroutine MEF90EXOVecViewSide_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step, offset
-      type(tVec), intent(IN)            :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step, offset
+      type(tVec), intent(IN)             :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs, c, numSS, set, ssLocalSize, ssxs, sscs
+      PetscInt                           :: xs, xe, bs, c, numSS, set, ssLocalSize, ssxs, sscs
       PetscScalar, dimension(:), pointer :: varray
       PetscInt, dimension(:), pointer    :: ssID, ssSize
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
-      PetscMPIInt                      :: rank
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
+      PetscMPIInt                        :: rank
 
       ssxs = 0_ki
       sscs = 0_ki
@@ -499,17 +495,17 @@ contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoadSide_Private"
    subroutine MEF90EXOVecLoadSide_Private(v, exoid, step, offset, ierr)
-      integer, intent(IN)               :: exoid
-      PetscInt, intent(IN)              :: step, offset
-      type(tVec), intent(IN)            :: v
-      PetscErrorCode, intent(INOUT)     :: ierr
+      integer, intent(IN)                :: exoid
+      PetscInt, intent(IN)               :: step, offset
+      type(tVec), intent(IN)             :: v
+      PetscErrorCode, intent(INOUT)      :: ierr
 
-      PetscInt                         :: xs, xe, bs, c, numSS, set, ssLocalSize, ssxs, sscs
+      PetscInt                           :: xs, xe, bs, c, numSS, set, ssLocalSize, ssxs, sscs
       PetscScalar, dimension(:), pointer :: varray
       PetscInt, dimension(:), pointer    :: ssID, ssSize
-      type(tVec)                       :: vComp
-      type(tIS)                        :: compIS
-      PetscMPIInt                      :: rank
+      type(tVec)                         :: vComp
+      type(tIS)                          :: compIS
+      PetscMPIInt                        :: rank
 
       ssxs = 0_ki
       sscs = 0_ki
