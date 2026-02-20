@@ -93,10 +93,12 @@ contains
 
       type(MEF90DefMechGlobalOptions_Type), pointer    :: MEF90DefMechGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
-      type(tDM)                                       :: dmDisplacement, dmDamage, dmCohesiveDisplacement
-      type(tVec)                                      :: tmpVec
-      character(len=MEF90MXSTRLEN)                    :: IOBuffer
+      type(tDM)                                        :: dmDisplacement, dmDamage, dmCohesiveDisplacement
+      type(tVec)                                       :: tmpVec
+      character(len=MEF90MXSTRLEN)                     :: IOBuffer
+      PetscExodusIIInt                                 :: EXOstep
 
+      EXOstep = step
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
       PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
 
@@ -108,7 +110,7 @@ contains
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dmDisplacement, tmpVec, ierr))
          PetscCall(PetscObjectSetName(tmpVec, "Displacement", ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, MEF90DefMechCtx%dim, ierr))
          PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementConstraintsSF, ierr))
          PetscCall(DMRestoreLocalVector(dmDisplacement, tmpVec, ierr))
       case (MEF90Scaling_Linear)
@@ -123,7 +125,7 @@ contains
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dmDamage, tmpVec, ierr))
          PetscCall(PetscObjectSetName(tmpVec, "Damage", ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
          PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageConstraintsSF, ierr))
          PetscCall(DMRestoreLocalVector(dmDamage, tmpVec, ierr))
       case (MEF90Scaling_Linear)
@@ -137,7 +139,7 @@ contains
 
       select case (MEF90DefMechGlobalOptions%cohesiveDisplacementScaling)
       case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%cohesiveDisplacement, MEF90DefMechCtx%cohesiveDisplacementToIOSF, MEF90DefMechCtx%IOToCohesiveDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%cohesiveDisplacement, MEF90DefMechCtx%cohesiveDisplacementToIOSF, MEF90DefMechCtx%IOToCohesiveDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, MEF90DefMechCtx%dim, ierr))
       case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%cohesiveDisplacement, time, ierr))
       case (MEF90Scaling_CST)
@@ -172,7 +174,7 @@ contains
 
       select case (MEF90DefMechGlobalOptions%bodyForceScaling)
       case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%bodyForce, MEF90DefMechCtx%bodyForceToIOSF, MEF90DefMechCtx%IOToBodyForceSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90DefMechCtx%bodyForce, MEF90DefMechCtx%bodyForceToIOSF, MEF90DefMechCtx%IOToBodyForceSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, MEF90DefMechCtx%dim, ierr))
       case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90DefMechCtx%bodyForce, time, ierr))
       case (MEF90Scaling_CST)
@@ -655,7 +657,7 @@ contains
 
    subroutine MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr)
       type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
-      PetscInt, intent(IN)                                :: step
+      PetscExodusIIInt, intent(IN)                        :: step
       PetscErrorCode, intent(INOUT)                       :: ierr
 
       type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions

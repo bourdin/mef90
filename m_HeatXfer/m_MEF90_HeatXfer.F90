@@ -51,9 +51,11 @@ contains
 
       type(MEF90HeatXferGlobalOptions_Type), pointer   :: MEF90HeatXferGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
-      type(tDM)                                       :: dm
-      type(tVec)                                      :: tmpVec
+      type(tDM)                                        :: dm
+      type(tVec)                                       :: tmpVec
+      PetscExodusIIInt                                 :: exoStep
 
+      EXOStep = step
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
 
@@ -63,7 +65,7 @@ contains
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dm, tmpVec, ierr))
          PetscCall(PetscObjectSetName(tmpVec, "Temperature", ierr))
-         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
          PetscCall(MEF90VecCopySF(tmpVec, MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%boundaryToTemperatureSF, ierr))
          PetscCall(DMRestoreLocalVector(dm, tmpVec, ierr))
       case (MEF90Scaling_Linear)
@@ -77,7 +79,6 @@ contains
       select case (MEF90HeatXferGlobalOptions%externalTemperatureScaling)
       case (MEF90Scaling_File)
          SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_LIB, "External temperature from file not implemented yet "//__FUNCT__)
-         ! PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%externalTemperatureLocal,MEF90HeatXferCtx%externalTemperatureToIOSF,MEF90HeatXferCtx%IOToExternalTemperatureSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%externalTemperatureLocal, time, ierr))
       case (MEF90Scaling_CST)
@@ -89,7 +90,6 @@ contains
       select case (MEF90HeatXferGlobalOptions%fluxScaling)
       case (MEF90Scaling_File)
          SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_LIB, "Flux from file not implemented yet "//__FUNCT__)
-         ! PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%fluxLocal,MEF90HeatXferCtx%fluxToIOSF,MEF90HeatXferCtx%IOToFluxSF,MEF90HeatXferCtx%MEF90Ctx%resultViewer,step,1_Ki,ierr))
       case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%fluxLocal, time, ierr))
       case (MEF90Scaling_CST)
@@ -100,7 +100,7 @@ contains
 
       select case (MEF90HeatXferGlobalOptions%boundaryFluxScaling)
       case (MEF90Scaling_File)
-         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%boundaryFluxLocal, MEF90HeatXferCtx%boundaryFluxToIOSF, MEF90HeatXferCtx%IOToBoundaryFluxSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         PetscCall(MEF90EXOVecLoad(MEF90HeatXferCtx%boundaryFluxLocal, MEF90HeatXferCtx%boundaryFluxToIOSF, MEF90HeatXferCtx%IOToBoundaryFluxSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
       case (MEF90Scaling_Linear)
          PetscCall(MEF90VecSetValuesFromOptions(MEF90HeatXferCtx%boundaryFluxLocal, time, ierr))
       case (MEF90Scaling_CST)
@@ -249,7 +249,7 @@ contains
 
    subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
-      PetscInt, intent(IN)                                :: step
+      PetscExodusIIInt, intent(IN)                        :: step
       PetscErrorCode, intent(OUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
@@ -257,7 +257,7 @@ contains
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
 
       if (MEF90HeatXferGlobalOptions%temperatureExport) then
-         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, step, 1_Ki, ierr))
       end if
    end subroutine MEF90HeatXferViewEXO
 

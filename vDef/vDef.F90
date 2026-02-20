@@ -13,21 +13,21 @@ program vDef
    implicit none(type)
 
    PetscErrorCode                                     :: ierr
-   type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90Ctx_Type), target                        :: MEF90Ctx
+   type(MEF90CtxGlobalOptions_Type), pointer          :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+   type(MEF90DefMechGlobalOptions_Type), pointer      :: MEF90DefMechGlobalOptions
    !!! HeatXfer contexts
    type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+   type(MEF90HeatXferGlobalOptions_Type), pointer     :: MEF90HeatXferGlobalOptions
 
-   type(tDM), target                                   :: dm, temperatureDM, displacementDM, damageDM
+   type(tDM), target                                  :: dm, temperatureDM, displacementDM, damageDM
    type(tIS)                                          :: setIS
-   PetscInt, dimension(:), pointer                      :: setID
+   PetscInt, dimension(:), pointer                    :: setID
    PetscInt                                           :: set
-   PetscReal, dimension(:), pointer                     :: time, elasticEnergy, bodyForceWork, boundaryForceWork, cohesiveEnergy, surfaceEnergy
+   PetscReal, dimension(:), pointer                   :: time, elasticEnergy, bodyForceWork, boundaryForceWork, cohesiveEnergy, surfaceEnergy
 
    type(tSNES)                                        :: displacementSNES, damageSNES
    type(tTao)                                         :: damageTAO
@@ -36,7 +36,7 @@ program vDef
    type(tVec)                                         :: displacement, displacementResidual, damage, damageResidual
    type(tVec)                                         :: damageAltMinOld
    type(tVec)                                         :: damageLB, damageUB
-   PetscReal, dimension(:), pointer                     :: damageArray, damageAltMinOldArray, damageLBArray, damageUBArray
+   PetscReal, dimension(:), pointer                   :: damageArray, damageAltMinOldArray, damageLBArray, damageUBArray
    PetscInt                                           :: iDof
    PetscReal                                          :: SOROmega, mySOROmega
 
@@ -55,6 +55,7 @@ program vDef
    Type(tPetscViewer)                                 :: logViewer
 
    PetscInt                                           :: step
+   PetscExodusIIInt                                   :: EXOstep
    PetscInt                                           :: AltMinIter, AltMinStep = 0_ki
    PetscReal                                          :: damageMaxChange, damageMin, damageMax
 
@@ -105,7 +106,7 @@ program vDef
    end if
 
    distribute: block
-      type(tDM), target                    :: dmDist
+      type(tDM), target                   :: dmDist
       PetscInt                            :: ovlp = 0_ki
       type(tPetscSF)                      :: naturalPointSF
 
@@ -233,17 +234,18 @@ program vDef
 
          !!! Reload current state if necessary
       if (MEF90GlobalOptions%timeSkip > 0) then
+         EXOstep = MEF90GlobalOptions%timeSkip
          select case (MEF90HeatXferGlobalOptions%timeSteppingType)
          case (MEF90HeatXfer_timeSteppingTypeSteadyState)
-            PetscCallA(MEF90EXOVecLoad(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90Ctx%resultViewer, MEF90GlobalOptions%timeSkip, 1_ki, ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
          case (MEF90HeatXfer_timeSteppingTypeTransient)
-            PetscCallA(TSSetTime(temperatureTS, time(MEF90GlobalOptions%timeSkip), ierr))
+            PetscCallA(TSSetTime(temperatureTS, time(EXOstep), ierr))
          end select
 
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
          case (MEF90DefMech_timeSteppingTypeQuasiStatic)
-            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90Ctx%resultViewer, MEF90GlobalOptions%timeSkip, MEF90DefMechCtx%dim, ierr))
-            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90Ctx%resultViewer, MEF90GlobalOptions%timeSkip, 1_ki, ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90Ctx%resultViewer, EXOstep, MEF90DefMechCtx%dim, ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
          end select
       end if
 
@@ -320,8 +322,9 @@ program vDef
             PetscCallA(PetscLogStagePop(ierr))
 
             !!! Save results
+            EXOstep = step
             PetscCallA(PetscLogStagePush(logStageIO, ierr))
-            PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr))
+            PetscCallA(MEF90HeatXferViewEXO(MEF90HeatXferCtx, EXOstep, ierr))
             PetscCallA(PetscLogStagePop(ierr))
          end if
 
@@ -441,10 +444,11 @@ program vDef
                      exit altMin
                   end if
 
-                  if (mod(AltMinIter, 25) == 0) then
+                  if (mod(AltMinIter, 25_Ki) == 0) then
+                     EXOstep = step
                      !!! Save results and boundary Values
                      PetscCallA(PetscLogStagePush(logStageIO, ierr))
-                     PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr))
+                     PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, EXOstep, ierr))
                      PetscCallA(PetscLogStagePop(ierr))
                   end if
                end do AltMin
@@ -500,7 +504,8 @@ program vDef
                PetscCallA(MEF90DefMechStress(MEF90DefMechCtx, MEF90DefMechCtx%stress, ierr))
             end if
             PetscCallA(PetscLogStagePush(logStageIO, ierr))
-            PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr))
+            EXOstep = step
+            PetscCallA(MEF90DefMechViewEXO(MEF90DefMechCtx, EXOstep, ierr))
             PetscCallA(PetscLogStagePop(ierr))
 
             PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr))

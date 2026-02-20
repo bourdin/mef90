@@ -48,7 +48,7 @@ contains
    subroutine MEF90GetHookesLaw(comm, prefix, dim, HookesLaw, ierr)
       MPIU_Comm, intent(in)                           :: comm
       character(len = MEF90MXSTRLEN), intent(in)      :: prefix
-      PetscInt, intent(IN)                            :: dim
+      integer, intent(IN)                             :: dim
       class(MEF90HookesLaw), allocatable, intent(out) :: HookesLaw
       PetscErrorCode, intent(inout)                   :: ierr
 
