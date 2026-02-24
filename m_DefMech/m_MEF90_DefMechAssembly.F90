@@ -194,7 +194,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                               if (ATModel%isElastic) then
                                  stressGauss = stressGaussPlusnD + stressGaussMinusnD
                               else
-                                 stressGauss = (ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlusnD + stressGaussMinusnD
+                                 stressGauss = ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD
                               end if
                         end select
                   end select
@@ -530,7 +530,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                         if (ATModel%isElastic) then
                            matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (eed2Plus + eed2Minus)
                         else
-                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ( (ATModel%a(damageGauss) + matpropSet%residualStiffness) * eed2Plus + eed2Minus)
+                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ( ATModel%a(damageGauss) * eed2Plus + eed2Minus)
                         end if                           
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
@@ -989,7 +989,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                   if (ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
-                     elasticEnergyDensityGauss = (ATmodel%a(damageGauss) + matpropSet%residualStiffness) * EEDPlus + EEDMinus
+                     elasticEnergyDensityGauss = ATModel%a(damageGauss) * EEDPlus + EEDMinus
                   end if
 
                   myEnergy = myEnergy + elemVect(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
@@ -1158,7 +1158,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                               if (ATModel%isElastic) then
                                  stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlusnD + stressGaussMinusnD)
                               else
-                                 stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * ((ATModel%a(damageGauss) + matpropSet%residualStiffness) * stressGaussPlusnD + stressGaussMinusnD)
+                                 stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD)
                               end if
                         end select
                   end select

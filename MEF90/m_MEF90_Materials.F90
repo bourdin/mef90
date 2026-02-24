@@ -43,7 +43,6 @@ module m_MEF90_Materials_Types
       PetscReal                     :: SpecificHeat                                     ! Cp
       type(MatS2D)                  :: ThermalConductivity                              ! K
       type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
-      PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: cohesiveStiffness
       character(len=MEF90MXSTRLEN)  :: Name
    end type MEF90MatProp2D_Type
@@ -53,7 +52,6 @@ module m_MEF90_Materials_Types
       PetscReal                     :: SpecificHeat                                     ! Cp
       type(MatS3D)                  :: ThermalConductivity                              ! K
       type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
-      PetscReal                     :: residualStiffness                                ! eta
       PetscReal                     :: cohesiveStiffness
       character(len=MEF90MXSTRLEN)  :: Name
    end type MEF90MatProp3D_Type
@@ -70,7 +68,6 @@ module m_MEF90_Materials_Types
                                                1.0_kr, & ! SpecificHeat
                                                MEF90MatS2DIdentity, & ! ThermalConductivity
                                                MEF90MatS2DIdentity, & ! LinearThermalExpansion
-                                               1.0e-9, & ! Residual Stiffness
                                                0.0_kr, & ! cohesive stiffness
                                                "MEF90Mathium2D")
 
@@ -79,7 +76,6 @@ module m_MEF90_Materials_Types
                                                1.0_kr, & ! SpecificHeat
                                                MEF90MatS3DIdentity, & ! ThermalConductivity
                                                MEF90MatS3DIdentity, & ! LinearThermalExpansion
-                                               1.0e-9, & ! Residual Stiffness
                                                0.0_kr, & ! cohesive stiffness
                                                "MEF90Mathium3D")
 end module m_MEF90_Materials_Types
@@ -226,7 +222,6 @@ contains
       PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 3_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       PetscCall(PetscBagRegisterRealArray(bag, matprop%LinearThermalExpansion, 3_ki, 'LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%residualStiffness, default%residualStiffness, 'residualStiffness', '[unit-less] (eta) residual stiffness', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%cohesiveStiffness, default%cohesiveStiffness, 'cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', ierr))
    end subroutine PetscBagRegisterMEF90MatProp2D
 
@@ -256,7 +251,6 @@ contains
       PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 6_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
       matprop%LinearThermalExpansion = default%LinearThermalExpansion
       PetscCall(PetscBagRegisterRealArray(bag, matprop%LinearThermalExpansion, 6_ki, 'LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%residualStiffness, default%residualStiffness, 'residualStiffness', '[unit-less] (eta) residual stiffness', ierr))
       PetscCall(PetscBagRegisterReal(bag, matprop%cohesiveStiffness, default%cohesiveStiffness, 'cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', ierr))
    end subroutine PetscBagRegisterMEF90MatProp3D
 

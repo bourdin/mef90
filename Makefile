@@ -1,4 +1,11 @@
-all: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef Utils
+DIRS: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef Utils
+
+all: $(DIRS)
+
+.PHONY: all $(DIRS)
+
+$(DIRS):
+	$(MAKE) -C $@ $(MFLAGS) all
 
 mef90version.h: chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h

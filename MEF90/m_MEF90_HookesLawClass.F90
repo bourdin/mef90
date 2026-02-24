@@ -59,7 +59,7 @@ contains
 
    subroutine MEF90HookesLaw_setFromOptions(self, ierr)
       class(MEF90HookesLaw), intent(inout) :: self
-      PetscErrorCode,intent(inout) :: ierr
+      PetscErrorCode,intent(inout)         :: ierr
 
       PetscBool :: printHelp
       PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))

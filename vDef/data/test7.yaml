@@ -14,18 +14,19 @@ defmech:
 #        converged:
 #            reason: ascii
 cs0001:
-    #fracturetoughness: 1
-    residualstiffness: 0.
     damage:
         type: AT1
         internalLength: .5
-        fracturetoughness: 1
+        fractureToughness: 1
+        residualStiffness: 1.e-6
+        elastic: false
     plasticity:
         type: NONE 
     HookesLaw:
         type: isotropic
         YoungsModulus: 1.
         PoissonRatio:  0.3
+        planeStress: false
 fs0020:
     displacementBC: 1,1,1
     boundaryDisplacement: -5,0,0 

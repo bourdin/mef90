@@ -56,7 +56,7 @@ contains
       class(MEF90DefMechAT1_Type), intent(IN)          :: self
       PetscReal                                        :: alpha
 
-      aAT1 = (1.0_kr - alpha)**2
+      aAT1 = self%residualStiffness + (1.0_Kr - self%residualStiffness) * (1.0_kr - alpha)**2
    end function aAT1
 
 #undef __FUNCT__
@@ -70,7 +70,7 @@ contains
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
       PetscReal                                         :: alpha
 
-      DaAT1 = -2.0_kr * (1.0_kr - alpha)
+      DaAT1 = -2.0_kr * (1.0_Kr - self%residualStiffness) * (1.0_kr - alpha)
    end function DaAT1
 
 #undef __FUNCT__
@@ -84,7 +84,7 @@ contains
       class(MEF90DefMechAT1_Type), intent(IN)           :: self
       PetscReal                                         :: alpha
 
-      D2aAT1 = 2.0_kr
+      D2aAT1 = 2.0_kr * (1.0_Kr - self%residualStiffness)
    end function D2aAT1
 
 #undef __FUNCT__

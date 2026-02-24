@@ -1,6 +1,15 @@
 MEF90_DIM=2
+# all:
+# 	-@make -C ${MEF90_DIR} m_HeatXfer
+DIRS = ${MEF90_DIR} m_HeatXfer
+
+all: $(DIRS)
+
+.PHONY: all $(DIRS)
+
 all:
-	-@make -C ${MEF90_DIR} m_HeatXfer
+	$(MAKE) -C $@ $(MFLAGS) all
+
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules

@@ -1,6 +1,13 @@
 MEF90_DIM=2
+DIRS = ${MEF90_DIR} m_DefMech
+
+all: $(DIRS)
+
+.PHONY: all $(DIRS)
+
 all:
-	-@make -C ${MEF90_DIR} m_DefMech
+	$(MAKE) -C $@ $(MFLAGS) all
+# 	-@$(MAKE) -C ${MEF90_DIR} m_DefMech
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
