@@ -1,40 +1,49 @@
 #include "../MEF90/mef90.inc"
 module m_MEF90_DefMechAT2
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use m_MEF90_Parameters
+   use m_MEF90_LinAlg
+
    use m_MEF90_DefMechAT_class
-   implicit none(type, external)
+   implicit none(type)
    private
    public :: MEF90DefMechAT2_Type
 
-   type, extends(MEF90DefMechAT_Type)                  :: MEF90DefMechAT2_Type
-   contains
-      procedure, pass(self)                            :: a => aAT2
-      procedure, pass(self)                            :: Da => DaAT2
-      procedure, pass(self)                            :: D2a => D2aAT2
+   type, extends(MEF90DefMechAT_Type) :: MEF90DefMechAT2_Type
 
-      procedure, pass(self)                            :: w => wAT2
-      procedure, pass(self)                            :: Dw => DwAT2
-      procedure, pass(self)                            :: D2w => D2wAT2
+   contains
+      procedure, pass(self) :: a => aAT2
+      procedure, pass(self) :: Da => DaAT2
+      procedure, pass(self) :: D2a => D2aAT2
+
+      procedure, pass(self) :: w => wAT2
+      procedure, pass(self) :: Dw => DwAT2
+      procedure, pass(self) :: D2w => D2wAT2
+
+      procedure, pass(self) :: setFromOptions => MEF90DefMechAT2_setFromOptions
    end type MEF90DefMechAT2_Type
 
-   interface MEF90DefMechAT2_Type
-      module procedure MEF90DefMechAT2_Constructor
-   end interface
-
 contains
+
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechAT2_Constructor"
+#define __FUNCT__ "MEF90DefMechAT2_setFromOptions"
 !!!
 !!!
-!!!  MEF90DefMechAT2_Constructor: the default constructor for a MEF90_DefMechAT2_Type
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!  MEF90DefMechAT2_setFromOptions: initializes a MEF90_DefMechAT2_Type from options
+!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   type(MEF90DefMechAT2_Type) function MEF90DefMechAT2_Constructor()
-      MEF90DefMechAT2_Constructor%cw = 0.5_kr
-      MEF90DefMechAT2_Constructor%aorder = 2
-      MEF90DefMechAT2_Constructor%worder = 2
-      MEF90DefMechAT2_Constructor%type = 'MEF90DefMechAT2'
-   end function MEF90DefMechAT2_Constructor
+   subroutine MEF90DefMechAT2_setFromOptions(self,ierr)
+      class(MEF90DefMechAT2_Type), intent(inout) :: self
+      PetscErrorCode,intent(inout) :: ierr
+
+      self%cw = 0.5_kr
+      self%aorder = 2
+      self%worder = 1
+      self%type = 'MEF90DefMechAT2'
+
+      PetscCall(MEF90DefMechAT_setFromOptions(self, ierr))
+   end subroutine MEF90DefMechAT2_setFromOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT2"
@@ -44,10 +53,10 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT2(self, alpha)
-      class(MEF90DefMechAT2_Type), intent(IN)           :: self
+      class(MEF90DefMechAT2_Type), intent(IN)          :: self
       PetscReal                                        :: alpha
 
-      aAT2 = (1.0_kr - alpha)**2
+      aAT2 = self%residualStiffness + (1.0_Kr - self%residualStiffness) * (1.0_kr - alpha)**2
    end function aAT2
 
 #undef __FUNCT__
@@ -59,9 +68,9 @@ contains
 !!!
    PetscReal function DaAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
-      DaAT2 = -2.0_kr * (1.0_kr - alpha)
+      DaAT2 = -2.0_kr * (1.0_Kr - self%residualStiffness) * (1.0_kr - alpha)
    end function DaAT2
 
 #undef __FUNCT__
@@ -73,21 +82,21 @@ contains
 !!!
    PetscReal function D2aAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
-      D2aAT2 = 2.0_kr
+      D2aAT2 = 2.0_kr * (1.0_Kr - self%residualStiffness)
    end function D2aAT2
 
 #undef __FUNCT__
 #define __FUNCT__ "wAT2"
 !!!
 !!!
-!!!  wAT2: the "w" function of the standard AT2 model, i.e. w(\alpha) = \alpha
+!!!  wAT2: the "w" function of the standard AT2 model, i.e. w(\alpha) = \alpha^2
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
       wAT2 = alpha**2
    end function wAT2
@@ -101,9 +110,9 @@ contains
 !!!
    PetscReal function DwAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
-      DwAT2 = 2.0_kr * alpha
+      DwAT2 = 2.0_Kr * alpha
    end function DwAT2
 
 #undef __FUNCT__
@@ -115,8 +124,8 @@ contains
 !!!
    PetscReal function D2wAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
-      PetscReal                                        :: alpha
+      PetscReal                                         :: alpha
 
-      D2wAT2 = 2.0_kr
+      D2wAT2 = 2.0_Kr
    end function D2wAT2
 end module m_MEF90_DefMechAT2

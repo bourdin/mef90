@@ -4,7 +4,7 @@ module m_MEF90_DefMechAT
    use m_MEF90_DefMechAT_class
    use m_MEF90_DefMechAT1
    ! use m_MEF90_DefMechAT1exp
-   ! use m_MEF90_DefMechAT2
+   use m_MEF90_DefMechAT2
    ! use m_MEF90_DefMechATKKL
    ! use m_MEF90_DefMechATLinSoft
    use m_MEF90_DefMechCtx
@@ -16,7 +16,7 @@ module m_MEF90_DefMechAT
    public :: MEF90DefMechAT_Type
    public :: MEF90DefMechAT1_Type
    ! public :: MEF90DefMechAT1exp_Type
-   ! public :: MEF90DefMechAT2_Type
+   public :: MEF90DefMechAT2_Type
    ! public :: MEF90DefMechATKKL_Type
    ! public :: MEF90DefMechATLinSoft_Type
 
@@ -27,25 +27,15 @@ module m_MEF90_DefMechAT
          MEF90DefMech_damageTypeAT1exp, &
          MEF90DefMech_damageTypeAT2, &
          MEF90DefMech_damageTypeLinSoft, &
-         MEF90DefMech_damageTypeKKL, &
-         MEf90DefMech_damageTypeAT1Elastic, &
-         MEf90DefMech_damageTypeAT1expElastic, &
-         MEf90DefMech_damageTypeAT2Elastic, &
-         MEF90DefMech_damageTypeLinSoftElastic, &
-         MEF90DefMech_damageTypeKKLElastic
+         MEF90DefMech_damageTypeKKL
    end enum
 
-   character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_damageTypeList = [ &
+   character(len=MEF90MXSTRLEN), dimension(8), protected   :: MEF90DefMech_damageTypeList = [ &
       'AT1                     ', &
       'AT1exp                  ', &
       'AT2                     ', &
       'LinSoft                 ', &
       'KKL                     ', &
-      'AT1Elastic              ', &
-      'AT1expElastic           ', &
-      'AT2Elastic              ', &
-      'LinSoftElastic          ', &
-      'KKLElastic              ', &
       'MEF90DefMech_damageType ', &
       '_MEF90DefMech_damageType', &
       '                        '  &
@@ -75,17 +65,15 @@ contains
 
       select case (damageType)
          case (MEF90DefMech_damageTypeAT1)
-            ATModel = MEF90DefMechAT1_Type(comm, prefix, isElastic = PETSC_FALSE)
-         case (MEF90DefMech_damageTypeAT1Elastic)
-            ATModel = MEF90DefMechAT1_Type(comm, prefix, isElastic = PETSC_TRUE)
-            ! case (MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT1expElastic)
-            !    ATModel = MEF90DefMechAT1exp_Type(cellSetOptions%DamageAT1expb)
-            ! case (MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeAT2Elastic)
-            !    ATModel = MEF90DefMechAT2_Type()
-            ! case (MEF90DefMech_damageTypeKKL, MEF90DefMech_damageTypeKKLElastic)
+            ATModel = MEF90DefMechAT1_Type(comm, prefix)
+            ! case (MEF90DefMech_damageTypeAT1exp)
+            !    ATModel = MEF90DefMechAT1exp_Type(comm, prefix)
+            case (MEF90DefMech_damageTypeAT2)
+               ATModel = MEF90DefMechAT2_Type(comm, prefix)
+            ! case (MEF90DefMech_damageTypeKKL)
             !    ATModel = MEF90DefMechATKKL_Type()
-            ! case (MEF90DefMech_damageTypeLinSoft, MEF90DefMech_damageTypeLinSoftElastic)
-            !    ATModel = MEF90DefMechATLinSoft_Type(cellSetOptions%DamageATLinSoftk)
+            ! case (MEF90DefMech_damageTypeLinSoft)
+            !    ATModel = MEF90DefMechATLinSoft_Type(comm, prefix)
          case default
             print *, __FUNCT__, ': Unimplemented damage Type', damageType
             stop
