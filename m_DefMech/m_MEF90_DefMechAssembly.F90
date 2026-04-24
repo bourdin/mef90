@@ -397,7 +397,6 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscReal, dimension(:,:), pointer                  :: matDof
    PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
-   class(MEF90HookesLaw), allocatable                  :: AGaussPlus, AGaussMinus
    type(MEF90_MATS)                                    :: totalStrainGauss, plasticStrainCell
    type(MEF90_VECT)                                    :: U0Gauss
    type(MEF90_MATPROP), pointer                        :: matpropSet

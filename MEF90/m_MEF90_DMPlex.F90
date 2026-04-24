@@ -988,9 +988,9 @@ contains
       PetscCall(VecCreateMPI(comm, nleaves, PETSC_DETERMINE, v, ierr))
       PetscCall(VecSetBlockSize(v, bs, ierr))
       PetscCall(PetscSFrestoreGraph(sf, nroots, nleaves, ilocal, iremote, ierr))
-      if (associated(iLocal)) then
-         deallocate (ilocal)
-      end if
+      ! if (associated(iLocal)) then
+      !    deallocate (ilocal)
+      ! end if
    end subroutine MEF90VecCreateIO
 
 #undef __FUNCT__
