@@ -38,8 +38,8 @@ contains
 !!!                                    so there is no need for interpolation of the forcees, external, and boundary values
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, residual, MEF90DefMechCtx, ierr)
@@ -65,14 +65,14 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    type(eDMPolytopeType)                               :: cellGeometry
    type(MEF90ElementType)                              :: elemVectType, elemScalType
    PetscReal, dimension(:), pointer                    :: residualDof
+   PetscReal                                           :: residualDoFPlus, residualDoFMinus
 
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    type(tVec)                                          :: locResidual
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90DefMechSplit), allocatable               :: Split
-   class(MEF90Mat), allocatable                        :: stressGaussPlus, stressGaussMinus
-   type(MEF90_MATS)                                    :: totalStrainGauss, stressGauss
+   type(MEF90_MATS)                                    :: totalStrainGauss
    type(MEF90_VECT)                                    :: U0Gauss, bodyForce, boundaryForce, pressureForce
    PetscReal                                           :: damageGauss, temperatureGauss
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
@@ -135,7 +135,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -185,25 +185,13 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
 
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
-
-                  call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
-                  select type(stressGaussPlusnD => stressGaussPlus)
-                     type is (MEF90_MATS)
-                        select type(stressGaussMinusnD => stressGaussMinus)
-                           type is (MEF90_MATS)
-                              if (ATModel%isElastic) then
-                                 stressGauss = stressGaussPlusnD + stressGaussMinusnD
-                              else
-                                 stressGauss = ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD
-                              end if
-                        end select
-                  end select
-
+                  call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                   do iDof = 1, numDofDisplacement
+                     call Split%DEED(HookesLaw, elemVect(cell)%GradS_BF(iDof, iGauss), residualDoFPlus, residualDoFminus, ierr)
                      if (ATModel%isElastic) then
-                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (stressGauss .DotP. elemVect(cell)%GradS_BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (residualDoFPlus + residualDoFminus)
                      else
-                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (stressGauss .DotP. elemVect(cell)%GradS_BF(iDof, iGauss))
+                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * residualDoFPlus + residualDoFminus)
                      end if
                   end do ! iDof numDofDisplacement
                end do ! iGauss
@@ -424,7 +412,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    class(MEF90DefMechSplit), allocatable               :: Split
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
-   PetscReal                                           :: eed2Plus, eed2Minus
+   PetscReal                                           :: D2EEDPlus, D2EEDMinus
 
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
@@ -473,7 +461,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -522,15 +510,14 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  call Split%D2EED(totalStrainGauss - plasticStrainCell, HookesLaw, AGaussPlus, AGaussMinus)
+                  call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                   do iDof = 1, numDofDisplacement
                      do jDof = 1, numDofDisplacement
-                        call AGaussPlus%multmult(elemVect(cell)%GradS_BF(iDof, iGauss), elemVect(cell)%GradS_BF(jDof, iGauss), eed2Plus, ierr)
-                        call AGaussMinus%multmult(elemVect(cell)%GradS_BF(iDof, iGauss), elemVect(cell)%GradS_BF(jDof, iGauss), eed2Minus, ierr)
+                        call Split%D2EED(HookesLaw, elemVect(cell)%GradS_BF(iDof, iGauss), elemVect(cell)%GradS_BF(jDof, iGauss), D2EEDPlus, D2EEDMinus, ierr)
                         if (ATModel%isElastic) then
-                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (eed2Plus + eed2Minus)
+                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (D2EEDPlus + D2EEDMinus)
                         else
-                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ( ATModel%a(damageGauss) * eed2Plus + eed2Minus)
+                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ( ATModel%a(damageGauss) * D2EEDPlus + D2EEDMinus)
                         end if                           
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
@@ -865,8 +852,8 @@ end subroutine MEF90DefMechPlasticDissipation
 !!!  MEF90DefMechElasticEnergy:
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
@@ -944,7 +931,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -984,8 +971,9 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
 ! End If
 ! #endif
-
-                  call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDPlus, EEDMinus)
+                  !!! Not actually sure if the split should be computed at totalStrainGauss or at totalStrainGauss - plasticStrainCell
+                  call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
+                  call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDPlus, EEDMinus, ierr)
                   if (ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
@@ -1019,8 +1007,8 @@ end subroutine MEF90DefMechElasticEnergy
 !!!  MEF90DefMechStress:
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
@@ -1100,7 +1088,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -1147,21 +1135,23 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
                   !!! This is ridiculous. There has to be a better way...
-!!! This is becasue DEED assumes that these are allocated...
+                  !!! This is because DEED assumes that these are allocated...
                   stressGaussPlus = totalStrainGauss
                   stressGaussMinus = totalStrainGauss
-                  call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
-                  select type(stressGaussPlusnD => stressGaussPlus)
-                     type is (MEF90_MATS)
-                        select type(stressGaussMinusnD => stressGaussMinus)
-                           type is (MEF90_MATS)
-                              if (ATModel%isElastic) then
-                                 stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlusnD + stressGaussMinusnD)
-                              else
-                                 stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD)
-                              end if
-                        end select
-                  end select
+
+                  !!! This is broken right now since DEED had to be rewritten to return the action of teh stress on a test function rather than the stress itself. We need to add a method to Split that just returns the stress itself without multiplying by the test function
+                  ! call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
+                  ! select type(stressGaussPlusnD => stressGaussPlus)
+                  !    type is (MEF90_MATS)
+                  !       select type(stressGaussMinusnD => stressGaussMinus)
+                  !          type is (MEF90_MATS)
+                  !             if (ATModel%isElastic) then
+                  !                stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlusnD + stressGaussMinusnD)
+                  !             else
+                  !                stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD)
+                  !             end if
+                  !       end select
+                  ! end select
                   cellSize = cellSize + elemVect(cell)%Gauss_C(iGauss)
                end do ! iGauss
                stressCell = stressCell / cellSize
@@ -1277,7 +1267,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -1325,12 +1315,6 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
 
-                  if (.not. ATModel%isElastic) then
-                     call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDGaussPlus, EEDGaussMinus)
-                  else
-                     EEDGaussPlus = 0.0_kr
-                  end if
-                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
                   !!! begin ugly hack
                   !!! The following won't work until I overload the LinAlg operations to work with the parent classes
                   ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
@@ -1339,10 +1323,20 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                         C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
                   end select
                   !!! end ugly hack
+
+                  EEDGaussPlus = 0.0_kr
+                  if (.not. ATModel%isElastic) then
+                     call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
+                     call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDGaussPlus, EEDGaussMinus, ierr)
+                  end if
+                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
                   C3 = ATModel%Da(damageGauss) * EEDGaussPlus + C1 * ATModel%Dw(damageGauss)
+
                   do iDof = 1, numDofDamage
                      residualDof(iDof) = residualDof(iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                         C3 * elemScal(cell)%BF(iDof, iGauss) + (C2 * gradDamageGauss .DotP. elemScal(cell)%Grad_BF(iDof, iGauss)))
+                                            C3 * elemScal(cell)%BF(iDof, iGauss) &
+                                          + (C2 * gradDamageGauss .DotP. elemScal(cell)%Grad_BF(iDof, iGauss)) &
+                                        )
                   end do ! iDof numDofDamage
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
@@ -1506,7 +1500,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             PetscCall(HookesLaw%setFromOptions(ierr))
 
             !!! Allocate elements
-            QuadratureOrder = max(2 * elemVectType%order, split%damageOrder + split%strainOrder)
+            QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -1553,12 +1547,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  if (.not. ATModel%isElastic) then
-                     call Split%EED(totalStrainGauss - plasticStrainCell, HookesLaw, EEDGaussPlus, EEDGaussMinus)
-                  else
-                     EEDGaussPlus = 0.0_kr
-                  end if
-                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
+
                   !!! begin ugly hack
                   !!! The following won't work until I overload the LinAlg operations to work with the parent classes
                   ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
@@ -1567,10 +1556,20 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                         C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
                   end select
                   !!! end ugly hack
+
+                  EEDGaussPlus = 0.0_kr
+                  if (.not. ATModel%isElastic) then
+                     call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
+                     call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDGaussPlus, EEDGaussMinus, ierr)
+                  end if
+                  C1 = ATModel%fractureToughness / ATModel%cw * 0.25_kr / ATModel%internalLength
                   C3 = ATModel%D2a(damageGauss) * EEDGaussPlus + C1 * ATModel%D2w(damageGauss)
                   do jDof = 1, numDofDamage
                      do iDof = 1, numDofDamage
-                        matDof(jDof, iDof) = matDof(jDof, iDof) + elemScal(cell)%Gauss_C(iGauss) * ( C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof, iGauss) + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP. elemScal(cell)%Grad_BF(jDof, iGauss)))
+                        matDof(jDof, iDof) = matDof(jDof, iDof) + elemScal(cell)%Gauss_C(iGauss) * ( &
+                              C3 * elemScal(cell)%BF(iDof, iGauss) * elemScal(cell)%BF(jDof, iGauss) &
+                            + (C2 * elemScal(cell)%Grad_BF(iDof, iGauss) .DotP. elemScal(cell)%Grad_BF(jDof, iGauss)) &
+                           )
                      end do ! iDof numDofDamage
                   end do ! jDof numDofDamage
                end do ! iGauss

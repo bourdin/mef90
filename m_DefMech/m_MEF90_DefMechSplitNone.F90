@@ -12,6 +12,7 @@ type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitNone
 contains
    procedure              :: setFromOptions => MEF90DefMechSplitNone_setFromOptions
    procedure              :: view => MEF90DefMechSplitNone_view
+   procedure, pass(self)  :: setup => setupNONE
    procedure, pass(self)  :: EED => EEDNone
    procedure, pass(self)  :: DEED => DEEDNone
    procedure, pass(self)  :: D2EED => D2EEDNone
@@ -32,8 +33,8 @@ contains
       PetscErrorCode, intent(inout)               :: ierr
       PetscBool                                   :: printHelp
 
-      self%damageOrder = 0
-      self%strainOrder = 2
+      ! self%damageOrder = 0
+      self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitNone'
 
       !!! MEF90DefMechSplitNone has no options
@@ -71,6 +72,26 @@ contains
    end subroutine MEF90DefMechSplitNone_view
 
 #undef __FUNCT__
+#define __FUNCT__ "setupNONE"
+!!!
+!!!
+!!!  setupNONE: the setup routine for a MEF90DefMechSplitNone, which does nothing since there is no split
+!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
+!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine setupNONE(self, Strain, ierr)
+      use m_MEF90
+      implicit none(type, external)
+
+      class(MEF90DefMechSplitNone), intent(inout) :: self
+      class(mef90Mat), intent(IN)                 :: Strain
+      PetscErrorCode, intent(inout)               :: ierr
+
+      self%strain = Strain
+   end subroutine setupNONE
+
+
+#undef __FUNCT__
 #define __FUNCT__ "EEDNone"
 !!!
 !!!
@@ -80,15 +101,14 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine EEDNone(self, Strain, HookesLaw, EEDPlus, EEDMinus)
-      class(MEF90DefMechSplitNone), intent(IN)      :: self
-      class(mef90Mat), intent(IN)                   :: Strain
-      class(MEF90HookesLaw), allocatable            :: HookesLaw
-      PetscReal, intent(OUT)                        :: EEDPlus, EEDMinus
+   subroutine EEDNone(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
+      class(MEF90DefMechSplitNone), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)        :: HookesLaw
+      class(mef90Mat), intent(IN)              :: phi
+      PetscReal, intent(OUT)                   :: EEDPlus, EEDMinus
+      PetscErrorCode, intent(inout)            :: ierr
 
-      PetscErrorCode                                :: ierr
-
-      Call HookesLaw%multmult(Strain, Strain, EEDPlus, ierr)
+      Call HookesLaw%multmult(phi, phi, EEDPlus, ierr)
       EEDPlus = EEDPlus * 0.5_kr
       EEDMinus = 0.0_kr
    end subroutine EEDNone
@@ -105,23 +125,15 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine DEEDNone(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
-      class(MEF90DefMechSplitNone), intent(IN)      :: self
-      class(mef90Mat), intent(IN)                   :: Strain
-      class(MEF90HookesLaw), allocatable            :: HookesLaw
-      class(mef90Mat), allocatable, intent(OUT)     :: DEEDPlus, DEEDMinus
+   subroutine DEEDNone(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
+      class(MEF90DefMechSplitNone), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)        :: HookesLaw
+      class(mef90Mat), intent(IN)              :: phi
+      PetscReal, intent(OUT)                   :: DEEDPlus, DEEDMinus
+      PetscErrorCode, intent(inout)            :: ierr
 
-      PetscErrorCode                                :: ierr
-
-      select type (Strain)
-         type is (MatS2D)
-            DEEDMinus = MatS2D()
-            DEEDPlus = MatS2D()
-         type is (MatS3D)
-            DEEDMinus = MatS3D()
-            DEEDPlus = MatS3D()
-      end select
-      call HookesLaw%mult(Strain, DEEDPlus, ierr)
+      call HookesLaw%multmult(self%strain, phi, DEEDPlus, ierr)
+      DEEDminus = 0.0_kr
    end subroutine DEEDNone
 
 #undef __FUNCT__
@@ -133,13 +145,14 @@ contains
 !!!               without a split, D2EEDPlus = HookesLaw, D2EEDMinus = 0
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   subroutine D2EEDNone(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
-      class(MEF90DefMechSplitNone), intent(IN)        :: self
-      class(mef90Mat), intent(IN)                     :: Strain
-      class(MEF90HookesLaw), allocatable, intent(IN)  :: HookesLaw
-      class(MEF90HookesLaw), allocatable, intent(OUT) :: D2EEDPlus, D2EEDMinus
+   subroutine D2EEDNone(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
+      class(MEF90DefMechSplitNone), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)        :: HookesLaw
+      class(mef90Mat), intent(IN)              :: phi, psi
+      PetscReal, intent(OUT)                   :: D2EEDPlus, D2EEDMinus
+      PetscErrorCode, intent(inout)            :: ierr
 
-      D2EEDPlus = HookesLaw
-      D2EEDMinus = MEF90HookesLawZero(comm = HookesLaw%comm,  prefix = HookesLaw%prefix)
+      call HookesLaw%multmult(phi, psi, D2EEDPlus, ierr)
+      D2EEDMinus = 0.0_kr
    end subroutine D2EEDNone
 end module m_MEF90_DefMechSplitNone

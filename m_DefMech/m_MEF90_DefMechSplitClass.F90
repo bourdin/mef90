@@ -3,6 +3,7 @@ module m_MEF90_DefMechSplit_class
 #include "petsc/finclude/petsc.h"
 
 ! use m_MEF90_Materials
+use m_MEF90_LinAlg_class
 use m_MEF90_Parameters
 use m_MEF90_BaseClass
 use m_MEF90_HookesLaw_Class
@@ -22,49 +23,62 @@ public :: MEF90DefMechSplit_D2SmoothPositiveSquare
 !!!
 
 type, extends(MEF90Object), abstract :: MEF90DefMechSplit
-   character(len=MEF90MXSTRLEN)                      :: type = ''
-   integer                                           :: damageOrder = 0
-   integer                                           :: strainOrder = 0
+   character(len=MEF90MXSTRLEN)                          :: type = ''
+   ! integer                                               :: damageOrder = 0
+   integer                                               :: quadratureOrder = 0
+   class(mef90Mat), allocatable                          :: strain
 contains
-
-   procedure(EEDInterface), pass(self), deferred     :: EED
-   procedure(DEEDInterface), pass(self), deferred    :: DEED
-   procedure(D2EEDInterface), pass(self), deferred   :: D2EED
+   procedure(setupInterface), pass(self), deferred       :: setup
+   procedure(EEDInterface), pass(self), deferred         :: EED
+   procedure(DEEDInterface), pass(self), deferred        :: DEED
+   procedure(D2EEDInterface), pass(self), deferred       :: D2EED
 end type MEF90DefMechSplit
 
 abstract interface
-   subroutine EEDInterface(self, Strain, HookesLaw, EEDPlus, EEDMinus)
+
+   subroutine setupInterface(self, Strain, ierr)
       use m_MEF90
       import :: MEF90DefMechSplit
       implicit none(type, external)
 
-      class(MEF90DefMechSplit), intent(IN)           :: self
-      class(mef90Mat), intent(IN)                    :: Strain
-      class(MEF90HookesLaw), allocatable             :: HookesLaw
-      PetscReal, intent(OUT)                         :: EEDPlus, EEDMinus
+      class(MEF90DefMechSplit), intent(inout) :: self
+      class(mef90Mat), intent(IN)             :: Strain
+      PetscErrorCode, intent(inout)           :: ierr
+   end subroutine setupInterface
+   subroutine EEDInterface(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
+      use m_MEF90
+      import :: MEF90DefMechSplit
+      implicit none(type, external)
+
+      class(MEF90DefMechSplit), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)    :: HookesLaw
+      class(mef90Mat), intent(IN)          :: phi
+      PetscReal, intent(OUT)               :: EEDPlus, EEDMinus
+      PetscErrorCode, intent(inout)        :: ierr
    end subroutine EEDInterface
 
-   subroutine DEEDInterface(self, Strain, HookesLaw, DEEDPlus, DEEDMinus)
+   subroutine DEEDInterface(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
       use m_MEF90
       import :: MEF90DefMechSplit
       implicit none(type, external)
 
-      class(MEF90DefMechSplit), intent(IN)           :: self
-      class(mef90Mat), intent(IN)                    :: Strain
-      class(MEF90HookesLaw), allocatable             :: HookesLaw
-      class(mef90Mat), allocatable, intent(OUT)      :: DEEDPlus, DEEDMinus
-
+      class(MEF90DefMechSplit), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)    :: HookesLaw
+      class(mef90Mat), intent(IN)          :: phi
+      PetscReal, intent(OUT)               :: DEEDPlus, DEEDMinus
+      PetscErrorCode, intent(inout)        :: ierr
    end subroutine DEEDInterface
 
-   subroutine D2EEDInterface(self, Strain, HookesLaw, D2EEDPlus, D2EEDMinus)
+   subroutine D2EEDInterface(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
       use m_MEF90
       import :: MEF90DefMechSplit
       implicit none(type, external)
 
-      class(MEF90DefMechSplit), intent(IN)                :: self
-      class(mef90Mat), intent(IN)                         :: Strain
-      class(MEF90HookesLaw), allocatable, intent(IN)      :: HookesLaw
-      class(MEF90HookesLaw), allocatable, intent(OUT)     :: D2EEDPlus, D2EEDMinus
+      class(MEF90DefMechSplit), intent(IN) :: self
+      class(MEF90HookesLaw), intent(IN)    :: HookesLaw
+      class(mef90Mat), intent(IN)          :: phi, psi
+      PetscReal, intent(OUT)               :: D2EEDPlus, D2EEDMinus
+      PetscErrorCode, intent(inout)        :: ierr
    end subroutine D2EEDInterface
 end interface
 
@@ -83,11 +97,11 @@ contains
 !!!
 
 function MEF90DefMechSplit_SmoothPositiveSquare(x, gamma)
-   PetscReal, intent(IN)                             :: x
-   PetscReal, intent(IN)                             :: gamma
-   PetscReal                                         :: MEF90DefMechSplit_SmoothPositiveSquare
+   PetscReal, intent(IN) :: x
+   PetscReal, intent(IN) :: gamma
+   PetscReal             :: MEF90DefMechSplit_SmoothPositiveSquare
 
-   PetscReal                                         :: gammaOver2
+   PetscReal             :: gammaOver2
 
    gammaOver2 = gamma * 0.5_kr
    if (x <= -gammaOver2) then
@@ -110,11 +124,11 @@ end function MEF90DefMechSplit_SmoothPositiveSquare
 !!!
 
 function MEF90DefMechSplit_DSmoothPositiveSquare(x, gamma)
-   PetscReal, intent(IN)                             :: x
-   PetscReal, intent(IN)                             :: gamma
-   PetscReal                                         :: MEF90DefMechSplit_DSmoothPositiveSquare
+   PetscReal, intent(IN) :: x
+   PetscReal, intent(IN) :: gamma
+   PetscReal             :: MEF90DefMechSplit_DSmoothPositiveSquare
 
-   PetscReal                                         :: gammaOver2
+   PetscReal             :: gammaOver2
 
    gammaOver2 = gamma * 0.5_kr
    if (x <= -gammaOver2) then
@@ -137,11 +151,11 @@ end function MEF90DefMechSplit_DSmoothPositiveSquare
 !!!
 
 function MEF90DefMechSplit_D2SmoothPositiveSquare(x, gamma)
-   PetscReal, intent(IN)                             :: x
-   PetscReal, intent(IN)                             :: gamma
-   PetscReal                                         :: MEF90DefMechSplit_D2SmoothPositiveSquare
+   PetscReal, intent(IN) :: x
+   PetscReal, intent(IN) :: gamma
+   PetscReal             :: MEF90DefMechSplit_D2SmoothPositiveSquare
 
-   PetscReal                                         :: gammaOver2
+   PetscReal             :: gammaOver2
 
    gammaOver2 = gamma * 0.5_kr
    if (x <= -gammaOver2) then
