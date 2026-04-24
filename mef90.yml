@@ -1,0 +1,13 @@
+# install with conda env create -f mef90.yml
+name: mef90
+channels:
+  - conda-forge
+  #- defaults
+dependencies:
+  - numpy
+  - scipy
+  - sympy
+  - matplotlib
+  - jupyter
+  - typer
+  - yaml

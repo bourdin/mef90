@@ -495,15 +495,15 @@ contains
 !!!
 
    subroutine MEF90VecGetClosureSize(v, p, clSize, ierr)
-      type(tVec), intent(IN)              :: v
-      PetscInt, intent(IN)                :: p
-      PetscInt, intent(OUT)               :: clSize
-      PetscErrorCode, intent(INOUT)       :: ierr
+      type(tVec), intent(IN)          :: v
+      PetscInt, intent(IN)            :: p
+      PetscInt, intent(OUT)           :: clSize
+      PetscErrorCode, intent(INOUT)   :: ierr
 
-      type(tDM)                          :: dm
-      type(tPetscSection)                :: section
-      PetscInt, dimension(:), pointer      :: closure
-      PetscInt                           :: point, numDof, numClosure
+      type(tDM)                       :: dm
+      type(tPetscSection)             :: section
+      PetscInt, dimension(:), pointer :: closure
+      PetscInt                        :: point, numDof, numClosure
 
       clSize = 0
       PetscCall(VecGetDM(v, dm, ierr))
@@ -536,9 +536,9 @@ contains
       type(tPetscSection), intent(INOUT)  :: section
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      type(tIS)                          :: setIS
-      PetscInt, dimension(:), pointer      :: setID
-      PetscInt                           :: set
+      type(tIS)                           :: setIS
+      PetscInt, dimension(:), pointer     :: setID
+      PetscInt                            :: set
 
       PetscCall(DMGetLabelIdIS(dm, MEF90SetLabelName(setType), setIS, ierr))
       if (.not. PetscObjectIsNull(setIS)) then
@@ -569,12 +569,12 @@ contains
       type(tPetscSection), intent(INOUT)  :: section
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      type(tIS)                          :: setPointIS
-      PetscInt, dimension(:), pointer      :: setPointID
-      PetscInt                           :: point
-      PetscInt, dimension(:), pointer      :: closure
-      PetscInt                           :: p, depth
-      PetscInt                           :: field = 0
+      type(tIS)                           :: setPointIS
+      PetscInt, dimension(:), pointer     :: setPointID
+      PetscInt                            :: point
+      PetscInt, dimension(:), pointer     :: closure
+      PetscInt                            :: p, depth
+      PetscInt                            :: field = 0
 
       PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
       if (.not. PetscObjectIsNull(setPointIS)) then
@@ -608,15 +608,15 @@ contains
 !!!
 
    subroutine MEF90CellSectionCreate(dm, numComponents, section, ierr)
-      type(tDM), intent(IN)               :: dm
-      PetscInt, intent(IN)                :: numComponents
-      type(tPetscSection), intent(INOUT)  :: section
-      PetscErrorCode, intent(INOUT)       :: ierr
+      type(tDM), intent(IN)              :: dm
+      PetscInt, intent(IN)               :: numComponents
+      type(tPetscSection), intent(INOUT) :: section
+      PetscErrorCode, intent(INOUT)      :: ierr
 
       type(tIS)                          :: setIS, setPointIS
-      PetscInt, dimension(:), pointer      :: setID, setPointID
+      PetscInt, dimension(:), pointer    :: setID, setPointID
       PetscInt                           :: set, point
-      PetscInt, dimension(:), pointer      :: closure
+      PetscInt, dimension(:), pointer    :: closure
       PetscInt                           :: p, depth, dim
 
       PetscCall(DMGetDimension(dm, dim, ierr))
@@ -664,15 +664,15 @@ contains
       type(tPetscSection), intent(INOUT)  :: section
       PetscEnum, intent(IN)               :: setType
       PetscInt, intent(IN)                :: setID
-      PetscBool, dimension(:), pointer     :: constraints
-      PetscBool, dimension(:, :), pointer   :: table
+      PetscBool, dimension(:), pointer    :: constraints
+      PetscBool, dimension(:, :), pointer :: table
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      type(tIS)                          :: setPointIS
-      PetscInt, dimension(:), pointer      :: setPointID
-      PetscInt                           :: point, numDof
-      PetscInt, dimension(:), pointer      :: closure
-      PetscInt                           :: p
+      type(tIS)                           :: setPointIS
+      PetscInt, dimension(:), pointer     :: setPointID
+      PetscInt                            :: point, numDof
+      PetscInt, dimension(:), pointer     :: closure
+      PetscInt                            :: p
 
       PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
       if (.not. PetscObjectIsNull(setPOintIS)) then
@@ -753,7 +753,7 @@ contains
       type(tPetscSF), intent(IN)          :: sf
       PetscErrorCode, intent(INOUT)       :: ierr
 
-      PetscScalar, dimension(:), pointer   :: arrayin, arrayout
+      PetscScalar, dimension(:), pointer  :: arrayin, arrayout
 
       PetscCall(VecGetArrayRead(vin, arrayin, ierr))
       PetscCall(VecGetArray(vout, arrayout, ierr))
@@ -773,14 +773,14 @@ contains
 !!!
 
    subroutine MEF90IOSFCreate(MEF90Ctx, v, liosf, iolsf, ierr)
-      type(tVec), intent(IN)              :: v
-      type(tPetscSF), intent(OUT)         :: liosf, iolsf
-      type(MEF90Ctx_type), intent(IN)     :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)       :: ierr
+      type(tVec), intent(IN)            :: v
+      type(tPetscSF), intent(OUT)       :: liosf, iolsf
+      type(MEF90Ctx_type), intent(IN)   :: MEF90Ctx
+      PetscErrorCode, intent(INOUT)     :: ierr
 
-      type(tPetscSF)                     :: naturalSF, ioSF, lcgSF, cglSF, tempSF, invTempSF
-      type(tDM)                          :: dm
-      character(len=PETSC_MAX_PATH_LEN)  :: vecname
+      type(tPetscSF)                    :: naturalSF, ioSF, lcgSF, cglSF, tempSF, invTempSF
+      type(tDM)                         :: dm
+      character(len=PETSC_MAX_PATH_LEN) :: vecname
 
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx, dm, lcgSF, ierr))
@@ -819,14 +819,14 @@ contains
 !!!
 
    subroutine MEF90FaceSetIOSFCreate(MEF90Ctx, v, liosf, iolsf, ierr)
-      type(tVec), intent(IN)              :: v
-      type(tPetscSF), intent(OUT)         :: liosf, iolsf
-      type(MEF90Ctx_type), intent(IN)     :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)       :: ierr
+      type(tVec), intent(IN)            :: v
+      type(tPetscSF), intent(OUT)       :: liosf, iolsf
+      type(MEF90Ctx_type), intent(IN)   :: MEF90Ctx
+      PetscErrorCode, intent(INOUT)     :: ierr
 
-      type(tPetscSF)                     :: naturalSF, ioSF, lcgSF, cglSF, tempSF, temp2SF, invTempSF, iosideSF, sideioSF
-      type(tDM)                          :: dm
-      character(len=PETSC_MAX_PATH_LEN)  :: vecname
+      type(tPetscSF)                    :: naturalSF, ioSF, lcgSF, cglSF, tempSF, temp2SF, invTempSF, iosideSF, sideioSF
+      type(tDM)                         :: dm
+      character(len=PETSC_MAX_PATH_LEN) :: vecname
 
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(CreateLocalToCGlobalSF_Private(MEF90Ctx, dm, lcgSF, ierr))
@@ -874,16 +874,16 @@ contains
 !!!
 
    subroutine MEF90ConstraintSFCreate(MEF90Ctx, v, vB, sf, invSF, ierr)
-      type(tVec), intent(IN)                   :: v, vB
-      type(tPetscSF), intent(OUT)              :: sf, invSF
-      type(MEF90Ctx_type), intent(IN)          :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tVec), intent(IN)                    :: v, vB
+      type(tPetscSF), intent(OUT)               :: sf, invSF
+      type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      type(tDM)                               :: dm, dmB
-      type(tPetscSection)                     :: locSection, locBSection
+      type(tDM)                                 :: dm, dmB
+      type(tPetscSection)                       :: locSection, locBSection
       type(sPetscSFNode), dimension(:), pointer :: remote
       PetscInt, dimension(:), pointer           :: local, cindices
-      PetscInt                                :: pStart, pEnd, p, d, nleaves, ldof, loff, cdof, coff, nsize, nroots
+      PetscInt                                  :: pStart, pEnd, p, d, nleaves, ldof, loff, cdof, coff, nsize, nroots
 
       nleaves = 0
       nsize = 0
@@ -937,15 +937,15 @@ contains
 !!!
 
    subroutine MEF90VecGlobalToLocalConstraint(g, c, l, ierr)
-      type(tVec), intent(IN)                   :: g, c
-      type(tVec), intent(INOUT)                :: l
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tVec), intent(IN)           :: g, c
+      type(tVec), intent(INOUT)        :: l
+      PetscErrorCode, intent(INOUT)    :: ierr
 
-      type(tDM)                               :: dm
-      type(tPetscSection)                     :: s
-      PetscInt                                :: numConstraint
-      PetscInt                                :: p, pStart, pEnd
-      PetscReal, dimension(:), pointer          :: vArray
+      type(tDM)                        :: dm
+      type(tPetscSection)              :: s
+      PetscInt                         :: numConstraint
+      PetscInt                         :: p, pStart, pEnd
+      PetscReal, dimension(:), pointer :: vArray
 
       PetscCall(VecGetDM(g, dm, ierr))
       PetscCall(DMGlobalToLocal(dm, g, INSERT_VALUES, l, ierr))
@@ -988,9 +988,6 @@ contains
       PetscCall(VecCreateMPI(comm, nleaves, PETSC_DETERMINE, v, ierr))
       PetscCall(VecSetBlockSize(v, bs, ierr))
       PetscCall(PetscSFrestoreGraph(sf, nroots, nleaves, ilocal, iremote, ierr))
-      ! if (associated(iLocal)) then
-      !    deallocate (ilocal)
-      ! end if
    end subroutine MEF90VecCreateIO
 
 #undef __FUNCT__
@@ -1003,19 +1000,19 @@ contains
 !!!
 
    subroutine MEF90VecSetValuesFromOptions(v, scalingFactor, ierr)
-      type(tVec), intent(INOUT)                :: v
-      PetscReal, intent(IN)                    :: scalingFactor
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tVec), intent(INOUT)               :: v
+      PetscReal, intent(IN)                   :: scalingFactor
+      PetscErrorCode, intent(INOUT)           :: ierr
 
       type(tDM)                               :: dm
       PetscEnum                               :: setType
       PetscInt                                :: set, point
       type(tIS)                               :: setIS, pointIS
-      PetscInt, dimension(:), pointer           :: setID, pointID
+      PetscInt, dimension(:), pointer         :: setID, pointID
       character(len=MEF90MXSTRLEN)            :: ValueKey, name
       PetscBool                               :: flg
       PetscInt                                :: dim, numOpt, bs, numDofClosure, i
-      PetscReal, dimension(:), pointer          :: Val, vArray
+      PetscReal, dimension(:), pointer        :: Val, vArray
       type(tPetscSection)                     :: section
 
       PetscCall(VecGetDM(v, dm, ierr))
@@ -1154,29 +1151,29 @@ contains
 !!!
 
    subroutine MEF90VecSetValuesFromOptionsExpr(v, t, ierr)
-      type(tVec), intent(INOUT)                 :: v
-      PetscReal, intent(IN)                     :: t
-      PetscErrorCode, intent(INOUT)             :: ierr
+      type(tVec), intent(INOUT)                :: v
+      PetscReal, intent(IN)                    :: t
+      PetscErrorCode, intent(INOUT)            :: ierr
 
 #ifdef MEF90_HAVE_SYMENGINEF90
       type(tDM)                                :: dm
       PetscEnum                                :: setType
       PetscInt                                 :: set, point, p
       type(tIS)                                :: setIS, pointIS
-      PetscInt, dimension(:), pointer            :: setID, pointID
+      PetscInt, dimension(:), pointer          :: setID, pointID
       character(len=MEF90MXSTRLEN)             :: ValueKey, name, ExprStr, IOBuffer
       PetscBool                                :: flg
       PetscInt                                 :: dim, numOpt, bs, numDofClosure, numDof, i, c, dof
-      PetscInt, dimension(:), pointer            :: closure
-      PetscReal, dimension(:), pointer           :: vArray
+      PetscInt, dimension(:), pointer          :: closure
+      PetscReal, dimension(:), pointer         :: vArray
       type(tPetscSection)                      :: section
       type(tPetscSection)                      :: coordSection
       type(tVec)                               :: coordVec
-      PetscReal, dimension(:), pointer           :: coordArray
-      PetscReal, dimension(3)                   :: xyz
-      type(Basic), dimension(:), allocatable     :: exprs
+      PetscReal, dimension(:), pointer         :: coordArray
+      PetscReal, dimension(3)                  :: xyz
+      type(Basic), dimension(:), allocatable   :: exprs
       type(Basic)                              :: tmpExpr
-      type(symbol), dimension(3)                :: vars
+      type(symbol), dimension(3)               :: vars
       character                                :: delim = ';'
       character(len=MEF90MXSTRLEN), dimension(:), allocatable :: ExprStrComp
 
@@ -1275,30 +1272,30 @@ contains
 !!!
 
    subroutine MEF90VecSetBCValuesFromOptionsExpr(v, t, ierr)
-      type(tVec), intent(INOUT)                 :: v
-      PetscReal, intent(IN)                     :: t
-      PetscErrorCode, intent(INOUT)             :: ierr
+      type(tVec), intent(INOUT)                :: v
+      PetscReal, intent(IN)                    :: t
+      PetscErrorCode, intent(INOUT)            :: ierr
 
 #ifdef MEF90_HAVE_SYMENGINEF90
       type(tDM)                                :: dm
       PetscEnum                                :: setType
       PetscInt                                 :: set, point, c, p, i
       type(tIS)                                :: setIS, pointIS
-      PetscInt, dimension(:), pointer            :: setID, pointID
+      PetscInt, dimension(:), pointer          :: setID, pointID
       character(len=MEF90MXSTRLEN)             :: BCOptionKey, BCValueKey, name, ExprStr, IOBuffer
-      PetscBool, dimension(:), pointer           :: setBC
+      PetscBool, dimension(:), pointer         :: setBC
       PetscBool                                :: flg
       PetscInt                                 :: dim, numOpt, numBC, bs, numDofClosure, numDof, dof
-      PetscInt, dimension(:), pointer            :: closure
-      PetscReal, dimension(:), pointer           :: vArray
+      PetscInt, dimension(:), pointer          :: closure
+      PetscReal, dimension(:), pointer         :: vArray
       type(tPetscSection)                      :: section
       type(tPetscSection)                      :: coordSection
       type(tVec)                               :: coordVec
-      PetscReal, dimension(:), pointer           :: coordArray
-      PetscReal, dimension(3)                   :: xyz
-      type(Basic), dimension(:), allocatable     :: exprs
+      PetscReal, dimension(:), pointer         :: coordArray
+      PetscReal, dimension(3)                  :: xyz
+      type(Basic), dimension(:), allocatable   :: exprs
       type(Basic)                              :: tmpExpr
-      type(symbol), dimension(3)                :: vars
+      type(symbol), dimension(3)               :: vars
       character                                :: delim = ';'
       character(len=MEF90MXSTRLEN), dimension(:), allocatable :: ExprStrComp
 
@@ -1409,16 +1406,16 @@ contains
 !!!
 
    subroutine CreateNaturalToIOSF_Private(MEF90Ctx, dm, sf, ierr)
-      type(tDM), intent(IN)                    :: dm
-      type(MEF90Ctx_type), intent(IN)          :: MEF90Ctx
-      type(tPetscSF), intent(OUT)              :: sf
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tDM), intent(IN)                     :: dm
+      type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
+      type(tPetscSF), intent(OUT)               :: sf
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      type(tVec)                              :: vnat, vio
-      type(tPetscLayout)                      :: ioMap, natMap
+      type(tVec)                                :: vnat, vio
+      type(tPetscLayout)                        :: ioMap, natMap
       type(sPetscSFNode), dimension(:), pointer :: remote
       PetscInt, dimension(:), pointer           :: ioRange
-      PetscInt                                :: nroots, nleaves, globalIndex, i, globalSize, bs
+      PetscInt                                  :: nroots, nleaves, globalIndex, i, globalSize, bs
 
       PetscCall(DMPlexCreateNaturalVector(dm, vnat, ierr))
       PetscCall(VecGetSize(vnat, globalSize, ierr))
@@ -1459,16 +1456,16 @@ contains
 !!!
 
    subroutine CreateLocalToCGlobalSF_Private(MEF90Ctx, dm, sf, ierr)
-      type(tDM), intent(IN)                    :: dm
-      type(MEF90Ctx_type), intent(IN)          :: MEF90Ctx
-      type(tPetscSF), intent(OUT)              :: sf
-      PetscErrorCode, intent(INOUT)            :: ierr
-
-      type(tPetscSection)                     :: locSection, gSection
-      type(tPetscSF)                          :: overlapSF, idSF
+      type(tDM), intent(IN)                     :: dm
+      type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
+      type(tPetscSF), intent(OUT)               :: sf
+      PetscErrorCode, intent(INOUT)             :: ierr
+      
+      type(tPetscSection)                       :: locSection, gSection
+      type(tPetscSF)                            :: overlapSF, idSF
       type(sPetscSFNode), dimension(:), pointer :: remote
       PetscInt, dimension(:), pointer           :: remoteOffsets
-      PetscInt                                :: pStart, pEnd, p, n
+      PetscInt                                  :: pStart, pEnd, p, n
 
       PetscCall(DMGetLocalSection(dm, locSection, ierr))
       PetscCall(DMGetPointSF(dm, overlapSF, ierr))
@@ -1509,15 +1506,15 @@ contains
 
    subroutine CreateCGlobalToLocalSF_Private(MEF90Ctx, dm, sf, ierr)
       type(tDM), intent(IN)                    :: dm
-      type(MEF90Ctx_type), intent(IN)          :: MEF90Ctx
-      type(tPetscSF), intent(OUT)              :: sf
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
+      type(tPetscSF), intent(OUT)               :: sf
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      type(tPetscSection)                     :: locSection, gSection
-      type(tPetscSF)                          :: overlapSF, idSF, tempSF, ttempSF
+      type(tPetscSection)                       :: locSection, gSection
+      type(tPetscSF)                            :: overlapSF, idSF, tempSF, ttempSF
       type(sPetscSFNode), dimension(:), pointer :: remote, tempRemote, lgRemote, glRemote
       PetscInt, dimension(:), pointer           :: tempLocal, lgLocal, glLocal, remoteOffsets
-      PetscInt                                :: pStart, pEnd, p, n, lgNRoots, lgNLeaves, tempNRoots, tempNLeaves, glNRoots, glNLeaves
+      PetscInt                                  :: pStart, pEnd, p, n, lgNRoots, lgNLeaves, tempNRoots, tempNLeaves, glNRoots, glNLeaves
 
       PetscCall(DMGetLocalSection(dm, locSection, ierr))
       PetscCall(DMGetPointSF(dm, overlapSF, ierr))
@@ -1605,16 +1602,16 @@ contains
 !!!
 
    subroutine CreateSideSF_Private(MEF90Ctx, dm, sf, invSF, ierr)
-      type(tDM), intent(IN)                    :: dm
-      type(MEF90Ctx_type), intent(IN)          :: MEF90Ctx
-      type(tPetscSF), intent(OUT)              :: sf, invSF
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tDM), intent(IN)                     :: dm
+      type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
+      type(tPetscSF), intent(OUT)               :: sf, invSF
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      type(tIS)                               :: ssIS, gssIS, faceIS, facesIS
+      type(tIS)                                 :: ssIS, gssIS, faceIS, facesIS
       PetscInt, dimension(:), pointer           :: ssID, faceID
-      type(tPetscSF)                          :: migrationSF, tempSF
-      type(tVec)                              :: localVec
-      PetscInt                                :: set, face, nroots, nleaves, i, totalleaves, numComponent, uNumComponent, j, numSS, key, numFaces
+      type(tPetscSF)                            :: migrationSF, tempSF
+      type(tVec)                                :: localVec
+      PetscInt                                  :: set, face, nroots, nleaves, i, totalleaves, numComponent, uNumComponent, j, numSS, key, numFaces
       type(sPetscSFNode), dimension(:), pointer :: iremote
       type(tIS), dimension(:), pointer          :: locfacesIS
       PetscInt, dimension(:), pointer           :: ilocal, permIndices, emptyInd, facesID, procSSID
