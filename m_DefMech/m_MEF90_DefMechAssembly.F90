@@ -378,8 +378,8 @@ end subroutine MEF90DefMechOperatorDisplacement
 !!!  MEF90DefMechBilinearFormDisplacement:
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu,Erwan Tanne erwan.tanne@gmail.com
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, A, M, MEF90DefMechCtx, ierr)
@@ -580,8 +580,8 @@ end subroutine MEF90DefMechBilinearFormDisplacement
 !!!  MEF90DefMechWork:
 !!!
 !!!  (c) 2014-2022 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
@@ -742,8 +742,8 @@ end subroutine MEF90DefMechWork
 !!!  MEF90DefMechCohesiveEnergy:
 !!!
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
@@ -1034,12 +1034,25 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90DefMechSplit), allocatable               :: Split
-   class(MEF90Mat), allocatable                        :: stressGaussPlus, stressGaussMinus
-   type(MEF90_MATS)                                    :: totalStrainGauss, stressCell
+   PetscReal                                           :: stressGaussPlus, stressGaussMinus
+   type(MEF90_MATS)                                    :: totalStrainGauss
    PetscReal                                           :: damageGauss, temperatureGauss, cellSize
-   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
+   PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss, ij
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
+
+#if MEF90_DIM == 2
+   type(MEF90_MATS), dimension(3)                      :: eij = [MatS2D(1.0_Kr, 0.0_Kr, 0.0_Kr), &
+                                                                 MatS2D(0.0_Kr, 1.0_Kr, 0.0_Kr), &
+                                                                 MatS2D(0.0_Kr, 0.0_Kr, 1.0_Kr)]
+#else
+   type(MEF90_MATS), dimension(6)                      :: eij = [MatS3D(1.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr), &
+                                                                 MatS3D(0.0_Kr, 1.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr), &
+                                                                 MatS3D(0.0_Kr, 0.0_Kr, 1.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr), &
+                                                                 MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 1.0_Kr, 0.0_Kr, 0.0_Kr), &
+                                                                 MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 1.0_Kr, 0.0_Kr), &
+                                                                 MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 1.0_Kr)]
+#endif
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
    PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
@@ -1101,7 +1114,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
-               stressCell = 0.0_kr
+               stressDof = 0.0_kr
                cellSize = 0.0_kr
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
@@ -1133,10 +1146,19 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  !!! This is ridiculous. There has to be a better way...
-                  !!! This is because DEED assumes that these are allocated...
-                  stressGaussPlus = totalStrainGauss
-                  stressGaussMinus = totalStrainGauss
+                  !!! This is really silly but since I decided that EED, DEED, and D2EED would return directinal derivatives instead of linear operators,
+                  !!! I have to call DEED for each component of the stress tensor (plus it only works for a linear law)
+                  do ij = 1, SIZEOFMEF90_MATS
+                     call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
+                     call Split%DEED(HookesLaw, eij(ij), stressGaussPlus, stressGaussMinus, ierr)
+                     if (ATModel%isElastic) then
+                        stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlus + stressGaussMinus)
+                     else
+                        stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus)
+                     end if
+                  end do
+
+
 
                   !!! This is broken right now since DEED had to be rewritten to return the action of teh stress on a test function rather than the stress itself. We need to add a method to Split that just returns the stress itself without multiplying by the test function
                   ! call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
@@ -1153,8 +1175,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   ! end select
                   cellSize = cellSize + elemVect(cell)%Gauss_C(iGauss)
                end do ! iGauss
-               stressCell = stressCell / cellSize
-               stressDof = stressCell
+               stressDof = stressDof / cellSize
                PetscCall(DMPlexVecSetClosure(dmStress, PETSC_NULL_SECTION, stress, setPointID(cell), stressDof, INSERT_VALUES, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -1182,8 +1203,8 @@ end subroutine MEF90DefMechStress
 !!!                                    so there is no need for interpolation of the forcees, external, and boundary values
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMechCtx, ierr)

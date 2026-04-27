@@ -15,7 +15,6 @@
 #define SIZEOFMEF90_MAT     9_Ki
 #define SIZEOFMEF90_MATS    6_Ki
 #define SIZEOFMEF90_TENS4OS 21_Ki
-#define SIZEOFMATPROP       sizeofMEF90MatProp3D
 #define MEF90_MAT_IDENTITY  MEF90Mat3DIdentity
 #define MEF90_MATS_IDENTITY MEF90MatS3DIdentity
 #else
@@ -32,8 +31,6 @@
 #define SIZEOFMEF90_MAT     4_Ki
 #define SIZEOFMEF90_MATS    3_Ki
 #define SIZEOFMEF90_TENS4OS 6_Ki
-#define SIZEOFMATPROP       sizeofMEF90MatProp2D
 #define MEF90_MAT_IDENTITY  MEF90Mat2DIdentity
 #define MEF90_MATS_IDENTITY MEF90MatS2DIdentity
-#define MEF90_DEFMECHSPLIT  MEF90DefMechSplit2D
 #endif

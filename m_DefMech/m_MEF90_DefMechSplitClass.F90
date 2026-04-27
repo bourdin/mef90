@@ -45,6 +45,7 @@ abstract interface
       class(mef90Mat), intent(IN)             :: Strain
       PetscErrorCode, intent(inout)           :: ierr
    end subroutine setupInterface
+   
    subroutine EEDInterface(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
       use m_MEF90
       import :: MEF90DefMechSplit
