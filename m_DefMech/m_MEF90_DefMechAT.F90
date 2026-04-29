@@ -3,9 +3,9 @@ module m_MEF90_DefMechAT
 #include "petsc/finclude/petsc.h"
    use m_MEF90_DefMechAT_class
    use m_MEF90_DefMechAT1
-   ! use m_MEF90_DefMechAT1exp
+   use m_MEF90_DefMechAT1exp
    use m_MEF90_DefMechAT2
-   ! use m_MEF90_DefMechATKKL
+   use m_MEF90_DefMechATKKL
    ! use m_MEF90_DefMechATLinSoft
    use m_MEF90_DefMechCtx
    use petscsys
@@ -66,12 +66,12 @@ contains
       select case (damageType)
          case (MEF90DefMech_damageTypeAT1)
             ATModel = MEF90DefMechAT1_Type(comm, prefix)
-            ! case (MEF90DefMech_damageTypeAT1exp)
-            !    ATModel = MEF90DefMechAT1exp_Type(comm, prefix)
+            case (MEF90DefMech_damageTypeAT1exp)
+               ATModel = MEF90DefMechAT1exp_Type(comm, prefix)
             case (MEF90DefMech_damageTypeAT2)
                ATModel = MEF90DefMechAT2_Type(comm, prefix)
-            ! case (MEF90DefMech_damageTypeKKL)
-            !    ATModel = MEF90DefMechATKKL_Type()
+            case (MEF90DefMech_damageTypeKKL)
+               ATModel = MEF90DefMechATKKL_Type(comm, prefix)
             ! case (MEF90DefMech_damageTypeLinSoft)
             !    ATModel = MEF90DefMechATLinSoft_Type(comm, prefix)
          case default

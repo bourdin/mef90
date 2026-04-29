@@ -42,7 +42,6 @@ contains
       if (printHelp) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
-
    end subroutine MEF90DefMechSplitNone_setFromOptions
 
 #undef __FUNCT__

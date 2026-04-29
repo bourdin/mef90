@@ -8,39 +8,47 @@
 
 module m_MEF90_DefMechATKKL
 #include "petsc/finclude/petsc.h"
-   ! Use m_MEF90
+   use petscsys
+   use m_MEF90_Parameters
+   use m_MEF90_LinAlg
+
    use m_MEF90_DefMechAT_class
-   implicit none(type, external)
+   implicit none(type)
    private
    public :: MEF90DefMechATKKL_Type
-   type, extends(MEF90DefMechAT_Type)                 :: MEF90DefMechATKKL_Type
+   type, extends(MEF90DefMechAT_Type) :: MEF90DefMechATKKL_Type
    contains
-      procedure, pass(self)                            :: a => aKKL
-      procedure, pass(self)                            :: Da => DaKKL
-      procedure, pass(self)                            :: D2a => D2aKKL
+      procedure, pass(self) :: a => aKKL
+      procedure, pass(self) :: Da => DaKKL
+      procedure, pass(self) :: D2a => D2aKKL
 
-      procedure, pass(self)                            :: w => wKKL
-      procedure, pass(self)                            :: Dw => DwKKL
-      procedure, pass(self)                            :: D2w => D2wKKL
+      procedure, pass(self) :: w => wKKL
+      procedure, pass(self) :: Dw => DwKKL
+      procedure, pass(self) :: D2w => D2wKKL
+
+      procedure, pass(self) :: setFromOptions => MEF90DefMechATKKL_setFromOptions
    end type MEF90DefMechATKKL_Type
 
-   interface MEF90DefMechATKKL_Type
-      module procedure MEF90DefMechATKKL_Constructor
-   end interface
-
 contains
+
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechATKKL_Constructor"
+#define __FUNCT__ "MEF90DefMechATKKL_setFromOptions"
 !!!
-!!!  MEF90DefMechATKKL_Constructor: the default constructor for a MEF90_DefMechATKKL_Type
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
-   type(MEF90DefMechATKKL_Type) function MEF90DefMechATKKL_Constructor()
-      MEF90DefMechATKKL_Constructor%cw = 0.7165753016381484_kr
-      MEF90DefMechATKKL_Constructor%aorder = 3
-      MEF90DefMechATKKL_Constructor%worder = 1
-      MEF90DefMechATKKL_Constructor%type = 'MEF90DefMechKKL'
-   end function MEF90DefMechATKKL_Constructor
+!!!  MEF90DefMechATKKL_setFromOptions: initializes a MEF90_DefMechATKKL_Type from options
+!!!  (c) 2025-26 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine MEF90DefMechATKKL_setFromOptions(self,ierr)
+      class(MEF90DefMechATKKL_Type), intent(inout) :: self
+      PetscErrorCode,intent(inout) :: ierr
+
+      self%cw = 0.7165753016381484_kr
+      self%aorder = 3
+      self%worder = 3
+      self%type = 'MEF90DefMechATKKL'
+
+      PetscCall(MEF90DefMechAT_setFromOptions(self, ierr))
+   end subroutine MEF90DefMechATKKL_setFromOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "aKKL"
@@ -49,8 +57,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       aKKL = 4.0_kr * (1.0_kr - alpha)**3 - 3.0_kr * (1.0_kr - alpha)**4
    end function aKKL
@@ -62,8 +70,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       DaKKL = -12.0_kr * ((1.0_kr - alpha)**2 - (1.0_kr - alpha)**3)
    end function DaKKL
@@ -75,8 +83,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       D2aKKL = 24.0_kr * (1.0_kr - alpha) - 36.0_kr * (1.0_kr - alpha)**2
    end function D2aKKL
@@ -89,8 +97,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       wKKL = 1.0_kr - 4.0_kr * (1.0_kr - alpha)**3 + 3.0_kr * (1.0_kr - alpha)**4
    end function wKKL
@@ -103,8 +111,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       DwKKL = 12.0_kr * ((1.0_kr - alpha)**2 - (1.0_kr - alpha)**3)
    end function DwKKL
@@ -117,8 +125,8 @@ contains
 !!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wKKL(self, alpha)
-      class(MEF90DefMechATKKL_Type), intent(IN)         :: self
-      PetscReal                                        :: alpha
+      class(MEF90DefMechATKKL_Type), intent(IN) :: self
+      PetscReal :: alpha
 
       D2wKKL = -24.0_kr * (1.0_kr - alpha) + 36.0_kr * (1.0_kr - alpha)**2
    end function D2wKKL

@@ -11,6 +11,7 @@ module m_MEF90_DefMechAT_class
 
    private
    public :: MEF90DefMechAT_Type
+   public :: MEF90DefMechAT_view
    public :: MEF90DefMechAT_setFromOptions
 
 !!!
