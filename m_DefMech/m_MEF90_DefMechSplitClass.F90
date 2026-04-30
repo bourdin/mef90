@@ -2,7 +2,6 @@
 module m_MEF90_DefMechSplit_class
 #include "petsc/finclude/petsc.h"
 
-! use m_MEF90_Materials
 use m_MEF90_LinAlg_class
 use m_MEF90_Parameters
 use m_MEF90_BaseClass

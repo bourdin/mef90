@@ -10,8 +10,8 @@ public :: MEF90DefMechSplitNone
 
 type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitNone
 contains
-   procedure              :: setFromOptions => MEF90DefMechSplitNone_setFromOptions
-   procedure              :: view => MEF90DefMechSplitNone_view
+   procedure, pass(self)  :: setFromOptions => MEF90DefMechSplitNone_setFromOptions
+   procedure, pass(self)  :: view => MEF90DefMechSplitNone_view
    procedure, pass(self)  :: setup => setupNONE
    procedure, pass(self)  :: EED => EEDNone
    procedure, pass(self)  :: DEED => DEEDNone

@@ -23,33 +23,33 @@ module m_MEF90_DefMechAT_class
 !!!
 
    type, abstract, extends(MEF90Object) :: MEF90DefMechAT_Type
-      PetscReal                                        :: fractureToughness = 0.0_Kr
-      class(mef90Mat), allocatable                     :: toughnessAnisotropyMatrix
-      PetscReal                                        :: internalLength = -1.0_Kr
-      PetscReal                                        :: residualStiffness = 0.0_Kr
-      PetscBool                                        :: isElastic = PETSC_FALSE
-      PetscReal                                        :: cw = -1.0_Kr
-      PetscInt                                         :: aOrder = -1
-      PetscInt                                         :: wOrder = -1
-      character(len=MEF90MXSTRLEN)                     :: type = ''
+      PetscReal                    :: fractureToughness = 0.0_Kr
+      class(mef90Mat), allocatable :: toughnessAnisotropyMatrix
+      PetscReal                    :: internalLength = -1.0_Kr
+      PetscReal                    :: residualStiffness = 0.0_Kr
+      PetscBool                    :: isElastic = PETSC_FALSE
+      PetscReal                    :: cw = -1.0_Kr
+      PetscInt                     :: aOrder = -1
+      PetscInt                     :: wOrder = -1
+      character(len=MEF90MXSTRLEN) :: type = ''
 
-      contains
+   contains
       ! procedure, pass(self) :: setFromOptions => MEF90DefMechAT_setFromOptions
       procedure, pass(self) :: view => MEF90DefMechAT_View
-      procedure(ATInterface), pass(self), deferred     :: a
-      procedure(ATInterface), pass(self), deferred     :: Da
-      procedure(ATInterface), pass(self), deferred     :: D2a
-      procedure(ATInterface), pass(self), deferred     :: w
-      procedure(ATInterface), pass(self), deferred     :: Dw
-      procedure(ATInterface), pass(self), deferred     :: D2w
+      procedure(ATInterface), pass(self), deferred :: a
+      procedure(ATInterface), pass(self), deferred :: Da
+      procedure(ATInterface), pass(self), deferred :: D2a
+      procedure(ATInterface), pass(self), deferred :: w
+      procedure(ATInterface), pass(self), deferred :: Dw
+      procedure(ATInterface), pass(self), deferred :: D2w
    end type MEF90DefMechAT_Type
 
    abstract interface
       PetscReal function ATInterface(self, alpha)
          use petscsys
          import :: MEF90DefMechAT_Type
-         class(MEF90DefMechAT_Type), intent(IN)        :: self
-         PetscReal                                     :: alpha
+         class(MEF90DefMechAT_Type), intent(IN) :: self
+         PetscReal                              :: alpha
       end function ATInterface
    end interface
 
@@ -61,7 +61,7 @@ contains
 !!!  MEF90DefMechAT_view: the default viewer for a MEF90_DefMechAT_Type
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine MEF90DefMechAT_View(self,viewer,ierr)
+   subroutine MEF90DefMechAT_View(self, viewer, ierr)
       class(MEF90DefMechAT_Type), intent(in)    :: self
       type(tPetscViewer), intent(in)            :: viewer
       PetscErrorCode, intent(inout)             :: ierr
