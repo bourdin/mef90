@@ -38,7 +38,7 @@ contains
       self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitHD'
 
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "split_HydrostaticDeviatoric_", "Options for MEF90DefMechSplitHydrostaticDeviatoric_type", "mef90DefMech", ierr))
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "split_HydrostaticDeviatoric_", "Options for MEF90DefMechSplitHD_type", "mef90DefMech", ierr))
          PetscCall(PetscOptionsReal('-gamma', 'gamma parameter', '[]', self%gamma, self%gamma, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
@@ -114,7 +114,7 @@ contains
       PetscErrorCode, intent(inout)          :: ierr
       
       PetscReal                              :: AIIN2 ! AI.I/N^2
-      PetscReal                              :: trStrain ! tr(self%Strain)
+      PetscReal                              :: tre ! tr(e)
 
       select type(HookesLaw)
       type is (MEF90HookesLawIsotropic2D)
@@ -122,7 +122,7 @@ contains
       type is (MEF90HookesLawIsotropic3D)
          AIIN2 = HookesLaw%BulkModulus
       class default
-         select type(e => self%strain)
+         select type(e => phi)
          type is (MatS2D)
             call HookesLaw%multmult(MEF90MatS2DIdentity, MEF90MatS2DIdentity, AIIN2, ierr)
             AIIN2 = AIIN2 / 4.0_Kr
@@ -131,14 +131,15 @@ contains
             AIIN2 = AIIN2 / 9.0_Kr
          end select ! self%strain
       end select ! HookesLaw
-      select type(e => self%strain)
-      type is (MatS2D)
-         trStrain = trace(e)
-      type is (MatS3D)
-         trStrain = trace(e)
-      end select ! self%strain
 
-      EEDMinus = AIIN2 * MEF90DefMechSplit_SmoothPositiveSquare(-trStrain, self%gamma) / 2.0_Kr
+      select type(e => phi)
+      type is (MatS2D)
+         tre = trace(e)
+      type is (MatS3D)
+         tre = trace(e)
+      end select ! phi
+
+      EEDMinus = AIIN2 * MEF90DefMechSplit_SmoothPositiveSquare(-tre, self%gamma) / 2.0_Kr
 
       call HookesLaw%multmult(phi, phi, EEDPlus, ierr)
       EEDPlus = EEDPlus / 2.0_Kr - EEDMinus

@@ -52,7 +52,7 @@ m_MEF90_DefMechSplitClass.o: ${BASE_DIR}/m_MEF90_DefMechSplitClass.F90 m_MEF90_D
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-m_MEF90_DefMechSplit.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitNone.o m_MEF90_DefMechSplitHD.o # m_MEF90_DefMechSplitDeviatoric2D.o m_MEF90_DefMechSplitHydrostatic2D.o 
+m_MEF90_DefMechSplit.o: ${BASE_DIR}/m_MEF90_DefMechSplit.F90 m_MEF90_DefMechSplitNone.o m_MEF90_DefMechSplitHD.o m_MEF90_DefMechSplitDeviatoric.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
@@ -65,10 +65,6 @@ m_MEF90_DefMechSplitHD.o: ${BASE_DIR}/m_MEF90_DefMechSplitHD.F90 m_MEF90_DefMech
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF90_DefMechSplitDeviatoric.o: ${BASE_DIR}/m_MEF90_DefMechSplitDeviatoric.F90 m_MEF90_DefMechSplitClass.o
-	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-m_MEF90_DefMechSplitHydrostatic.o: ${BASE_DIR}/m_MEF90_DefMechSplitHydrostatic.F90 m_MEF90_DefMechSplitClass.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

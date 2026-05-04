@@ -4,30 +4,26 @@ module m_MEF90_DefMechSplit
 use m_MEF90_DefMechSplit_class
 use m_MEF90_DefMechSplitNone
 use m_MEF90_DefMechSplitHD
-! use m_MEF90_DefMechSplitDeviatoric
-! use m_MEF90_DefMechSplitHydrostatic
+use m_MEF90_DefMechSplitDeviatoric
 use m_MEF90_DefMechCtx
 use petscsys
 
 implicit none(type)
 ! private
 public :: MEF90DefMechGetSplit
-! public :: MEF90DefMechSplitDeviatoric
+public :: MEF90DefMechSplitDeviatoric
 public :: MEF90DefMechSplitHD
-! public :: MEF90DefMechSplitHydrostatic
 public :: MEF90DefMechSplitNone
 
 enum, bind(c)
    enumerator :: MEF90DefMechSplitEnumNone = 0, &
       MEF90DefMechSplitEnumHydrostaticDeviatoric, &
-      MEF90DefMechSplitEnumHydrostatic, &
       MEF90DefMechSplitEnumDeviatoric
 end enum
-character(len=MEF90MXSTRLEN), dimension(5), protected :: MEF90DefMechSplitEnumList = [ &
+character(len=MEF90MXSTRLEN), dimension(6), protected :: MEF90DefMechSplitEnumList = [ &
          'None                      ', &
          'HydrostaticDeviatoric     ', &
-         ! 'Hydrostatic               ', &
-         ! 'Deviatoric                ', &
+         'Deviatoric                ', &
          'MEF90DefMechSplitEnumList ', &
          '_MEF90DefMechSplitEnumList', &
          '                          '  &
@@ -62,10 +58,8 @@ contains
          Split = MEF90DefMechSplitNone(comm = comm, prefix = prefix)
       case (MEF90DefMechSplitEnumHydrostaticDeviatoric)
          Split = MEF90DefMechSplitHD(comm = comm, prefix = prefix)
-      ! case (MEF90DefMech_unilateralContactTypeDeviatoric)
-      !    Split = MEF90DefMechSplitDeviatoric()
-      ! case (MEF90DefMech_unilateralContactTypeHydrostatic)
-      !    Split = MEF90DefMechSplitHydrostatic(cellSetOptions%unilateralContactHydrostaticDeviatoricGamma)
+      case (MEF90DefMechSplitEnumDeviatoric)
+         Split = MEF90DefMechSplitDeviatoric(comm = comm, prefix = prefix)
       case default
          print *, __FUNCT__, ': Unimplemented split Type', MEF90DefMechSplitEnumNone
          stop
