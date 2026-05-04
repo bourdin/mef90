@@ -126,13 +126,17 @@ contains
          type is (MatS2D)
             call HookesLaw%multmult(MEF90MatS2DIdentity, MEF90MatS2DIdentity, AIIN2, ierr)
             AIIN2 = AIIN2 / 4.0_Kr
-            trStrain = trace(e)
          type is (MatS3D)
             call HookesLaw%multmult(MEF90MatS3DIdentity, MEF90MatS3DIdentity, AIIN2, ierr)
             AIIN2 = AIIN2 / 9.0_Kr
-            trStrain = trace(e)
          end select ! self%strain
       end select ! HookesLaw
+      select type(e => self%strain)
+      type is (MatS2D)
+         trStrain = trace(e)
+      type is (MatS3D)
+         trStrain = trace(e)
+      end select ! self%strain
 
       EEDMinus = AIIN2 * MEF90DefMechSplit_SmoothPositiveSquare(-trStrain, self%gamma) / 2.0_Kr
 
@@ -170,13 +174,18 @@ contains
          type is (MatS2D)
             call HookesLaw%multmult(MEF90MatS2DIdentity, MEF90MatS2DIdentity, AIIN2, ierr)
             AIIN2 = AIIN2 / 4.0_Kr
-            trStrain = trace(e)
          type is (MatS3D)
             call HookesLaw%multmult(MEF90MatS3DIdentity, MEF90MatS3DIdentity, AIIN2, ierr)
             AIIN2 = AIIN2 / 9.0_Kr
-            trStrain = trace(e)
          end select ! self%strain
       end select ! HookesLaw
+
+      select type(e => self%strain)
+      type is (MatS2D)
+         trStrain = trace(e)
+      type is (MatS3D)
+         trStrain = trace(e)
+      end select ! self%strain
 
       select type(p =>phi)
       type is (MatS2D)
@@ -185,7 +194,7 @@ contains
          trPhi = trace(p)
       end select
 
-      DEEDMinus = -AIIN2 * MEF90DefMechSplit_DSmoothPositiveSquare(-trStrain, self%gamma) * trPhi / 2.0_Kr
+      DEEDMinus = -AIIN2 * MEF90DefMechSplit_DSmoothPositiveSquare(-trStrain, self%gamma) * trPhi
       call HookesLaw%multmult(phi, self%strain, DEEDPlus, ierr)
       DEEDPlus = DEEDPlus - DEEDMinus 
    end subroutine DEEDHD
@@ -226,12 +235,20 @@ contains
          end select ! self%strain
       end select ! HookesLaw
 
+      select type(e => self%strain)
+      type is (MatS2D)
+         trStrain = trace(e)
+      type is (MatS3D)
+         trStrain = trace(e)
+      end select ! self%strain
+
       select type(p =>phi)
       type is (MatS2D)
          trPhi = trace(p)
       type is (MatS3D)
          trPhi = trace(p)
       end select
+
       select type(p =>psi)
       type is (MatS2D)
          trPsi = trace(p)
@@ -239,7 +256,7 @@ contains
          trPsi = trace(p)
       end select
 
-      D2EEDMinus = AIIN2 * MEF90DefMechSplit_D2SmoothPositiveSquare(-trStrain, self%gamma) * trPhi * trPsi / 2.0_Kr  
+      D2EEDMinus = AIIN2 * MEF90DefMechSplit_D2SmoothPositiveSquare(-trStrain, self%gamma) * trPhi * trPsi 
       call HookesLaw%multmult(phi, psi, D2EEDPlus, ierr)
       D2EEDPlus = D2EEDPlus - D2EEDMinus
    end subroutine D2EEDHD

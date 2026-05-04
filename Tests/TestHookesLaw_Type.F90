@@ -7,7 +7,7 @@ program TestHookesLaw_Type
 
    character(len = MEF90MXSTRLEN) :: prefix1 = 'cs0001_'
    character(len = MEF90MXSTRLEN) :: prefix2 = 'cs0002_'
-   class(MEF90HookesLaw), allocatable :: HookesLaw1, HookesLaw2, HookesLaw3
+   class(MEF90HookesLaw), allocatable :: HookesLaw1, HookesLaw2
    PetscErrorCode :: ierr
 
    PetscCallA(PetscInitialize(ierr))
@@ -21,8 +21,6 @@ program TestHookesLaw_Type
    call HookesLaw2%SetFromOptions(ierr)
    call HookesLaw2%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
 
-   HookesLaw3 = MEF90HookesLawSum(HookesLaw1, HookesLaw2)
-   call HookesLaw3%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
 
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

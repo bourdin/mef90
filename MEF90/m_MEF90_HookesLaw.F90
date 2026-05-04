@@ -25,9 +25,9 @@ module m_MEF90_HookesLaw
          MEF90HookesLawEnumZero
    end enum
 
-   character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90HookesLawEnumList = [ &
+   character(len=MEF90MXSTRLEN), dimension(5), protected   :: MEF90HookesLawEnumList = [ &
       'Isotropic           ', &
-      'Full                ', &
+      ! 'Full                ', &
       'Zero                ', &
       'MEF90HookesLaw_Type ', &
       '_MEF90HookesLaw_Type', &

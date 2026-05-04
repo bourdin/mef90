@@ -1157,22 +1157,6 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                         stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus)
                      end if
                   end do
-
-
-
-                  !!! This is broken right now since DEED had to be rewritten to return the action of teh stress on a test function rather than the stress itself. We need to add a method to Split that just returns the stress itself without multiplying by the test function
-                  ! call Split%DEED(totalStrainGauss - plasticStrainCell, HookesLaw, stressGaussPlus, stressGaussMinus)
-                  ! select type(stressGaussPlusnD => stressGaussPlus)
-                  !    type is (MEF90_MATS)
-                  !       select type(stressGaussMinusnD => stressGaussMinus)
-                  !          type is (MEF90_MATS)
-                  !             if (ATModel%isElastic) then
-                  !                stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlusnD + stressGaussMinusnD)
-                  !             else
-                  !                stressCell = stressCell + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlusnD + stressGaussMinusnD)
-                  !             end if
-                  !       end select
-                  ! end select
                   cellSize = cellSize + elemVect(cell)%Gauss_C(iGauss)
                end do ! iGauss
                stressDof = stressDof / cellSize
@@ -1200,7 +1184,7 @@ end subroutine MEF90DefMechStress
 !!!
 !!!
 !!!  MEF90DefMechOperatorDamage: Build the operator. When called in SNES, the solution time should always match the target time,
-!!!                                    so there is no need for interpolation of the forcees, external, and boundary values
+!!!                                    so there is no need for interpolation of the forces, external, and boundary values
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
