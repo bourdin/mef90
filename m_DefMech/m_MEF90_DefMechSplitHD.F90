@@ -116,6 +116,8 @@ contains
       PetscReal                              :: AIIN2 ! AI.I/N^2
       PetscReal                              :: tre ! tr(e)
 
+      AIIN2 = 0.0_Kr
+      tre = 0.0_Kr
       select type(HookesLaw)
       type is (MEF90HookesLawIsotropic2D)
          AIIN2 = HookesLaw%BulkModulus
@@ -165,6 +167,9 @@ contains
       PetscReal                              :: trStrain ! tr(self%Strain)
       PetscReal                              :: trPhi ! tr(phi)
 
+      AIIN2 = 0.0_Kr
+      trStrain = 0.0_Kr
+      trPhi = 0.0_Kr
       select type(HookesLaw)
       type is (MEF90HookesLawIsotropic2D)
          AIIN2 = HookesLaw%BulkModulus
@@ -218,6 +223,10 @@ contains
       PetscReal                              :: trStrain ! tr(self%Strain)
       PetscReal                              :: trPhi, trPsi ! tr(phi), tr(psi)
 
+      AIIN2 = 0.0_Kr
+      trStrain = 0.0_Kr
+      trPhi = 0.0_Kr
+      trPsi = 0.0_Kr
       select type(HookesLaw)
       type is (MEF90HookesLawIsotropic2D)
          AIIN2 = HookesLaw%BulkModulus
