@@ -277,21 +277,6 @@ module m_MEF90_DefMechCtx
    end enum
    character(len=MEF90MXSTRLEN), dimension(6), protected   :: MEF90DefMech_BTTypeList
 
-   ! enum, bind(c)
-   !    enumerator :: MEF90DefMech_damageTypeAT1 = 0, &
-   !       MEF90DefMech_damageTypeAT1exp, &
-   !       MEF90DefMech_damageTypeAT2, &
-   !       MEF90DefMech_damageTypeLinSoft, &
-   !       MEF90DefMech_damageTypeKKL, &
-   !       MEf90DefMech_damageTypeAT1Elastic, &
-   !       MEf90DefMech_damageTypeAT1expElastic, &
-   !       MEf90DefMech_damageTypeAT2Elastic, &
-   !       MEF90DefMech_damageTypeLinSoftElastic, &
-   !       MEF90DefMech_damageTypeKKLElastic
-
-   ! end enum
-   ! character(len=MEF90MXSTRLEN), dimension(13), protected   :: MEF90DefMech_damageTypeList
-
    enum, bind(c)
       enumerator :: MEF90DefMech_plasticityTypeNone = 0, &
          MEF90DefMech_plasticityTypeTresca, &
@@ -368,20 +353,6 @@ contains
       MEF90DefMech_BTTypeList(4) = 'MEF90DefMech_BTType'
       MEF90DefMech_BTTypeList(5) = '_MEF90DefMech_BTType'
       MEF90DefMech_BTTypeList(6) = ''
-
-      ! MEF90DefMech_damageTypeList(1) = 'AT1'
-      ! MEF90DefMech_damageTypeList(2) = 'AT1exp'
-      ! MEF90DefMech_damageTypeList(3) = 'AT2'
-      ! MEF90DefMech_damageTypeList(4) = 'LinSoft'
-      ! MEF90DefMech_damageTypeList(5) = 'KKL'
-      ! MEF90DefMech_damageTypeList(6) = 'AT1Elastic'
-      ! MEF90DefMech_damageTypeList(7) = 'AT1expElastic'
-      ! MEF90DefMech_damageTypeList(8) = 'AT2Elastic'
-      ! MEF90DefMech_damageTypeList(9) = 'LinSoftElastic'
-      ! MEF90DefMech_damageTypeList(10) = 'KKLElastic'
-      ! MEF90DefMech_damageTypeList(11) = 'MEF90DefMech_damageType'
-      ! MEF90DefMech_damageTypeList(12) = '_MEF90DefMech_damageType'
-      ! MEF90DefMech_damageTypeList(13) = ''
 
       MEF90DefMech_plasticityTypeList(1) = 'None'
       MEF90DefMech_plasticityTypeList(2) = 'Tresca'

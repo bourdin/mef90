@@ -10,23 +10,23 @@ module m_MEF90_HeatXferCtx_Type
    public :: MEF90HeatXferVertexSetOptions_Type
 
    type MEF90HeatXferCtx_Type
-      type(MEF90Ctx_Type), pointer          :: MEF90Ctx
-      type(tDM)                            :: megaDM
-      PetscInt                             :: dim
+      type(MEF90Ctx_Type), pointer           :: MEF90Ctx
+      type(tDM)                              :: megaDM
+      PetscInt                               :: dim
 
-      type(tVec), pointer                   :: temperatureLocal
-      type(tVec), pointer                   :: externalTemperatureLocal
-      type(tVec), pointer                   :: fluxLocal
-      type(tVec), pointer                   :: boundaryFluxLocal
+      type(tVec), pointer                    :: temperatureLocal
+      type(tVec), pointer                    :: externalTemperatureLocal
+      type(tVec), pointer                    :: fluxLocal
+      type(tVec), pointer                    :: boundaryFluxLocal
 
-      type(tPetscViewer)                   :: viewer
-      type(tPetscSF)                       :: temperatureToIOSF, IOToTemperatureSF
-      type(tPetscSF)                       :: boundaryToTemperatureSF
-      type(tPetscSF)                       :: externalTemperatureToIOSF, IOToexternalTemperatureSF
-      type(tPetscSF)                       :: fluxToIOSF, IOTofluxSF
-      type(tPetscSF)                       :: boundaryFluxToIOSF, IOToboundaryFluxSF
+      type(tPetscViewer)                     :: viewer
+      type(tPetscSF)                         :: temperatureToIOSF, IOToTemperatureSF
+      type(tPetscSF)                         :: boundaryToTemperatureSF
+      type(tPetscSF)                         :: externalTemperatureToIOSF, IOToexternalTemperatureSF
+      type(tPetscSF)                         :: fluxToIOSF, IOTofluxSF
+      type(tPetscSF)                         :: boundaryFluxToIOSF, IOToboundaryFluxSF
 
-      type(tPetscBag)                      :: GlobalOptionsBag
+      type(tPetscBag)                        :: GlobalOptionsBag
       type(tPetscBag), dimension(:), pointer :: CellSetOptionsBag
       type(tPetscBag), dimension(:), pointer :: FaceSetOptionsBag
       type(tPetscBag), dimension(:), pointer :: VertexSetOptionsBag
@@ -49,7 +49,7 @@ module m_MEF90_HeatXferCtx_Type
       PetscReal                        :: flux
       PetscBool                        :: Has_BC
       PetscReal                        :: boundaryTemperature
-      PetscReal, dimension(3)           :: advectionVector
+      PetscReal, dimension(3)          :: advectionVector
    end type MEF90HeatXferCellSetOptions_Type
 
    type MEF90HeatXferFaceSetOptions_Type
@@ -84,9 +84,9 @@ contains
 !!!
 
    subroutine PetscBagGetDataMEF90HeatXferCtxGlobalOptions(bag, data, ierr)
-      type(tPetscBag)                                    :: bag
-      type(MEF90HeatXferGlobalOptions_Type), pointer   :: data
-      PetscErrorCode                                  :: ierr
+      type(tPetscBag)                                :: bag
+      type(MEF90HeatXferGlobalOptions_Type), pointer :: data
+      PetscErrorCode                                 :: ierr
 
       PetscCall(PetscBagGetData(bag, data, ierr))
    end subroutine PetscBagGetDataMEF90HeatXferCtxGlobalOptions
@@ -110,8 +110,8 @@ contains
 !!!
 
    subroutine PetscBagGetDataMEF90HeatXferCtxCellSetOptions(bag, data, ierr)
-      type(tPetscBag)                                    :: bag
-      type(MEF90HeatXferCellSetOptions_Type), pointer  :: data
+      type(tPetscBag)                                 :: bag
+      type(MEF90HeatXferCellSetOptions_Type), pointer :: data
       PetscErrorCode                                  :: ierr
 
       PetscCall(PetscBagGetData(bag, data, ierr))
@@ -137,7 +137,7 @@ contains
 
    subroutine PetscBagGetDataMEF90HeatXferCtxFaceSetOptions(bag, data, ierr)
       type(tPetscBag)                                 :: bag
-      type(MEF90HeatXferFaceSetOptions_Type), pointer  :: data
+      type(MEF90HeatXferFaceSetOptions_Type), pointer :: data
       PetscErrorCode                                  :: ierr
 
       PetscCall(PetscBagGetData(bag, data, ierr))
@@ -210,7 +210,7 @@ contains
       type(MEF90HeatXferCellSetOptions_Type)          :: HeatXferCellSetOptions
       type(MEF90HeatXferFaceSetOptions_Type)          :: HeatXferFaceSetOptions
       type(MEF90HeatXferVertexSetOptions_Type)        :: HeatXferVertexSetOptions
-      character(len=1), pointer                        :: dummychar(:)
+      character(len=1), pointer                       :: dummychar(:)
       PetscSizeT                                      :: sizeofchar
 
       PetscCall(PetscDataTypeGetSize(PETSC_CHAR, sizeofchar, ierr))
@@ -238,17 +238,17 @@ contains
 !!!
 
    subroutine MEF90HeatXferCtxCreate(HeatXferCtx, dm, MEF90Ctx, ierr)
-      type(MEF90HeatXferCtx_Type), intent(OUT)            :: HeatXferCtx
-      type(tDM), target, intent(IN)                        :: dm
-      type(MEF90Ctx_Type), target, intent(IN)              :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)                       :: ierr
+      type(MEF90HeatXferCtx_Type), intent(OUT)  :: HeatXferCtx
+      type(tDM), target, intent(IN)             :: dm
+      type(MEF90Ctx_Type), target, intent(IN)   :: MEF90Ctx
+      PetscErrorCode, intent(INOUT)             :: ierr
 
-      type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
-      type(tIS)                                          :: setIS
-      PetscInt                                           :: set, numSet
-      character(len=MEF90MXSTRLEN)                       :: vecName
-      type(tDM), dimension(:), pointer                     :: dmList
-      type(tPetscSF)                                     :: dummySF
+      type(MEF90CtxGlobalOptions_Type), pointer :: MEF90GlobalOptions
+      type(tIS)                                 :: setIS
+      PetscInt                                  :: set, numSet
+      character(len=MEF90MXSTRLEN)              :: vecName
+      type(tDM), dimension(:), pointer          :: dmList
+      type(tPetscSF)                            :: dummySF
 
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
 
@@ -333,7 +333,7 @@ contains
       type(MEF90HeatXferCtx_Type), intent(INOUT)       :: HeatXferCtx
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      PetscInt                                        :: set
+      PetscInt                                         :: set
 
       if (associated(HeatXferCtx%temperatureLocal)) then
          PetscCall(VecDestroy(HeatXferCtx%temperatureLocal, ierr))

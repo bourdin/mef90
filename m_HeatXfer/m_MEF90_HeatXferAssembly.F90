@@ -27,28 +27,28 @@ contains
 !!!
 
 subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
-   type(tSNES), intent(IN)                          :: snesTemp
-   type(tVec), intent(IN)                           :: x
-   type(tVec), intent(INOUT)                        :: residual
-   type(MEF90HeatXferCtx_Type), intent(IN)          :: MEF90HeatXferCtx
-   PetscErrorCode, intent(INOUT)                    :: ierr
+   type(tSNES), intent(IN)                         :: snesTemp
+   type(tVec), intent(IN)                          :: x
+   type(tVec), intent(INOUT)                       :: residual
+   type(MEF90HeatXferCtx_Type), intent(IN)         :: MEF90HeatXferCtx
+   PetscErrorCode, intent(INOUT)                   :: ierr
 
    type(tDM)                                       :: dmTemperature, dmFlux, dmBoundaryFlux, dmExternalTemperature
    type(tPetscSection)                             :: sectionFlux, sectionBoundaryFlux, sectionExternalTemperature
    type(tVec)                                      :: locResidual
    type(tIS)                                       :: setIS, setPointIS
-   PetscInt, dimension(:), pointer                   :: setID, setPointID
+   PetscInt, dimension(:), pointer                 :: setID, setPointID
    PetscInt                                        :: set, QuadratureOrder, vecOffset
    PetscInt                                        :: cell, iDof, jDof, iGauss
-   type(MEF90HeatXferCellSetOptions_Type), pointer  :: cellSetOptions
-   type(MEF90HeatXferFaceSetOptions_Type), pointer  :: faceSetOptions
-   type(MEF90_MATPROP), pointer                     :: matpropSet
-   type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
+   type(MEF90HeatXferCellSetOptions_Type), pointer :: cellSetOptions
+   type(MEF90HeatXferFaceSetOptions_Type), pointer :: faceSetOptions
+   type(MEF90_MATPROP), pointer                    :: matpropSet
+   type(MEF90_ELEMENT_SCAL), dimension(:), pointer :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
-   type(MEF90HeatXferGlobalOptions_Type), pointer   :: MEF90HeatXferGlobalOptions
-   PetscReal, dimension(:), pointer                  :: temperatureDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
+   type(MEF90CtxGlobalOptions_Type), pointer       :: MEF90CtxGlobalOptions
+   type(MEF90HeatXferGlobalOptions_Type), pointer  :: MEF90HeatXferGlobalOptions
+   PetscReal, dimension(:), pointer                :: temperatureDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
    type(MEF90_VECT)                                :: advectionVec
 
    PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
