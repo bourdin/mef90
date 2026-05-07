@@ -39,7 +39,7 @@ contains
 
       PetscBool                                       :: printHelp
 
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsBool('-planeStress', '2D plane stress', '', PETSC_FALSE, self%isPlaneStress, PETSC_NULL_BOOL, ierr))
@@ -181,7 +181,7 @@ contains
       PetscErrorCode,intent(inout)                    :: ierr
 
       PetscBool :: printHelp
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))

@@ -14,27 +14,20 @@ module m_MEF90_DefMechAT
    private
    public :: MEF90DefMechGetATModel
    public :: MEF90DefMechAT_Type
-   public :: MEF90DefMechAT1_Type
-   ! public :: MEF90DefMechAT1exp_Type
-   public :: MEF90DefMechAT2_Type
-   ! public :: MEF90DefMechATKKL_Type
-   ! public :: MEF90DefMechATLinSoft_Type
-
-   public :: MEF90DefMech_damageTypeAT1
 
    enum, bind(c)
       enumerator :: MEF90DefMech_damageTypeAT1 = 0, &
          MEF90DefMech_damageTypeAT1exp, &
          MEF90DefMech_damageTypeAT2, &
-         MEF90DefMech_damageTypeLinSoft, &
+         ! MEF90DefMech_damageTypeLinSoft, &
          MEF90DefMech_damageTypeKKL
    end enum
 
-   character(len=MEF90MXSTRLEN), dimension(8), protected   :: MEF90DefMech_damageTypeList = [ &
+   character(len=MEF90MXSTRLEN), dimension(7), protected   :: MEF90DefMech_damageTypeList = [ &
       'AT1                     ', &
       'AT1exp                  ', &
       'AT2                     ', &
-      'LinSoft                 ', &
+      ! 'LinSoft                 ', &
       'KKL                     ', &
       'MEF90DefMech_damageType ', &
       '_MEF90DefMech_damageType', &

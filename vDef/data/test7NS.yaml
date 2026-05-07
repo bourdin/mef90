@@ -1,37 +1,40 @@
 verbose: 0
 time:
-    min: 0
-    max: 1.5
-    numstep: 21
+  min: 0
+  max: 1.5
+  numstep: 21
 heatxfer:
-    timestepping:
-        type: null
+  timestepping:
+    type: null
 defmech:
-    timestepping:
-        type: quasistatic
+  timestepping:
+    type: quasistatic
 #damage:
 #    snes:
 #        converged:
 #            reason: ascii
 cs0001:
+  damage:
+    type: AT1
     fracturetoughness: 1
-    residualstiffness: 0.
-    internalLength: .5
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE 
-    HookesLaw:
-        type: isotropic
-        YoungsModulus: 1.
-        PoissonRatio:  0.3
+    residualstiffness: 0
+    internalLength: 0.5
+    elastic: false
+  plasticity:
+    type: NONE
+  HookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1
+      PoissonRatio: 0.3
+      planeStress: false
 vs0200:
-    displacementBC: 1,1,1
-    boundaryDisplacement: -5,0,0 
-    damageBC: 1
-    boundaryDamage: 0
+  displacementBC: 1,1,1
+  boundaryDisplacement: -5,0,0
+  damageBC: 1
+  boundaryDamage: 0
 vs0300:
-    displacementBC: 1,1,1
-    boundaryDisplacement: 5,0,0 
-    damageBC: 1
-    boundaryDamage: 0
+  displacementBC: 1,1,1
+  boundaryDisplacement: 5,0,0
+  damageBC: 1
+  boundaryDamage: 0

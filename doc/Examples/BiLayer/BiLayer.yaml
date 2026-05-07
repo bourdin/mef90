@@ -3,91 +3,82 @@
 # lower edge free + lower toughness + higher thermal expansion => periodic cracks in lower layer (compressive?)
 # rollers on lower edge + equal toughness + higher thermal expansion => crack does not penetrate lower layer. periodic cracks in upper layer
 
-
 verbose: 1
 boundaryDisplacement:
   scaling: linear
-boundaryTemp:
+boundaryTemperature:
   scaling: linear
 defmech:
-    irrevthres: 0.
-    timestepping:
-        type: quasistatic
+  irrevthres: 0
+  timestepping:
+    type: quasistatic
 heatxfer:
-    timestepping:
-        type: steadystate
+  timestepping:
+    type: steadystate
+temperature:
+  export: yes
 time:
-    min: 000
-    max: 100
-    numstep: 11
-    interpolation: linear
+  min: 0
+  max: 100
+  numstep: 11
+  interpolation: linear
 cs0001:
-    # top layer
-    hookeslaw: 
-        type: isotropic
-        YoungsModulus: 3.45E+05
-        PoissonRatio: .22
-        PlaneStress: 1
-    FractureToughness: 4.24E-02
-    internallength: .2
+  # top layer
+  hookeslaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 3.45e+5
+      PoissonRatio: 0.22
+      PlaneStress: 1
+  LinearThermalExpansion: 8E-6,8E-6,0
+  damage:
+    type: AT1
+    FractureToughness: 4.24e-2
+    internallength: 0.2
     # PRL: 5E-2
-    residualstiffness: 0.
-    LinearThermalExpansion: 8E-6,8E-6,0
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
-    tempBC: yes
-    boundaryTemp: 1.
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
+  temperatureBC: yes
+  boundaryTemperature: 1
 cs0002:
-    # bottom layer
-    hookeslaw: 
-        type: isotropic
-        YoungsModulus: 3.45E+05
-        PoissonRatio: .22
-        PlaneStress: 1
-    FractureToughness: 1.0E-02
-    internallength: .2
+  # bottom layer
+  hookeslaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 3.45e+5
+      PoissonRatio: 0.22
+      PlaneStress: 1
+  LinearThermalExpansion: 2E-5,2E-5,0
+  damage:
+    type: AT1
+    FractureToughness: 1e-2
+    internallength: 0.2
     # PRL: 5E-2
-    residualstiffness: 0.
-    LinearThermalExpansion: 2E-5,2E-5,0
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
-    tempBC: yes
-    boundaryTemp: 1.
-cs0010:
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
+  temperatureBC: yes
+  boundaryTemperature: 1
+fs0010:
   # upper edge
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    boundaryDisplacement: 0,0,0
-    damageBC: no
-    tempBC: no
-cs0020:
-    # lower edge
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    boundaryDisplacement: 0,0,0
-    damageBC: no
-    tempBC: no
-cs0030:
-    # crack
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: yes
-    boundaryDamage: 1.
-    tempBC: no
+  displacementbc: no,no,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+  temperatureBC: no
+fs0020:
+  # lower edge
+  displacementbc: no,yes,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+  temperatureBC: no
+fs0030:
+  # crack
+  displacementbc: no,no,no
+  damageBC: yes
+  boundaryDamage: 1
+  temperatureBC: no

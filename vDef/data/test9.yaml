@@ -10,28 +10,38 @@ defmech:
     timestepping:
        type: quasistatic
 cs0001:
-    fracturetoughness: 1
-    residualstiffness: 0.
-    cohesivestiffness: 1.
-    internalLength: .5
     damage:
-        type: AT2
+        type: AT1
+        internalLength: .5
+        fractureToughness: 1
+        residualStiffness: 1.e-6
+        elastic: false
+        fracturetoughness: 1
+        residualstiffness: 0.
+        # cohesivestiffness: 1.
+        internalLength: .5
     plasticity:
-        type: NONE 
+        type: NONE
+    HookesLaw:
+        type: isotropic
+        isotropic:
+          YoungsModulus: 1.
+          PoissonRatio:  0.3
+          planeStress: false
     displacementBC: no,no
     boundaryDisplacement: 0.0,0.0
     LinearThermalExpansion: 1.0,0.0,0.0
-    tempBC: yes
-    boundaryTemp: 1.
+    temperatureBC: yes
+    boundaryTemperature: 1.
     damageBC: yes
     boundaryDamage: 0.
-cs0010:
+fs0020:
     displacementBC: no,no
-    boundaryDisplacement: 0.,0. 
+    boundaryDisplacement: 0.,0.
     damageBC: yes
     boundaryDamage: 0.
-cs0020:
+fs0030:
     displacementBC: no,no
-    boundaryDisplacement: 0.,0. 
+    boundaryDisplacement: 0.,0.
     damageBC: yes
     boundaryDamage: 0.
