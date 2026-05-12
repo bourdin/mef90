@@ -40,6 +40,7 @@ contains
 
       PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "split_HydrostaticDeviatoric_", "Options for MEF90DefMechSplitHD_type", "mef90DefMech", ierr))
          PetscCall(PetscOptionsReal('-gamma', 'gamma parameter', '[]', self%gamma, self%gamma, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool("-hybrid", "Use a hybrid split", "MEF90", PETSC_FALSE, self%isHybrid, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
       PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))

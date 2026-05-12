@@ -38,6 +38,11 @@ contains
       self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitDeviatoric'
 
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "split_Deviatoric_", "Options for MEF90DefMechSplitDeviatoric_type", "mef90DefMech", ierr))
+         PetscCall(PetscOptionsBool("-hybrid", "Use a hybrid split", "MEF90", PETSC_FALSE, self%isHybrid, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsEnd(ierr))
+
+
       PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
       if (printHelp) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
