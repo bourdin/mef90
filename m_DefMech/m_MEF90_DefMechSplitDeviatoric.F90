@@ -65,7 +65,7 @@ contains
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         type: Deviatoric\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
-         write(IOBuffer, "('         no options\n')")
+         write(IOBuffer, "('         hybrid: ', L1, '\n')") self%isHybrid
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
       end if
    end subroutine viewDeviatoric

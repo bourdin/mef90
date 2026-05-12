@@ -96,9 +96,9 @@ module m_MEF90_DefMechCtx_Type
       PetscReal                               :: crackPressure
       ! PetscEnum                               :: damageType
       PetscEnum                               :: plasticityType
-      PetscEnum                               :: unilateralContactType
-      PetscReal                               :: unilateralContactHydrostaticDeviatoricGamma
-      PetscBool                               :: unilateralContactHybrid
+      ! PetscEnum                               :: unilateralContactType
+      ! PetscReal                               :: unilateralContactHydrostaticDeviatoricGamma
+      ! PetscBool                               :: unilateralContactHybrid
       ! PetscReal                               :: DamageATLinSoftk
       ! PetscReal                               :: DamageAT1expb
       PetscReal, dimension(3)                 :: cohesiveDisplacement
@@ -790,9 +790,9 @@ contains
       ! PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%DamageAT1expb, default%DamageAT1expb, 'damage_AT1exp_b', '[unit-less] (b): b parameter in tha AT1 model with exponential stiffness interpolation', ierr))
       ! PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%damageType, MEF90DefMech_damageTypeList, default%damageType, 'damage_type', 'Type of damage law', ierr))
       PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%plasticityType, MEF90DefMech_plasticityTypeList, default%plasticityType, 'plasticity_type', 'Type of plasticity law', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%unilateralContactType, MEF90DefMech_unilateralContactTypeList, default%unilateralContactType, 'unilateralContact_type', 'Type of handling of unilateral contact', ierr))
-      PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma, default%unilateralContactHydrostaticDeviatoricGamma, 'unilateralContact_hydrostaticDeviatoric_gamma', '[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter', ierr))
-      PetscCall(PetscBagRegisterBool(bag, DefMechCellSetOptions%unilateralContactHybrid, default%unilateralContactHybrid, 'unilateralContact_hybrid', 'Use hybrid unilateral contact formulation (Y/N)', ierr))
+      ! PetscCall(PetscBagRegisterEnum(bag, DefMechCellSetOptions%unilateralContactType, MEF90DefMech_unilateralContactTypeList, default%unilateralContactType, 'unilateralContact_type', 'Type of handling of unilateral contact', ierr))
+      ! PetscCall(PetscBagRegisterReal(bag, DefMechCellSetOptions%unilateralContactHydrostaticDeviatoricGamma, default%unilateralContactHydrostaticDeviatoricGamma, 'unilateralContact_hydrostaticDeviatoric_gamma', '[unit-less] (gamma): Hydrostatic Deviatoric regularization parameter', ierr))
+      ! PetscCall(PetscBagRegisterBool(bag, DefMechCellSetOptions%unilateralContactHybrid, default%unilateralContactHybrid, 'unilateralContact_hybrid', 'Use hybrid unilateral contact formulation (Y/N)', ierr))
       PetscCall(PetscBagRegisterRealArray(bag, DefMechCellSetOptions%cohesiveDisplacement, 3_ki, 'cohesiveDisplacement', '[m] (U): Cohesive displacement value', ierr))
       PetscCall(PetscBagRegisterBoolArray(bag, DefMechCellSetOptions%Has_displacementBC, 3_ki, 'DisplacementBC', 'Displacement has Dirichlet boundary Condition (Y/N)', ierr))
       PetscCall(PetscBagRegisterRealArray(bag, DefMechCellSetOptions%boundaryDisplacement, 3_ki, 'boundaryDisplacement', '[m] (U): Displacement boundary value', ierr))

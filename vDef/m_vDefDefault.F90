@@ -58,9 +58,9 @@ module m_vDefDefault
                                                           0.0_kr, & ! crackPressure
                                                          !  MEF90DefMech_damageTypeAT1, & ! damageType
                                                           MEF90DefMech_plasticityTypeNone, & ! plasticityType
-                                                          MEF90DefMech_unilateralContactTypeNone, & ! unilateralContactType
-                                                          1.0e-5, & ! unilateralContactHydrostaticDeviatoricGamma
-                                                          PETSC_FALSE, & ! unilateralContactHybrid
+                                                         !  MEF90DefMech_unilateralContactTypeNone, & ! unilateralContactType
+                                                         !  1.0e-5, & ! unilateralContactHydrostaticDeviatoricGamma
+                                                         !  PETSC_FALSE, & ! unilateralContactHybrid
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! cohesiveDisplacement
                                                           [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE], & ! hasDisplacementBC
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! boundaryDisplacement

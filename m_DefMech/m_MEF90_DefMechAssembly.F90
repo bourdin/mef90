@@ -125,11 +125,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-            if (cellSetOptions%unilateralContactHybrid) then
-               Split = MEF90DefMechSplitNONE(MEF90DefMechCtx%MEF90Ctx%comm, prefix)
-            else
-               PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
-            end if
+            PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
             PetscCall(Split%setFromOptions(ierr))
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
@@ -191,8 +187,12 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                      if (ATModel%isElastic) then
                         residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (residualDoFPlus + residualDoFminus)
                      else
-                        residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * residualDoFPlus + residualDoFminus)
-                     end if
+                        if (split%isHybrid) then
+                           residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * ATModel%a(damageGauss) * (residualDoFPlus + residualDoFminus)
+                        else
+                           residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * residualDoFPlus + residualDoFminus)
+                        end if ! isHybrid
+                     end if! isElastic
                   end do ! iDof numDofDisplacement
                end do ! iGauss
                PetscCall(DMPlexVecSetClosure(dmDisplacement, PETSC_NULL_SECTION, locResidual, setPointID(cell), residualDof, ADD_VALUES, ierr))
@@ -450,11 +450,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-            if (cellSetOptions%unilateralContactHybrid) then
-               Split = MEF90DefMechSplitNONE(MEF90DefMechCtx%MEF90Ctx%comm, prefix)
-            else
-               PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
-            end if
+            PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
             PetscCall(Split%setFromOptions(ierr))
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
@@ -516,8 +512,12 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                         if (ATModel%isElastic) then
                            matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (D2EEDPlus + D2EEDMinus)
                         else
-                           matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ( ATModel%a(damageGauss) * D2EEDPlus + D2EEDMinus)
-                        end if                           
+                           if (split%isHybrid) then
+                              matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * ATModel%a(damageGauss) * (D2EEDPlus + D2EEDMinus)
+                           else
+                              matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * D2EEDPlus + D2EEDMinus)
+                           end if ! isHybrid
+                        end if ! isElastic             
                      end do ! jDof numDofDisplacement
                   end do ! iDof numDofDisplacement
                end do ! iGauss
@@ -920,11 +920,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-            if (cellSetOptions%unilateralContactHybrid) then
-               Split = MEF90DefMechSplitNONE(MEF90DefMechCtx%MEF90Ctx%comm, prefix)
-            else
-               PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
-            end if
+            PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
             PetscCall(Split%setFromOptions(ierr))
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
@@ -976,7 +972,11 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                   if (ATModel%isElastic) then
                      elasticEnergyDensityGauss = EEDPlus + EEDMinus
                   else
-                     elasticEnergyDensityGauss = ATModel%a(damageGauss) * EEDPlus + EEDMinus
+                     if (split%isHybrid) then
+                        elasticEnergyDensityGauss = ATModel%a(damageGauss) * (EEDPlus + EEDMinus)
+                     else
+                        elasticEnergyDensityGauss = ATModel%a(damageGauss) * EEDPlus + EEDMinus
+                     endif
                   end if
 
                   myEnergy = myEnergy + elemVect(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
@@ -1090,11 +1090,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             write(prefix,'("cs",I4.4,"_")') setID(set)
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%MEF90Ctx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-            if (cellSetOptions%unilateralContactHybrid) then
-               Split = MEF90DefMechSplitNONE(MEF90DefMechCtx%MEF90Ctx%comm, prefix)
-            else
-               PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
-            end if
+            PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%MEF90Ctx%comm, prefix, Split, ierr))
             PetscCall(Split%setFromOptions(ierr))
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%MEF90Ctx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
@@ -1154,8 +1150,12 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                      if (ATModel%isElastic) then
                         stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (stressGaussPlus + stressGaussMinus)
                      else
-                        stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus)
-                     end if
+                        if (split%isHybrid) then
+                           stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * ATModel%a(damageGauss) * (stressGaussPlus + stressGaussMinus)
+                        else
+                           stressDof(ij) = stressDof(ij) + elemVect(cell)%Gauss_C(iGauss) * (ATModel%a(damageGauss) * stressGaussPlus + stressGaussMinus)
+                        end if ! isHybrid
+                     end if ! isElastic
                   end do
                   cellSize = cellSize + elemVect(cell)%Gauss_C(iGauss)
                end do ! iGauss

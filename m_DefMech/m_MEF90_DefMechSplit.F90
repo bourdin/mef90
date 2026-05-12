@@ -49,8 +49,9 @@ contains
       PetscEnum :: splitType
 
       splitType = MEF90DefMechSplitEnumNone
-      PetscCall(PetscOptionsBegin(comm, trim(prefix), "Options for MEF90DefMechSplit", "MEF90", ierr))
-         PetscCall(PetscOptionsEnum("-split_type", "split type", "MEF90", MEF90DefMechSplitEnumList, MEF90DefMechSplitEnumNone, splitType, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsBegin(comm, trim(prefix)//"split_", "Options for MEF90DefMechSplit", "MEF90", ierr))
+         PetscCall(PetscOptionsEnum("-type", "split type", "MEF90", MEF90DefMechSplitEnumList, MEF90DefMechSplitEnumNone, splitType, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool("-hybrid", "Use a hybrid split", "MEF90", PETSC_FALSE, split%isHybrid, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
       select case (splitType)

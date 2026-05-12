@@ -69,6 +69,8 @@ contains
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         type: HydrostaticDeviatoric\n')")
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         write(IOBuffer, "('         hybrid: ', L1, '\n')") self%isHybrid
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
          write(IOBuffer, "('         gamma: ',ES12.5,' []\n')") self%gamma
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
       end if

@@ -51,8 +51,8 @@ contains
       PetscErrorCode, intent(inout) :: ierr
 
       PetscEnum :: damageType
-      PetscCall(PetscOptionsBegin(comm, trim(prefix), "Options for MEF90DefMechAT_type", "mef90DefMech", ierr))
-         PetscCall(PetscOptionsEnum("-damage_type", "AT model type", "mef90DefMech", MEF90DefMech_damageTypeList, MEF90DefMech_damageTypeAT1, damageType, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsBegin(comm, trim(prefix)//"damage_", "Options for MEF90DefMechAT_type", "mef90DefMech", ierr))
+         PetscCall(PetscOptionsEnum("-type", "AT model type", "mef90DefMech", MEF90DefMech_damageTypeList, MEF90DefMech_damageTypeAT1, damageType, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
 

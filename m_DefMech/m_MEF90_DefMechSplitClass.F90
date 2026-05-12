@@ -25,6 +25,7 @@ type, extends(MEF90Object), abstract :: MEF90DefMechSplit
    character(len=MEF90MXSTRLEN)                          :: type = ''
    ! integer                                               :: damageOrder = 0
    integer                                               :: quadratureOrder = 0
+   PetscBool                                             :: isHybrid = PETSC_FALSE
    class(mef90Mat), allocatable                          :: strain
 contains
    procedure(setupInterface), pass(self), deferred       :: setup
