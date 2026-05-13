@@ -1,0 +1,77 @@
+### global options
+verbose: 0
+time:
+  min: 0
+  max: 1
+  numstep: 101
+boundaryDisplacement:
+  scaling: linear
+defmech:
+  irrevthres: 0
+  timestepping:
+    type: quasistatic
+  solver:
+    type: altmin
+  damage:
+    atol: 1e-3
+  pclag: 10
+  sor:
+    omega: 1
+heatxfer:
+  timestepping:
+    type: null
+temperature:
+  export: 0
+displacement:
+  snes:
+    type: ksponly
+    lag_preconditioner_persists: yes
+  pc:
+    type: hypre
+cs0001:
+  hookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1
+      PoissonRatio: 0.3
+      planeStress: yes
+  damage:
+    type: AT1
+    FractureToughness: 1e-2
+    internallength: 0.01
+    residualstiffness: 1e-5
+  plasticity:
+    type: none
+  Split:
+    type: Deviatoric
+    HydrostaticDeviatoric:
+      gamma: 1e-1
+      Hybrid: no
+  displacementbc: no,no,no
+  damageBC: no
+fs0020:
+  displacementbc: no,yes,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+fs0030:
+  displacementbc: no,yes,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+fs0060:
+  displacementbc: no,yes,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+fs0040:
+  displacementbc: yes,yes,yes
+  boundaryDisplacement: -.5,0,0
+  damageBC: yes
+  boundaryDamage: 0
+fs0050:
+  displacementbc: yes,yes,yes
+  boundaryDisplacement: .5,0,0
+  damageBC: yes
+  boundaryDamage: 0
+fs0100:
+  displacementbc: no,no,no
+  damageBC: yes
+  boundaryDamage: 1

@@ -1,54 +1,54 @@
 ### global options
 verbose: 1
 time:
-    min: 0
-    max: 3
-    numstep: 1
+  min: 0
+  max: 3
+  numstep: 1
 heatxfer:
-    timestepping:
-        type: null
+  timestepping:
+    type: null
 defmech:
-    timestepping: 
-        type: quasistatic
-    solver:
-        type: altmin
-    damage:
-        atol: 1.0e-3
-    sor:
-        omega: 1.
-    pclag: 5
+  timestepping:
+    type: quasistatic
+  solver:
+    type: altmin
+  damage:
+    atol: 1e-3
+  sor:
+    omega: 1
+  pclag: 5
 displacement:
-    snes:
-        type: ksponly
-    pc:
-        type: gamg
+  snes:
+    type: ksponly
+  pc:
+    type: ml
 damage:
-    snes:
-        atol: 1e-6
-        rtol: 1e-5
+  snes:
+    atol: 1e-6
+    rtol: 1e-5
 cs0001:
-    hookesLaw:  
-        type: isotropic
-        YoungsModulus: 1.
-        PoissonRatio:  0.3
-        PlaneStress: 1
+  hookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1
+      PoissonRatio: 0.3
+      PlaneStress: 1
+  damage:
+    type: AT2
     FractureToughness: 1
-    internallength: .03
-    residualstiffness: 0.
-    damage:
-        type: AT2
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
+    internallength: 0.03
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
 fs0020:
-    displacementbc: yes,no,no
-    boundaryDisplacement: -.5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
+  displacementbc: yes,no,no
+  boundaryDisplacement: -.5,0,0
+  damageBC: yes
+  boundaryDamage: 0
 fs0030:
-    displacementbc: yes,no,no
-    boundaryDisplacement: .5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
-
+  displacementbc: yes,no,no
+  boundaryDisplacement: .5,0,0
+  damageBC: yes
+  boundaryDamage: 0

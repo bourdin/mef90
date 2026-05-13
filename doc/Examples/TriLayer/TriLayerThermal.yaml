@@ -1,91 +1,91 @@
-verbose: 1
+verbose: 0
 time:
-    min: 000
-    max: 100
-    numstep: 101
-    interpolation: quadratic
+  min: 0
+  max: 100
+  numstep: 101
+  interpolation: quadratic
 boundaryDisplacement:
-    scaling: linear
-boundaryTemp:
-    scaling: linear
+  scaling: linear
+boundarytemperature:
+  scaling: linear
+temperature:
+  export: 1
 defmech:
-    timestepping:
-        type: quasistatic
-    damage:
-        atol: 1.0e-3
-    sor:
-        omega: 1.4
-    pclag: 5
-disp:
-    snes:
-        type: ksponly
-    pc:
-        type: bjacobi
+  mode: quasistatic
+  damage:
+    atol: 1e-3
+  sor:
+    omega: 1
+  pclag: 5
+displacement:
+  snes:
+    type: ksponly
+  pc:
+    type: hypre
 heatxfer:
-    mode: transient
-    initialtemp: 0
+  mode: steadystate
+  initialtemperature: 0
 cs0001:
-    # center layer
-    hookeslaw: 
-        type: isotropic
-        YoungsModulus: 1
-        PoissonRatio: .2
-        PlaneStress: 1
+  # center layer
+  hookeslaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1
+      PoissonRatio: 0.2
+      PlaneStress: 1
+  LinearThermalExpansion: 1,1,0
+  damage:
+    type: AT1
+    elastic: yes
     FractureToughness: 1
-    internallength: .5
-    residualstiffness: 0.
-    LinearThermalExpansion: 1,1,0
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
+    internallength: 0.5
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
 cs0002:
-    # outer layer
-    hookeslaw: 
-        type: isotropic
-        YoungsModulus: .5
-        PoissonRatio: .4
-        PlaneStress: 1
+  # outer layer
+  hookeslaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 0.5
+      PoissonRatio: 0.4
+      PlaneStress: 1
+  LinearThermalExpansion: 1.,1.,0
+  damage:
+    type: AT1
+    elastic: yes
     FractureToughness: 1
-    internallength: .5
-    residualstiffness: 0.
-    LinearThermalExpansion: 1.,1.,0
-    damage:
-        type: AT2Elastic
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
-cs0030:
+    internallength: 0.5
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
+fs0040:
   # top edge
-    displacementbc: no,no,no
-    boundaryDisplacement: 0,0,0
-    damageBC: no
-    tempBC: yes
-    boundaryTemp: 1
-    #flux: 1
-cs0040:
-    # bottom edge
-    displacementbc: no,yes,no
-    boundaryDisplacement: 0,0,0
-    damageBC: no
-    tempBC: no
-cs0050:
-    # left edge
-    displacementbc: no,no,no
-    damageBC: yes
-    boundaryDamage: 0.
-    tempBC: no
-cs0060:
-    # left edge
-    displacementbc: no,no,no
-    damageBC: yes
-    boundaryDamage: 0.
-    tempBC: no
-vs0100:
-    displacementbc: yes,yes,no
-    boundaryDisplacement: 0,0,0
-    damageBC: yes
-
+  displacementbc: no,no,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+  temperatureBC: yes
+  boundarytemperature: 1
+fs0030:
+  # bottom edge
+  displacementbc: no,yes,no
+  boundaryDisplacement: 0,0,0
+  damageBC: no
+  temperatureBC: no
+  boundaryflux: -1
+fs0050:
+  # left edge
+  displacementbc: no,no,no
+  damageBC: yes
+  boundaryDamage: 0
+  temperatureBC: no
+fs0060:
+  # right edge
+  displacementbc: no,no,no
+  damageBC: yes
+  boundaryDamage: 0
+  temperatureBC: no

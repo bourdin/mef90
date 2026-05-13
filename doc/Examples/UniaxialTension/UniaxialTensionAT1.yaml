@@ -1,70 +1,55 @@
 ### global options
 verbose: 1
 time:
-    min: 0
-    max: 5
-    numstep: 21
+  min: 0
+  max: 5
+  numstep: 21
 heatxfer:
-    timestepping:
-        type: null
+  timestepping:
+    type: null
 defmech:
-    timestepping:
-        type: quasistatic
-    solver:
-        type: altmin
-    damage:
-        atol: 1.0e-3
-    sor:
-        omega: 1.
-    pclag: 5
-    irrevthres: 0.
+  timestepping:
+    type: quasistatic
+  solver:
+    type: altmin
+  damage:
+    atol: 1e-3
+  sor:
+    omega: 1
+  pclag: 5
+  irrevthres: 0
 displacement:
-    snes:
-        type: ksponly
-    pc:
-        type: gamg
+  snes:
+    type: ksponly
+  pc:
+    type: ml
 damage:
-    snes:
-        atol: 1e-6
-        rtol: 1e-5
+  snes:
+    atol: 1e-6
+    rtol: 1e-5
 cs0001:
-    hookesLaw:  
-        type: isotropic
-        YoungsModulus: 1.
-        PoissonRatio:  0.3
-        PlaneStress: 1
+  hookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1
+      PoissonRatio: 0.3
+      PlaneStress: 1
+  damage:
+    type: AT1
     FractureToughness: 1
-    internallength: .03
-    residualstiffness: 0.
-    damage:
-        type: AT1
-    plasticity:
-        type: NONE
-    displacementbc: no,no,no
-    damageBC: no
+    internallength: 0.03
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+  displacementbc: no,no,no
+  damageBC: no
 fs0020:
-    displacementbc: yes,yes,no
-    boundaryDisplacement: -.5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
+  displacementbc: yes,yes,no
+  boundaryDisplacement: -.5,0,0
+  damageBC: yes
+  boundaryDamage: 0
 fs0030:
-    displacementbc: yes,yes,no
-    boundaryDisplacement: .5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
-vs0400:
-    displacementbc: yes,yes,yes
-    boundaryDisplacement: -.5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
-vs0401:
-    displacementbc: yes,yes,yes
-    boundaryDisplacement: .5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
-vs0402:
-    displacementbc: yes,yes,no
-    boundaryDisplacement: .5,0,0
-    damageBC: yes
-    boundaryDamage: 0.
-
+  displacementbc: yes,yes,no
+  boundaryDisplacement: .5,0,0
+  damageBC: yes
+  boundaryDamage: 0
