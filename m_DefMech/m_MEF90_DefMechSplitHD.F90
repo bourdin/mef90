@@ -203,7 +203,7 @@ contains
          trPhi = trace(p)
       end select
 
-      DEEDMinus = -AIIN2 * MEF90DefMechSplit_DSmoothPositiveSquare(-trStrain, self%gamma) * trPhi
+      DEEDMinus = -AIIN2 * MEF90DefMechSplit_DSmoothPositiveSquare(-trStrain, self%gamma) * trPhi / 2.0_Kr
       call HookesLaw%multmult(phi, self%strain, DEEDPlus, ierr)
       DEEDPlus = DEEDPlus - DEEDMinus 
    end subroutine DEEDHD
@@ -269,7 +269,7 @@ contains
          trPsi = trace(p)
       end select
 
-      D2EEDMinus = AIIN2 * MEF90DefMechSplit_D2SmoothPositiveSquare(-trStrain, self%gamma) * trPhi * trPsi 
+      D2EEDMinus = AIIN2 * MEF90DefMechSplit_D2SmoothPositiveSquare(-trStrain, self%gamma) * trPhi * trPsi / 2.0_Kr
       call HookesLaw%multmult(phi, psi, D2EEDPlus, ierr)
       D2EEDPlus = D2EEDPlus - D2EEDMinus
    end subroutine D2EEDHD
