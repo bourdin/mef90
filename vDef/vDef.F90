@@ -72,7 +72,7 @@ program vDef
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90CtxDefaultGlobalOptions, ierr))
    PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
 
-   if (MEF90GlobalOptions%verbose > 1) then
+   if (MEF90GlobalOptions%verbose > 0) then
       PetscCallA(PetscPrintf(MEF90Ctx%comm, "Reading geometry\n", ierr))
    end if
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
@@ -90,13 +90,13 @@ program vDef
    PetscCallMPIA(MPI_Bcast(flg, 1, MPI_LOGICAL, 0, MEF90Ctx%Comm, ierr))
    if (flg) then
       ! we assume that the output file is formatted
-      if (MEF90GlobalOptions%verbose > 1) then
+      if (MEF90GlobalOptions%verbose > 0) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Opening result file\n", ierr))
       end if
       PetscCallA(MEF90CtxOpenEXO(MEF90Ctx, MEF90Ctx%resultViewer, FILE_MODE_APPEND, ierr))
    else
       ! we need to create the output file
-      if (MEF90GlobalOptions%verbose > 1) then
+      if (MEF90GlobalOptions%verbose > 0) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Creating result file\n", ierr))
       end if
       ! PetscCallA(PetscViewerDestroy(MEF90Ctx%resultViewer,ierr))
@@ -111,7 +111,7 @@ program vDef
       type(tPetscSF)                      :: naturalPointSF
 
       if (MEF90Ctx%NumProcs > 1) then
-         if (MEF90GlobalOptions%verbose > 1) then
+         if (MEF90GlobalOptions%verbose > 0) then
             PetscCallA(PetscPrintf(MEF90Ctx%comm, "Distributing mesh\n", ierr))
          end if
          PetscCallA(DMSetUseNatural(dm, PETSC_TRUE, ierr))
@@ -214,15 +214,15 @@ program vDef
    PetscCallA(DMGetDimension(MEF90DefMechCtx%megaDM, MEF90DefMechCtx%dim, ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
    if (EXONeedsFormatting) then
-      if (MEF90GlobalOptions%verbose > 1) then
+      if (MEF90GlobalOptions%verbose > 0) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Formatting result file\n", ierr))
       end if
       PetscCallA(MEF90DefMechFormatEXO(MEF90DefMechCtx, time, ierr))
-      if (MEF90GlobalOptions%verbose > 1) then
+      if (MEF90GlobalOptions%verbose > 0) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Done Formatting result file\n", ierr))
       end if
    end if
-   if (MEF90GlobalOptions%verbose > 1) then
+   if (MEF90GlobalOptions%verbose > 0) then
       PetscCallA(PetscViewerView(MEF90Ctx%resultViewer, PETSC_VIEWER_STDOUT_WORLD, ierr))
    end if
 

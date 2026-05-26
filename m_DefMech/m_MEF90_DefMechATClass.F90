@@ -108,7 +108,7 @@ contains
       class(MEF90DefMechAT_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
 
-      PetscBool :: printHelp
+      PetscInt :: printHelp
       PetscReal, dimension(:), allocatable :: tmpArray
       PetscInt :: nOpt
 
@@ -137,8 +137,8 @@ contains
          end select
       PetscCall(PetscOptionsEnd(ierr))
 
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90DefMechAT_setFromOptions

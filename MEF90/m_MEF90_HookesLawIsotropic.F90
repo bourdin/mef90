@@ -37,7 +37,7 @@ contains
       class(MEF90HookesLawIsotropic2D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscBool                                       :: printHelp
+      PetscInt                                        :: printHelp
 
       PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
@@ -54,8 +54,8 @@ contains
          self%BulkModulus = self%lambda + self%mu
       end if
 
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90HookesLawIsotropic2D_setFromOptions
@@ -180,7 +180,7 @@ contains
       class(MEF90HookesLawIsotropic3D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscBool :: printHelp
+      PetscInt :: printHelp
       PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
@@ -189,8 +189,8 @@ contains
       self%mu = self%YoungsModulus / (1.0_kr + self%PoissonRatio)*.5_kr
       self%BulkModulus = self%lambda + 2.0_kr * self%mu / 3.0_kr
 
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90HookesLawIsotropic3D_setFromOptions

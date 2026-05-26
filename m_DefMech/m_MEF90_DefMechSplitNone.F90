@@ -31,15 +31,15 @@ contains
    subroutine MEF90DefMechSplitNone_setFromOptions(self, ierr)
       class(MEF90DefMechSplitNone), intent(inout) :: self
       PetscErrorCode, intent(inout)               :: ierr
-      PetscBool                                   :: printHelp
+      PetscInt                                    :: printHelp
 
       ! self%damageOrder = 0
       self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitNone'
 
       !!! MEF90DefMechSplitNone has no options
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90DefMechSplitNone_setFromOptions

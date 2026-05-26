@@ -61,9 +61,9 @@ contains
       class(MEF90HookesLaw), intent(inout) :: self
       PetscErrorCode,intent(inout)         :: ierr
 
-      PetscBool :: printHelp
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscInt :: printHelp
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90HookesLaw_setFromOptions
