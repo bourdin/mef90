@@ -56,6 +56,7 @@ program vDef
 
    PetscInt                                           :: step
    PetscExodusIIInt                                   :: EXOstep
+   Integer                                            :: exoid
    PetscInt                                           :: AltMinIter, AltMinStep = 0_ki
    PetscReal                                          :: damageMaxChange, damageMin, damageMax
 
@@ -221,6 +222,13 @@ program vDef
       if (MEF90GlobalOptions%verbose > 0) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Done Formatting result file\n", ierr))
       end if
+   else
+      !!! Make sure time steps in the file are correct
+      PetscCall(PetscViewerExodusIIGetId(MEF90Ctx%resultViewer, exoid, ierr))
+      do step = 1, size(time)
+         call exptim(exoid, step, time(step), ierr)
+      end do
+      PetscCall(PetscViewerFlush(MEF90Ctx%resultViewer, ierr))
    end if
    if (MEF90GlobalOptions%verbose > 0) then
       PetscCallA(PetscViewerView(MEF90Ctx%resultViewer, PETSC_VIEWER_STDOUT_WORLD, ierr))
