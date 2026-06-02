@@ -85,13 +85,13 @@ m_MEF90_HookesLawIsotropic.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLawIsotropic.F90 
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
-m_MEF90_HookesLawZero.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLawZero.F90 \
-        m_MEF90_HookesLawClass.o
-	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+# m_MEF90_HookesLawZero.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLawZero.F90 \
+#         m_MEF90_HookesLawClass.o
+# 	@echo "      $<"
+# 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF90_HookesLaw.o: ${MEF90_DIR}/MEF90/m_MEF90_HookesLaw.F90 \
-        m_MEF90_HookesLawIsotropic.o m_MEF90_HookesLawZero.o
+        m_MEF90_HookesLawIsotropic.o #m_MEF90_HookesLawZero.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

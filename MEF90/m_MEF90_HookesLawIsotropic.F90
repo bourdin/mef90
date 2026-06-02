@@ -19,7 +19,7 @@ module m_MEF90_HookesLawIsotropic2D
       PetscBool :: isPlaneStress = PETSC_FALSE
    contains
          procedure :: setFromOptions => MEF90HookesLawIsotropic2D_setFromOptions
-         procedure :: view => MEF90HookesLawIsotropic2D_view
+         procedure :: view_internal => MEF90HookesLawIsotropic2D_view
          procedure :: mult => MEF90HookesLawIsotropic2D_mult
          procedure :: multmult => MEF90HookesLawIsotropic2D_multmult
    end type MEF90HookesLawIsotropic2D
@@ -37,9 +37,11 @@ contains
       class(MEF90HookesLawIsotropic2D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscInt                                        :: printHelp
+      PetscInt                                        :: verbose
+      PetscViewer                                     :: stdoutViewer
 
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
+      self%name = trim(self%prefix) // "HookesLaw_Isotropic"  
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%name) // "_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsBool('-planeStress', '2D plane stress', '', PETSC_FALSE, self%isPlaneStress, PETSC_NULL_BOOL, ierr))
@@ -54,9 +56,10 @@ contains
          self%BulkModulus = self%lambda + self%mu
       end if
 
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp > 1) then
-         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         PetscCall(PetscViewerASCIIGetStdout(self%comm, stdoutViewer, ierr))
+         call self%view(stdoutViewer, ierr)
       end if
    end subroutine MEF90HookesLawIsotropic2D_setFromOptions
 
@@ -162,7 +165,7 @@ module m_MEF90_HookesLawIsotropic3D
       PetscReal :: BulkModulus = 0.0_Kr
    contains
          procedure, pass(self) :: setFromOptions => MEF90HookesLawIsotropic3D_setFromOptions
-         procedure, pass(self) :: view => MEF90HookesLawIsotropic3D_view
+         procedure, pass(self) :: view_internal => MEF90HookesLawIsotropic3D_view
          procedure             :: mult => MEF90HookesLawIsotropic3D_mult
          procedure             :: multmult => MEF90HookesLawIsotropic3D_multmult
    end type MEF90HookesLawIsotropic3D
@@ -176,12 +179,15 @@ contains
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HookesLawIsotropic3D_setFromOptions(self,ierr)
+   subroutine MEF90HookesLawIsotropic3D_setFromOptions(self, ierr)
       class(MEF90HookesLawIsotropic3D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscInt :: printHelp
-      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix) // "HookesLaw_Isotropic_", "Options for MEF90HookesLawIsotropic3D_Type", "mef90HookesLaw", ierr))
+      PetscInt                                        :: verbose
+      PetscViewer                                     :: stdoutViewer
+
+      self%name = trim(self%prefix) // "HookesLaw_Isotropic"  
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%name) // "_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
@@ -189,9 +195,10 @@ contains
       self%mu = self%YoungsModulus / (1.0_kr + self%PoissonRatio)*.5_kr
       self%BulkModulus = self%lambda + 2.0_kr * self%mu / 3.0_kr
 
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp > 1) then
-         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         PetscCall(PetscViewerASCIIGetStdout(self%comm, stdoutViewer, ierr))
+         call self%view(stdoutViewer, ierr)
       end if
    end subroutine MEF90HookesLawIsotropic3D_setFromOptions
 
@@ -203,7 +210,7 @@ contains
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HookesLawIsotropic3D_View(self,viewer,ierr)
+   subroutine MEF90HookesLawIsotropic3D_View(self, viewer, ierr)
       class(MEF90HookesLawIsotropic3D), intent(in) :: self
       type(tPetscViewer), intent(in)               :: viewer
       PetscErrorCode, intent(inout)                :: ierr

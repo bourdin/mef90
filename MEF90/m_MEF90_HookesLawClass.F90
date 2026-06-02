@@ -61,10 +61,13 @@ contains
       class(MEF90HookesLaw), intent(inout) :: self
       PetscErrorCode,intent(inout)         :: ierr
 
-      PetscInt :: printHelp
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp > 1) then
-         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      PetscViewer                          :: stdoutViewer
+      PetscInt                             :: verbose
+
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         PetscCall(PetscViewerASCIIGetStdout(self%comm, stdoutViewer, ierr))
+         call self%view(stdoutViewer, ierr)
       end if
    end subroutine MEF90HookesLaw_setFromOptions
 end module m_MEF90_HookesLaw_class
