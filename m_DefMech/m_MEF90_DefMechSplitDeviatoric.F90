@@ -12,7 +12,7 @@ type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitDeviatoric
    PetscReal :: gamma = 1.0e-1
 contains
    procedure, pass(self)  :: setFromOptions => setFromOptionsDeviatoric
-   procedure, pass(self)  :: view => viewDeviatoric
+   procedure, pass(self)  :: view_internal => viewDeviatoric
    procedure, pass(self)  :: setup => setupDeviatoric
    procedure, pass(self)  :: EED => EEDDeviatoric
    procedure, pass(self)  :: DEED => DEEDDeviatoric
@@ -32,7 +32,7 @@ contains
    subroutine setFromOptionsDeviatoric(self, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(inout) :: self
       PetscErrorCode, intent(inout)             :: ierr
-      PetscInt                                  :: printHelp
+      PetscInt                                  :: verbose
 
       ! self%damageOrder = 0
       self%quadratureOrder = 2
@@ -43,8 +43,8 @@ contains
       PetscCall(PetscOptionsEnd(ierr))
 
 
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp > 1) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine setFromOptionsDeviatoric
@@ -67,11 +67,11 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90DefMechSplit\n')") trim(self%prefix) // "split"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         type: Deviatoric\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         hybrid: ', L1, '\n')") self%isHybrid
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine viewDeviatoric
 
@@ -100,7 +100,7 @@ contains
 !!!
 !!!
 !!!  EEDDeviatoric: Compute the positive and negative part of the elastic energy density associated with a strain tensor
-!!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2 
+!!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2
 !!!           EEDPlus  = Ae.e/2 - EEDMinus
 !!!  with N = 3 for 3D and N = 2 for 2D, where e is the strain tensor, A is the Hookes law tensor
 !!!
@@ -113,7 +113,7 @@ contains
       class(mef90Mat), intent(IN)            :: phi
       PetscReal, intent(OUT)                 :: EEDPlus, EEDMinus
       PetscErrorCode, intent(inout)          :: ierr
-      
+
       select type(e => phi)
       type is (MatS2D)
          call HookesLaw%multmult(DeviatoricPart(e), e, EEDPlus, ierr)

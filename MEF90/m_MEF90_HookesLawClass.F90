@@ -9,7 +9,7 @@ module m_MEF90_HookesLaw_class
    implicit none(type, external)
    private
    public :: MEF90HookesLaw
-   public :: MEF90HookesLaw_setFromOptions
+   ! public :: MEF90HookesLaw_setFromOptions
 
 !!!
 !!!
@@ -48,26 +48,26 @@ module m_MEF90_HookesLaw_class
       end subroutine HookesLawMultMultInterface
    end interface
 
-contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90HookesLaw_setFromOptions"
-!!!
-!!!
-!!!  MEF90HookesLaw_setFromOptions: initializes a MEF90Hookes from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
-!!!
+! contains
+! #undef __FUNCT__
+! #define __FUNCT__ "MEF90HookesLaw_setFromOptions"
+! !!!
+! !!!
+! !!!  MEF90HookesLaw_setFromOptions: initializes a MEF90Hookes from options
+! !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
+! !!!
 
-   subroutine MEF90HookesLaw_setFromOptions(self, ierr)
-      class(MEF90HookesLaw), intent(inout) :: self
-      PetscErrorCode,intent(inout)         :: ierr
+!    subroutine MEF90HookesLaw_setFromOptions(self, ierr)
+!       class(MEF90HookesLaw), intent(inout) :: self
+!       PetscErrorCode,intent(inout)         :: ierr
 
-      PetscViewer                          :: stdoutViewer
-      PetscInt                             :: verbose
+!       PetscViewer                          :: stdoutViewer
+!       PetscInt                             :: verbose
 
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
-      if (verbose > 0) then
-         PetscCall(PetscViewerASCIIGetStdout(self%comm, stdoutViewer, ierr))
-         call self%view(stdoutViewer, ierr)
-      end if
-   end subroutine MEF90HookesLaw_setFromOptions
+!       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+!       if (verbose > 0) then
+!          PetscCall(PetscViewerASCIIGetStdout(self%comm, stdoutViewer, ierr))
+!          call self%view(stdoutViewer, ierr)
+!       end if
+!    end subroutine MEF90HookesLaw_setFromOptions
 end module m_MEF90_HookesLaw_class

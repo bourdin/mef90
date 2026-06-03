@@ -12,7 +12,7 @@ type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitHD
    PetscReal :: gamma = 1.0e-1
 contains
    procedure, pass(self)  :: setFromOptions => setFromOptionsHD
-   procedure, pass(self)  :: view => viewHD
+   procedure, pass(self)  :: view_internal => viewHD
    procedure, pass(self)  :: setup => setupHD
    procedure, pass(self)  :: EED => EEDHD
    procedure, pass(self)  :: DEED => DEEDHD
@@ -32,7 +32,7 @@ contains
    subroutine setFromOptionsHD(self, ierr)
       class(MEF90DefMechSplitHD), intent(inout) :: self
       PetscErrorCode, intent(inout)             :: ierr
-      PetscInt                                  :: printHelp
+      PetscInt                                  :: verbose
 
       ! self%damageOrder = 0
       self%quadratureOrder = 2
@@ -43,8 +43,8 @@ contains
          PetscCall(PetscOptionsBool("-hybrid", "Use a hybrid split", "MEF90", PETSC_FALSE, self%isHybrid, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
-      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp > 1) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine setFromOptionsHD
@@ -67,13 +67,13 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90DefMechSplit\n')") trim(self%prefix) // "split"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         type: HydrostaticDeviatoric\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         hybrid: ', L1, '\n')") self%isHybrid
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         gamma: ',ES12.5,' []\n')") self%gamma
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine viewHD
 
@@ -102,7 +102,7 @@ contains
 !!!
 !!!
 !!!  EEDHD: Compute the positive and negative part of the elastic energy density associated with a strain tensor
-!!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2 
+!!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2
 !!!           EEDPlus  = Ae.e/2 - EEDMinus
 !!!  with N = 3 for 3D and N = 2 for 2D, where e is the strain tensor, A is the Hookes law tensor
 !!!
@@ -115,7 +115,7 @@ contains
       class(mef90Mat), intent(IN)            :: phi
       PetscReal, intent(OUT)                 :: EEDPlus, EEDMinus
       PetscErrorCode, intent(inout)          :: ierr
-      
+
       PetscReal                              :: AIIN2 ! AI.I/N^2
       PetscReal                              :: tre ! tr(e)
 
@@ -205,7 +205,7 @@ contains
 
       DEEDMinus = -AIIN2 * MEF90DefMechSplit_DSmoothPositiveSquare(-trStrain, self%gamma) * trPhi / 2.0_Kr
       call HookesLaw%multmult(phi, self%strain, DEEDPlus, ierr)
-      DEEDPlus = DEEDPlus - DEEDMinus 
+      DEEDPlus = DEEDPlus - DEEDMinus
    end subroutine DEEDHD
 
 #undef __FUNCT__

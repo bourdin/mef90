@@ -13,7 +13,7 @@ module m_MEF90_HookesLawIsotropic2D
    type, extends(MEF90HookesLaw) :: MEF90HookesLawIsotropic2D
       PetscReal :: YoungsModulus = 1.0_Kr
       PetscReal :: PoissonRatio = 0.3_Kr
-      PetscReal :: lambda = 0.0_Kr 
+      PetscReal :: lambda = 0.0_Kr
       PetscReal :: mu = 0.0_Kr
       PetscReal :: BulkModulus = 0.0_Kr
       PetscBool :: isPlaneStress = PETSC_FALSE
@@ -40,7 +40,7 @@ contains
       PetscInt                                        :: verbose
       PetscViewer                                     :: stdoutViewer
 
-      self%name = trim(self%prefix) // "HookesLaw_Isotropic"  
+      self%name = trim(self%prefix) // "HookesLaw_Isotropic"
       PetscCall(PetscOptionsBegin(self%comm, trim(self%name) // "_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
@@ -82,21 +82,21 @@ subroutine MEF90HookesLawIsotropic2D_View(self, viewer, ierr)
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90HookesLaw\n')") trim(self%prefix)//"HookesLaw"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Type: Isotropic\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Youngs modulus (E): ',ES12.5,' [Pa]\n')") self%YoungsModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Poisson ratio (nu): ',ES12.5,' []\n')") self%PoissonRatio
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Bulk modulus (\kappa): ',ES12.5,' [Pa]\n')") self%BulkModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Lame coefficient (\lambda): ',ES12.5,' [Pa]\n')") self%lambda
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Shear modulus (\mu): ',ES12.5,' [Pa]\n')") self%mu
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         plane stress (): ',L1,' [bool]\n')") self%isPlaneStress
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine MEF90HookesLawIsotropic2D_View
 
@@ -160,7 +160,7 @@ module m_MEF90_HookesLawIsotropic3D
    type, extends(MEF90HookesLaw) :: MEF90HookesLawIsotropic3D
       PetscReal :: YoungsModulus = 1.0_Kr
       PetscReal :: PoissonRatio = 0.3_Kr
-      PetscReal :: lambda = 0.0_Kr 
+      PetscReal :: lambda = 0.0_Kr
       PetscReal :: mu = 0.0_Kr
       PetscReal :: BulkModulus = 0.0_Kr
    contains
@@ -186,7 +186,7 @@ contains
       PetscInt                                        :: verbose
       PetscViewer                                     :: stdoutViewer
 
-      self%name = trim(self%prefix) // "HookesLaw_Isotropic"  
+      self%name = trim(self%prefix) // "HookesLaw_Isotropic"
       PetscCall(PetscOptionsBegin(self%comm, trim(self%name) // "_", "Options for MEF90HookesLawIsotropic2D_Type", "mef90HookesLaw", ierr))
          PetscCall(PetscOptionsReal('-YoungsModulus', 'Young''s modulus (E)', '[Pa]', self%YoungsModulus, self%YoungsModulus, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-PoissonRatio', 'Poisson ratio (\nu))', '[]', self%PoissonRatio, self%PoissonRatio, PETSC_NULL_BOOL, ierr))
@@ -221,19 +221,19 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90HookesLaw\n')") trim(self%prefix)//"HookesLaw"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Type: Isotropic\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Youngs modulus (E): ',ES12.5,' [Pa]\n')") self%YoungsModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Poisson ratio (nu): ',ES12.5,' []\n')") self%PoissonRatio
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Bulk modulus (\kappa): ',ES12.5,' [Pa]\n')") self%BulkModulus
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Lame coefficient (\lambda): ',ES12.5,' [Pa]\n')") self%lambda
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         Shear modulus (\mu): ',ES12.5,' [Pa]\n')") self%mu
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine MEF90HookesLawIsotropic3D_View
 
