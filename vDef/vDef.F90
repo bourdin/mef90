@@ -33,7 +33,7 @@ program vDef
    type(tTao)                                         :: damageTAO
    type(eSNESConvergedReason)                         :: displacementSNESConvergedReason, damageSNESConvergedReason
    type(eTaoConvergedReason)                          :: damageTAOConvergedReason
-   character(len=MEF90MXSTRLEN)                       :: convergeReasonString
+   ! character(len=MEF90MXSTRLEN)                       :: convergeReasonString
    type(tVec)                                         :: displacement, displacementResidual, damage, damageResidual
    type(tVec)                                         :: damageAltMinOld
    type(tVec)                                         :: damageLB, damageUB
@@ -280,8 +280,8 @@ program vDef
             PetscCallA(SNESSolve(temperatureSNES, PETSC_NULL_VEC, temperature, ierr))
             PetscCallA(SNESGetConvergedReason(temperatureSNES, temperatureSNESConvergedReason, ierr))
             if (temperatureSNESConvergedReason%v < 0) then
-               PetscCallA(SNESGetConvergedReasonString(temperatureSNES, convergeReasonString, ierr))
-               write (IOBuffer, 400) "temperature", temperatureSNESConvergedReason, trim(convergeReasonString)
+               ! PetscCallA(SNESGetConvergedReasonString(temperatureSNES, convergeReasonString, ierr))
+               write (IOBuffer, 400) "temperature", temperatureSNESConvergedReason!, trim(convergeReasonString)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
             end if
 
@@ -374,8 +374,8 @@ program vDef
                   PetscCallA(SNESSolve(displacementSNES, PETSC_NULL_VEC, displacement, ierr))
                   PetscCallA(SNESGetConvergedReason(displacementSNES, displacementSNESConvergedReason, ierr))
                   if (displacementSNESConvergedReason%v < 0) then
-                     PetscCallA(SNESGetConvergedReasonString(displacementSNES, convergeReasonString, ierr))
-                     write (IOBuffer, 400) "displacement", displacementSNESConvergedReason, trim(convergeReasonString)
+                     ! PetscCallA(SNESGetConvergedReasonString(displacementSNES, convergeReasonString, ierr))
+                     write (IOBuffer, 400) "displacement", displacementSNESConvergedReason!, trim(convergeReasonString)
                      PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                   end if
 
@@ -394,8 +394,8 @@ program vDef
                      PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage, ierr))
                      PetscCallA(SNESGetConvergedReason(damageSNES, damageSNESConvergedReason, ierr))
                      if (damageSNESConvergedReason%v < 0) then
-                        PetscCallA(SNESGetConvergedReasonString(damageSNES, convergeReasonString, ierr))
-                        write (IOBuffer, 400) "damage", damageSNESConvergedReason, trim(convergeReasonString)
+                        ! PetscCallA(SNESGetConvergedReasonString(damageSNES, convergeReasonString, ierr))
+                        write (IOBuffer, 400) "damage", damageSNESConvergedReason!, trim(convergeReasonString)
                         PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                      end if
                   case (MEF90DefMech_DamageSolverTypeTao)
@@ -547,7 +547,8 @@ program vDef
 
 209 format("   Alt. Min. step ", I5, " alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5, "\n")
 
-400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ": ", A, "\n")
+! 400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ": ", A, "\n")
+400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ". \n Check https://petsc.org/release/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
 401 format(" [ERROR]: ", A, " TAOSolve failed with TAOConvergedReason ", I2, ". \n Check https://petsc.org/release/docs/manualpages/TAO/TAOConvergedReason/ for error code meaning.\n")
    !!! Clean up and exit nicely
    select case (MEF90DefMechGlobalOptions%timeSteppingType)
