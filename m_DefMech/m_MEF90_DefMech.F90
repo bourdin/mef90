@@ -3,6 +3,7 @@ module m_MEF90_DefMech
 #include "petsc/finclude/petsc.h"
    use petscsnes
    use petsctao
+   use petscdmplex
 
    use m_MEF90_Parameters, only: Kr, Ki, MEF90MxStrLen, MXSTLN
    use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions, &

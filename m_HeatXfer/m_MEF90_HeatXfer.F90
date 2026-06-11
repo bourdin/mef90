@@ -3,6 +3,7 @@ module m_MEF90_HeatXfer
 #include "petsc/finclude/petsc.h"
    use petscsnes
    use petsctao
+   use petscts
    use m_MEF90_Parameters, only: Kr, Ki
    use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions, &
                           MEF90Scaling_CST, MEF90Scaling_Expr, MEF90Scaling_File, MEF90Scaling_Linear
