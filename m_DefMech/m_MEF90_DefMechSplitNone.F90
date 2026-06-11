@@ -31,7 +31,7 @@ contains
    subroutine MEF90DefMechSplitNone_setFromOptions(self, ierr)
       class(MEF90DefMechSplitNone), intent(inout) :: self
       PetscErrorCode, intent(inout)               :: ierr
-      PetscInt                                    :: verbose
+      PetscInt                                    :: verbose = 0
 
       ! self%damageOrder = 0
       self%quadratureOrder = 2

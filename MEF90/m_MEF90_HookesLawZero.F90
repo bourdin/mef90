@@ -13,7 +13,7 @@ module m_MEF90_HookesLawZero
    type, extends(MEF90HookesLaw) :: MEF90HookesLawZero
    contains
          procedure :: setFromOptions => MEF90HookesLawZero_setFromOptions
-         procedure :: view => MEF90HookesLawZero_view
+         procedure :: view_internal => MEF90HookesLawZero_view
          procedure :: mult => MEF90HookesLawZero_mult
          procedure :: multmult => MEF90HookesLawZero_multmult
    end type MEF90HookesLawZero

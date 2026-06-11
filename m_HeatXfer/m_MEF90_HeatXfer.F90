@@ -47,7 +47,7 @@ contains
       type(MEF90HeatXferCtx_Type), intent(INOUT)       :: MEF90HeatXferCtx
       PetscInt, intent(IN)                             :: step
       PetscReal, intent(IN)                            :: time
-      PetscErrorCode, intent(OUT)                      :: ierr
+      PetscErrorCode, intent(INOUT)                      :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type), pointer   :: MEF90HeatXferGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
@@ -126,7 +126,7 @@ contains
       type(tVec), intent(IN)                              :: x
       type(tVec), intent(INOUT)                           :: residual
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferOperator2D(snesTemp, x, residual, MEF90HeatXferCtx, ierr))
@@ -151,7 +151,7 @@ contains
       type(tVec), intent(IN)                              :: x
       type(tMat), intent(INOUT)                           :: A, M
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferBilinearForm2D(snesTemp, x, A, M, MEF90HeatXferCtx, ierr))
@@ -200,7 +200,7 @@ contains
       type(tVec), intent(IN)                              :: x, xdot
       type(tVec), intent(INOUT)                           :: F
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXFerIFunction2D(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ierr))
@@ -227,7 +227,7 @@ contains
       PetscReal, intent(IN)                               :: shift
       type(tMat), intent(INOUT)                           :: A, M
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferIJacobian2D(tempTS, t, x, xdot, shift, A, M, MEF90HeatXferCtx, ierr))
@@ -250,7 +250,7 @@ contains
    subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
       PetscExodusIIInt, intent(IN)                        :: step
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
 
@@ -275,7 +275,7 @@ contains
       type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
       type(tSNES), intent(OUT)                            :: snesTemp
       type(tVec), intent(IN)                              :: residual
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
@@ -286,7 +286,7 @@ contains
 
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
-      PetscCall(DMCreateMatrix(dm, matTemp, iErr))
+      PetscCall(DMCreateMatrix(dm, matTemp, ierr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matTemp, MAT_SPD, PETSC_TRUE, ierr))
@@ -337,7 +337,7 @@ contains
       type(tTS), intent(OUT)                              :: tsTemp
       type(tVec), intent(IN)                              :: residual
       PetscReal, intent(IN)                               :: initialTime, initialStep
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
@@ -349,7 +349,7 @@ contains
 
       PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
-      PetscCall(DMCreateMatrix(dm, matTemp, iErr))
+      PetscCall(DMCreateMatrix(dm, matTemp, ierr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
       PetscCall(MatSetOption(matTemp, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matTemp, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
@@ -357,6 +357,7 @@ contains
       if (MEF90HeatXferGlobalOptions%addNullSpace) then
          PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm, PETSC_TRUE, 0_ki, PETSC_NULL_VEC_ARRAY, nspTemp, ierr))
          PetscCall(MatSetNullSpace(matTemp, nspTemp, ierr))
+         PetscCall(MatNullSpaceDestroy(nspTemp, ierr))
       end if
       PetscCall(MatSetFromOptions(matTemp, ierr))
 
@@ -373,7 +374,7 @@ contains
       PetscCall(TSSetProblemType(tsTemp, TS_LINEAR, ierr))
       PetscCall(VecSet(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferGlobalOptions%initialTemperature, ierr))
       PetscCall(TSSetSolution(tsTemp, MEF90HeatXferCtx%temperatureLocal, ierr))
-      PetscCall(TsSetTime(tsTemp, initialTime, ierr))
+      PetscCall(TSSetTime(tsTemp, initialTime, ierr))
       PetscCall(TSSetTimeStep(tsTemp, initialStep, ierr))
 
       PetscCall(TSSetExactFinalTime(tsTemp, TS_EXACTFINALTIME_MATCHSTEP, ierr))

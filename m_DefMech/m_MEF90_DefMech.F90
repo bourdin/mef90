@@ -794,7 +794,7 @@ contains
       PetscCall(VecSet(LB, 0.0_kr, ierr))
       PetscCall(VecSet(UB, 1.0_kr, ierr))
       PetscCall(SNESVISetVariableBounds(snesDamage, LB, UB, ierr))
-      PetscCall(DMRestoreGlobalVector(dm, LB, ierr))
+      PetscCall(VecDestroy(LB, ierr))
       PetscCall(VecDestroy(UB, ierr))
 
       PetscCall(SNESSetFunction(snesDamage, residual, MEF90DefMechOperatorDamage, MEF90DefMechCtx, ierr))
@@ -861,7 +861,7 @@ contains
       PetscCall(VecSet(LB, 0.0_kr, ierr))
       PetscCall(VecSet(UB, 1.0_kr, ierr))
       PetscCall(TAOSetVariableBounds(taoDamage, LB, UB, ierr))
-      PetscCall(DMRestoreGlobalVector(dm, LB, ierr))
+      PetscCall(VecDestroy(LB, ierr))
       PetscCall(VecDestroy(UB, ierr))
 
       PetscCall(TAOSetObjective(taoDamage, MEF90DefMechTAOObjectiveDamage, MEF90DefMechCtx, ierr))

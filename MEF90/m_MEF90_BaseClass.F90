@@ -75,7 +75,7 @@ subroutine MEF90Object_view(self, viewer, ierr)
       PetscErrorCode, intent(inout)        :: ierr
 
       PetscViewer                          :: stdoutViewer
-      PetscInt                             :: verbose
+      PetscInt                             :: verbose = 0
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then

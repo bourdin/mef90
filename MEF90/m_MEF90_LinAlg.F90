@@ -1263,11 +1263,11 @@ contains
       type(MatS2D), intent(IN)                     :: M1, M2
       type(Tens4OS2D)                              :: oDotMatS2D
 
-      oDotMatS2D%XXXX = M1%XX + M2%XX
+      oDotMatS2D%XXXX = M1%XX * M2%XX
       oDotMatS2D%XXYY = M1%XY * M2%XY
       oDotMatS2D%XXXY = (M1%XX * M2%XY + M1%XY * M2%XX) * 0.5_kr
 
-      oDotMatS2D%YYYY = M1%YY + M2%YY
+      oDotMatS2D%YYYY = M1%YY * M2%YY
       oDotMatS2D%YYXY = (M1%XY * M2%YY + M1%YY * M2%XY) * 0.5_kr
 
       oDotMatS2D%XYXY = (M1%XX * M2%YY + M1%YY * M2%XX) * 0.5_kr
@@ -1690,7 +1690,7 @@ contains
       A(2, 2) = T%YYYY
       A(2, 3) = T%YYXY * 2.0_kr
 
-      A(3, 1) = A(3, 1)
+      A(3, 1) = A(1, 3)
       A(3, 2) = A(2, 3)
       A(3, 3) = T%XYXY * 2.0_kr
    end subroutine Tens4OS2DToArray
@@ -2478,10 +2478,11 @@ contains
       call DSYEVD('V', 'L', n, A, n, lmbda, work, lwork, iwork, liwork, info)
       Pt = transpose(A)
       do i = 1, n
-         d = sqrt(lmbda(i))
-         if (d < 0.0_kr) then
+
+         if (lmbda(i) < 0.0_kr) then
             write (*, *) 'ERROR in Tens4OSDSquareRoot, negative eigenvalue ', lmbda(i)
          else
+            d = sqrt(lmbda(i))
             do j = 1, n
                Pt(i, j) = A(j, i) * d
             end do
@@ -2509,10 +2510,10 @@ contains
       call DSYEVD('V', 'L', n, A, n, lmbda, work, lwork, iwork, liwork, info)
       Pt = transpose(A)
       do i = 1, n
-         d = sqrt(lmbda(i))
-         if (d < 0.0_kr) then
+         if (lmbda(i) < 0.0_kr) then
             write (*, *) 'ERROR in Tens4OSDSquareRoot, negative eigenvalue ', lmbda(i)
          else
+            d = sqrt(lmbda(i))
             do j = 1, n
                Pt(i, j) = A(j, i) * d
             end do

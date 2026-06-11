@@ -37,7 +37,7 @@ contains
       class(MEF90HookesLawIsotropic2D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscInt                                        :: verbose
+      PetscInt                                        :: verbose = 0
       PetscViewer                                     :: stdoutViewer
 
       self%name = trim(self%prefix) // "HookesLaw_Isotropic"
@@ -183,7 +183,7 @@ contains
       class(MEF90HookesLawIsotropic3D), intent(inout) :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscInt                                        :: verbose
+      PetscInt                                        :: verbose = 0
       PetscViewer                                     :: stdoutViewer
 
       self%name = trim(self%prefix) // "HookesLaw_Isotropic"

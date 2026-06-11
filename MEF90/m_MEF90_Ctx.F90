@@ -299,7 +299,7 @@ contains
          allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
          if (GlobalOptions%timeNumStep > 1) then
-            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1.0_kr)
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1)
          end if
          t = [(GlobalOptions%timeMin + i * dt, i = 0, GlobalOptions%timeNumStep - 1)]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax

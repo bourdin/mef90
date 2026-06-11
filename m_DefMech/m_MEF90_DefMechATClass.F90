@@ -108,7 +108,7 @@ contains
       class(MEF90DefMechAT_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
 
-      PetscInt :: verbose
+      PetscInt :: verbose = 0
       PetscReal, dimension(:), allocatable :: tmpArray
       PetscInt :: nOpt
 

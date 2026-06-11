@@ -430,6 +430,8 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
       PetscCall(VecGetArray(MEF90HeatXferCtx%fluxLocal, fluxArray, ierr))
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
+         myenergy = 0.0_kr
+         myBodyWork = 0.0_kr
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             PetscCall(PetscBagGetDataMEF90HeatXferCtxCellSetOptions(MEF90HeatXferCtx%CellSetOptionsBag(set), cellSetOptions, ierr))
@@ -440,7 +442,6 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
             QuadratureOrder = elementType%order * 2
             PetscCall(MEF90ElementCreate(dmTemperature, setPointIS, elem, QuadratureOrder, elementType, ierr))
 
-            myEnergy = 0.0_kr
             do cell = 1, size(setPointID)
                   !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                   !!! If this happens, we will need to protect this loop
@@ -456,7 +457,6 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
             end do ! cell
             myEnergy = myEnergy * 0.5_kr
 
-            myBodyWork = 0.0_kr
             if (cellSetOptions%flux /= 0.0_kr) then
                do cell = 1, size(setPointID)
                      !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)

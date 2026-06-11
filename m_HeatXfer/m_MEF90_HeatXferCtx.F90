@@ -258,7 +258,7 @@ contains
 
       !!! I need to allocate for the overall number of sets, not the local one
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
       PetscCall(ISGetLocalSize(setIS, numSet, ierr))
       allocate (HeatXferCtx%CellSetOptionsBag(numSet), stat=ierr)
       do set = 1, numSet
@@ -267,16 +267,16 @@ contains
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90FaceSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
       PetscCall(ISGetLocalSize(setIS, numSet, ierr))
       allocate (HeatXferCtx%FaceSetOptionsBag(numSet), stat=ierr)
       do set = 1, numSet
-         PetscCall(PetscBagCreate(MEF90Ctx%comm, sizeofMEF90HeatXferCellSetOptions, HeatXferCtx%FaceSetOptionsBag(set), ierr))
+         PetscCall(PetscBagCreate(MEF90Ctx%comm, sizeofMEF90HeatXferFaceSetOptions, HeatXferCtx%FaceSetOptionsBag(set), ierr))
       end do
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90VertexSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
       PetscCall(ISGetLocalSize(setIS, numSet, ierr))
       allocate (HeatXferCtx%VertexSetOptionsBag(numSet), stat=ierr)
       do set = 1, numSet
@@ -357,14 +357,14 @@ contains
       end if
 
       !!! Destroy SFs
-      PetscCall(PetscSFDestroy(HeatXferCtx%temperatureToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%IOToTemperatureSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%externalTemperatureToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%IOToExternalTemperatureSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%fluxToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%IOToFluxSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%boundaryFluxToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXferCtx%IOToBoundaryFluxSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%temperatureToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%IOToTemperatureSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%externalTemperatureToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%IOToExternalTemperatureSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%fluxToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%IOToFluxSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%boundaryFluxToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXferCtx%IOToBoundaryFluxSF, ierr))
 
       PetscCall(PetscSFDestroy(HeatXferCtx%boundaryToTemperatureSF, ierr))
 
@@ -585,7 +585,7 @@ contains
       !!! Registering Vertex Set Context
       !!!
       PetscCall(DMGetLabelIdIS(heatXferCtx%megaDM, MEF90VertexSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(heatXferCtx%MEF90Ctx%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setName, "('Vertex set ',I4)") setID(set)
