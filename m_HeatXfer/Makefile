@@ -36,6 +36,6 @@ m_MEF90_HeatXferCtx.o: ${BASE_DIR}/m_MEF90_HeatXferCtx.F90
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 allclean:
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean

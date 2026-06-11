@@ -473,16 +473,16 @@ runTestVonMises3D: TestVonMises3D
 	${RM} -f $@.out $@.exo
 
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_HeatXfer:
-	make -C ${MEF90_DIR} m_HeatXfer
+	${MAKE} -C ${MEF90_DIR} m_HeatXfer
 m_DefMech:
-	make -C ${MEF90_DIR} m_DefMech
+	${MAKE} -C ${MEF90_DIR} m_DefMech
 
 clean::
 	-@rm -f TestMaterials TestMEF90Ctx testHeatXfer testLeak
 allclean:
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 
 debug::
 	@echo FFLAGS              ${FFLAGS}

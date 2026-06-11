@@ -1,17 +1,17 @@
 NP=4 
 all:
-	-@make -C ${MEF90_DIR} ThermoElasticity
+	-@${MAKE} -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
 test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
 	-@for i in {1..4}; do \
-	make -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=1 OPTIONSFILE=testElastDisp$${i}.yaml;\
-	make -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=2 OPTIONSFILE=testElastDisp$${i}.yaml;\
+	${MAKE} -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=1 OPTIONSFILE=testElastDisp$${i}.yaml;\
+	${MAKE} -s testThermoElasticity PREFIX=Beam1x10-tri.msh ORDER=2 OPTIONSFILE=testElastDisp$${i}.yaml;\
 	done
 
 test3D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
 	-@for i in {1..4}; do \
-	make -s testThermoElasticity PREFIX=Beam3D1x10-tet.msh ORDER=1 OPTIONSFILE=testElastDisp$${i}.yaml;\
-	make -s testThermoElasticity PREFIX=Beam3D1x10-tet.msh ORDER=2 OPTIONSFILE=testElastDisp$${i}.yaml;\
+	${MAKE} -s testThermoElasticity PREFIX=Beam3D1x10-tet.msh ORDER=1 OPTIONSFILE=testElastDisp$${i}.yaml;\
+	${MAKE} -s testThermoElasticity PREFIX=Beam3D1x10-tet.msh ORDER=2 OPTIONSFILE=testElastDisp$${i}.yaml;\
 	done
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -50,15 +50,15 @@ testThermoElasticity:
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}-$${ORDER}* 
 	
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_DefMech:
-	make -C ${MEF90_DIR} m_DefMech
+	${MAKE} -C ${MEF90_DIR} m_DefMech
 	
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
 
 allclean: testclean
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 	
 debug::
 	@echo FFLAGS ${FFLAGS} 
