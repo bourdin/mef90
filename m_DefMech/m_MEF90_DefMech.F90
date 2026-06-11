@@ -4,11 +4,16 @@ module m_MEF90_DefMech
    use petscsnes
    use petsctao
 
-   use m_MEF90_EXO
-   use m_MEF90_DefMechCtx
-   use m_MEF90_DefMechAT
+   use m_MEF90_Parameters, only: Kr, Ki, MEF90MxStrLen, MXSTLN
+   use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions, &
+                          MEF90Scaling_CST, MEF90Scaling_Expr, MEF90Scaling_File, MEF90Scaling_Linear
+   use m_MEF90_DMPlex, only: MEF90VecCopySF, MEF90VecSetBCValuesFromOptions, MEF90VecSetBCValuesFromOptionsExpr, &
+                             MEF90VecSetValuesFromOptions, MEF90VecSetValuesFromOptionsExpr
+   use m_MEF90_EXO, only: MEF90EXOFormat, MEF90EXOVecLoad, MEF90EXOVecView
+   use m_MEF90_DefMechCtx, only: MEF90DefMechCtx_Type, MEF90DefMechGlobalOptions_Type, &
+                                 PetscBagGetDataMEF90DefMechCtxGlobalOptions
 
-   use m_MEF90_DefMechAssembly2D, &
+   use m_MEF90_DefMechAssembly2D, only: &
       MEF90DefMechOperatorDisplacement2D => MEF90DefMechOperatorDisplacement, &
       MEF90DefMechBilinearFormDisplacement2D => MEF90DefMechBilinearFormDisplacement, &
       MEF90DefMechWork2D => MEF90DefMechWork, &
@@ -23,9 +28,9 @@ module m_MEF90_DefMech
       MEF90DefMechTAOObjectiveDamage2D => MEF90DefMechTAOObjectiveDamage, &
       MEF90DefMechCrackVolume2D => MEF90DefMechCrackVolume, &
       MEF90DefMechStress2D => MEF90DefMechStress
-   use m_MEF90_DefMechPlasticity2D, &
+   use m_MEF90_DefMechPlasticity2D, only: &
       MEF90DefMechPlasticStrainUpdate2D => MEF90DefMechPlasticStrainUpdate
-   use m_MEF90_DefMechAssembly3D, &
+   use m_MEF90_DefMechAssembly3D, only: &
       MEF90DefMechOperatorDisplacement3D => MEF90DefMechOperatorDisplacement, &
       MEF90DefMechBilinearFormDisplacement3D => MEF90DefMechBilinearFormDisplacement, &
       MEF90DefMechWork3D => MEF90DefMechWork, &
@@ -40,7 +45,7 @@ module m_MEF90_DefMech
       MEF90DefMechTAOObjectiveDamage3D => MEF90DefMechTAOObjectiveDamage, &
       MEF90DefMechCrackVolume3D => MEF90DefMechCrackVolume, &
       MEF90DefMechStress3D => MEF90DefMechStress
-   use m_MEF90_DefMechPlasticity3D, &
+   use m_MEF90_DefMechPlasticity3D, only: &
       MEF90DefMechPlasticStrainUpdate3D => MEF90DefMechPlasticStrainUpdate
 
    implicit none(type)

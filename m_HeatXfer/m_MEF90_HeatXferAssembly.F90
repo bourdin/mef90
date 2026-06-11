@@ -3,7 +3,23 @@ module MEF90_APPEND(m_MEF90_HeatXferAssembly,MEF90_DIM)D
 #include "petsc/finclude/petsc.h"
 use petscsnes
 use petsctao
-use m_MEF90_HeatXferCtx
+use petscdmplex
+use m_MEF90_Parameters, only: Kr, Ki
+use m_MEF90_LinAlg, only: MEF90_VECT, MEF90_MAT, MEF90_MATS, &
+                          operator(*), operator(+), operator(-), operator(/), &
+                          operator(.DotP.), assignment(=)
+use m_MEF90_Elements, only: MEF90_ELEMENT_SCAL, MEF90ElementType, &
+                            MEF90ElementGetType, MEF90ElementGetTypeBoundary, &
+                            MEF90ElementCreate, MEF90ElementDestroy
+use m_MEF90_Utils, only: MEF90ISAllGatherMerge
+use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions
+use m_MEF90_DMPlex, only: MEF90CellSetLabelName, MEF90FaceSetLabelName, MEF90VecGlobalToLocalConstraint
+use m_MEF90_Materials, only: MEF90_MATPROP, PetscBagGetDataMEF90MatProp
+use m_MEF90_HeatXferCtx, only: MEF90HeatXferCtx_Type, MEF90HeatXferGlobalOptions_Type, &
+                               MEF90HeatXferCellSetOptions_Type, MEF90HeatXferFaceSetOptions_Type, &
+                               PetscBagGetDataMEF90HeatXferCtxGlobalOptions, &
+                               PetscBagGetDataMEF90HeatXferCtxCellSetOptions, &
+                               PetscBagGetDataMEF90HeatXferCtxFaceSetOptions
 implicit none(type, external)
 
 private

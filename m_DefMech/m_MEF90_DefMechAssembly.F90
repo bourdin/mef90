@@ -5,14 +5,29 @@ module MEF90_APPEND(m_MEF90_DefMechAssembly,MEF90_DIM)D
 
 use petscsnes
 use petsctao
-use m_MEF90_DefMechCtx
-use m_MEF90_Materials
-use m_MEF90_HookesLaw
-use m_MEF90_DefMechSplit
-use m_MEF90_DefMechAT
+use petscdmplex
+use m_MEF90_Parameters, only: Kr, Ki, MEF90MxStrLen
+use m_MEF90_LinAlg, only: MEF90_VECT, MEF90_MAT, MEF90_MATS, MEF90_TENS4OS, &
+                          operator(*), operator(+), operator(-), operator(/), &
+                          operator(.DotP.), assignment(=)
+use m_MEF90_Elements, only: MEF90_ELEMENT_SCAL, MEF90_ELEMENT_VECT, MEF90ElementType, &
+                            MEF90ElementGetType, MEF90ElementGetTypeBoundary, &
+                            MEF90ElementCreate, MEF90ElementDestroy
+use m_MEF90_Utils, only: MEF90ISAllGatherMerge
+use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions
+use m_MEF90_DMPlex, only: MEF90CellSetLabelName, MEF90FaceSetLabelName
+use m_MEF90_DefMechCtx, only: MEF90DefMechCtx_Type, MEF90DefMechGlobalOptions_Type, &
+                              MEF90DefMechCellSetOptions_Type, MEF90DefMechFaceSetOptions_Type, &
+                              PetscBagGetDataMEF90DefMechCtxGlobalOptions, &
+                              PetscBagGetDataMEF90DefMechCtxCellSetOptions, &
+                              PetscBagGetDataMEF90DefMechCtxFaceSetOptions
+use m_MEF90_Materials, only: MEF90_MATPROP, PetscBagGetDataMEF90MatProp
+use m_MEF90_HookesLaw, only: MEF90HookesLaw, MEF90GetHookesLaw
+use m_MEF90_DefMechSplit, only: MEF90DefMechSplit, MEF90DefMechGetSplit
+use m_MEF90_DefMechAT, only: MEF90DefMechAT_Type, MEF90DefMechGetATModel
 
 implicit none(type, external)
-! Private
+private
 public MEF90DefMechOperatorDisplacement, &
    MEF90DefMechBilinearFormDisplacement, &
    MEF90DefMechWork, &

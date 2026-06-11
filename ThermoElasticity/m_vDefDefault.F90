@@ -4,6 +4,7 @@ module m_vDefDefault
    use petsc
    use m_MEF90
    use m_MEF90_DefMechCtx
+   use m_MEF90_DefMechAT, only: MEF90DefMech_damageTypeAT1, MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeKKL
    use m_MEF90_HeatXferCtx
    implicit none(type, external)
 
