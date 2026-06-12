@@ -1,6 +1,6 @@
 NP=4 
 all:
-	-@${MAKE} -C ${MEF90_DIR} ThermoElasticity
+	@${MAKE} -C ${MEF90_DIR} ThermoElasticity
 test: test2D test3D
 test2D: ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity
 	-@for i in {1..4}; do \
@@ -27,15 +27,15 @@ ThermoElasticity:${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity ${MEF90_OBJS} $
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity: ThermoElasticity.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
-	-@${FLINKER} -o $@ ThermoElasticity.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	@${FLINKER} -o $@ ThermoElasticity.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
 ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} m_vDefDefault.o
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_vDefDefault.o: ${BASE_DIR}/m_vDefDefault.F90 ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 
 

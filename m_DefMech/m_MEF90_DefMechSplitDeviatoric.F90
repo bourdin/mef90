@@ -1,7 +1,10 @@
 #include "../MEF90/mef90.inc"
 module m_MEF90_DefMechSplitDeviatoric
 #include "petsc/finclude/petsc.h"
+use petscsys
+use, intrinsic :: iso_c_binding
 use m_MEF90_DefMechSplit_class
+use m_MEF90_LinAlg
 use m_MEF90_Materials
 use m_MEF90_HookesLaw
 implicit none(type)

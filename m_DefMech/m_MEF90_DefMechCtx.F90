@@ -1,5 +1,9 @@
 module m_MEF90_DefMechCtx_Type
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use petscdmplex
+   use petscbag
+   use, intrinsic :: iso_c_binding
    use m_MEF90_Ctx
    implicit none(type, external)
 
@@ -238,7 +242,16 @@ end module m_MEF90DefMechVertexSetOptions_Private
 
 module m_MEF90_DefMechCtx
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use petscdmplex
+   use petscbag
+   use, intrinsic :: iso_c_binding
+   use m_MEF90_Parameters
+   use m_MEF90_LinAlg
+   use m_MEF90_Ctx
    use m_MEF90_DMPlex
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge, MEF90FilePrefix
+   use m_MEF90_Materials
    use m_MEF90_DefMechCtx_Type
    use m_MEF90DefMechGlobalOptions_Private
    use m_MEF90DefMechCellSetOptions_Private

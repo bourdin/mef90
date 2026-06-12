@@ -1,16 +1,20 @@
 module m_MEF90_NormsInterface
 #include "petsc/finclude/petsc.h"
-   use m_MEF90_NormsImplementation_MEF90Element2DScal, MEF90L2DotProductSet2DScal => MEF90L2DotProductSet, &
+   use m_MEF90_NormsImplementation_MEF90Element2DScal, only: &
+      MEF90L2DotProductSet2DScal => MEF90L2DotProductSet, &
       MEF90H1DotProductSet2DScal => MEF90H1DotProductSet, &
       MEF90L2NormSet2DScal => MEF90L2NormSet
-   use m_MEF90_NormsImplementation_MEF90Element2DVect, MEF90L2DotProductSet2DVect => MEF90L2DotProductSet, &
+   use m_MEF90_NormsImplementation_MEF90Element2DVect, only: &
+      MEF90L2DotProductSet2DVect => MEF90L2DotProductSet, &
       MEF90H1DotProductSet2DVect => MEF90H1DotProductSet, &
       MEF90H1SymDotProductSet2DVect => MEF90H1SymDotProductSet, &
       MEF90L2NormSet2DVect => MEF90L2NormSet
-   use m_MEF90_NormsImplementation_MEF90Element3DScal, MEF90L2DotProductSet3DScal => MEF90L2DotProductSet, &
+   use m_MEF90_NormsImplementation_MEF90Element3DScal, only: &
+      MEF90L2DotProductSet3DScal => MEF90L2DotProductSet, &
       MEF90H1DotProductSet3DScal => MEF90H1DotProductSet, &
       MEF90L2NormSet3DScal => MEF90L2NormSet
-   use m_MEF90_NormsImplementation_MEF90Element3DVect, MEF90L2DotProductSet3DVect => MEF90L2DotProductSet, &
+   use m_MEF90_NormsImplementation_MEF90Element3DVect, only: &
+      MEF90L2DotProductSet3DVect => MEF90L2DotProductSet, &
       MEF90H1DotProductSet3DVect => MEF90H1DotProductSet, &
       MEF90H1SymDotProductSet3DVect => MEF90H1SymDotProductSet, &
       MEF90L2NormSet3DVect => MEF90L2NormSet

@@ -1,6 +1,6 @@
 NP=2 
 all:
-	-@${MAKE} -C ${MEF90_DIR} WorkControlled
+	@${MAKE} -C ${MEF90_DIR} WorkControlled
 test: test2D test3D
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
@@ -28,11 +28,11 @@ WorkControlled:${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled: WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS}  ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
-	-@${FLINKER} -o $@ WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	@${FLINKER} -o $@ WorkControlled.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
 WorkControlled.o: ${BASE_DIR}/WorkControlled.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 testWorkControlled:
 	@echo ;echo "Testing WorkControlled with $${PREFIX} $${OPTIONSFILE}"

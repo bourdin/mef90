@@ -1,12 +1,11 @@
 #include "mef90.inc"
 module MEF90_APPEND(m_MEF90_MassMatrixImplementation_,MEF90_ELEMENTTYPE)
 #include "petsc/finclude/petsc.h"
+use petscdmplex
 use m_MEF90_Parameters
-use m_MEF90_Utils
 use m_MEF90_LinAlg
-use m_MEF90_Elements
-use m_MEF90_Ctx
-use m_MEF90_DMPlex
+use m_MEF90_Elements, only: MEF90ElementType, MEF90Element2DScal, MEF90Element2DVect, MEF90Element3DScal, MEF90Element3DVect
+use m_MEF90_DMPlex, only: MEF90SetLabelName
 implicit none(type, external)
 
 private

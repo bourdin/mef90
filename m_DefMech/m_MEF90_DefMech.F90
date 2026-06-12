@@ -5,7 +5,7 @@ module m_MEF90_DefMech
    use petsctao
    use petscdmplex
 
-   use m_MEF90_Parameters, only: Kr, Ki, MEF90MxStrLen, MXSTLN
+   use m_MEF90_Parameters, only: Kr, Ki, MEF90MxStrLen
    use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions, &
                           MEF90Scaling_CST, MEF90Scaling_Expr, MEF90Scaling_File, MEF90Scaling_Linear
    use m_MEF90_DMPlex, only: MEF90VecCopySF, MEF90VecSetBCValuesFromOptions, MEF90VecSetBCValuesFromOptionsExpr, &
@@ -50,6 +50,7 @@ module m_MEF90_DefMech
       MEF90DefMechPlasticStrainUpdate3D => MEF90DefMechPlasticStrainUpdate
 
    implicit none(type)
+#include "exodusII.inc"
    ! private
    public :: MEF90DefMechSetTransients
    public :: MEF90DefMechOperatorDisplacement

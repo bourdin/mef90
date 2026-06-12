@@ -4,22 +4,28 @@ module m_MEF90_Parameters
 
    use petscsys
    implicit none(type, external)
-#include "exodusII.inc"
+! #include "exodusII.inc"
 #include "../mef90version.h"
+
+   private
+   public :: Ki, Kr, MEF90MXSTRLEN, MEF90INFINITY, MEF90NINFINITY
 
    ! The following ensures that mef90 and PETSC real types are compatible:
    ! thanks to Michael Metcalf in comp.lang.fortran
-   PetscReal, parameter                  :: PReal = 1.0
-   integer, parameter, public            :: Kr = selected_real_kind(precision(PReal))
+   ! PetscReal, parameter          :: PReal = 1.0
+   ! integer, parameter            :: Kr = selected_real_kind(precision(PReal))
 
-   PetscInt, parameter                   :: PInt = 1
-   integer, parameter, public            :: Ki = kind(PInt)
+   ! PetscInt, parameter           :: PInt = 1
+   ! integer, parameter            :: Ki = kind(PInt)
 
-   PetscLogDouble, parameter             :: flop = 1.0
-   integer, parameter, public            :: PFlop = selected_real_kind(precision(flop))
+   ! PetscLogDouble, parameter     :: flop = 1.0
+   ! integer, parameter            :: PFlop = selected_real_kind(precision(flop))
 
-   PetscInt, parameter, public           :: MEF90MXSTRLEN = 256
+   integer, parameter            :: Kr = PETSC_REAL_KIND
+   integer, parameter            :: Ki = PETSC_INT_KIND
 
-   PetscReal, parameter, public          :: MEF90INFINITY = huge(1.0_kr)
-   PetscReal, parameter, public          :: MEF90NINFINITY = -huge(1.0_kr)
+   PetscInt, parameter           :: MEF90MXSTRLEN = 256
+
+   PetscReal, parameter          :: MEF90INFINITY = huge(1.0_kr)
+   PetscReal, parameter          :: MEF90NINFINITY = -huge(1.0_kr)
 end module m_MEF90_Parameters

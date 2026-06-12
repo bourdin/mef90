@@ -1,9 +1,7 @@
 module m_MEF90_HookesLaw_class
 #include "petsc/finclude/petsc.h"
    use m_MEF90_Parameters
-   use m_MEF90_Utils
-   ! use m_MEF90_LinAlg
-   use m_MEF90_BaseClass
+   use m_MEF90_BaseClass, only: MEF90Object
    use petscsys
 
    implicit none(type, external)
@@ -26,7 +24,7 @@ module m_MEF90_HookesLaw_class
 
    abstract interface
       subroutine HookesLawMultInterface(A, phi, Aphi, ierr)
-         use m_MEF90_LinAlg_class
+         use m_MEF90_LinAlg_class, only: mef90Mat
          use petscsys
          import :: MEF90HookesLaw
 
@@ -37,7 +35,7 @@ module m_MEF90_HookesLaw_class
       end subroutine HookesLawMultInterface
 
       subroutine HookesLawMultMultInterface(A, phi, psi, Aphipsi, ierr)
-         use m_MEF90_LinAlg_class
+         use m_MEF90_LinAlg_class, only: mef90Mat
          use petscsys
          import :: MEF90HookesLaw
 

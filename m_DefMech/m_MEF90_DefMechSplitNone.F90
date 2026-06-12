@@ -1,6 +1,8 @@
 #include "../MEF90/mef90.inc"
 module m_MEF90_DefMechSplitNone
 #include "petsc/finclude/petsc.h"
+use petscsys
+use, intrinsic :: iso_c_binding
 use m_MEF90_DefMechSplit_class
 use m_MEF90_Materials
 use m_MEF90_HookesLaw

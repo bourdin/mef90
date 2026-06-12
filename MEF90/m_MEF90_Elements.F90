@@ -1,13 +1,12 @@
 module m_MEF90_Elements
 #include "petsc/finclude/petsc.h"
    use m_MEF90_Parameters
-   use m_MEF90_Utils
    use m_MEF90_LinAlg
    use petscdmplex
    use, intrinsic :: iso_c_binding
    implicit none(type, external)
 
-   !Private
+   private
    public :: MEF90ElementCreate
    public :: MEF90ElementDestroy
 
@@ -15,6 +14,9 @@ module m_MEF90_Elements
    public :: MEF90Element2DVect, MEF90Element2DScal
    public :: MEF90Element3DVect, MEF90Element3DScal
    public :: MEF90ElementGetType, MEF90ElementGetTypeBoundary
+   public :: MEF90ElementFamilyLagrange
+   public :: MEF90ElementFamilyList
+   public :: MEF90ElementsInitialize_Private
 
    type MEF90ElementType
       ! name is the element name in english language

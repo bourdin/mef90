@@ -2,6 +2,8 @@
 module m_MEF90_DefMechSplit_class
 #include "petsc/finclude/petsc.h"
 
+use petscsys
+use, intrinsic :: iso_c_binding
 use m_MEF90_LinAlg_class
 use m_MEF90_Parameters
 use m_MEF90_BaseClass
@@ -9,6 +11,9 @@ use m_MEF90_HookesLaw_Class
 implicit none(type, external)
 private
 public :: MEF90DefMechSplit
+public :: mef90Mat
+public :: MEF90MXSTRLEN
+public :: kr
 public :: MEF90DefMechSplit_SmoothPositiveSquare
 public :: MEF90DefMechSplit_DSmoothPositiveSquare
 public :: MEF90DefMechSplit_D2SmoothPositiveSquare
@@ -36,8 +41,8 @@ end type MEF90DefMechSplit
 abstract interface
 
    subroutine setupInterface(self, Strain, ierr)
-      use m_MEF90
-      import :: MEF90DefMechSplit
+      use, intrinsic :: iso_c_binding
+      import :: MEF90DefMechSplit, mef90Mat
       implicit none(type, external)
 
       class(MEF90DefMechSplit), intent(inout) :: self
@@ -46,8 +51,8 @@ abstract interface
    end subroutine setupInterface
 
    subroutine EEDInterface(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
-      use m_MEF90
-      import :: MEF90DefMechSplit
+      use, intrinsic :: iso_c_binding
+      import :: MEF90DefMechSplit, mef90Mat, MEF90HookesLaw
       implicit none(type, external)
 
       class(MEF90DefMechSplit), intent(IN) :: self
@@ -58,8 +63,8 @@ abstract interface
    end subroutine EEDInterface
 
    subroutine DEEDInterface(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
-      use m_MEF90
-      import :: MEF90DefMechSplit
+      use, intrinsic :: iso_c_binding
+      import :: MEF90DefMechSplit, mef90Mat, MEF90HookesLaw
       implicit none(type, external)
 
       class(MEF90DefMechSplit), intent(IN) :: self
@@ -70,8 +75,8 @@ abstract interface
    end subroutine DEEDInterface
 
    subroutine D2EEDInterface(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
-      use m_MEF90
-      import :: MEF90DefMechSplit
+      use, intrinsic :: iso_c_binding
+      import :: MEF90DefMechSplit, mef90Mat, MEF90HookesLaw
       implicit none(type, external)
 
       class(MEF90DefMechSplit), intent(IN) :: self

@@ -1,21 +1,17 @@
 module m_MEF90
 #include "petsc/finclude/petsc.h"
 #include "../mef90version.h"
-   use m_MEF90_Ctx
+   use petscsys
+   use m_MEF90_Ctx, only: MEF90CtxInitialize_Private
    use m_MEF90_LinAlg
    use m_MEF90_Parameters
-   use m_MEF90_baseClass
-   use m_MEF90_Materials
-   use m_MEF90_MPI
-   use m_MEF90_EXO
-   use m_MEF90_Utils
-   use m_MEF90_DMPlex
-   use m_MEF90_Elements
-   use m_MEF90_MassMatrixInterface
-   use m_MEF90_NormsInterface
-   use m_MEF90_HookesLaw
+   use m_MEF90_Materials, only: MEF90MaterialsInitialize_Private
+   use m_MEF90_MPI, only: MEF90MPIInitialize_Private, MEF90MPIFinalize_Private
+   use m_MEF90_Elements, only: MEF90ElementsInitialize_Private
 
    implicit none(type, external)
+   private
+   public :: MEF90Initialize, MEF90Finalize
 
 contains
 #undef __FUNCT__

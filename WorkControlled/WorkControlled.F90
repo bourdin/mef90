@@ -3,11 +3,17 @@ Program WorkControlled
 #include <finclude/petscdef.h>
    Use petsc
    Use m_MEF90
+   Use m_MEF90_Ctx, only: MEF90Ctx_Type, MEF90CtxGlobalOptions_Type, MEF90CtxCreate, MEF90CtxDestroy, &
+                          MEF90CtxGetTime, PetscBagGetDataMEF90CtxGlobalOptions
+   Use m_MEF90_DMPlex, only: MEF90CellSetLabelName, MEF90FaceSetLabelName, MEF90VertexSetLabelName
+   Use m_MEF90_Parameters, only: MEF90MXSTRLEN, kr, ki
    !Use m_vDef
    Use m_MEF90_DefMechCtx
    Use m_MEF90_DefMech
    Use m_MEF90_HeatXferCtx
    Use m_MEF90_HeatXfer
+   Use m_MEF90_EXO, only: MEF90CtxOpenEXO
+   Use m_MEF90_Utils, only: MEF90ISAllGatherMerge, MEF90FilePrefix
    implicit none (type, external)
 
    PetscErrorCode                                     :: ierr

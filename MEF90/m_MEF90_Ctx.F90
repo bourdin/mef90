@@ -1,12 +1,12 @@
 module m_MEF90_Ctx_Type
 #include "petsc/finclude/petsc.h"
+   use petscsys
    use petscbag
    use m_MEF90_Parameters
-   use m_MEF90_Utils
    use m_MEF90_LinAlg
-   use m_MEF90_Elements
    use, intrinsic :: iso_c_binding
    implicit none(type, external)
+
    private
    public :: MEF90Ctx_Type
    public :: MEF90CtxGlobalOptions_Type
@@ -36,21 +36,33 @@ end module m_MEF90_Ctx_Type
 module m_MEF90_Ctx
 #include "petsc/finclude/petsc.h"
    use, intrinsic :: iso_c_binding
+   use petscsys
    use petscbag
    use m_MEF90_Parameters
-   use m_MEF90_Utils
+   use m_MEF90_Utils, only: MEF90FilePrefix, MEF90FileExtension, MEF90StrTokenize
    use m_MEF90_LinAlg
-   use m_MEF90_Elements
-   use m_MEF90_Ctx_Type
+   use m_MEF90_Elements, only: MEF90ElementFamilyList, MEF90ElementFamilyLagrange
+   use m_MEF90_Ctx_Type, only: MEF90Ctx_Type, MEF90CtxGlobalOptions_Type
 
    implicit none(type)
+   private
+#include "exodusII.inc"
 
    public :: MEF90Ctx_Type
    public :: MEF90CtxGlobalOptions_Type
+   public :: MEF90CtxCreate
+   public :: MEF90CtxDestroy
    public :: MEF90CtxInitialize_Private
    public :: PetscBagGetDataMEF90CtxGlobalOptions
    public :: MEF90CtxGetTime
    public :: sizeofMEF90CtxGlobalOptions
+   public :: MEF90Scaling_CST, MEF90Scaling_Linear, MEF90Scaling_File, MEF90Scaling_Expr, MEF90Scaling_Null
+   public :: MEF90ScalingList
+   public :: MEF90TimeInterpolation_linear, MEF90TimeInterpolation_Vcycle
+   public :: MEF90TimeInterpolation_quadratic, MEF90TimeInterpolation_exo
+   public :: MEF90TimeInterpolationList
+   public :: MEF90ElementFamilyLagrange
+   public :: MEF90ElementFamilyList
 
    PetscSizeT, protected    :: sizeofMEF90CtxGlobalOptions
 
