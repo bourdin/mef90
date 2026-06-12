@@ -1,5 +1,9 @@
 module m_MEF90_HeatXferCtx_Type
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use petscdmplex
+   use petscbag
+   use, intrinsic :: iso_c_binding
    use m_MEF90_Ctx
    implicit none(type, external)
    private
@@ -171,8 +175,14 @@ end module m_MEF90HeatXferVertexSetOptions_Private
 
 module m_MEF90_HeatXferCtx
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use petscdmplex
+   use petscbag
+   use, intrinsic :: iso_c_binding
+   use m_MEF90_Parameters
    use m_MEF90_Ctx
    use m_MEF90_DMPlex
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge
    use m_MEF90_Materials
    use m_MEF90_HeatXferCtx_Type
    use m_MEF90HeatXferGlobalOptions_Private

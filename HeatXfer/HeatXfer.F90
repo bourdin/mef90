@@ -4,7 +4,9 @@ Program HeatXfer
    Use m_MEF90
    Use m_MEF90_HeatXfer
    Use m_MEF90_HeatXferDefault
-   implicit none (type, external)   
+   Use m_MEF90_EXO, only: MEF90CtxOpenEXO, MEF90EXODMView, MEF90EXOFormat
+   Use m_MEF90_Utils, only: MEF90ISAllGatherMerge
+   implicit none (type, external)
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx

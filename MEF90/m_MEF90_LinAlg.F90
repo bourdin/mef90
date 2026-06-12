@@ -25,11 +25,30 @@ end module m_MEF90_LinAlg_class
 
 module m_MEF90_LinAlg
 #include "petsc/finclude/petsc.h"
-   use m_MEF90_LinAlg_class
+   use petscsys
+   use m_MEF90_LinAlg_class, only: mef90Vect, mef90Mat, mef90Tens4OS
    use m_MEF90_Parameters
-   use m_MEF90_Utils
 
    implicit none(type)
+   private
+   public :: mef90Vect, mef90Mat, mef90Tens4OS
+   public :: Vect2D, Vect3D
+   public :: Mat2D, MatS2D, Mat3D, MatS3D
+   public :: Tens4OS2D, Tens4OS3D
+   public :: MEF90Vect2De1, MEF90Vect2De2
+   public :: MEF90Vect3De1, MEF90Vect3De2, MEF90Vect3De3
+   public :: MEF90Mat2DIdentity, MEF90MatS2DIdentity
+   public :: MEF90Mat3DIdentity, MEF90MatS3DIdentity
+   public :: MEF90Tens4OS2DIdentity, MEF90Tens4OS3DIdentity
+   public :: operator(+), operator(-), operator(*), operator(/)
+   public :: operator(.DotP.), operator(.CrossP.)
+   public :: operator(.TensP.), operator(.SymP.), operator(.oDot.)
+   public :: Transpose, Invert, Trace, Det
+   public :: assignment(=)
+   public :: Symmetrize, DeviatoricPart, HydrostaticPart
+   public :: MEF90MatRaRt, MEF90MatRtaR
+   public :: Norm, simplexNormal, sqrt
+   public :: SpectralDecomposition, Diagonalize, Moment, Tens4OSTransform
 
    external :: dsyevd
    external :: dgetrf

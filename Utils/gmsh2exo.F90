@@ -1,6 +1,10 @@
 program gmsh2exo
 #include <petsc/finclude/petsc.h>
    use m_MEF90
+   use m_MEF90_Ctx, only: MEF90Ctx_Type, MEF90CtxGlobalOptions_Type, MEF90CtxCreate, MEF90CtxDestroy, &
+                          MEF90TimeInterpolation_linear, MEF90ElementFamilyLagrange
+   use m_MEF90_Parameters, only: kr
+   use m_MEF90_EXO, only: MEF90CtxOpenEXO, MEF90EXODMView
    use petsc
    implicit none(type, external)
 

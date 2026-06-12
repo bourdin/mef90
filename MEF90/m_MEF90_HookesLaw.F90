@@ -2,10 +2,9 @@
 module m_MEF90_HookesLaw
 #include "petsc/finclude/petsc.h"
    use m_MEF90_Parameters
-   use m_MEF90_Utils
-   use m_MEF90_HookesLaw_class
-   use m_MEF90_HookesLawIsotropic2D
-   use m_MEF90_HookesLawIsotropic3D
+   use m_MEF90_HookesLaw_class, only: MEF90HookesLaw
+   use m_MEF90_HookesLawIsotropic2D, only: MEF90HookesLawIsotropic2D
+   use m_MEF90_HookesLawIsotropic3D, only: MEF90HookesLawIsotropic3D
    ! use m_MEF90_HookesLawZero
    use petscsys
    implicit none(type)

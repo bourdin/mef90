@@ -1,5 +1,6 @@
 module m_MEF90_MPI
 #include "petsc/finclude/petsc.h"
+   use petscsys
    use m_MEF90_Parameters
    implicit none(type, external)
 

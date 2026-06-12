@@ -4,6 +4,7 @@ module m_vDefDefault
    use petsc
    use m_MEF90
    use m_MEF90_DefMechCtx
+   use m_MEF90_DefMechAT, only: MEF90DefMech_damageTypeAT1, MEF90DefMech_damageTypeAT1exp, MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeKKL
    use m_MEF90_HeatXferCtx
    implicit none(type, external)
 
@@ -56,14 +57,11 @@ module m_vDefDefault
    type(MEF90DefMechCellSetOptions_Type), parameter    :: DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! bodyForce
                                                           0.0_kr, & ! crackPressure
-                                                          MEF90DefMech_damageTypeAT1, & ! damageType
+                                                         !  MEF90DefMech_damageTypeAT1, & ! damageType
                                                           MEF90DefMech_plasticityTypeNone, & ! plasticityType
-                                                          MEF90DefMech_unilateralContactTypeNone, & ! unilateralContactType
-                                                          1.0e-5, & ! unilateralContactHydrostaticDeviatoricGamma
-                                                          PETSC_FALSE, & ! unilateralContactHybrid
-                                                          1.0_kr, & ! damageATLinSoftk
-                                                          1.25_kr, & ! damageAT1expb
-                                                          MEF90DefMech_drivingForceTypeNone, & ! drivingForceType
+                                                         !  MEF90DefMech_unilateralContactTypeNone, & ! unilateralContactType
+                                                         !  1.0e-5, & ! unilateralContactHydrostaticDeviatoricGamma
+                                                         !  PETSC_FALSE, & ! unilateralContactHybrid
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! cohesiveDisplacement
                                                           [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE], & ! hasDisplacementBC
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! boundaryDisplacement

@@ -4,11 +4,17 @@ program vDefHF
 
    use petsc
    use m_MEF90
+   use m_MEF90_Ctx, only: MEF90Ctx_Type, MEF90CtxGlobalOptions_Type, MEF90CtxCreate, MEF90CtxDestroy, &
+                          MEF90CtxGetTime, PetscBagGetDataMEF90CtxGlobalOptions
+   use m_MEF90_DMPlex, only: MEF90CellSetLabelName, MEF90FaceSetLabelName, MEF90VertexSetLabelName
+   use m_MEF90_Parameters, only: MEF90MXSTRLEN, kr, ki
    use m_MEF90_DefMechCtx
    use m_MEF90_DefMech
    use m_MEF90_HeatXferCtx
    use m_MEF90_HeatXfer
    use m_vDefDefault
+   use m_MEF90_EXO, only: MEF90CtxOpenEXO
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge, MEF90FilePrefix
    implicit none(type, external)
 
    PetscErrorCode                                     :: ierr

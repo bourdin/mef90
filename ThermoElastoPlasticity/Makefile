@@ -1,6 +1,6 @@
 NP=2 
 all:
-	-@${MAKE} -C ${MEF90_DIR} ThermoElastoPlasticity
+	@${MAKE} -C ${MEF90_DIR} ThermoElastoPlasticity
 test: test2D test3D
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
@@ -34,11 +34,11 @@ ThermoElastoPlasticity:${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity
 
 ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity: ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
-	-@${FLINKER} -o $@ ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	@${FLINKER} -o $@ ThermoElastoPlasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
 ThermoElastoPlasticity.o: ${BASE_DIR}/ThermoElastoPlasticity.F90 ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 testThermoElastoPlasticity:
 	@echo ;echo "Testing ThermoElastoPlasticity with $${PREFIX} $${OPTIONSFILE}"

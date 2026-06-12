@@ -1,10 +1,14 @@
 module m_MEF90_Materials_Types
 #include "petsc/finclude/petsc.h"
    use m_MEF90_Parameters
-   use m_MEF90_Utils
    use m_MEF90_LinAlg
    use petscbag
    implicit none(type, external)
+   private
+   public :: MEF90HookesLaw2D, MEF90HookesLaw3D, MEF90RotationMatrix3D
+   public :: MEF90MatProp2D_Type, MEF90MatProp3D_Type
+   public :: MEF90HookesLawTypeFull, MEF90HookesLawTypeIsotropic
+   public :: MEF90Mathium2D, MEF90Mathium3D
 
    type MEF90HookesLaw2D
       type(Tens4OS2D)    :: fullTensor
@@ -82,7 +86,8 @@ end module m_MEF90_Materials_Types
 
 module m_MEF90_Materials_Interface2D
 #include "petsc/finclude/petsc.h"
-   use m_MEF90_Materials_Types
+   use petscbag
+   use m_MEF90_Materials_Types, only: MEF90MatProp2D_Type
    implicit none(type)
    private
    public :: PetscBagGetDataMEF90MatProp2D
@@ -101,7 +106,8 @@ end module m_MEF90_Materials_Interface2D
 
 module m_MEF90_Materials_Interface3D
 #include "petsc/finclude/petsc.h"
-   use m_MEF90_Materials_Types
+   use petscbag
+   use m_MEF90_Materials_Types, only: MEF90MatProp3D_Type
    implicit none(type)
    private
    public :: PetscBagGetDataMEF90MatProp3D
@@ -120,16 +126,34 @@ end module m_MEF90_Materials_Interface3D
 
 module m_MEF90_Materials
 #include "petsc/finclude/petsc.h"
+   use petscbag
+   use petscdm
+   use petscis
    use m_MEF90_Parameters
-   use m_MEF90_Utils
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge
    use m_MEF90_LinAlg
-   use m_MEF90_Elements
-   use m_MEF90_Ctx
-   use m_MEF90_DMPlex
-   use m_MEF90_Materials_Types
-   use m_MEF90_Materials_Interface2D
-   use m_MEF90_Materials_Interface3D
+   use m_MEF90_Ctx, only: MEF90Ctx_Type, MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions
+   use m_MEF90_DMPlex, only: MEF90CellSetLabelName
+   use m_MEF90_Materials_Types, only: MEF90HookesLaw2D, MEF90HookesLaw3D, MEF90RotationMatrix3D, &
+      MEF90MatProp2D_Type, MEF90MatProp3D_Type, &
+      MEF90HookesLawTypeFull, MEF90HookesLawTypeIsotropic, &
+      MEF90Mathium2D, MEF90Mathium3D
+   use m_MEF90_Materials_Interface2D, only: PetscBagGetDataMEF90MatProp2D
+   use m_MEF90_Materials_Interface3D, only: PetscBagGetDataMEF90MatProp3D
    implicit none(type)
+   private
+   public :: PetscBagGetDataMEF90MatProp
+   public :: PetscBagRegisterMEF90MatProp
+   public :: MEF90MatPropBagSetFromOptions
+   public :: operator(+), operator(-), operator(*)
+   public :: sizeofMEF90MatProp2D, sizeofMEF90MatProp3D
+   public :: sizeofMEF90HookesLaw2D, sizeofMEF90HookesLaw3D
+   public :: MEF90HookesLawTypeList
+   public :: MEF90MaterialsInitialize_Private
+   public :: MEF90HookesLaw2D, MEF90HookesLaw3D, MEF90RotationMatrix3D
+   public :: MEF90MatProp2D_Type, MEF90MatProp3D_Type
+   public :: MEF90HookesLawTypeFull, MEF90HookesLawTypeIsotropic
+   public :: MEF90Mathium2D, MEF90Mathium3D
 
    interface PetscBagGetDataMEF90MatProp
       module procedure PetscBagGetDataMEF90MatProp2D, PetscBagGetDataMEF90MatProp3D

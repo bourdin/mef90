@@ -14,6 +14,9 @@ module m_MEF90_DefMechAT
    private
    public :: MEF90DefMechGetATModel
    public :: MEF90DefMechAT_Type
+   public :: MEF90DefMech_damageTypeAT1, MEF90DefMech_damageTypeAT1exp, &
+             MEF90DefMech_damageTypeAT2, MEF90DefMech_damageTypeKKL, &
+             MEF90DefMech_damageTypeList
 
    enum, bind(c)
       enumerator :: MEF90DefMech_damageTypeAT1 = 0, &

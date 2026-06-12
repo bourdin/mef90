@@ -1,7 +1,9 @@
 Module m_MEF90_HeatXferDefault
 #include <petsc/finclude/petsc.h>
+    Use m_MEF90
+    Use m_MEF90_HeatXferCtx
     Use m_MEF90_HeatXfer
-    implicit none (type, external)   
+    implicit none (type, external)
 
     Type(MEF90CtxGlobalOptions_Type),Parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
                                                             1,                               & ! verbose

@@ -3,15 +3,22 @@ module m_MEF90_HeatXfer
 #include "petsc/finclude/petsc.h"
    use petscsnes
    use petsctao
-   use m_MEF90_EXO
-   use m_MEF90_HeatXferCtx
-   use m_MEF90_HeatXferAssembly2D, &
+   use petscts
+   use m_MEF90_Parameters, only: Kr, Ki
+   use m_MEF90_Ctx, only: MEF90CtxGlobalOptions_Type, PetscBagGetDataMEF90CtxGlobalOptions, &
+                          MEF90Scaling_CST, MEF90Scaling_Expr, MEF90Scaling_File, MEF90Scaling_Linear
+   use m_MEF90_DMPlex, only: MEF90VecCopySF, MEF90VecSetBCValuesFromOptions, MEF90VecSetBCValuesFromOptionsExpr, &
+                             MEF90VecSetValuesFromOptions, MEF90VecSetValuesFromOptionsExpr
+   use m_MEF90_EXO, only: MEF90EXOVecLoad, MEF90EXOVecView
+   use m_MEF90_HeatXferCtx, only: MEF90HeatXferCtx_Type, MEF90HeatXferGlobalOptions_Type, &
+                                  PetscBagGetDataMEF90HeatXferCtxGlobalOptions
+   use m_MEF90_HeatXferAssembly2D, only: &
       MEF90HeatXferEnergy2D => MEF90HeatXferEnergy, &
       MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
       MEF90HeatXferBilinearForm2D => MEF90HeatXferBilinearForm, &
       MEF90HeatXferIFunction2D => MEF90HeatXferIFunction, &
       MEF90HeatXferIJacobian2D => MEF90HeatXferIJacobian
-   use m_MEF90_HeatXferAssembly3D, &
+   use m_MEF90_HeatXferAssembly3D, only: &
       MEF90HeatXferEnergy3D => MEF90HeatXFerEnergy, &
       MEF90HeatXferOperator3D => MEF90HeatXferOperator, &
       MEF90HeatXferBilinearForm3D => MEF90HeatXferBilinearForm, &

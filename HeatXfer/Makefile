@@ -1,6 +1,6 @@
 NP=2
 all:
-	-@${MAKE} -C ${MEF90_DIR} HeatXfer
+	@${MAKE} -C ${MEF90_DIR} HeatXfer
 test: test2D test3D testTransient2D testTransient3D
 test1:
 	-@for OPTIONSFILE in test1.yaml; do \
@@ -42,15 +42,15 @@ HeatXfer:${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer: HeatXfer.o
 	-@echo "      $@"
-	-@${FLINKER} -o $@ HeatXfer.o m_HeatXferDefault.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} 
+	@${FLINKER} -o $@ HeatXfer.o m_HeatXferDefault.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} 
 
 HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS} m_HeatXferDefault.o
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_HeatXferDefault.o: ${BASE_DIR}/m_HeatXferDefault.F90 ${MEF90_HEATXFER_OBJS}
 	-@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+	@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 testHeatXfer:
 	@echo ;echo "Testing HeatXfer with $${PREFIX} $${OPTIONSFILE}"

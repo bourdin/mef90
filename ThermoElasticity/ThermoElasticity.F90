@@ -7,6 +7,8 @@ program ThermoElasticity
    use m_MEF90_HeatXfer
    use m_MEF90_HeatXferCtx
    use m_vDefDefault
+   use m_MEF90_EXO, only: MEF90CtxOpenEXO, MEF90EXODMView
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge
    implicit none(type, external)
 
    PetscErrorCode                                     :: ierr

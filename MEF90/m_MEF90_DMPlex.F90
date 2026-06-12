@@ -1,11 +1,13 @@
 module m_MEF90_DMPlex
 #include "petsc/finclude/petsc.h"
 #include "petsc/finclude/petscsf.h"
+   use petscdmplex
    use m_MEF90_Parameters
-   use m_MEF90_Utils
+   use m_MEF90_Utils, only: MEF90ISAllGatherMerge, MEF90StrTokenize, MEF90StrCount
    use m_MEF90_LinAlg
-   use m_MEF90_Elements
-   use m_MEF90_Ctx
+   use m_MEF90_Elements, only: MEF90ElementType, MEF90ElementGetType, MEF90ElementGetTypeBoundary, &
+      MEF90P0Lagrange2D, MEF90P0Lagrange3D, MEF90P0Lagrange2DBoundary, MEF90P0Lagrange3DBoundary
+   use m_MEF90_Ctx, only: MEF90Ctx_Type
    use, intrinsic :: iso_c_binding
 #ifdef MEF90_HAVE_SYMENGINEF90
    use symengine

@@ -1,15 +1,17 @@
 module m_MEF90_EXO
 #include "petsc/finclude/petsc.h"
+   use petscsys
+   use petscdmplex
+   use, intrinsic :: iso_c_binding
    use m_MEF90_Parameters
-   use m_MEF90_Utils
-   use m_MEF90_Elements
-   use m_MEF90_Ctx
-   use m_MEF90_DMPlex
+   use m_MEF90_Ctx, only: MEF90Ctx_Type
+   use m_MEF90_DMPlex, only: MEF90VecCreateIO, MEF90VecCopySF
 
    implicit none(type)
 #include "../mef90version.h"
 
    private
+#include "exodusII.inc"
    PetscInt, public                                 :: exo_ver
 
    public :: MEF90CtxOpenEXO

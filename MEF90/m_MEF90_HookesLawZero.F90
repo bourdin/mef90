@@ -1,9 +1,9 @@
 module m_MEF90_HookesLawZero
 #include "petsc/finclude/petsc.h"
+   use petscsys
    use m_MEF90_Parameters
-   use m_MEF90_Utils
    use m_MEF90_LinAlg
-   use m_MEF90_HookesLaw_Class
+   use m_MEF90_HookesLaw_Class, only: MEF90HookesLaw
    use iso_c_binding
 
    implicit none(type)
