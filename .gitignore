@@ -28,5 +28,6 @@ Tests/TestDofOrdering
 Tests/TestDotProduct
 Tests/TestSNLP
 arch-*
+main-*
 
 Tests/TestVecSetBCFromOptionsExpr
