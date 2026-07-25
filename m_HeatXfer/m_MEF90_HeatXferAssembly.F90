@@ -429,6 +429,10 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
       PetscCall(ISGetIndices(setIS, setID, ierr))
       PetscCall(VecGetArray(MEF90HeatXferCtx%fluxLocal, fluxArray, ierr))
       do set = 1, size(setID)
+         !!! myEnergy and myBodyWork are reduced over the whole communicator below, including over the ranks
+         !!! owning no point of this set, so they have to be initialized outside of the setPointIS test
+         myEnergy = 0.0_kr
+         myBodyWork = 0.0_kr
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
@@ -440,7 +444,6 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
             QuadratureOrder = elementType%order * 2
             PetscCall(MEF90ElementCreate(dmTemperature, setPointIS, elem, QuadratureOrder, elementType, ierr))
 
-            myEnergy = 0.0_kr
             do cell = 1, size(setPointID)
                   !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
                   !!! If this happens, we will need to protect this loop
@@ -456,7 +459,6 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
             end do ! cell
             myEnergy = myEnergy * 0.5_kr
 
-            myBodyWork = 0.0_kr
             if (cellSetOptions%flux /= 0.0_kr) then
                do cell = 1, size(setPointID)
                      !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
@@ -492,10 +494,12 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
       PetscCall(ISGetIndices(setIS, setID, ierr))
       PetscCall(VecGetArray(MEF90HeatXferCtx%boundaryFluxLocal, boundaryFluxArray, ierr))
       do set = 1, size(setID)
+         !!! mySurfaceWork is reduced over the whole communicator below, including over the ranks
+         !!! owning no point of this set, so it has to be initialized outside of the setPointIS test
+         mySurfaceWork = 0.0_kr
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
-            mySurfaceWork = 0.0_kr
             if (faceSetOptions%boundaryFlux /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
                PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
