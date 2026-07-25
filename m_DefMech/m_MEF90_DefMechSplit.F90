@@ -5,7 +5,7 @@ use m_MEF90_DefMechSplit_class
 use m_MEF90_DefMechSplitNone
 use m_MEF90_DefMechSplitHD
 use m_MEF90_DefMechSplitDeviatoric
-use m_MEF90_DefMechCtx
+use m_MEF90_DefMech_class
 use petscsys
 
 implicit none(type)

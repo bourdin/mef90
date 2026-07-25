@@ -7,7 +7,7 @@ module MEF90_APPEND(m_MEF90_DefMechPlasticity,MEF90_DIM)D
 ! use MEF90_APPEND(m_MEF90_DefMechPlasticityDruckerPragerCap,MEF90_DIM)D
 ! use MEF90_APPEND(m_MEF90_DefMechPlasticityTresca,MEF90_DIM)D
 ! use MEF90_APPEND(m_MEF90_DefMechPlasticityVonMises,MEF90_DIM)D
-use m_MEF90_DefMechCtx
+use m_MEF90_DefMech_class
 
 implicit none(type, external)
 ! private
@@ -32,7 +32,7 @@ subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, Pl
    use SNLPF90
 #endif
 
-   type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
    type(tVec), intent(INOUT)                           :: plasticStrain
    type(tVec), intent(IN)                              :: x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld
    PetscErrorCode, intent(INOUT)                       :: ierr
@@ -112,7 +112,7 @@ subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, Pl
 !          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
 
 !          !!GET DAMAGE TYPE
-!          Call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set),cellSetOptions,ierr);CHKERRQ(ierr)
+!          cellSetOptions = MEF90DefMechCtx%cellSetOptions(set)
 !          If (cellSetOptions%plasticityType /= MEF90DefMech_plasticityTypeNONE) Then
 !             elemDisplacementType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDisplacement)
 !             elemScalType = MEF90KnownElements(cellSetOptions%elemTypeShortIDDamage)

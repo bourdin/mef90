@@ -66,8 +66,8 @@ program TestConstraintIO3
    PetscBool                                           :: interpolate = PETSC_TRUE
 
    !!! Defect mechanics contexts
-   type(MEF90DefMechCtx_Type)                          :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer        :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                      :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                 :: MEF90DefMechGlobalOptions
 
    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0
    character(len=MEF90MXSTRLEN), dimension(:), pointer   :: nodalVarName, cellVarName, gVarName
@@ -145,9 +145,9 @@ program TestConstraintIO3
    end block distribute
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
-   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx, dm, MEF90Ctx, ierr))
-   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, DefMechDefaultGlobalOptions, DefMechDefaultCellSetOptions, DefMechDefaultFaceSetOptions, DefMechDefaultVertexSetOptions, ierr))
-   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+   PetscCallA(MEF90DefMechCreate(MEF90DefMechCtx, dm, MEF90Ctx, "", ierr))
+   PetscCallA(MEF90DefMechCtx%setFromOptions(ierr))
+   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCallA(DMDestroy(dm, ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal, dmU, ierr))

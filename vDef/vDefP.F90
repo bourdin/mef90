@@ -4,7 +4,7 @@ program CoupledPlasticityDamage
 
    use petsc
    use m_MEF90
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXferCtx
    use m_MEF90_HeatXfer
@@ -16,8 +16,8 @@ program CoupledPlasticityDamage
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
-   type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
    !!! HeatXfer contexts
    type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
@@ -84,7 +84,7 @@ program CoupledPlasticityDamage
    type(Vec)                                          :: cumulatedDissipatedPlasticEnergyOld
    type(Vec)                                          :: cumulatedDissipatedPlasticEnergyVariation
 
-   type(MEF90DefMechCellSetOptions_Type), pointer      :: cellSetOptions
+   type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
 
    !!! Secant method for sneddon
    PetscReal, dimension(3)                              :: CrackPressureSave, CrackVolumeSave
@@ -111,15 +111,9 @@ program CoupledPlasticityDamage
    call MEF90CtxOpenEXO(MEF90Ctx, Mesh, ierr)
 
    !!! Create DefMech context, get all DefMech options
-   call MEF90DefMechCtxCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
-   if (dim == 2) then
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, vDefDefMechDefaultGlobalOptions2D, &
-                                         DefMechDefaultCellSetOptions, DefMechDefaultVertexSetOptions, ierr)
-   else
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, vDefDefMechDefaultGlobalOptions3D, &
-                                         DefMechDefaultCellSetOptions, DefMechDefaultVertexSetOptions, ierr)
-   end if
-   call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90DefMechCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90DefMechCtx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
    !!! Create HeatXfer context, get all HeatXfer options
    call MEF90HeatXferCtxCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
@@ -140,7 +134,7 @@ program CoupledPlasticityDamage
 
    !!! Create sections, vectors, and solvers for DefMech Context
    call MEF90DefMechCtxSetSections(MEF90DefMechCtx, ierr)
-   call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechCreateVectors(MEF90DefMechCtx, ierr)
    call VecDuplicate(MEF90DefMechCtx%damage, damageOld, ierr); CHKERRQ(ierr)
    call VecDuplicate(MEF90DefMechCtx%displacement, residualDisp, ierr); CHKERRQ(ierr)
    call PetscObjectSetName(residualDisp, "residualDisp", ierr); CHKERRQ(ierr)
@@ -181,21 +175,21 @@ program CoupledPlasticityDamage
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (elasticEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    elasticEnergySet = 0.0_kr
-   allocate (surfaceEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (surfaceEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    surfaceEnergySet = 0.0_kr
-   allocate (forceWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (forceWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
    forceWorkSet = 0.0_kr
-   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    cohesiveEnergySet = 0.0_kr
-   allocate (thermalEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (thermalEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    thermalEnergySet = 0.0_kr
-   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
    heatFluxWorkSet = 0.0_kr
-   allocate (plasticDissipationSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (plasticDissipationSet(size(MEF90DefMechCtx%cellSetOptions)))
    plasticDissipationSet = 0.0_kr
-   allocate (CrackVolumeSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (CrackVolumeSet(size(MEF90DefMechCtx%cellSetOptions)))
    CrackVolumeSet = 0.0_kr
 
    allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))
@@ -225,13 +219,13 @@ program CoupledPlasticityDamage
    end if
 
    !!! Create logical list of blocks where crack pressure or work control is activated
-   allocate (ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
-   allocate (ActivatedWorkControlledBlocksList(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (ActivatedWorkControlledBlocksList(size(MEF90DefMechCtx%cellSetOptions)))
    call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
    call MEF90ISAllGatherMerge(PETSC_COMM_WORLD, CellSetGlobalIS, ierr); CHKERRQ(ierr)
    call ISGetIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
    do set = 1, size(setID)
-      call PetscBagGetDataMEF90DefMechCtxCellSetOptions(MEF90DefMechCtx%CellSetOptionsBag(set), cellSetOptions, ierr); CHKERRQ(ierr)
+      cellSetOptions = MEF90DefMechCtx%cellSetOptions(set)
       ActivatedCrackPressureBlocksList(set) = cellSetOptions%CrackVolumeControlled
       ActivatedWorkControlledBlocksList(set) = cellSetOptions%WorkControlled
    end do
@@ -624,7 +618,7 @@ program CoupledPlasticityDamage
       call TSDestroy(tsTemp, ierr); CHKERRQ(ierr)
    end select
 
-   call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechDestroyVectors(MEF90DefMechCtx, ierr)
    nullify (MEF90HeatXferCtx%temperature)
    call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx, ierr)
    call VecDestroy(damageOld, ierr); CHKERRQ(ierr)
@@ -651,7 +645,7 @@ program CoupledPlasticityDamage
    deallocate (totalMechanicalEnergy)
    deallocate (plasticDissipation)
 
-   call MEF90DefMechCtxDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
+   call MEF90DefMechDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
    call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
    call MEF90CtxCloseEXO(MEF90Ctx, ierr)
 

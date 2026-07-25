@@ -7,7 +7,7 @@ module m_MEF90_DefMechAT
    use m_MEF90_DefMechAT2
    use m_MEF90_DefMechATKKL
    ! use m_MEF90_DefMechATLinSoft
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use petscsys
    implicit none(type)
 

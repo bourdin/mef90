@@ -4,7 +4,7 @@ program vDef
    use petsc
    use m_MEF90
    !Use m_vDef
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXferCtx
    use m_MEF90_HeatXfer
@@ -16,8 +16,8 @@ program vDef
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
-   type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
    !!! HeatXfer contexts
    type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
@@ -94,15 +94,9 @@ program vDef
    call MEF90CtxOpenEXO(MEF90Ctx, Mesh, ierr)
 
    !!! Create DefMech context, get all DefMech options
-   call MEF90DefMechCtxCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
-   if (dim == 2) then
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, vDefDefMechDefaultGlobalOptions2D, &
-                                         DefMechDefaultCellSetOptions, DefMechDefaultVertexSetOptions, ierr)
-   else
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, vDefDefMechDefaultGlobalOptions3D, &
-                                         DefMechDefaultCellSetOptions, DefMechDefaultVertexSetOptions, ierr)
-   end if
-   call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90DefMechCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90DefMechCtx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
    !!! Create HeatXfer context, get all HeatXfer options
    call MEF90HeatXferCtxCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
@@ -123,7 +117,7 @@ program vDef
 
    !!! Create sections, vectors, and solvers for DefMech Context
    call MEF90DefMechCtxSetSections(MEF90DefMechCtx, ierr)
-   call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechCreateVectors(MEF90DefMechCtx, ierr)
    call VecDuplicate(MEF90DefMechCtx%displacement, displacementAltMinOld, ierr); CHKERRQ(ierr)
    call VecDuplicate(MEF90DefMechCtx%displacement, residualDisp, ierr); CHKERRQ(ierr)
    call PetscObjectSetName(residualDisp, "residualDisp", ierr); CHKERRQ(ierr)
@@ -165,17 +159,17 @@ program vDef
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (elasticEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    elasticEnergySet = 0.0_kr
-   allocate (surfaceEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (surfaceEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    surfaceEnergySet = 0.0_kr
-   allocate (forceWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (forceWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
    forceWorkSet = 0.0_kr
-   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    cohesiveEnergySet = 0.0_kr
-   allocate (thermalEnergySet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (thermalEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
    thermalEnergySet = 0.0_kr
-   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
    heatFluxWorkSet = 0.0_kr
 
    allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))
@@ -602,7 +596,7 @@ program vDef
    write (IOBuffer, *) 'Total number of alternate minimizations:', AltMinStep, '\n'
    call PetscPrintf(PETSC_COMM_WORLD, IOBuffer, ierr); CHKERRQ(ierr)
 
-   call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechDestroyVectors(MEF90DefMechCtx, ierr)
    nullify (MEF90HeatXferCtx%temperature)
    call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx, ierr)
    call VecDestroy(damageAltMinOld, ierr); CHKERRQ(ierr)
@@ -628,7 +622,7 @@ program vDef
    deallocate (totalMechanicalEnergy)
 
    deallocate (time)
-   call MEF90DefMechCtxDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
+   call MEF90DefMechDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
    call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
    call MEF90CtxCloseEXO(MEF90Ctx, ierr)
    call DMDestroy(Mesh, ierr); CHKERRQ(ierr)

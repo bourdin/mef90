@@ -2,7 +2,7 @@
 program ThermoElasticity
 #include "petsc/finclude/petsc.h"
    use m_MEF90
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer
    use m_MEF90_HeatXferCtx
@@ -14,8 +14,8 @@ program ThermoElasticity
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
-   type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
    !!! HeatXfer contexts
    type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
    type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
@@ -111,9 +111,9 @@ program ThermoElasticity
    PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
 
    !!! Create DefMechCtx, get all defMech options
-   PetscCallA(MEF90DefMechCtxCreate(MEF90DefMechCtx, dm, MEF90Ctx, ierr))
-   PetscCallA(MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, DefMechDefaultGlobalOptions, DefMechDefaultCellSetOptions, DefMechDefaultFaceSetOptions, DefMechDefaultVertexSetOptions, ierr))
-   PetscCallA(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+   PetscCallA(MEF90DefMechCreate(MEF90DefMechCtx, dm, MEF90Ctx, "", ierr))
+   PetscCallA(MEF90DefMechCtx%setFromOptions(ierr))
+   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCallA(VecDestroy(MEF90DefMechCtx%temperatureLocal, ierr))
    deallocate (MEF90DefMechCtx%temperatureLocal)
    MEF90DefMechCtx%temperatureLocal => MEF90HeatXferCtx%temperatureLocal
@@ -336,7 +336,7 @@ program ThermoElasticity
    deallocate (energy)
    deallocate (bodyForceWork)
    deallocate (boundaryForceWork)
-   PetscCallA(MEF90DefMechCtxDestroy(MEF90DefMechCtx, ierr))
+   PetscCallA(MEF90DefMechDestroy(MEF90DefMechCtx, ierr))
    nullify (MEF90HeatXferCtx%temperatureLocal)
    PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr))
 

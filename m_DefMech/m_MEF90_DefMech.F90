@@ -3,9 +3,10 @@ module m_MEF90_DefMech
 #include "petsc/finclude/petsc.h"
    use petscsnes
    use petsctao
+   use, intrinsic :: iso_c_binding
 
    use m_MEF90_EXO
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use m_MEF90_DefMechAT
 
    use m_MEF90_DefMechAssembly2D, &
@@ -86,12 +87,12 @@ contains
 !!!
 
    subroutine MEF90DefMechSetTransients(MEF90DefMechCtx, step, time, ierr)
-      type(MEF90DefMechCtx_Type), intent(INOUT)        :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(INOUT)            :: MEF90DefMechCtx
       PetscInt, intent(IN)                             :: step
       PetscReal, intent(IN)                            :: time
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      type(MEF90DefMechGlobalOptions_Type), pointer    :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)             :: MEF90DefMechGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
       type(tDM)                                        :: dmDisplacement, dmDamage, dmCohesiveDisplacement
       type(tVec)                                       :: tmpVec
@@ -100,7 +101,7 @@ contains
 
       EXOstep = step
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
@@ -218,13 +219,15 @@ contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   subroutine MEF90DefMechOperatorDisplacement(snesTemp, x, residual, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechOperatorDisplacement(snesTemp, x, residual, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesTemp
       type(tVec), intent(IN)                              :: x
       type(tVec), intent(INOUT)                           :: residual
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechOperatorDisplacement2D(snesTemp, x, residual, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -242,13 +245,15 @@ contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   subroutine MEF90DefMechBilinearFormDisplacement(snesDispl, x, A, M, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechBilinearFormDisplacement(snesDispl, x, A, M, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesDispl
       type(tVec), intent(IN)                              :: x
       type(tMat), intent(INOUT)                           :: A, M
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechBilinearFormDisplacement2D(snesDispl, x, A, M, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -267,7 +272,7 @@ contains
 !!!
 
    subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)           :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)               :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                  :: bodyForceWork, boundaryForceWork
       PetscErrorCode, intent(INOUT)                    :: ierr
 
@@ -289,7 +294,7 @@ contains
 !!!
 
    subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)           :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)               :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                  :: cohesiveEnergy
       PetscErrorCode, intent(INOUT)                    :: ierr
 
@@ -311,7 +316,7 @@ contains
 !!!
 
    subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -335,7 +340,7 @@ contains
    subroutine MEF90DefMechPlasticDissipation(x, MEF90DefMechCtx, plasticStrainOld, energy, ierr)
       type(tVec), intent(IN)                              :: x
       type(tVec), intent(IN)                              :: plasticStrainOld
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -357,7 +362,7 @@ contains
 !!!
 
    subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tVec), intent(IN)                              :: stress
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -378,7 +383,7 @@ contains
 !!!
 
    subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                     :: CrackVolume
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -399,13 +404,15 @@ contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesDamage
       type(tVec), intent(IN)                              :: damage
       type(tVec), intent(INOUT)                           :: residual
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechOperatorDamage2D(snesDamage, damage, residual, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -422,13 +429,15 @@ contains
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, PETScCtx, ierr)
       type(tTao), intent(IN)                              :: taoDamage
       type(tVec), intent(IN)                              :: damage
       type(tVec), intent(INOUT)                           :: residual
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOGradientDamage2D(taoDamage, damage, residual, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -446,13 +455,15 @@ contains
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
-   subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesDamage
       type(tVec), intent(IN)                              :: damage
       type(tMat), intent(INOUT)                           :: A, M
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechBilinearFormDamage2D(snesDamage, damage, A, M, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -469,13 +480,15 @@ contains
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, PETScCtx, ierr)
       type(tTao), intent(IN)                              :: taoDamage
       type(tVec), intent(IN)                              :: damage
       type(tMat), intent(INOUT)                           :: A, M
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOHessianDamage2D(taoDamage, damage, A, M, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -494,7 +507,7 @@ contains
 !!!
 
    subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                     :: energy
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -514,13 +527,15 @@ contains
 !!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMechCtx, ierr)
+   subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, PETScCtx, ierr)
       type(tTao), intent(IN)                              :: taoDamage
       type(tVec), intent(IN)                              :: damage
       PetscReal, intent(INOUT)                            :: energy
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90DefMech_Type), pointer                    :: MEF90DefMechCtx
       PetscErrorCode, intent(INOUT)                       :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90DefMechCtx)
       if (MEF90DefMechCtx%dim == 2) then
          PetscCall(MEF90DefMechTAOObjectiveDamage2D(taoDamage, damage, energy, MEF90DefMechCtx, ierr))
       else if (MEF90DefMechCtx%dim == 3) then
@@ -539,15 +554,15 @@ contains
 !!!
 
    subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx, time, ierr)
-      type(MEF90DefMechCtx_Type), intent(INOUT)           :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(INOUT)               :: MEF90DefMechCtx
       PetscReal, dimension(:), pointer                     :: time
       PetscErrorCode, intent(OUT)                         :: ierr
 
       character(len=MXSTLN), dimension(:), pointer         :: nameG, nameN, nameC
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
       PetscInt                                           :: numFields, offset
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       allocate (nameG(0))
 
       numFields = 0
@@ -649,20 +664,20 @@ contains
 #define __FUNCT__ "MEF90DefMechViewEXO"
 !!!
 !!!
-!!!  MEF90DefMechViewEXO: Save all fields in a MEF90DefMechCtx_Type in an exodus file
+!!!  MEF90DefMechViewEXO: Save all fields in a MEF90DefMech_Type in an exodus file
 !!!
 !!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       PetscExodusIIInt, intent(IN)                        :: step
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
       if (MEF90DefMechGlobalOptions%displacementExport) then
          PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
@@ -692,12 +707,12 @@ contains
 !!!
 
    subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx, snesDisplacement, residual, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tSNES), intent(OUT)                            :: snesDisplacement
       type(tVec), intent(IN)                              :: residual
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
       type(tDM)                                          :: dm
       type(tMat)                                         :: matDisplacement
       type(tMatNullSpace)                                :: nspDisplacement
@@ -705,7 +720,7 @@ contains
       type(tVec)                                         :: gCoord
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDisplacement, ierr))
       PetscCall(MatSetOptionsPrefix(matDisplacement, "Displacement_", ierr))
@@ -724,13 +739,13 @@ contains
       PetscCall(MatSetFromOptions(matDisplacement, ierr))
 
       PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm, snesDisplacement, ierr))
-      PetscCall(SNESSetApplicationContext(snesDisplacement, MEF90DefMechCtx, ierr))
+      PetscCall(SNESSetApplicationContext(snesDisplacement, MEF90DefMechCtx%PETScCtx, ierr))
       PetscCall(SNESSetDM(snesDisplacement, dm, ierr))
       PetscCall(SNESSetType(snesDisplacement, SNESKSPONLY, ierr))
       PetscCall(SNESSetOptionsPrefix(snesDisplacement, 'Displacement_', ierr))
 
-      PetscCall(SNESSetFunction(snesDisplacement, residual, MEF90DefMechOperatorDisplacement, MEF90DefMechCtx, ierr))
-      PetscCall(SNESSetJacobian(snesDisplacement, matDisplacement, matDisplacement, MEF90DefMechBilinearFormDisplacement, MEF90DefMechCtx, ierr))
+      PetscCall(SNESSetFunction(snesDisplacement, residual, MEF90DefMechOperatorDisplacement, MEF90DefMechCtx%PETScCtx, ierr))
+      PetscCall(SNESSetJacobian(snesDisplacement, matDisplacement, matDisplacement, MEF90DefMechBilinearFormDisplacement, MEF90DefMechCtx%PETScCtx, ierr))
       atol = 1.0d-7
       rtol = 1.0d-5
       stol = 1.0d-7
@@ -761,19 +776,19 @@ contains
 !!!
 
    subroutine MEF90DefMechCreateSNESDamage(MEF90DefMechCtx, snesDamage, residual, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tSNES), intent(OUT)                            :: snesDamage
       type(tVec), intent(IN)                              :: residual
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
       type(tDM)                                          :: dm
       type(tMat)                                         :: matDamage
       type(tKSP)                                         :: kspDamage
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
@@ -784,7 +799,7 @@ contains
       PetscCall(MatSetFromOptions(matDamage, ierr))
 
       PetscCall(SNESCreate(MEF90DefMechCtx%MEF90Ctx%Comm, snesDamage, ierr))
-      PetscCall(SNESSetApplicationContext(snesDamage, MEF90DefMechCtx, ierr))
+      PetscCall(SNESSetApplicationContext(snesDamage, MEF90DefMechCtx%PETScCtx, ierr))
       PetscCall(SNESSetDM(snesDamage, dm, ierr))
       PetscCall(SNESSetType(snesDamage, SNESVINEWTONRSLS, ierr))
       PetscCall(SNESSetOptionsPrefix(snesDamage, 'Damage_', ierr))
@@ -797,8 +812,8 @@ contains
       PetscCall(DMRestoreGlobalVector(dm, LB, ierr))
       PetscCall(VecDestroy(UB, ierr))
 
-      PetscCall(SNESSetFunction(snesDamage, residual, MEF90DefMechOperatorDamage, MEF90DefMechCtx, ierr))
-      PetscCall(SNESSetJacobian(snesDamage, matDamage, matDamage, MEF90DefMechBilinearFormDamage, MEF90DefMechCtx, ierr))
+      PetscCall(SNESSetFunction(snesDamage, residual, MEF90DefMechOperatorDamage, MEF90DefMechCtx%PETScCtx, ierr))
+      PetscCall(SNESSetJacobian(snesDamage, matDamage, matDamage, MEF90DefMechBilinearFormDamage, MEF90DefMechCtx%PETScCtx, ierr))
       atol = 1.0d-7
       rtol = 1.0d-5
       stol = 1.0d-7
@@ -828,19 +843,19 @@ contains
 !!!
 
    subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx, taoDamage, residual, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tTao), intent(OUT)                             :: taoDamage
       type(tVec), intent(IN)                              :: residual
       PetscErrorCode, intent(INOUT)                       :: ierr
 
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
       type(tDM)                                          :: dm
       type(tMat)                                         :: matDamage
       type(tKSP)                                         :: kspDamage
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
@@ -851,7 +866,7 @@ contains
       PetscCall(MatSetFromOptions(matDamage, ierr))
 
       PetscCall(TAOCreate(MEF90DefMechCtx%MEF90Ctx%Comm, taoDamage, ierr))
-      PetscCall(TAOSetApplicationContext(taoDamage, MEF90DefMechCtx, ierr))
+      PetscCall(TAOSetApplicationContext(taoDamage, MEF90DefMechCtx%PETScCtx, ierr))
       ! PetscCall(TAOSetDM(taoDamage,dm,ierr))
       PetscCall(TAOSetType(taoDamage, TAOBNTR, ierr))
       PetscCall(TAOSetOptionsPrefix(taoDamage, 'Damage_', ierr))
@@ -864,9 +879,9 @@ contains
       PetscCall(DMRestoreGlobalVector(dm, LB, ierr))
       PetscCall(VecDestroy(UB, ierr))
 
-      PetscCall(TAOSetObjective(taoDamage, MEF90DefMechTAOObjectiveDamage, MEF90DefMechCtx, ierr))
-      PetscCall(TAOSetGradient(taoDamage, residual, MEF90DefMechTAOGradientDamage, MEF90DefMechCtx, ierr))
-      PetscCall(TAOSetHessian(taoDamage, matDamage, matDamage, MEF90DefMechTAOHessianDamage, MEF90DefMechCtx, ierr))
+      PetscCall(TAOSetObjective(taoDamage, MEF90DefMechTAOObjectiveDamage, MEF90DefMechCtx%PETScCtx, ierr))
+      PetscCall(TAOSetGradient(taoDamage, residual, MEF90DefMechTAOGradientDamage, MEF90DefMechCtx%PETScCtx, ierr))
+      PetscCall(TAOSetHessian(taoDamage, matDamage, matDamage, MEF90DefMechTAOHessianDamage, MEF90DefMechCtx%PETScCtx, ierr))
       atol = 1.0d-5
       rtol = 1.0d-4
       stol = 1.0d-5
@@ -897,7 +912,7 @@ contains
 !!!
 
    subroutine MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, snesDamage, alpha, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tSNES), intent(INOUT)                          :: snesDamage
       type(tVec), intent(IN)                              :: alpha
       PetscErrorCode, intent(INOUT)                       :: ierr
@@ -906,9 +921,9 @@ contains
       type(tVec)                                         :: LB, UB
       PetscReal, dimension(:), pointer                     :: LBPtr
       PetscInt                                           :: i
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
@@ -940,7 +955,7 @@ contains
 !!!
 
    subroutine MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, taoDamage, alpha, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tTao), intent(INOUT)                           :: taoDamage
       type(tVec), intent(IN)                              :: alpha
       PetscErrorCode, intent(INOUT)                       :: ierr
@@ -949,9 +964,9 @@ contains
       type(tVec)                                         :: LB, UB
       PetscReal, dimension(:), pointer                     :: LBPtr
       PetscInt                                           :: i
-      type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr))
+      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
@@ -983,7 +998,7 @@ contains
 !!!
 
    subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr)
-      type(MEF90DefMechCtx_Type), intent(IN)              :: MEF90DefMechCtx
+      type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
       type(tVec), intent(INOUT)                           :: plasticStrain
       type(tVec), intent(IN)                              :: x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld
       PetscErrorCode, intent(INOUT)                       :: ierr

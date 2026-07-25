@@ -3,7 +3,7 @@ program ThermoElastoPlasticity
 #include <finclude/petscdef.h>
 
    use m_MEF90
-   use m_MEF90_DefMechCtx
+   use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer
    use m_MEF90_HeatXferCtx
@@ -25,8 +25,8 @@ program ThermoElastoPlasticity
                                                           MEF90FileFormat_EXOSingle)       ! fileFormat
 
    !!! Defect mechanics contexts
-   type(MEF90DefMechCtx_Type)                         :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type), pointer       :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
    type(MEF90DefMechGlobalOptions_Type), parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                           MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                           MEF90DefMech_SolverTypeAltMin, & ! timeSteppingType
@@ -197,15 +197,9 @@ program ThermoElastoPlasticity
    call MEF90CtxOpenEXO(MEF90Ctx, Mesh, ierr)
 
    !!! Create DefMech context, get all DefMech options
-   call MEF90DefMechCtxCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
-   if (dim == 2) then
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, MEF90DefMechDefaultGlobalOptions2D, &
-                                         MEF90DefMechDefaultCellSetOptions, MEF90DefMechDefaultVertexSetOptions, ierr)
-   else
-      call MEF90DefMechCtxSetFromOptions(MEF90DefMechCtx, PETSC_NULL_CHARACTER, MEF90DefMechDefaultGlobalOptions3D, &
-                                         MEF90DefMechDefaultCellSetOptions, MEF90DefMechDefaultVertexSetOptions, ierr)
-   end if
-   call PetscBagGetDataMEF90DefMechCtxGlobalOptions(MEF90DefMechCtx%GlobalOptionsBag, MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90DefMechCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90DefMechCtx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
    !!! Create HeatXfer context, get all HeatXfer options
    call MEF90HeatXferCtxCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
@@ -229,7 +223,7 @@ program ThermoElastoPlasticity
    call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx, ierr)
 
    !!! Create vectors
-   call MEF90DefMechCtxCreateVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechCreateVectors(MEF90DefMechCtx, ierr)
    call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx, ierr)
 
    !!! Link the temperature field from the DefMech context to that of the HeatXfer context
@@ -275,16 +269,16 @@ program ThermoElastoPlasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (energy(size(MEF90DefMechCtx%cellSetOptions)))
    energy = 0.0_kr
 
-   allocate (plasticDissipationvariation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (plasticDissipationvariation(size(MEF90DefMechCtx%cellSetOptions)))
    plasticDissipationvariation = 0.0_kr
 
-   allocate (plasticDissipation(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (plasticDissipation(size(MEF90DefMechCtx%cellSetOptions)))
    plasticDissipation = 0.0_kr
 
-   allocate (work(size(MEF90DefMechCtx%CellSetOptionsBag)))
+   allocate (work(size(MEF90DefMechCtx%cellSetOptions)))
    work = 0.0_kr
 
    !!!
@@ -483,7 +477,7 @@ program ThermoElastoPlasticity
       call TSDestroy(tsTemp, ierr); CHKERRQ(ierr)
    end select
 
-   call MEF90DefMechCtxDestroyVectors(MEF90DefMechCtx, ierr)
+   call MEF90DefMechDestroyVectors(MEF90DefMechCtx, ierr)
    nullify (MEF90HeatXferCtx%temperature)
    call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx, ierr)
    call VecDestroy(residualDisp, ierr); CHKERRQ(ierr)
@@ -500,7 +494,7 @@ program ThermoElastoPlasticity
    deallocate (work)
    deallocate (plasticDissipationvariation)
 
-   call MEF90DefMechCtxDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
+   call MEF90DefMechDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
    call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
    call MEF90CtxCloseEXO(MEF90Ctx, ierr)
 
