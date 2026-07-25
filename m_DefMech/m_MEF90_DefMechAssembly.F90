@@ -46,7 +46,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    type(tSNES), intent(IN)                             :: snesDisplacement
    type(tVec), intent(IN)                              :: displacement
    type(tVec), intent(INOUT)                           :: residual
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmBodyForce, dmBoundaryForce, dmPressureForce, dmPlasticStrain
@@ -386,7 +386,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    type(tSNES), intent(IN)                             :: snesDisplacement
    type(tVec), intent(IN)                              :: displacement
    type(tMat), intent(INOUT)                           :: A, M
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmPlasticStrain
@@ -585,7 +585,7 @@ end subroutine MEF90DefMechBilinearFormDisplacement
 !!!
 
 subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: bodyForceWork, boundaryForceWork
    PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -747,7 +747,7 @@ end subroutine MEF90DefMechWork
 !!!
 
 subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: cohesiveEnergy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -838,7 +838,7 @@ end subroutine MEF90DefMechCohesiveEnergy
 
 subroutine MEF90DefMechPlasticDissipation(MEF90DefMechCtx, plasticStrainOld, energy, ierr)
    type(tVec), intent(IN)                              :: plasticStrainOld
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -856,7 +856,7 @@ end subroutine MEF90DefMechPlasticDissipation
 !!!
 
 subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -1011,7 +1011,7 @@ end subroutine MEF90DefMechElasticEnergy
 !!!
 
 subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(INOUT)                       :: ierr
    type(tVec), intent(IN)                              :: stress
 
@@ -1195,7 +1195,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    type(tSNES), intent(IN)                             :: snesDamage
    type(tVec), intent(IN)                              :: damage
    type(tVec), intent(INOUT)                           :: residual
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
@@ -1405,7 +1405,7 @@ subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, MEF90DefMe
    type(tTao), intent(IN)                              :: taoDamage
    type(tVec), intent(IN)                              :: damage
    type(tVec), intent(INOUT)                           :: residual
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
    type(tSNES)                                         :: dummySNES
@@ -1431,7 +1431,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    type(tSNES), intent(IN)                             :: snesDamage
    type(tVec), intent(IN)                              :: damage
    type(tMat), intent(INOUT)                           :: A, M
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
@@ -1614,7 +1614,7 @@ subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, MEF90DefMechCtx
    type(tTao), intent(IN)                              :: taoDamage
    type(tVec), intent(IN)                              :: damage
    type(tMat), intent(INOUT)                           :: A, M
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscErrorCode, intent(OUT)                         :: ierr
 
    type(tSNES)                                         :: dummySNES
@@ -1637,7 +1637,7 @@ end subroutine MEF90DefMechTAOHessianDamage
 !!!
 
 subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: energy
    PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -1740,7 +1740,7 @@ end subroutine MEF90DefMechSurfaceEnergy
 !!!
 
 subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMechCtx, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    type(tTao), intent(IN)                              :: taoDamage
    type(tVec), intent(IN)                              :: damage
    PetscReal, intent(INOUT)                            :: energy
@@ -1786,7 +1786,7 @@ end subroutine MEF90DefMechTAOObjectiveDamage
 !!!
 
 subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    PetscReal, dimension(:), pointer                    :: CrackVolume
    PetscErrorCode, intent(INOUT)                       :: ierr
 

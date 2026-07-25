@@ -5,7 +5,7 @@ program ThermoElasticity
    use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer
-   use m_MEF90_HeatXferCtx
+   use m_MEF90_HeatXfer_class
    use m_vDefDefault
    implicit none(type, external)
 
@@ -17,8 +17,8 @@ program ThermoElasticity
    type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
    type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
    !!! HeatXfer contexts
-   type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+   type(MEF90HeatXfer_Type), target                    :: MEF90HeatXferCtx
+   type(MEF90HeatXferGlobalOptions_Type)               :: MEF90HeatXferGlobalOptions
 
    type(tDM), target                                   :: dm, temperatureDM, displacementDM
    type(tIS)                                          :: setIS
@@ -106,9 +106,9 @@ program ThermoElasticity
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90_dm_view", ierr))
 
    !!! Create HeatXfer context, get all HeatXfer options
-   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx, dm, MEF90Ctx, ierr))
-   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx, PETSC_NULL_CHARACTER, HeatXferDefaultGlobalOptions, HeatXferDefaultCellSetOptions, HeatXferDefaultFaceSetOptions, HeatXferDefaultVertexSetOptions, ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+   PetscCallA(MEF90HeatXferCreate(MEF90HeatXferCtx, dm, MEF90Ctx, "", ierr))
+   PetscCallA(MEF90HeatXferCtx%setFromOptions(ierr))
+   MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
    !!! Create DefMechCtx, get all defMech options
    PetscCallA(MEF90DefMechCreate(MEF90DefMechCtx, dm, MEF90Ctx, "", ierr))
@@ -178,9 +178,9 @@ program ThermoElasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
-   allocate (bodyForceWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
-   allocate (boundaryForceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
+   allocate (energy(size(MEF90HeatXferCtx%cellSetOptions)))
+   allocate (bodyForceWork(size(MEF90HeatXferCtx%cellSetOptions)))
+   allocate (boundaryForceWork(size(MEF90HeatXferCtx%faceSetOptions)))
 
    !!!
    !!! Actual computations / time stepping
@@ -338,7 +338,7 @@ program ThermoElasticity
    deallocate (boundaryForceWork)
    PetscCallA(MEF90DefMechDestroy(MEF90DefMechCtx, ierr))
    nullify (MEF90HeatXferCtx%temperatureLocal)
-   PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr))
+   PetscCallA(MEF90HeatXferDestroy(MEF90HeatXferCtx, ierr))
 
    PetscCallA(PetscViewerASCIIOpen(MEF90Ctx%comm, trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log', logViewer, ierr))
    PetscCallA(PetscLogView(logViewer, ierr))

@@ -9,8 +9,8 @@ program TestHeatXferCtx
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
-   type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+   type(MEF90HeatXfer_Type), target                    :: MEF90HeatXferCtx
+   type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
    type(tDM)                                          :: dm
 
    type(tIS)                                          :: cellSetIS, faceSetIS
@@ -76,11 +76,11 @@ program TestHeatXferCtx
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-heatXfer_dm_view", ierr))
 
    !!! Create HeatXfer context, get all HeatXfer options
-   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx, dm, MEF90Ctx, ierr))
-   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx, PETSC_NULL_CHARACTER, MEF90HeatXferDefaultGlobalOptions, MEF90HeatXferDefaultCellSetOptions, MEF90HeatXferDefaultFaceSetOptions, MEF90HeatXferDefaultVertexSetOptions, ierr))
+   PetscCallA(MEF90HeatXferCreate(MEF90HeatXferCtx, dm, MEF90Ctx, "", ierr))
+   PetscCallA(MEF90HeatXferCtx%setFromOptions(ierr))
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx
    PetscCallA(DMDestroy(dm, ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+   MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
    !!! Get parse all materials data from the command line
    PetscCallA(DMGetDimension(MEF90HeatXferCtx%megaDM, dim, ierr))
@@ -127,7 +127,7 @@ program TestHeatXferCtx
    PetscCallA(ISGetIndices(cellSetIS, cellSetID, ierr))
    PetscCallA(ISDestroy(cellSetIS, ierr))
 
-   PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr))
+   PetscCallA(MEF90HeatXferDestroy(MEF90HeatXferCtx, ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx, ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

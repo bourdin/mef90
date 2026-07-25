@@ -16,8 +16,8 @@ program TestConstraintIO3
    PetscBool                                           :: interpolate = PETSC_TRUE
 
    !!! Defect mechanics contexts
-   type(MEF90DefMech_Type), target                      :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type)                 :: MEF90DefMechGlobalOptions
+   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
    PetscInt                                            :: numNodalVar = 3, numCellVar = 0, numGVar = 0
    character(len=MEF90MXSTRLEN), dimension(:), pointer   :: nodalVarName, cellVarName, gVarName

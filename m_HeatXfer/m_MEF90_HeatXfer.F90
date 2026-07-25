@@ -4,7 +4,8 @@ module m_MEF90_HeatXfer
    use petscsnes
    use petsctao
    use m_MEF90_EXO
-   use m_MEF90_HeatXferCtx
+   use m_MEF90_HeatXfer_class
+   use, intrinsic :: iso_c_binding
    use m_MEF90_HeatXferAssembly2D, &
       MEF90HeatXferEnergy2D => MEF90HeatXferEnergy, &
       MEF90HeatXferOperator2D => MEF90HeatXferOperator, &
@@ -44,12 +45,12 @@ contains
 !!!
 
    subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx, step, time, ierr)
-      type(MEF90HeatXferCtx_Type), intent(INOUT)       :: MEF90HeatXferCtx
+      type(MEF90HeatXfer_Type), intent(INOUT)          :: MEF90HeatXferCtx
       PetscInt, intent(IN)                             :: step
       PetscReal, intent(IN)                            :: time
       PetscErrorCode, intent(OUT)                      :: ierr
 
-      type(MEF90HeatXferGlobalOptions_Type), pointer   :: MEF90HeatXferGlobalOptions
+      type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
       type(tDM)                                        :: dm
       type(tVec)                                       :: tmpVec
@@ -57,7 +58,7 @@ contains
 
       EXOStep = step
       PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
-      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+      MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
 
@@ -121,13 +122,15 @@ contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
+   subroutine MEF90HeatXferOperator(snesTemp, x, residual, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesTemp
       type(tVec), intent(IN)                              :: x
       type(tVec), intent(INOUT)                           :: residual
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
       PetscErrorCode, intent(OUT)                         :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferOperator2D(snesTemp, x, residual, MEF90HeatXferCtx, ierr))
       else if (MEF90HeatXferCtx%dim == 3) then
@@ -146,13 +149,15 @@ contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
+   subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, PETScCtx, ierr)
       type(tSNES), intent(IN)                             :: snesTemp
       type(tVec), intent(IN)                              :: x
       type(tMat), intent(INOUT)                           :: A, M
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
       PetscErrorCode, intent(OUT)                         :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferBilinearForm2D(snesTemp, x, A, M, MEF90HeatXferCtx, ierr))
       else if (MEF90HeatXferCtx%dim == 3) then
@@ -172,7 +177,7 @@ contains
 !!!
 
    subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, ierr)
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(MEF90HeatXfer_Type), intent(IN)                 :: MEF90HeatXferCtx
       PetscReal, dimension(:), pointer                     :: energy, bodyWork, surfaceWork
       PetscErrorCode, intent(INOUT)                       :: ierr
 
@@ -194,14 +199,16 @@ contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ierr)
+   subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, PETScCtx, ierr)
       type(tTS), intent(IN)                               :: tempTS
       PetscReal, intent(IN)                               :: time
       type(tVec), intent(IN)                              :: x, xdot
       type(tVec), intent(INOUT)                           :: F
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
       PetscErrorCode, intent(OUT)                         :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXFerIFunction2D(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ierr))
       else if (MEF90HeatXferCtx%dim == 3) then
@@ -220,15 +227,17 @@ contains
 !!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXferCtx, ierr)
+   subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, PETScCtx, ierr)
       type(tTS), intent(IN)                               :: tempTS
       PetscReal, intent(IN)                               :: t
       type(tVec), intent(IN)                              :: x, xdot
       PetscReal, intent(IN)                               :: shift
       type(tMat), intent(INOUT)                           :: A, M
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(c_ptr), intent(IN)                             :: PETScCtx
+      type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
       PetscErrorCode, intent(OUT)                         :: ierr
 
+      call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
          PetscCall(MEF90HeatXferIJacobian2D(tempTS, t, x, xdot, shift, A, M, MEF90HeatXferCtx, ierr))
       else if (MEF90HeatXferCtx%dim == 3) then
@@ -248,13 +257,13 @@ contains
 !!!
 
    subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(MEF90HeatXfer_Type), intent(IN)                :: MEF90HeatXferCtx
       PetscExodusIIInt, intent(IN)                        :: step
       PetscErrorCode, intent(OUT)                         :: ierr
 
-      type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+      type(MEF90HeatXferGlobalOptions_Type)               :: MEF90HeatXferGlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+      MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
       if (MEF90HeatXferGlobalOptions%temperatureExport) then
          PetscCall(MEF90EXOVecView(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferCtx%temperatureToIOSF, MEF90HeatXferCtx%IOToTemperatureSF, MEF90HeatXferCtx%MEF90Ctx%resultViewer, step, 1_Ki, ierr))
@@ -272,19 +281,19 @@ contains
 !!!
 
    subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx, snesTemp, residual, ierr)
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(MEF90HeatXfer_Type), target, intent(IN)        :: MEF90HeatXferCtx
       type(tSNES), intent(OUT)                            :: snesTemp
       type(tVec), intent(IN)                              :: residual
       PetscErrorCode, intent(OUT)                         :: ierr
 
-      type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+      type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
       type(tMat)                                         :: matTemp
       type(tMatNullSpace)                                :: nspTemp
       type(tKSP)                                         :: kspTemp
       PetscReal                                          :: rtol, dtol
 
-      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+      MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matTemp, iErr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
@@ -300,13 +309,13 @@ contains
       PetscCall(MatSetFromOptions(matTemp, ierr))
 
       PetscCall(SNESCreate(MEF90HeatXferCtx%MEF90Ctx%Comm, snesTemp, ierr))
-      PetscCall(SNESSetApplicationContext(snesTemp, MEF90HeatXferCtx, ierr))
+      PetscCall(SNESSetApplicationContext(snesTemp, MEF90HeatXferCtx%PETScCtx, ierr))
       PetscCall(SNESSetDM(snesTemp, dm, ierr))
       PetscCall(SNESSetType(snesTemp, SNESKSPONLY, ierr))
       PetscCall(SNESSetOptionsPrefix(snesTemp, 'Temperature_', ierr))
 
-      PetscCall(SNESSetFunction(snesTemp, residual, MEF90HeatXferOperator, MEF90HeatXferCtx, ierr))
-      PetscCall(SNESSetJacobian(snesTemp, matTemp, matTemp, MEF90HeatXferBilinearForm, MEF90HeatXferCtx, ierr))
+      PetscCall(SNESSetFunction(snesTemp, residual, MEF90HeatXferOperator, MEF90HeatXferCtx%PETScCtx, ierr))
+      PetscCall(SNESSetJacobian(snesTemp, matTemp, matTemp, MEF90HeatXferBilinearForm, MEF90HeatXferCtx%PETScCtx, ierr))
       PetscCall(SNESSetFromOptions(snesTemp, ierr))
       !!!
       !!! Set some KSP options
@@ -333,13 +342,13 @@ contains
 
    subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx, tsTemp, residual, initialTime, initialStep, ierr)
 
-      type(MEF90HeatXferCtx_Type), intent(IN)             :: MEF90HeatXferCtx
+      type(MEF90HeatXfer_Type), target, intent(IN)        :: MEF90HeatXferCtx
       type(tTS), intent(OUT)                              :: tsTemp
       type(tVec), intent(IN)                              :: residual
       PetscReal, intent(IN)                               :: initialTime, initialStep
       PetscErrorCode, intent(OUT)                         :: ierr
 
-      type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
+      type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
       type(tMat)                                         :: matTemp
       type(tMatNullSpace)                                :: nspTemp
@@ -347,7 +356,7 @@ contains
       type(tKSP)                                         :: kspTemp
       PetscReal                                          :: rtol, dtol
 
-      PetscCall(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr))
+      MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matTemp, iErr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
@@ -365,8 +374,8 @@ contains
       PetscCall(TSSetOptionsPrefix(tsTemp, 'Temperature_', ierr))
       PetscCall(TSGetSNES(tsTemp, snesTemp, ierr))
 
-      PetscCall(TSSetIFunction(tsTemp, residual, MEF90HeatXFerIFunction, MEF90HeatXferCtx, ierr))
-      PetscCall(TSSetIJacobian(tsTemp, matTemp, matTemp, MEF90HeatXFerIJacobian, MEF90HeatXferCtx, ierr))
+      PetscCall(TSSetIFunction(tsTemp, residual, MEF90HeatXFerIFunction, MEF90HeatXferCtx%PETScCtx, ierr))
+      PetscCall(TSSetIJacobian(tsTemp, matTemp, matTemp, MEF90HeatXFerIJacobian, MEF90HeatXferCtx%PETScCtx, ierr))
 
       PetscCall(TSSetType(tsTemp, 'rosw', ierr))
       PetscCall(TSRosWSetType(tsTemp, 'ra3pw', ierr))

@@ -4,7 +4,7 @@ module m_vDefDefault
    use petsc
    use m_MEF90
    use m_MEF90_DefMech_class
-   use m_MEF90_HeatXferCtx
+   use m_MEF90_HeatXfer_class
    implicit none(type, external)
 
 !!! Default values of the contexts
@@ -19,31 +19,4 @@ module m_vDefDefault
                                                           1_ki, & ! numCycle
                                                           MEF90ElementFamilyLagrange, & ! elementFamily
                                                           1_ki)                            ! elementOrder
-
-   type(MEF90HeatXferGlobalOptions_Type), parameter    :: HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
-                                                          MEF90HeatXFer_timeSteppingTypeSteadyState, & ! timeSteppingType
-                                                          PETSC_FALSE, & ! addNullSpace
-                                                          0.0_kr, & ! initialTemperature
-                                                          MEF90Scaling_Linear, & ! boundaryTempScaling
-                                                          MEF90Scaling_Linear, & ! externalTempScaling
-                                                          MEF90Scaling_Linear, & ! fluxScaling
-                                                          MEF90Scaling_Linear, & ! boundaryFluxScaling
-                                                          PETSC_TRUE)            ! temperatureExport
-
-   type(MEF90HeatXferCellSetOptions_Type), parameter   :: HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
-                                                          0.0_kr, & ! flux
-                                                          PETSC_FALSE, & ! hasTemperatureBC
-                                                          0.0_kr, & ! boundaryTemperature
-                                                          [0.0_kr, 0.0_kr, 0.0_kr]) ! advectionVector
-
-   type(MEF90HeatXferFaceSetOptions_Type), parameter   :: HeatXferDefaultFaceSetOptions = MEF90HeatXferFaceSetOptions_Type( &
-                                                          0.0_kr, & ! boundaryFlux
-                                                          0.0_kr, & ! surfaceThermalConductivity
-                                                          0.0_kr, & ! externalTemp
-                                                          PETSC_FALSE, & ! hasTemperatureBC
-                                                          0.0_kr)          ! boundaryTemperature
-
-   type(MEF90HeatXferVertexSetOptions_Type), parameter ::HeatXferDefaultVertexSetOptions = MEF90HeatXferVertexSetOptions_Type( &
-                                                          PETSC_FALSE, & ! hasTemperatureBC
-                                                          0.0_kr)          ! boundaryTemperature
 end module m_vDefDefault

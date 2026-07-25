@@ -6,7 +6,7 @@ Program WorkControlled
    !Use m_vDef
    use m_MEF90_DefMech_class
    Use m_MEF90_DefMech
-   Use m_MEF90_HeatXferCtx
+   use m_MEF90_HeatXfer_class
    Use m_MEF90_HeatXfer
    implicit none (type, external)
 
@@ -19,8 +19,8 @@ Program WorkControlled
    Type(MEF90DefMechGlobalOptions_Type),pointer       :: MEF90DefMechGlobalOptions
 
    !!! HeatXfer contexts
-   Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
+   Type(MEF90HeatXfer_Type), target                   :: MEF90HeatXferCtx
+   Type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
 
 
    Type(DM),target                                    :: Mesh
@@ -238,10 +238,9 @@ Program WorkControlled
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
    !!! Create HeatXfer context, get all HeatXfer options
-   Call MEF90HeatXferCtxCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx,ierr);CHKERRQ(ierr)
-   Call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,vDefHeatXferDefaultGlobalOptions, &
-                                       vDefHeatXferDefaultCellSetOptions,vDefHeatXferDefaultVertexSetOptions,ierr)
-   Call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90HeatXferCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90HeatXferCtx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
    !!! Get material properties bags
    If (dim == 2) Then
@@ -280,7 +279,7 @@ Program WorkControlled
    !!! Create sections, vectors, and solvers for HeatXfer Context
    If (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) Then
       Call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx,ierr)
-      Call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx,ierr)
+      Call MEF90HeatXferCreateVectors(MEF90HeatXferCtx,ierr)
       Call VecDuplicate(MEF90HeatXferCtx%temperature,residualTemp,ierr);CHKERRQ(ierr)
       Call PetscObjectSetName(residualTemp,"residualTemp",ierr);CHKERRQ(ierr)
       Select Case(MEF90HeatXferGlobalOptions%timeSteppingType)
@@ -597,7 +596,7 @@ Program WorkControlled
 
    Call MEF90DefMechDestroyVectors(MEF90DefMechCtx,ierr)
    Nullify(MEF90HeatXferCtx%temperature)
-   Call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx,ierr)
+   Call MEF90HeatXferDestroyVectors(MEF90HeatXferCtx,ierr)
    Call VecDestroy(damageOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyOld,ierr);CHKERRQ(ierr)
    Call VecDestroy(cumulatedDissipatedPlasticEnergyVariation,ierr);CHKERRQ(ierr)
@@ -619,7 +618,7 @@ Program WorkControlled
    DeAllocate(totalMechanicalEnergy)
 
    Call MEF90DefMechDestroy(MEF90DefMechCtx,ierr);CHKERRQ(ierr)
-   Call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
+   Call MEF90HeatXferDestroy(MEF90HeatXferCtx,ierr);CHKERRQ(ierr)
    Call MEF90CtxCloseEXO(MEF90Ctx,ierr)
 
    Call PetscViewerASCIIOpen(MEF90Ctx%comm,trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log',logViewer, ierr);CHKERRQ(ierr)

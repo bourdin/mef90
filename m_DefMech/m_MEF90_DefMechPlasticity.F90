@@ -32,7 +32,7 @@ subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, Pl
    use SNLPF90
 #endif
 
-   type(MEF90DefMech_Type), intent(IN)                  :: MEF90DefMechCtx
+   type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
    type(tVec), intent(INOUT)                           :: plasticStrain
    type(tVec), intent(IN)                              :: x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld
    PetscErrorCode, intent(INOUT)                       :: ierr

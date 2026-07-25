@@ -10,8 +10,8 @@ Program HeatXfer
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
 
    Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
-   Type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   Type(MEF90HeatXferGlobalOptions_Type),Pointer      :: MEF90HeatXferGlobalOptions
+   Type(MEF90HeatXfer_Type), target                   :: MEF90HeatXferCtx
+   Type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
                                                          
    Type(tDM)                                          :: dm,temperatureDM
    Type(tIS)                                          :: setIS
@@ -90,11 +90,11 @@ Program HeatXfer
    PetscCallA(DMViewFromOptions(dm,PETSC_NULL_OBJECT,"-heatXfer_dm_view",ierr))
 
    !!! Create HeatXfer context, get all HeatXfer options
-   PetscCallA(MEF90HeatXferCtxCreate(MEF90HeatXferCtx,dm,MEF90Ctx,ierr))
-   PetscCallA(MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx,PETSC_NULL_CHARACTER,MEF90HeatXferDefaultGlobalOptions,MEF90HeatXferDefaultCellSetOptions,MEF90HeatXferDefaultFaceSetOptions,MEF90HeatXferDefaultVertexSetOptions,ierr))
+   PetscCallA(MEF90HeatXferCreate(MEF90HeatXferCtx,dm,MEF90Ctx, "", ierr))
+   PetscCallA(MEF90HeatXferCtx%setFromOptions(ierr))
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx
    PetscCallA(DMDestroy(dm,ierr))
-   PetscCallA(PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag,MEF90HeatXferGlobalOptions,ierr))
+   MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
    !!! Get parse all materials data from the command line
    PetscCallA(DMGetDimension(MEF90HeatXferCtx%megaDM,dim,ierr))
@@ -128,9 +128,9 @@ Program HeatXfer
    !!! 
    !!! Allocate array of works and energies
    !!!
-   Allocate(energy(size(MEF90HeatXferCtx%CellSetOptionsBag)))
-   Allocate(cellWork(size(MEF90HeatXferCtx%CellSetOptionsBag)))
-   Allocate(faceWork(size(MEF90HeatXferCtx%FaceSetOptionsBag)))
+   Allocate(energy(size(MEF90HeatXferCtx%cellSetOptions)))
+   Allocate(cellWork(size(MEF90HeatXferCtx%cellSetOptions)))
+   Allocate(faceWork(size(MEF90HeatXferCtx%faceSetOptions)))
 
    !!!
    !!! Actual computations / time stepping
@@ -232,7 +232,7 @@ Program HeatXfer
 
    PetscCallA(VecDestroy(temperatureResidual,ierr))
    PetscCallA(VecDestroy(temperature,ierr))
-   PetscCallA(MEF90HeatXferCtxDestroy(MEF90HeatXferCtx,ierr))
+   PetscCallA(MEF90HeatXferDestroy(MEF90HeatXferCtx,ierr))
    PetscCallA(MEF90CtxDestroy(MEF90Ctx,ierr))
    PetscCallA(MEF90Finalize(ierr))
    PetscCallA(PetscFinalize(ierr))

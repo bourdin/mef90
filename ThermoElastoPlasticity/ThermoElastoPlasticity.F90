@@ -6,7 +6,7 @@ program ThermoElastoPlasticity
    use m_MEF90_DefMech_class
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer
-   use m_MEF90_HeatXferCtx
+   use m_MEF90_HeatXfer_class
    use petsc
    implicit none(type, external)
 
@@ -25,9 +25,9 @@ program ThermoElastoPlasticity
                                                           MEF90FileFormat_EXOSingle)       ! fileFormat
 
    !!! Defect mechanics contexts
-   type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
-   type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
-   type(MEF90DefMechGlobalOptions_Type), parameter     :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
+   type(MEF90DefMech_Type), target                    :: MEF90DefMechCtx
+   type(MEF90DefMechGlobalOptions_Type)               :: MEF90DefMechGlobalOptions
+   type(MEF90DefMechGlobalOptions_Type), parameter    :: MEF90DefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
                                                           MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                           MEF90DefMech_SolverTypeAltMin, & ! timeSteppingType
                                                           PETSC_TRUE, & ! disp_addNullSpace
@@ -61,7 +61,7 @@ program ThermoElastoPlasticity
                                                           0.0_kr, & ! dampingCoefficientDisplacement
                                                           0.0_kr)                    ! dampingCoefficientDamage
 
-   type(MEF90DefMechGlobalOptions_Type), parameter     :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
+   type(MEF90DefMechGlobalOptions_Type), parameter    :: MEF90DefMechDefaultGlobalOptions3D = MEF90DefMechGlobalOptions_Type( &
                                                           MEF90DefMech_TimeSteppingTypeQuasiStatic, & ! solverType
                                                           MEF90DefMech_SolverTypeAltMin, & ! timeSteppingType
                                                           PETSC_TRUE, & ! disp_addNullSpace
@@ -95,7 +95,7 @@ program ThermoElastoPlasticity
                                                           0.0_kr, & ! dampingCoefficientDisplacement
                                                           0.0_kr)                    ! dampingCoefficientDamage
 
-   type(MEF90DefMechCellSetOptions_Type), parameter    :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
+   type(MEF90DefMechCellSetOptions_Type), parameter   :: MEF90DefMechDefaultCellSetOptions = MEF90DefMechCellSetOptions_Type( &
                                                           -1, & ! elemTypeShortIDDispl will be overriden
                                                           -1, & ! elemTypeShortIDDamage will be overriden
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! force
@@ -110,16 +110,16 @@ program ThermoElastoPlasticity
                                                           PETSC_FALSE, & ! IsCrackPressureActivated
                                                           PETSC_FALSE, & ! IsWorkControlledActivated
                                                           0._kr)                                      ! Boundary Damage
-   type(MEF90DefMechVertexSetOptions_Type), parameter  :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
+   type(MEF90DefMechVertexSetOptions_Type), parameter :: MEF90DefMechDefaultVertexSetOptions = MEF90DefMechVertexSetOptions_Type( &
                                                           [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE], & ! Has Displacement BC
                                                           [0.0_kr, 0.0_kr, 0.0_kr], & ! boundary Displacement
                                                           PETSC_FALSE, & ! Has Damage BC
                                                           0.0_kr)                                    ! boundary Damage
 
    !!! HeatXfer contexts
-   type(MEF90HeatXferCtx_Type)                        :: MEF90HeatXferCtx
-   type(MEF90HeatXferGlobalOptions_Type), pointer      :: MEF90HeatXferGlobalOptions
-   type(MEF90HeatXferGlobalOptions_Type), parameter    :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
+   type(MEF90HeatXfer_Type), target                   :: MEF90HeatXferCtx
+   type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
+   type(MEF90HeatXferGlobalOptions_Type), parameter   :: MEF90HeatXferDefaultGlobalOptions = MEF90HeatXferGlobalOptions_Type( &
                                                           MEF90HeatXFer_timeSteppingTypeSteadyState, & ! mode
                                                           PETSC_FALSE, & ! addNullSpace
                                                           1, & ! tempOffset
@@ -130,7 +130,7 @@ program ThermoElastoPlasticity
                                                           2, & ! externalTempOffset
                                                           MEF90Scaling_Linear, & ! fluxScaling
                                                           1)                     ! fluxOffset
-   type(MEF90HeatXferCellSetOptions_Type), parameter   :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
+   type(MEF90HeatXferCellSetOptions_Type), parameter  :: MEF90HeatXferDefaultCellSetOptions = MEF90HeatXferCellSetOptions_Type( &
                                                           -1, & ! elemTypeShortID will be overriden
                                                           0.0_kr, & ! flux
                                                           0.0_kr, & ! surfaceThermalConductivity
@@ -202,10 +202,9 @@ program ThermoElastoPlasticity
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
    !!! Create HeatXfer context, get all HeatXfer options
-   call MEF90HeatXferCtxCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, ierr); CHKERRQ(ierr)
-   call MEF90HeatXferCtxSetFromOptions(MEF90HeatXferCtx, PETSC_NULL_CHARACTER, MEF90HeatXferDefaultGlobalOptions, &
-                                       MEF90HeatXferDefaultCellSetOptions, MEF90HeatXferDefaultVertexSetOptions, ierr)
-   call PetscBagGetDataMEF90HeatXferCtxGlobalOptions(MEF90HeatXferCtx%GlobalOptionsBag, MEF90HeatXferGlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90HeatXferCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90HeatXferCtx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
    !!! Get material properties bags
    if (dim == 2) then
@@ -224,7 +223,7 @@ program ThermoElastoPlasticity
 
    !!! Create vectors
    call MEF90DefMechCreateVectors(MEF90DefMechCtx, ierr)
-   call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx, ierr)
+   call MEF90HeatXferCreateVectors(MEF90HeatXferCtx, ierr)
 
    !!! Link the temperature field from the DefMech context to that of the HeatXfer context
    deallocate (MEF90DefMechCtx%temperature)
@@ -247,7 +246,7 @@ program ThermoElastoPlasticity
 
    if (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90HeatXfer_timeSteppingTypeNULL) then
       call MEF90HeatXferCtxSetSections(MEF90HeatXferCtx, ierr)
-      call MEF90HeatXferCtxCreateVectors(MEF90HeatXferCtx, ierr)
+      call MEF90HeatXferCreateVectors(MEF90HeatXferCtx, ierr)
       call VecDuplicate(MEF90HeatXferCtx%temperature, residualTemp, ierr); CHKERRQ(ierr)
       call PetscObjectSetName(residualTemp, "residualTemp", ierr); CHKERRQ(ierr)
       select case (MEF90HeatXferGlobalOptions%timeSteppingType)
@@ -479,7 +478,7 @@ program ThermoElastoPlasticity
 
    call MEF90DefMechDestroyVectors(MEF90DefMechCtx, ierr)
    nullify (MEF90HeatXferCtx%temperature)
-   call MEF90HeatXferCtxDestroyVectors(MEF90HeatXferCtx, ierr)
+   call MEF90HeatXferDestroyVectors(MEF90HeatXferCtx, ierr)
    call VecDestroy(residualDisp, ierr); CHKERRQ(ierr)
    call VecDestroy(residualTemp, ierr); CHKERRQ(ierr)
    call VecDestroy(plasticStrainPrevious, ierr); CHKERRQ(ierr)
@@ -495,7 +494,7 @@ program ThermoElastoPlasticity
    deallocate (plasticDissipationvariation)
 
    call MEF90DefMechDestroy(MEF90DefMechCtx, ierr); CHKERRQ(ierr)
-   call MEF90HeatXferCtxDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
+   call MEF90HeatXferDestroy(MEF90HeatXferCtx, ierr); CHKERRQ(ierr)
    call MEF90CtxCloseEXO(MEF90Ctx, ierr)
 
    call PetscViewerASCIIOpen(MEF90Ctx%comm, trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log', logViewer, ierr); CHKERRQ(ierr)
