@@ -227,10 +227,8 @@ module m_MEF90_DefMech_class
       type(MEF90DefMechGlobalOptions_Type)      :: globalOptions
       !!! Per-set options are not stored: they are read from the options database where they are needed,
       !!! with MEF90DefMech[Cell,Face,Vertex]SetOptionsSetFromOptions, the same way the AT model, the
-      !!! energy split, and the Hooke's law are obtained. Only the number of sets is kept here.
-      PetscInt                                  :: numCellSet = 0
-      PetscInt                                  :: numFaceSet = 0
-      PetscInt                                  :: numVertexSet = 0
+      !!! energy split, and the Hooke's law are obtained. The number of sets is obtained from the megaDM
+      !!! with MEF90DMGetNumSets.
       type(tPetscBag), dimension(:), pointer    :: MaterialPropertiesBag => null()
 
       type(tPetscViewer)                        :: globalEnergyViewer
@@ -282,24 +280,6 @@ contains
       DefMech%comm = MEF90Ctx%comm
       DefMech%prefix = prefix
       DefMech%PETScCtx = c_loc(DefMech)
-
-      !!!
-      !!! Count the sets. The per-set options themselves are read on demand, see MEF90DefMech_Type
-      !!!
-      PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, DefMech%numCellSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-
-      PetscCall(DMGetLabelIdIS(dm, MEF90FaceSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, DefMech%numFaceSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-
-      PetscCall(DMGetLabelIdIS(dm, MEF90VertexSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, DefMech%numVertexSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
 
       !!!
       !!! Create energy viewers

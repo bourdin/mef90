@@ -23,6 +23,8 @@ program ThermoElasticity
    type(tDM), target                                   :: dm, temperatureDM, displacementDM
    type(tIS)                                          :: setIS
    PetscInt, dimension(:), pointer                      :: setID
+   PetscInt                                           :: numCellSet
+   PetscInt                                           :: numFaceSet
    PetscInt                                           :: set
    PetscReal, dimension(:), pointer                     :: time, energy, bodyForceWork, boundaryForceWork
 
@@ -178,9 +180,11 @@ program ThermoElasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(MEF90HeatXferCtx%numCellSet))
-   allocate (bodyForceWork(MEF90HeatXferCtx%numCellSet))
-   allocate (boundaryForceWork(MEF90HeatXferCtx%numFaceSet))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90FaceSetLabelName, numFaceSet, ierr))
+   allocate (energy(numCellSet))
+   allocate (bodyForceWork(numCellSet))
+   allocate (boundaryForceWork(numFaceSet))
 
    !!!
    !!! Actual computations / time stepping

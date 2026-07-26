@@ -26,6 +26,7 @@ Program WorkControlled
    Type(DM),target                                    :: Mesh
    Type(IS)                                           :: setIS,CellSetGlobalIS
    PetscInt,Dimension(:),Pointer                      :: setID
+   PetscInt                                           :: numCellSet
    PetscInt                                           :: numset,set
    PetscReal,Dimension(:),Pointer                     :: time
    PetscReal,Dimension(:),Pointer                     :: thermalEnergySet,heatFluxWorkSet
@@ -300,17 +301,18 @@ Program WorkControlled
    !!!
    !!! Allocate array of works and energies
    !!!
-   Allocate(elasticEnergySet(MEF90DefMechCtx%numCellSet))
+   call MEF90DMGetNumSets(MEF90DefMechCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr); CHKERRQ(ierr)
+   Allocate(elasticEnergySet(numCellSet))
    elasticEnergySet = 0.0_Kr
-   Allocate(surfaceEnergySet(MEF90DefMechCtx%numCellSet))
+   Allocate(surfaceEnergySet(numCellSet))
    surfaceEnergySet = 0.0_Kr
-   Allocate(forceWorkSet(MEF90DefMechCtx%numCellSet))
+   Allocate(forceWorkSet(numCellSet))
    forceWorkSet = 0.0_Kr
-   Allocate(cohesiveEnergySet(MEF90DefMechCtx%numCellSet))
+   Allocate(cohesiveEnergySet(numCellSet))
    cohesiveEnergySet = 0.0_Kr
-   Allocate(thermalEnergySet(MEF90DefMechCtx%numCellSet))
+   Allocate(thermalEnergySet(numCellSet))
    thermalEnergySet = 0.0_Kr
-   Allocate(heatFluxWorkSet(MEF90DefMechCtx%numCellSet))
+   Allocate(heatFluxWorkSet(numCellSet))
    heatFluxWorkSet = 0.0_Kr
 
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))

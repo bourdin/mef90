@@ -77,8 +77,34 @@ module m_MEF90_DMPlex
              MEF90VecSetValuesFromOptions, &
              MEF90VecSetBCValuesFromOptionsExpr, &
              MEF90VecSetValuesFromOptionsExpr, &
-             MEF90VecGetClosureSize
+             MEF90VecGetClosureSize, &
+             MEF90DMGetNumSets
 contains
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DMGetNumSets"
+!!!
+!!!
+!!!  MEF90DMGetNumSets: the total number of sets of a given label, over the whole communicator of dm
+!!!                     and not only the ones with a point on the local rank
+!!!
+!!!  (c) 2026      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+   subroutine MEF90DMGetNumSets(dm, labelName, numSet, ierr)
+      type(tDM), intent(IN)                    :: dm
+      character(len=*), intent(IN)             :: labelName
+      PetscInt, intent(OUT)                    :: numSet
+      PetscErrorCode, intent(INOUT)            :: ierr
+
+      type(tIS)                                :: setIS
+      MPIU_Comm                                :: comm
+
+      PetscCall(PetscObjectGetComm(dm, comm, ierr))
+      PetscCall(DMGetLabelIdIS(dm, labelName, setIS, ierr))
+      PetscCall(MEF90ISAllGatherMerge(comm, setIS, ierr))
+      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
+      PetscCall(ISDestroy(setIS, ierr))
+   end subroutine MEF90DMGetNumSets
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateLocalVector"

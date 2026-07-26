@@ -26,6 +26,8 @@ program vDef
    type(tDM), target                                  :: dm, temperatureDM, displacementDM, damageDM
    type(tIS)                                          :: setIS
    PetscInt, dimension(:), pointer                    :: setID
+   PetscInt                                           :: numCellSet
+   PetscInt                                           :: numFaceSet
    PetscInt                                           :: set
    PetscReal, dimension(:), pointer                   :: time, elasticEnergy, bodyForceWork, boundaryForceWork, cohesiveEnergy, surfaceEnergy
 
@@ -204,11 +206,13 @@ program vDef
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergy(MEF90HeatXferCtx%numCellSet))
-   allocate (bodyForceWork(MEF90HeatXferCtx%numCellSet))
-   allocate (cohesiveEnergy(MEF90HeatXferCtx%numCellSet))
-   allocate (surfaceEnergy(MEF90HeatXferCtx%numCellSet))
-   allocate (boundaryForceWork(MEF90HeatXferCtx%numFaceSet))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90FaceSetLabelName, numFaceSet, ierr))
+   allocate (elasticEnergy(numCellSet))
+   allocate (bodyForceWork(numCellSet))
+   allocate (cohesiveEnergy(numCellSet))
+   allocate (surfaceEnergy(numCellSet))
+   allocate (boundaryForceWork(numFaceSet))
 
    !!!
    !!! Format Exodus file if needed

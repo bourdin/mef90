@@ -85,10 +85,8 @@ module m_MEF90_HeatXfer_class
 
       type(MEF90HeatXferGlobalOptions_Type)   :: globalOptions
       !!! Per-set options are not stored: they are read from the options database where they are needed,
-      !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. Only the number of sets is kept here.
-      PetscInt                                :: numCellSet = 0
-      PetscInt                                :: numFaceSet = 0
-      PetscInt                                :: numVertexSet = 0
+      !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. The number of sets is obtained
+      !!! from the megaDM with MEF90DMGetNumSets.
       type(tPetscBag), dimension(:), pointer  :: MaterialPropertiesBag => null()
 
       !!! Handle on self, to be used as the application context of SNES, TS, etc. Since MEF90HeatXfer_Type
@@ -122,7 +120,6 @@ contains
       PetscErrorCode, intent(INOUT)                 :: ierr
 
       type(MEF90CtxGlobalOptions_Type), pointer     :: MEF90GlobalOptions
-      type(tIS)                                     :: setIS
       character(len=MEF90MXSTRLEN)                  :: vecName
       type(tDM), dimension(:), pointer              :: dmList
       type(tPetscSF)                                :: dummySF
@@ -133,25 +130,6 @@ contains
       HeatXfer%comm = MEF90Ctx%comm
       HeatXfer%prefix = prefix
       HeatXfer%PETScCtx = c_loc(HeatXfer)
-
-      !!!
-      !!! Count the sets, over the whole communicator and not just the local ones. The per-set options
-      !!! themselves are read on demand, see MEF90HeatXfer_Type
-      !!!
-      PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, HeatXfer%numCellSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-
-      PetscCall(DMGetLabelIdIS(dm, MEF90FaceSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, HeatXfer%numFaceSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-
-      PetscCall(DMGetLabelIdIS(dm, MEF90VertexSetLabelName, SetIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, HeatXfer%numVertexSet, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetDimension(dm, HeatXfer%dim, ierr))
 

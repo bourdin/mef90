@@ -145,6 +145,7 @@ program ThermoElastoPlasticity
    type(DM), target                                    :: Mesh
    type(IS)                                           :: setIS, CellSetGlobalIS
    PetscInt, dimension(:), pointer                      :: setID
+   PetscInt                                           :: numCellSet
    PetscInt                                           :: numset, set
    PetscReal, dimension(:), pointer                     :: time, energy, work, plasticDissipation, plasticDissipationvariation
    type(SNES)                                         :: snesDisp
@@ -268,16 +269,17 @@ program ThermoElastoPlasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(MEF90DefMechCtx%numCellSet))
+   call MEF90DMGetNumSets(MEF90DefMechCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr); CHKERRQ(ierr)
+   allocate (energy(numCellSet))
    energy = 0.0_kr
 
-   allocate (plasticDissipationvariation(MEF90DefMechCtx%numCellSet))
+   allocate (plasticDissipationvariation(numCellSet))
    plasticDissipationvariation = 0.0_kr
 
-   allocate (plasticDissipation(MEF90DefMechCtx%numCellSet))
+   allocate (plasticDissipation(numCellSet))
    plasticDissipation = 0.0_kr
 
-   allocate (work(MEF90DefMechCtx%numCellSet))
+   allocate (work(numCellSet))
    work = 0.0_kr
 
    !!!

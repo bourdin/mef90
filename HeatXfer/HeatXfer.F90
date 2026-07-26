@@ -16,6 +16,8 @@ Program HeatXfer
    Type(tDM)                                          :: dm,temperatureDM
    Type(tIS)                                          :: setIS
    PetscInt,Dimension(:),Pointer                      :: setID
+   PetscInt                                           :: numCellSet
+   PetscInt                                           :: numFaceSet
    PetscInt                                           :: set
    PetscReal,Dimension(:),Pointer                     :: time,energy,cellWork,faceWork
 
@@ -128,9 +130,11 @@ Program HeatXfer
    !!! 
    !!! Allocate array of works and energies
    !!!
-   Allocate(energy(MEF90HeatXferCtx%numCellSet))
-   Allocate(cellWork(MEF90HeatXferCtx%numCellSet))
-   Allocate(faceWork(MEF90HeatXferCtx%numFaceSet))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr))
+   PetscCallA(MEF90DMGetNumSets(MEF90HeatXferCtx%megaDM, MEF90FaceSetLabelName, numFaceSet, ierr))
+   Allocate(energy(numCellSet))
+   Allocate(cellWork(numCellSet))
+   Allocate(faceWork(numFaceSet))
 
    !!!
    !!! Actual computations / time stepping

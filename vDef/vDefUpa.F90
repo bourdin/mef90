@@ -26,6 +26,7 @@ program CoupledPlasticityDamage
    type(DM), target                                    :: Mesh
    type(IS)                                           :: setIS, CellSetGlobalIS
    PetscInt, dimension(:), pointer                      :: setID
+   PetscInt                                           :: numCellSet
    PetscInt                                           :: numset, set
    PetscReal, dimension(:), pointer                     :: time
    PetscReal, dimension(:), pointer                     :: thermalEnergySet, heatFluxWorkSet
@@ -165,19 +166,20 @@ program CoupledPlasticityDamage
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergySet(MEF90DefMechCtx%numCellSet))
+   call MEF90DMGetNumSets(MEF90DefMechCtx%megaDM, MEF90CellSetLabelName, numCellSet, ierr); CHKERRQ(ierr)
+   allocate (elasticEnergySet(numCellSet))
    elasticEnergySet = 0.0_kr
-   allocate (surfaceEnergySet(MEF90DefMechCtx%numCellSet))
+   allocate (surfaceEnergySet(numCellSet))
    surfaceEnergySet = 0.0_kr
-   allocate (forceWorkSet(MEF90DefMechCtx%numCellSet))
+   allocate (forceWorkSet(numCellSet))
    forceWorkSet = 0.0_kr
-   allocate (cohesiveEnergySet(MEF90DefMechCtx%numCellSet))
+   allocate (cohesiveEnergySet(numCellSet))
    cohesiveEnergySet = 0.0_kr
-   allocate (thermalEnergySet(MEF90DefMechCtx%numCellSet))
+   allocate (thermalEnergySet(numCellSet))
    thermalEnergySet = 0.0_kr
-   allocate (heatFluxWorkSet(MEF90DefMechCtx%numCellSet))
+   allocate (heatFluxWorkSet(numCellSet))
    heatFluxWorkSet = 0.0_kr
-   allocate (plasticDissipationSet(MEF90DefMechCtx%numCellSet))
+   allocate (plasticDissipationSet(numCellSet))
    plasticDissipationSet = 0.0_kr
 
    allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))
