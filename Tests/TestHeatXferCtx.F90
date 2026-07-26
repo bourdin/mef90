@@ -82,13 +82,7 @@ program TestHeatXferCtx
    PetscCallA(DMDestroy(dm, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
-   !!! Get parse all materials data from the command line
    PetscCallA(DMGetDimension(MEF90HeatXferCtx%megaDM, dim, ierr))
-   if (dim == 2) then
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag, MEF90HeatXferCtx%megaDM, MEF90Mathium2D, MEF90Ctx, ierr))
-   else
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90HeatXferCtx%MaterialPropertiesBag, MEF90HeatXferCtx%megaDM, MEF90Mathium3D, MEF90Ctx, ierr))
-   end if
 
    PetscCallA(DMGetLabelIdIS(MEF90HeatXferCtx%megaDM, MEF90CellSetLabelName, cellSetIS, ierr))
    PetscCallA(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, cellSetIS, ierr))

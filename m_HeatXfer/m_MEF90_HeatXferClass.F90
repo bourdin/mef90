@@ -5,7 +5,7 @@ module m_MEF90_HeatXfer_class
    use m_MEF90_BaseClass
    use m_MEF90_Ctx
    use m_MEF90_DMPlex
-   use m_MEF90_Materials
+   use m_MEF90_LinAlg
    use, intrinsic :: iso_c_binding
    implicit none(type)
 
@@ -51,6 +51,11 @@ module m_MEF90_HeatXfer_class
       PetscBool                        :: Has_BC = PETSC_FALSE
       PetscReal                        :: boundaryTemperature = 0.0_kr
       PetscReal, dimension(3)          :: advectionVector = [0.0_kr, 0.0_kr, 0.0_kr]
+      !!! Material properties. thermalConductivity is a symmetric matrix, so it is dimension
+      !!! dependent and allocated by MEF90HeatXferCellSetOptionsSetFromOptions
+      PetscReal                        :: density = 1.0_kr
+      PetscReal                        :: specificHeat = 1.0_kr
+      class(mef90Mat), allocatable     :: thermalConductivity
    end type MEF90HeatXferCellSetOptions_Type
 
    type MEF90HeatXferFaceSetOptions_Type
@@ -87,7 +92,6 @@ module m_MEF90_HeatXfer_class
       !!! Per-set options are not stored: they are read from the options database where they are needed,
       !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. The number of sets is obtained
       !!! from the megaDM with MEF90DMGetNumSets.
-      type(tPetscBag), dimension(:), pointer  :: MaterialPropertiesBag => null()
 
       !!! Handle on self, to be used as the application context of SNES, TS, etc. Since MEF90HeatXfer_Type
       !!! extends MEF90Object, it has type-bound procedures and cannot be passed to the assumed-type (type(*))
@@ -218,11 +222,6 @@ contains
 
       nullify (HeatXfer%MEF90Ctx)
 
-      do set = 1, size(HeatXfer%MaterialPropertiesBag)
-         PetscCall(PetscBagDestroy(HeatXfer%MaterialPropertiesBag(set), ierr))
-      end do
-      deallocate (HeatXfer%MaterialPropertiesBag)
-
       PetscCall(DMDestroy(HeatXfer%megaDM, ierr))
    end subroutine MEF90HeatXferDestroy
 
@@ -264,13 +263,24 @@ contains
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferCellSetOptionsSetFromOptions(comm, prefix, options, ierr)
+   subroutine MEF90HeatXferCellSetOptionsSetFromOptions(comm, prefix, dim, options, ierr)
       MPIU_Comm, intent(IN)                                   :: comm
       character(len=*), intent(IN)                            :: prefix
+      PetscInt, intent(IN)                                    :: dim
       type(MEF90HeatXferCellSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                           :: ierr
 
       PetscInt                                                :: nOpt
+      PetscReal, dimension(:), allocatable                    :: tmpArray
+
+      select case (dim)
+      case (2)
+         options%thermalConductivity = MEF90MatS2DIdentity
+      case (3)
+         options%thermalConductivity = MEF90MatS3DIdentity
+      case default
+         SETERRQ(comm, PETSC_ERR_ARG_OUTOFRANGE, "dim must be 2 or 3 in " // __FUNCT__)
+      end select
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90HeatXfer_Type cell set", "mef90HeatXfer", ierr))
          PetscCall(PetscOptionsReal('-Flux', '[J.s^(-1).m^(-3) / J.s^(-1).m^(-2)] (f): Internal / applied heat flux', 'mef90HeatXfer', options%Flux, options%Flux, PETSC_NULL_BOOL, ierr))
@@ -278,6 +288,24 @@ contains
          PetscCall(PetscOptionsReal('-boundaryTemperature', 'Temperature boundary value', 'mef90HeatXfer', options%boundaryTemperature, options%boundaryTemperature, PETSC_NULL_BOOL, ierr))
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-advectionVector', '[m.s^(-1)] (V): advection vector', 'mef90HeatXfer', options%advectionVector, nOpt, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-Density', '[kg.m^(-dim)] (rho) Density', 'mef90HeatXfer', options%density, options%density, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-SpecificHeat', '[J.kg^(-1).K^(-1)] (Cp) Specific heat', 'mef90HeatXfer', options%specificHeat, options%specificHeat, PETSC_NULL_BOOL, ierr))
+         select type (K => options%thermalConductivity)
+         type is (MatS2D)
+            nOpt = 3
+            allocate (tmpArray(nOpt))
+            tmpArray = K
+            PetscCall(PetscOptionsRealArray('-ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', 'mef90HeatXfer', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
+            K = tmpArray
+            deallocate (tmpArray)
+         type is (MatS3D)
+            nOpt = 6
+            allocate (tmpArray(nOpt))
+            tmpArray = K
+            PetscCall(PetscOptionsRealArray('-ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', 'mef90HeatXfer', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
+            K = tmpArray
+            deallocate (tmpArray)
+         end select
       PetscCall(PetscOptionsEnd(ierr))
    end subroutine MEF90HeatXferCellSetOptionsSetFromOptions
 
@@ -363,7 +391,7 @@ contains
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
+         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), self%dim, cellSetOptions, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
@@ -441,7 +469,7 @@ contains
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
+         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), self%dim, cellSetOptions, ierr))
          write (IOBuffer, "(A,'cs',I4.4,': flux: ',ES12.5,' advection vector: ',3(ES12.5,' '),'\n')") &
             trim(self%prefix), setID(set), cellSetOptions%flux, cellSetOptions%advectionVector
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))

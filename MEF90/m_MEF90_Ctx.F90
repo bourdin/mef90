@@ -2,7 +2,6 @@
 module m_MEF90_Ctx
 #include "petsc/finclude/petsc.h"
    use, intrinsic :: iso_c_binding
-   use petscbag
    use petscsys
    use m_MEF90_Parameters
    use m_MEF90_Utils

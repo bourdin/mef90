@@ -112,11 +112,6 @@ program CoupledPlasticityDamage
 
    !!! Get material properties bags
    if (dim == 2) then
-      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%DMVect, MEF90Mathium2D, MEF90Ctx, ierr)
-   else
-      call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%DMVect, MEF90Mathium3D, MEF90Ctx, ierr)
-   end if
-   MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
    !!! Create time array from global options
    call MEF90CtxGetTime(MEF90Ctx, time, ierr)

@@ -109,7 +109,6 @@ subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, Pl
 !       Call ISGetIndices(CellSetGlobalIS,setID,ierr);CHKERRQ(ierr)
 
 !       Do set = 1,size(setID)
-!          Call PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set),matpropSet,ierr);CHKERRQ(ierr)
 
 !          !!GET DAMAGE TYPE
 !          cellSetOptions = MEF90DefMechCtx%cellSetOptions(set)

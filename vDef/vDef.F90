@@ -144,13 +144,6 @@ program vDef
    !!! We no longer need the DM. We have the megaDM in MEF90HeatXferCtx and MEF90DefMechCtx
    PetscCallA(DMDestroy(dm, ierr))
 
-   !!! Get parse all materials data from the command line
-   if (MEF90DefMechCtx%dim == 2) then
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%megaDM, MEF90Mathium2D, MEF90Ctx, ierr))
-   else
-      PetscCallA(MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag, MEF90DefMechCtx%megaDM, MEF90Mathium3D, MEF90Ctx, ierr))
-   end if
-   MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
    !!! Create GLOBAL vectors for the unknowns (temperature,displacements), residuals, etc
    PetscCallA(VecGetDM(MEF90HeatXferCtx%temperatureLocal, temperatureDM, ierr))

@@ -3,7 +3,6 @@ module m_MEF90_Materials_Types
    use m_MEF90_Parameters
    use m_MEF90_Utils
    use m_MEF90_LinAlg
-   use petscbag
    implicit none(type, external)
 
    type MEF90HookesLaw2D
@@ -38,85 +37,11 @@ module m_MEF90_Materials_Types
       PetscBool          :: fromEuler
    end type MEF90RotationMatrix3D
 
-   type MEF90MatProp2D_Type
-      PetscReal                     :: Density                                          ! rho
-      PetscReal                     :: SpecificHeat                                     ! Cp
-      type(MatS2D)                  :: ThermalConductivity                              ! K
-      type(MatS2D)                  :: LinearThermalExpansion                           ! alpha
-      PetscReal                     :: cohesiveStiffness
-      character(len=MEF90MXSTRLEN)  :: Name
-   end type MEF90MatProp2D_Type
-
-   type MEF90MatProp3D_Type
-      PetscReal                     :: Density                                          ! rho
-      PetscReal                     :: SpecificHeat                                     ! Cp
-      type(MatS3D)                  :: ThermalConductivity                              ! K
-      type(MatS3D)                  :: LinearThermalExpansion                           ! alpha
-      PetscReal                     :: cohesiveStiffness
-      character(len=MEF90MXSTRLEN)  :: Name
-   end type MEF90MatProp3D_Type
-
    enum, bind(c)
       enumerator :: MEF90HookesLawTypeFull = 0, &
          MEF90HookesLawTypeIsotropic
    end enum
-
-   !!! The Mathium is a bogus isotropic material whose material properties are all 1
-   !!! except for a Poisson Ratio of 0.3
-   type(MEF90MatProp2D_Type), parameter     :: MEF90Mathium2D = MEF90MatProp2D_Type( &
-                                               1.0_kr, & ! Density
-                                               1.0_kr, & ! SpecificHeat
-                                               MEF90MatS2DIdentity, & ! ThermalConductivity
-                                               MEF90MatS2DIdentity, & ! LinearThermalExpansion
-                                               0.0_kr, & ! cohesive stiffness
-                                               "MEF90Mathium2D")
-
-   type(MEF90MatProp3D_Type), parameter     :: MEF90Mathium3D = MEF90MatProp3D_Type( &
-                                               1.0_kr, & ! Density
-                                               1.0_kr, & ! SpecificHeat
-                                               MEF90MatS3DIdentity, & ! ThermalConductivity
-                                               MEF90MatS3DIdentity, & ! LinearThermalExpansion
-                                               0.0_kr, & ! cohesive stiffness
-                                               "MEF90Mathium3D")
 end module m_MEF90_Materials_Types
-
-module m_MEF90_Materials_Interface2D
-#include "petsc/finclude/petsc.h"
-   use m_MEF90_Materials_Types
-   implicit none(type)
-   private
-   public :: PetscBagGetDataMEF90MatProp2D
-
-contains
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90MatProp2D"
-   subroutine PetscBagGetDataMEF90MatProp2D(bag, data, ierr)
-      PetscBag                                :: bag
-      type(MEF90MatProp2D_Type), pointer      :: data
-      PetscErrorCode                          :: ierr
-
-      PetscCall(PetscBagGetData(bag, data, ierr))
-   end subroutine PetscBagGetDataMEF90MatProp2D
-end module m_MEF90_Materials_Interface2D
-
-module m_MEF90_Materials_Interface3D
-#include "petsc/finclude/petsc.h"
-   use m_MEF90_Materials_Types
-   implicit none(type)
-   private
-   public :: PetscBagGetDataMEF90MatProp3D
-
-contains
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90MatProp3D"
-   subroutine PetscBagGetDataMEF90MatProp3D(bag, data, ierr)
-      PetscBag                                :: bag
-      type(MEF90MatProp3D_Type), pointer      :: data
-      PetscErrorCode                          :: ierr
-
-      PetscCall(PetscBagGetData(bag, data, ierr))
-   end subroutine PetscBagGetDataMEF90MatProp3D
-end module m_MEF90_Materials_Interface3D
 
 module m_MEF90_Materials
 #include "petsc/finclude/petsc.h"
@@ -127,21 +52,7 @@ module m_MEF90_Materials
    use m_MEF90_Ctx
    use m_MEF90_DMPlex
    use m_MEF90_Materials_Types
-   use m_MEF90_Materials_Interface2D
-   use m_MEF90_Materials_Interface3D
    implicit none(type)
-
-   interface PetscBagGetDataMEF90MatProp
-      module procedure PetscBagGetDataMEF90MatProp2D, PetscBagGetDataMEF90MatProp3D
-   end interface
-
-   interface PetscBagRegisterMEF90MatProp
-      module procedure PetscBagRegisterMEF90MatProp2D, PetscBagRegisterMEF90MatProp3D
-   end interface
-
-   interface MEF90MatPropBagSetFromOptions
-      module procedure MEF90MatPropBagSetFromOptions2D, MEF90MatPropBagSetFromOptions3D
-   end interface
 
    interface operator(+)
       module procedure MEF90HookesLaw2DSum, MEF90HookesLaw3DSum
@@ -154,9 +65,6 @@ module m_MEF90_Materials
    interface operator(*)
       module procedure MEF90HookesLaw2DXMatS2D, MEF90HookesLaw3DXMatS3D, MEF90HookesLaw2DXMat2D, MEF90HookesLaw3DXMat3D, ScalarXMEF90HookesLaw2D, ScalarXMEF90HookesLaw3D
    end interface
-
-   PetscSizeT, protected   :: sizeofMEF90MatProp2D
-   PetscSizeT, protected   :: sizeofMEF90MatProp3D
 
    PetscSizeT, protected   :: sizeofMEF90HookesLaw2D
    PetscSizeT, protected   :: sizeofMEF90HookesLaw3D
@@ -175,16 +83,12 @@ contains
    subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode, intent(OUT)          :: ierr
 
-      type(MEF90MatProp2D_Type), target    :: matProp2D
-      type(MEF90MatProp3D_Type), target    :: matProp3D
       type(MEF90HookesLaw2D), target       :: HookesLaw2D
       type(MEF90HookesLaw3D), target       :: HookesLaw3D
       character(len=1), pointer            :: dummychar(:)
       PetscSizeT                           :: sizeofchar
 
       PetscCall(PetscDataTypeGetSize(PETSC_CHAR, sizeofchar, ierr))
-      sizeofMEF90MatProp2D = size(transfer(matProp2D, dummychar)) * sizeofchar
-      sizeofMEF90MatProp3D = size(transfer(matProp3D, dummychar)) * sizeofchar
       sizeofMEF90HookesLaw2D = size(transfer(HookesLaw2D, dummychar)) * sizeofchar
       sizeofMEF90HookesLaw3D = size(transfer(HookesLaw3D, dummychar)) * sizeofchar
 
@@ -194,161 +98,6 @@ contains
       MEF90HookesLawTypeList(4) = '_MEF90HookesLawTypeList'
       MEF90HookesLawTypeList(5) = ''
    end subroutine MEF90MaterialsInitialize_Private
-
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90MatProp2D"
-!!!
-!!!
-!!!  PetscBagRegisterMEF90MatProp2D:
-!!!
-!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   subroutine PetscBagRegisterMEF90MatProp2D(bag, name, prefix, default, ierr)
-      PetscBag                                :: bag
-      character(len=*), intent(IN)            :: prefix, name
-      type(MEF90MatProp2D_Type), intent(IN)   :: default
-      PetscErrorCode, intent(OUT)             :: ierr
-
-      type(MEF90MatProp2D_Type), pointer      :: matprop
-
-      PetscCall(PetscBagGetDataMEF90MatProp2D(bag, matprop, ierr))
-      PetscCall(PetscBagSetName(bag, trim(name), "MatProp2D object: material properties", ierr))
-      PetscCall(PetscBagSetOptionsPrefix(bag, trim(prefix), ierr))
-
-      PetscCall(PetscBagRegisterString(bag, matprop%name, trim(default%name), 'Name', '', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%density, default%density, 'Density', '[kg.m^(-2)] (rho) Density', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%SpecificHeat, default%SpecificHeat, 'SpecificHeat', '[J.kg^(-1).K^(-1)] (Cp) Specific heat', ierr))
-      matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 3_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
-      matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%LinearThermalExpansion, 3_ki, 'LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%cohesiveStiffness, default%cohesiveStiffness, 'cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', ierr))
-   end subroutine PetscBagRegisterMEF90MatProp2D
-
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90MatProp3D"
-!!!
-!!!
-!!!  PetscBagRegisterMEF90MatProp3D:
-!!!
-!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!
-   subroutine PetscBagRegisterMEF90MatProp3D(bag, name, prefix, default, ierr)
-      PetscBag                                :: bag
-      character(len=*), intent(IN)            :: prefix, name
-      type(MEF90MatProp3D_Type), intent(IN)   :: default
-      PetscErrorCode, intent(INOUT)           :: ierr
-
-      type(MEF90MatProp3D_Type), pointer      :: matprop
-      PetscCall(PetscBagGetDataMEF90MatProp3D(bag, matprop, ierr))
-      PetscCall(PetscBagSetName(bag, trim(name), "MatProp3D object: material properties", ierr))
-      PetscCall(PetscBagSetOptionsPrefix(bag, trim(prefix), ierr))
-
-      PetscCall(PetscBagRegisterString(bag, matprop%name, trim(default%name), 'Name', '', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%density, default%density, 'Density', '[kg.m^(-3)] (rho) Density', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%SpecificHeat, default%SpecificHeat, 'SpecificHeat', '[J.kg^(-1).K^(-1)] (Cp) Specific heat', ierr))
-      matprop%ThermalConductivity = default%ThermalConductivity
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%ThermalConductivity, 6_ki, 'ThermalConductivity', '[J.m^(-1).s^(-1).K^(-1)] (K) Thermal conductivity', ierr))
-      matprop%LinearThermalExpansion = default%LinearThermalExpansion
-      PetscCall(PetscBagRegisterRealArray(bag, matprop%LinearThermalExpansion, 6_ki, 'LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', ierr))
-      PetscCall(PetscBagRegisterReal(bag, matprop%cohesiveStiffness, default%cohesiveStiffness, 'cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', ierr))
-   end subroutine PetscBagRegisterMEF90MatProp3D
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90MatPropBagSetFromOptions2D"
-!!!
-!!!
-!!!  MEF90MatPropBagSetFromOptions:
-!!!  MEF90MatPropBagSetFromOptions2D
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
-!!!
-   subroutine MEF90MatPropBagSetFromOptions2D(MEF90MatPropBag, dm, defaultMaterial, MEF90Ctx, ierr)
-      PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
-      type(tDM), intent(IN)                            :: dm
-      type(MEF90MatProp2D_Type), intent(IN)            :: defaultMaterial
-      type(MEF90Ctx_Type), target, intent(IN)                    :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)                    :: ierr
-
-      type(tIS)                                        :: setIS
-      PetscInt, dimension(:), pointer                  :: setID
-      PetscInt                                         :: numSet, set
-      character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
-      type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
-
-      MEF90GlobalOptions => MEF90Ctx%globalOptions
-      PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      PetscCall(ISGetIndices(setIS, setID, ierr))
-      allocate (MEF90MatPropBag(numSet))
-      do set = 1, numSet
-         write (setName, 100) setID(set)
-         write (setprefix, 101) setID(set)
-         if (MEF90GlobalOptions%verbose > 0) then
-            write (IOBuffer, 102) setID(set), trim(setprefix)
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, ierr))
-         end if
-         PetscCall(PetscBagCreate(PETSC_COMM_WORLD, sizeofMEF90MatProp2D, MEF90MatPropBag(set), ierr))
-         PetscCall(PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set), setName, setprefix, defaultMaterial, ierr))
-         if (MEF90GlobalOptions%verbose > 0) then
-            PetscCall(PetscBagView(MEF90MatPropBag(set), PETSC_VIEWER_STDOUT_WORLD, ierr))
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n", ierr))
-         end if
-      end do
-      PetscCall(ISRestoreIndices(setIS, setID, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-100   format('Cell set ', I4)
-101   format('cs', I4.4, '_')
-102   format('Registering materials properties for cell set ', I4, ': ', A, '\n')
-   end subroutine MEF90MatPropBagSetFromOptions2D
-
-#undef __FUNCT__
-#define __FUNCT__ "MEF90MatPropBagSetFromOptions3D"
-!!!
-!!!
-!!!  MEF90MatPropBagSetFromOptions3D:
-!!!
-!!!  (c) 2012 Blaise Bourdin bourdin@lsu.edu
-!!!
-   subroutine MEF90MatPropBagSetFromOptions3D(MEF90MatPropBag, dm, defaultMaterial, MEF90Ctx, ierr)
-      PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
-      type(tDM), intent(IN)                            :: dm
-      type(MEF90MatProp3D_Type), intent(IN)            :: defaultMaterial
-      type(MEF90Ctx_Type), target, intent(IN)                    :: MEF90Ctx
-      PetscErrorCode, intent(INOUT)                    :: ierr
-
-      type(tIS)                                        :: setIS
-      PetscInt, dimension(:), pointer                  :: setID
-      PetscInt                                         :: numSet, set
-      character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
-      type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
-
-      MEF90GlobalOptions => MEF90Ctx%globalOptions
-      PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      PetscCall(ISGetIndices(setIS, setID, ierr))
-      allocate (MEF90MatPropBag(numSet))
-      do set = 1, numSet
-         write (setName, 100) setID(set)
-         write (setprefix, 101) setID(set)
-         if (MEF90GlobalOptions%verbose > 0) then
-            write (IOBuffer, 102) setID(set), trim(setprefix)
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, IOBuffer, ierr))
-         end if
-         PetscCall(PetscBagCreate(PETSC_COMM_WORLD, sizeofMEF90MatProp3D, MEF90MatPropBag(set), ierr))
-         PetscCall(PetscBagRegisterMEF90MatProp(MEF90MatPropBag(set), setName, setprefix, defaultMaterial, ierr))
-         if (MEF90GlobalOptions%verbose > 0) then
-            PetscCall(PetscBagView(MEF90MatPropBag(set), PETSC_VIEWER_STDOUT_WORLD, ierr))
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n", ierr))
-         end if
-      end do
-      PetscCall(ISRestoreIndices(setIS, setID, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-100   format('Cell set ', I4)
-101   format('cs', I4.4, '_')
-102   format('Registering materials properties for cell set ', I4, ': ', A, '\n')
-   end subroutine MEF90MatPropBagSetFromOptions3D
 
 !!! Subroutine generating various types of Hooke's laws
 #undef __FUNCT__

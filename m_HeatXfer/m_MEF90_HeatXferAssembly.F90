@@ -41,9 +41,9 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
    PetscInt                                        :: set, QuadratureOrder, vecOffset
    PetscInt                                        :: cell, iDof, jDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
+   type(MEF90_MATS)          :: thermalConductivity
    type(MEF90HeatXferFaceSetOptions_Type)          :: faceSetOptions
    character(len=MEF90MXSTRLEN)                    :: setPrefix
-   type(MEF90_MATPROP), pointer                    :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
@@ -77,9 +77,12 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
-            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (thermalConductivityMat => cellSetOptions%thermalConductivity)
+            type is (MEF90_MATS)
+               thermalConductivity = thermalConductivityMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -97,7 +100,7 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 1, size(elem(cell)%BF(:, 1))
                      do iDof = 1, size(elem(cell)%BF(:, 1))
-                        residualDof(jDof) = residualDof(jDof) + (matpropSet%ThermalConductivity * temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof, iGauss)) * elem(cell)%Gauss_C(iGauss)
+                        residualDof(jDof) = residualDof(jDof) + (thermalConductivity * temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof, iGauss)) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -115,7 +118,7 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
                   do iGauss = 1, size(elem(cell)%Gauss_C)
                      do jDof = 1, size(elem(cell)%BF(:, 1))
                         do iDof = 1, size(elem(cell)%BF(:, 1))
-                           residualDof(jDof) = residualDof(jDof) - (matpropSet%Density * matpropSet%SpecificHeat * advectionVec.dotP.temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
+                           residualDof(jDof) = residualDof(jDof) - (cellSetOptions%density * cellSetOptions%specificHeat * advectionVec.dotP.temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
                         end do ! iDof
                      end do ! jDof
                   end do ! iGauss
@@ -253,9 +256,9 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
    PetscInt                                        :: set, QuadratureOrder
    PetscInt                                        :: cell, iDof, jDof, iGauss, nbDof
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
+   type(MEF90_MATS)          :: thermalConductivity
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
    character(len=MEF90MXSTRLEN)                     :: setPrefix
-   type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
@@ -278,9 +281,12 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
-            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (thermalConductivityMat => cellSetOptions%thermalConductivity)
+            type is (MEF90_MATS)
+               thermalConductivity = thermalConductivityMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -298,7 +304,7 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 0, nbDof - 1
                      do iDof = 1, nbDof
-                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + (matpropSet%ThermalConductivity * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof + 1, iGauss)) * elem(cell)%Gauss_C(iGauss)
+                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + (thermalConductivity * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof + 1, iGauss)) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -314,7 +320,7 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
                   do iGauss = 1, size(elem(cell)%Gauss_C)
                      do jDof = 0, nbDof - 1
                         do iDof = 1, nbDof
-                           matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) - (matpropSet%Density * matpropSet%SpecificHeat * advectionVec.dotP.elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
+                           matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) - (cellSetOptions%density * cellSetOptions%specificHeat * advectionVec.dotP.elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
                         end do ! iDof
                      end do ! jDof
                   end do ! iGauss
@@ -404,9 +410,9 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
    PetscInt                                        :: set, QuadratureOrder, vecOffset
    PetscInt                                        :: cell, iDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
+   type(MEF90_MATS)          :: thermalConductivity
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
    character(len=MEF90MXSTRLEN)                     :: setPrefix
-   type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
@@ -442,9 +448,12 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
          myBodyWork = 0.0_kr
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
-            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (thermalConductivityMat => cellSetOptions%thermalConductivity)
+            type is (MEF90_MATS)
+               thermalConductivity = thermalConductivityMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -461,7 +470,7 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
                   do iDof = 1, size(elem(cell)%BF(:, 1))
                      gradTemperatureCell = gradTemperatureCell + temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss)
                   end do ! iDof
-                  myEnergy = myEnergy + ((matpropSet%ThermalConductivity * gradTemperatureCell) .dotP.gradTemperatureCell) * elem(cell)%Gauss_C(iGauss)
+                  myEnergy = myEnergy + ((thermalConductivity * gradTemperatureCell) .dotP.gradTemperatureCell) * elem(cell)%Gauss_C(iGauss)
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90HeatXferCtx%temperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
             end do ! cell
@@ -571,9 +580,9 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
    PetscInt                                        :: set, QuadratureOrder, vecOffset
    PetscInt                                        :: cell, iDof, jDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
+   type(MEF90_MATS)          :: thermalConductivity
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
    character(len=MEF90MXSTRLEN)                     :: setPrefix
-   type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
@@ -612,9 +621,12 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
-            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (thermalConductivityMat => cellSetOptions%thermalConductivity)
+            type is (MEF90_MATS)
+               thermalConductivity = thermalConductivityMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -632,7 +644,7 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 1, size(elem(cell)%BF(:, 1))
                      do iDof = 1, size(elem(cell)%BF(:, 1))
-                        residualDof(jDof) = residualDof(jDof) + matpropSet%Density * matpropSet%SpecificHeat * temperatureDotDof(iDof) * elem(cell)%BF(iDof, iGauss) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
+                        residualDof(jDof) = residualDof(jDof) + cellSetOptions%density * cellSetOptions%specificHeat * temperatureDotDof(iDof) * elem(cell)%BF(iDof, iGauss) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -648,7 +660,7 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 1, size(elem(cell)%BF(:, 1))
                      do iDof = 1, size(elem(cell)%BF(:, 1))
-                        residualDof(jDof) = residualDof(jDof) + (matpropSet%ThermalConductivity * temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof, iGauss)) * elem(cell)%Gauss_C(iGauss)
+                        residualDof(jDof) = residualDof(jDof) + (thermalConductivity * temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof, iGauss)) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -666,7 +678,7 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
                   do iGauss = 1, size(elem(cell)%Gauss_C)
                      do jDof = 1, size(elem(cell)%BF(:, 1))
                         do iDof = 1, size(elem(cell)%BF(:, 1))
-                           residualDof(jDof) = residualDof(jDof) - (matpropSet%Density * matpropSet%SpecificHeat * advectionVec.dotP.temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
+                           residualDof(jDof) = residualDof(jDof) - (cellSetOptions%density * cellSetOptions%specificHeat * advectionVec.dotP.temperatureDof(iDof) * elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof, iGauss) * elem(cell)%Gauss_C(iGauss)
                         end do ! iDof
                      end do ! jDof
                   end do ! iGauss
@@ -807,9 +819,9 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
    PetscInt                                        :: set, QuadratureOrder
    PetscInt                                        :: cell, iDof, jDof, iGauss, nbDof
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
+   type(MEF90_MATS)          :: thermalConductivity
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
    character(len=MEF90MXSTRLEN)                     :: setPrefix
-   type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
@@ -832,9 +844,12 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
-            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (thermalConductivityMat => cellSetOptions%thermalConductivity)
+            type is (MEF90_MATS)
+               thermalConductivity = thermalConductivityMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -852,7 +867,7 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 0, nbDof - 1
                      do iDof = 1, nbDof
-                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + shift * matpropSet%Density * matpropSet%SpecificHeat * elem(cell)%BF(iDof, iGauss) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
+                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + shift * cellSetOptions%density * cellSetOptions%specificHeat * elem(cell)%BF(iDof, iGauss) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -866,7 +881,7 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
                do iGauss = 1, size(elem(cell)%Gauss_C)
                   do jDof = 0, nbDof - 1
                      do iDof = 1, nbDof
-                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + (matpropSet%ThermalConductivity * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof + 1, iGauss)) * elem(cell)%Gauss_C(iGauss)
+                        matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) + (thermalConductivity * elem(cell)%Grad_BF(iDof, iGauss) .dotP.elem(cell)%Grad_BF(jDof + 1, iGauss)) * elem(cell)%Gauss_C(iGauss)
                      end do ! iDof
                   end do ! jDof
                end do ! iGauss
@@ -882,7 +897,7 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
                   do iGauss = 1, size(elem(cell)%Gauss_C)
                      do jDof = 0, nbDof - 1
                         do iDof = 1, nbDof
-                           matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) - (matpropSet%Density * matpropSet%SpecificHeat * advectionVec.dotP.elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
+                           matDof(jDof * nbDof + iDof) = matDof(jDof * nbDof + iDof) - (cellSetOptions%density * cellSetOptions%specificHeat * advectionVec.dotP.elem(cell)%Grad_BF(iDof, iGauss)) * elem(cell)%BF(jDof + 1, iGauss) * elem(cell)%Gauss_C(iGauss)
                         end do ! iDof
                      end do ! jDof
                   end do ! iGauss

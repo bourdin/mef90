@@ -57,8 +57,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90DefMechFaceSetOptions_Type)               :: faceSetOptions
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
@@ -113,9 +113,12 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
@@ -169,7 +172,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   end do ! iDof numDofDamage
 
                   PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
                   ! #if MEF90_DIM == 2
    !!! We need something along these lines
@@ -238,7 +241,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             ! End If ! damping
 
                !!! Cohesive force
-            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (matpropSet%cohesiveStiffness /= 0.0_kr)) then
+            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (cellSetOptions%cohesiveStiffness /= 0.0_kr)) then
                do cell = 1, size(setPointID)
                   residualDof = 0.0_kr
                   U0Gauss = 0.0_kr
@@ -248,7 +251,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                      do iDof = 1, numDofDisplacement
                         U0Gauss = U0Gauss + (displacementDof(iDof) - cohesiveDisplacementDof(iDof)) * elemVect(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDisplacement
-                     U0Gauss = U0Gauss * matpropSet%cohesiveStiffness
+                     U0Gauss = U0Gauss * cellSetOptions%cohesiveStiffness
                      do iDof = 1, numDofDisplacement
                         residualDof(iDof) = residualDof(iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(iDof, iGauss))
                      end do ! iDof numDofDisplacement
@@ -400,8 +403,8 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscReal, dimension(:), pointer                    :: displacementDof, damageDof, temperatureDof, plasticStrainArray
    type(MEF90_MATS)                                    :: totalStrainGauss, plasticStrainCell
    type(MEF90_VECT)                                    :: U0Gauss
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometry
@@ -439,9 +442,12 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
@@ -493,7 +499,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                      temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDamage
                   PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%temperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
 !!! We need something along these lines
@@ -542,12 +548,12 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             ! End If ! damping
 
                !!! Cohesive force
-            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (matpropSet%cohesiveStiffness /= 0.0_kr)) then
+            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (cellSetOptions%cohesiveStiffness /= 0.0_kr)) then
                do cell = 1, size(setPointID)
                   matDof = 0.0_kr
                   do iGauss = 1, numGauss
                     do iDof = 1, numDofDisplacement
-                       U0Gauss = matpropSet%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
+                       U0Gauss = cellSetOptions%cohesiveStiffness * elemVect(cell)%BF(iDof, iGauss)
                        do jDof = 1, numDofDisplacement
                            matDof(jDof, iDof) = matDof(jDof, iDof) + elemVect(cell)%Gauss_C(iGauss) * (U0Gauss .DotP. elemVect(cell)%BF(jDof, iGauss))
                         end do ! jDof numDofDisplacement
@@ -634,7 +640,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
@@ -760,7 +766,6 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(eDMPolytopeType)                               :: cellGeometry
@@ -789,9 +794,8 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
          myCohesiveEnergy = 0.0_kr
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
@@ -804,7 +808,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
             numDofDisplacement = size(elemVect(1)%BF(:, 1))
             numGauss = size(elemVect(1)%Gauss_C)
 
-            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (matpropSet%cohesiveStiffness /= 0.0_kr)) then
+            if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (cellSetOptions%cohesiveStiffness /= 0.0_kr)) then
                do cell = 1, size(setPointID)
                   U0Gauss = 0.0_kr
                   PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -814,7 +818,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
                         U0Gauss = U0Gauss + (displacementDof(iDof) - cohesiveDisplacementDof(iDof)) * elemVect(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDisplacement
                      do iDof = 1, numDofDisplacement
-                        myCohesiveEnergy = myCohesiveEnergy + elemVect(cell)%Gauss_C(iGauss) * matpropSet%cohesiveStiffness * (U0Gauss .DotP. U0Gauss)
+                        myCohesiveEnergy = myCohesiveEnergy + elemVect(cell)%Gauss_C(iGauss) * cellSetOptions%cohesiveStiffness * (U0Gauss .DotP. U0Gauss)
                      end do ! iDof numDofDisplacement
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmCohesiveDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%cohesiveDisplacement, setPointID(cell), PETSC_NULL_INTEGER, cohesiveDisplacementDof, ierr))
@@ -874,8 +878,8 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
@@ -913,9 +917,12 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
          myEnergy = 0.0_kr
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometryVect, ierr))
@@ -963,7 +970,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                   do iDof = 1, numDofDamage
                      temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDamage
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
 !!! We need something along these lines
@@ -1028,8 +1035,8 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
@@ -1083,9 +1090,12 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometryVect, ierr))
@@ -1135,7 +1145,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   do iDof = 1, numDofDamage
                      temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDamage
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
 !!! We need something along these lines
@@ -1211,8 +1221,8 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
@@ -1258,9 +1268,12 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmDamage, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometryVect, ierr))
@@ -1311,7 +1324,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   do iDof = 1, numDofDamage
                      temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDamage
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
                   ! #if MEF90_DIM == 2
    !!! We need something along these lines
@@ -1447,8 +1460,8 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim, vecOffset
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
+   type(MEF90_MATS)               :: linearThermalExpansion
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryVect, cellGeometryScal
@@ -1491,9 +1504,12 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmDamage, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
+            select type (linearThermalExpansionMat => cellSetOptions%linearThermalExpansion)
+            type is (MEF90_MATS)
+               linearThermalExpansion = linearThermalExpansionMat
+            end select
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometryVect, ierr))
@@ -1544,7 +1560,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   do iDof = 1, numDofDamage
                      temperatureGauss = temperatureGauss + temperatureDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDamage
-                  totalStrainGauss = totalStrainGauss - (temperatureGauss * matpropSet%LinearThermalExpansion)
+                  totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
 !!! We need something along these lines
@@ -1652,7 +1668,6 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
    type(eDMPolytopeType)                               :: cellGeometryScal
@@ -1683,9 +1698,8 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
          myEnergy = 0.0_kr
          PetscCall(DMGetStratumIS(dmDamage, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDamage, setPointID(1), cellGeometryScal, ierr))
@@ -1801,7 +1815,6 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
    type(tIS)                                           :: setIS, setPointIS
    PetscInt, dimension(:), pointer                     :: setID, setPointID
    PetscInt                                            :: set, QuadratureOrder, cell, dim
-   type(MEF90_MATPROP), pointer                        :: matpropSet
    type(MEF90DefMechCellSetOptions_Type)               :: cellSetOptions
    type(MEF90_ELEMENT_ELAST), dimension(:), pointer    :: elemVect
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer     :: elemScal
@@ -1835,9 +1848,8 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
          myCrackVolume = 0.0_kr
          PetscCall(DMGetStratumIS(dmDamage, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            PetscCall(PetscBagGetDataMEF90MatProp(MEF90DefMechCtx%MaterialPropertiesBag(set), matpropSet, ierr))
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
-            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, cellSetOptions, ierr))
+            PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, prefix, MEF90_DIM, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometryVect, ierr))

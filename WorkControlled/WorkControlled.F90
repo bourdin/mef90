@@ -237,11 +237,6 @@ Program WorkControlled
 
    !!! Get material properties bags
    If (dim == 2) Then
-      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90Mathium2D,MEF90Ctx,ierr)
-   Else
-      Call MEF90MatPropBagSetFromOptions(MEF90DefMechCtx%MaterialPropertiesBag,MEF90DefMechCtx%DMVect,MEF90Mathium3D,MEF90Ctx,ierr)
-   End If
-   MEF90HeatXferCtx%MaterialPropertiesBag => MEF90DefMechCtx%MaterialPropertiesBag
 
    !!! Create time array from global options
    Call MEF90CtxGetTime(MEF90Ctx,time,ierr)

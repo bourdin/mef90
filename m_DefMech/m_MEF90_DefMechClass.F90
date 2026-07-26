@@ -5,6 +5,7 @@ module m_MEF90_DefMech_class
    use m_MEF90_BaseClass
    use m_MEF90_Ctx
    use m_MEF90_DMPlex
+   use m_MEF90_LinAlg
    use, intrinsic :: iso_c_binding
    implicit none(type)
 
@@ -164,6 +165,10 @@ module m_MEF90_DefMech_class
       PetscReal                               :: boundaryDamage = 0.0_kr
       PetscBool                               :: CrackVolumeControlled = PETSC_FALSE
       PetscBool                               :: WorkControlled = PETSC_FALSE
+      !!! Material properties. linearThermalExpansion is a symmetric matrix, so it is dimension
+      !!! dependent and allocated by MEF90DefMechCellSetOptionsSetFromOptions
+      class(mef90Mat), allocatable            :: linearThermalExpansion
+      PetscReal                               :: cohesiveStiffness = 0.0_kr
    end type MEF90DefMechCellSetOptions_Type
 
    type MEF90DefMechFaceSetOptions_Type
@@ -229,7 +234,6 @@ module m_MEF90_DefMech_class
       !!! with MEF90DefMech[Cell,Face,Vertex]SetOptionsSetFromOptions, the same way the AT model, the
       !!! energy split, and the Hooke's law are obtained. The number of sets is obtained from the megaDM
       !!! with MEF90DMGetNumSets.
-      type(tPetscBag), dimension(:), pointer    :: MaterialPropertiesBag => null()
 
       type(tPetscViewer)                        :: globalEnergyViewer
       type(tPetscViewer), dimension(:), pointer :: setEnergyViewer => null()
@@ -593,13 +597,24 @@ contains
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechCellSetOptionsSetFromOptions(comm, prefix, options, ierr)
+   subroutine MEF90DefMechCellSetOptionsSetFromOptions(comm, prefix, dim, options, ierr)
       MPIU_Comm, intent(IN)                                  :: comm
       character(len=*), intent(IN)                           :: prefix
+      PetscInt, intent(IN)                                   :: dim
       type(MEF90DefMechCellSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
+      PetscReal, dimension(:), allocatable                   :: tmpArray
+
+      select case (dim)
+      case (2)
+         options%linearThermalExpansion = MEF90MatS2DIdentity
+      case (3)
+         options%linearThermalExpansion = MEF90MatS3DIdentity
+      case default
+         SETERRQ(comm, PETSC_ERR_ARG_OUTOFRANGE, "dim must be 2 or 3 in " // __FUNCT__)
+      end select
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90DefMech_Type cell set", "mef90DefMech", ierr))
          nOpt = 3
@@ -620,6 +635,23 @@ contains
          PetscCall(PetscOptionsBool('-CrackVolumeControlled', 'Crack Pressure controlled by the crack volume in this block (Y/N)', 'mef90DefMech', options%CrackVolumeControlled, options%CrackVolumeControlled, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsBool('-WorkControlled', 'Force magnitude controlled by its work in this block (Y/N)', 'mef90DefMech', options%WorkControlled, options%WorkControlled, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', 'mef90DefMech', options%cohesiveStiffness, options%cohesiveStiffness, PETSC_NULL_BOOL, ierr))
+         select type (alpha => options%linearThermalExpansion)
+         type is (MatS2D)
+            nOpt = 3
+            allocate (tmpArray(nOpt))
+            tmpArray = alpha
+            PetscCall(PetscOptionsRealArray('-LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', 'mef90DefMech', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
+            alpha = tmpArray
+            deallocate (tmpArray)
+         type is (MatS3D)
+            nOpt = 6
+            allocate (tmpArray(nOpt))
+            tmpArray = alpha
+            PetscCall(PetscOptionsRealArray('-LinearThermalExpansion', '[K^(-1)] (alpha) Linear thermal expansion matrix', 'mef90DefMech', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
+            alpha = tmpArray
+            deallocate (tmpArray)
+         end select
       PetscCall(PetscOptionsEnd(ierr))
    end subroutine MEF90DefMechCellSetOptionsSetFromOptions
 
@@ -727,7 +759,7 @@ contains
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
+         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), self%dim, cellSetOptions, ierr))
          self%hasDisplacementBounds = any(cellSetOptions%displacementLowerBound /= MEF90NINFINITY) .or. self%hasDisplacementBounds
          self%hasDisplacementBounds = any(cellSetOptions%displacementUpperBound /= MEF90INFINITY) .or. self%hasDisplacementBounds
       end do
@@ -806,7 +838,7 @@ contains
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
+         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), self%dim, cellSetOptions, ierr))
          write (IOBuffer, "(A,'cs',I4.4,': body force: ',3(ES12.5,' '),'plasticity: ',A,'\n')") &
             trim(self%prefix), setID(set), cellSetOptions%bodyForce, trim(MEF90DefMech_plasticityTypeList(cellSetOptions%plasticityType + 1))
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))

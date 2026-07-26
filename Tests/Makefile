@@ -151,13 +151,13 @@ TestConstraintIO4: TestConstraintIO4.o
 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 	-@${RM} $<
 
-# TestMaterials is a false positive
-# TestMaterials: TestMaterials.o
+# is a false positive
+# : .o
 # 	-@echo " $@"
 # 	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB}
 # 	-@${RM} $<
 
-# TestMaterials.o: ${MEF90_DIR}/Tests/TestMaterials.F90 MEF90
+# .o: ${MEF90_DIR}/Tests/.F90 MEF90
 # 	${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -DMEF90_DIM=2 -c -o $@ $<
 
 TestVec.o: ${MEF90_DIR}/Tests/TestVec.F90 MEF90
@@ -387,9 +387,8 @@ runTestConstraintIO: TestConstraintIO
 	else echo ${PWD} ; echo "Possible problem with with $<, diffs above "; fi;\
 	${RM} -f $@.out $@.exo
 
-# TestMaterials is a false positive
-# runTestMaterials: TestMaterials
-# 	@echo "         Running " $@
+# is a false positive
+# : # 	@echo "         Running " $@
 # 	-@ARGS='';\
 # 	${MPIEXEC} -n 2 ./$< $${ARGS} | grep -v -e ' \#' > $@.out 2>&1;\
 # 	if (${DIFF} -B ${MEF90_DIR}/Tests/results/$@.out $@.out) then echo "         ... passed"; \
@@ -471,7 +470,7 @@ m_DefMech:
 	make -C ${MEF90_DIR} m_DefMech
 
 clean::
-	-@rm -f TestMaterials TestMEF90Ctx testHeatXfer testLeak
+	-@rm -f TestMEF90Ctx testHeatXfer testLeak
 allclean:
 	make -C ${MEF90_DIR} clean
 
