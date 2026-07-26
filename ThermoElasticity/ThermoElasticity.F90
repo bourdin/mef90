@@ -6,7 +6,6 @@ program ThermoElasticity
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer
    use m_MEF90_HeatXfer_class
-   use m_vDefDefault
    implicit none(type, external)
 
    PetscErrorCode                                     :: ierr
@@ -52,8 +51,9 @@ program ThermoElasticity
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD, ierr))
 
    !!! Get all MEF90-wide options
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90CtxDefaultGlobalOptions, ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    if (MEF90GlobalOptions%verbose > 1) then
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD, "Reading geometry\n", ierr))

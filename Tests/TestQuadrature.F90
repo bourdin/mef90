@@ -40,8 +40,10 @@ program TestQuadrature
    MEF90GlobalOptions_default%elementOrder = 1
 
    !!! Get all MEF90-wide options
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
@@ -136,7 +138,7 @@ contains
    end subroutine project
 
    subroutine Integrate3D_Scal(MEF90Ctx, v, i, j, k, QuadratureOrder, i1, i2, ierr)
-      type(MEF90Ctx_Type), intent(IN)                     :: MEF90Ctx
+      type(MEF90Ctx_Type), target, intent(IN)                       :: MEF90Ctx
       type(tVec), intent(IN)                              :: v
       PetscInt, intent(IN)                                :: QuadratureOrder, i, j, k
       PetscReal, intent(OUT)                              :: i1
@@ -157,7 +159,7 @@ contains
       i1 = 0.0_kr
       i2 = 0.0_kr
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+      MEF90CtxGlobalOptions => MEF90Ctx%globalOptions
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(DMGetDimension(dm, dim, ierr))
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
@@ -200,7 +202,7 @@ contains
    end subroutine Integrate3D_Scal
 
    subroutine Integrate2D_Scal(MEF90Ctx, v, i, j, QuadratureOrder, i1, i2, ierr)
-      type(MEF90Ctx_Type), intent(IN)                     :: MEF90Ctx
+      type(MEF90Ctx_Type), target, intent(IN)                       :: MEF90Ctx
       type(tVec), intent(IN)                              :: v
       PetscInt, intent(IN)                                :: QuadratureOrder, i, j
       PetscReal, intent(OUT)                              :: i1
@@ -221,7 +223,7 @@ contains
       i1 = 0.0_kr
       i2 = 0.0_kr
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+      MEF90CtxGlobalOptions => MEF90Ctx%globalOptions
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(DMGetDimension(dm, dim, ierr))
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))

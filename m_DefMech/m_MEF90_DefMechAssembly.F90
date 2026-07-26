@@ -79,7 +79,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
    character(len=MEF90MXSTRLEN)                        :: prefix
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
@@ -415,7 +415,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscReal                                           :: D2EEDPlus, D2EEDMinus
 
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
@@ -609,7 +609,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
    PetscReal                                           :: myWork
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numGauss
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%bodyForce, dmBodyForce, ierr))
@@ -773,7 +773,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
    PetscReal                                           :: myCohesiveEnergy
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numGauss
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
@@ -891,7 +891,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
@@ -1060,7 +1060,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                                                                  MatS3D(0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 0.0_Kr, 1.0_Kr)]
 #endif
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(stress, dmStress, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
@@ -1231,7 +1231,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
@@ -1466,7 +1466,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
@@ -1666,7 +1666,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
    PetscInt                                            :: iDof, iGauss, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
 
@@ -1817,7 +1817,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
    PetscInt                                            :: iDof, iGauss, numDofDamage, numDofDisplacement, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))

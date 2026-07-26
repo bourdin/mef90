@@ -100,7 +100,7 @@ contains
       PetscExodusIIInt                                 :: EXOstep
 
       EXOstep = step
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90DefMechCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      MEF90GlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
       MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
 
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))

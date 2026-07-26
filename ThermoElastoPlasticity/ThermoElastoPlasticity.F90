@@ -13,16 +13,6 @@ program ThermoElastoPlasticity
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
    type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
-   type(MEF90CtxGlobalOptions_Type), parameter         :: MEF90DefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                          1, & ! verbose
-                                                          PETSC_FALSE, & ! validate
-                                                          MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                          0.0_kr, & ! timeMin
-                                                          1.0_kr, & ! timeMax
-                                                          11, & ! timeNumStep
-                                                          0, & ! timeSkip
-                                                          1.0_kr, & ! frequency
-                                                          MEF90FileFormat_EXOSingle)       ! fileFormat
 
    !!! Defect mechanics contexts
    type(MEF90DefMech_Type), target                    :: MEF90DefMechCtx
@@ -185,8 +175,10 @@ program ThermoElastoPlasticity
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
 
    !!! Get all MEF90-wide options
-   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90DefaultGlobalOptions, ierr); CHKERRQ(ierr)
-   call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   MEF90Ctx%globalOptions%verbose = 1
+   call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    !!! Get DM from mesh
    call MEF90CtxGetDMMeshEXO(MEF90Ctx, Mesh, ierr); CHKERRQ(ierr)

@@ -57,7 +57,7 @@ contains
       PetscExodusIIInt                                 :: exoStep
 
       EXOStep = step
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      MEF90GlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
       MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))

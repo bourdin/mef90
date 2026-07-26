@@ -266,7 +266,7 @@ contains
       PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
       type(tDM), intent(IN)                            :: dm
       type(MEF90MatProp2D_Type), intent(IN)            :: defaultMaterial
-      type(MEF90Ctx_Type), intent(IN)                  :: MEF90Ctx
+      type(MEF90Ctx_Type), target, intent(IN)                    :: MEF90Ctx
       PetscErrorCode, intent(INOUT)                    :: ierr
 
       type(tIS)                                        :: setIS
@@ -275,7 +275,7 @@ contains
       character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      MEF90GlobalOptions => MEF90Ctx%globalOptions
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
       PetscCall(ISGetLocalSize(setIS, numSet, ierr))
@@ -314,7 +314,7 @@ contains
       PetscBag, dimension(:), pointer                  :: MEF90MatPropBag
       type(tDM), intent(IN)                            :: dm
       type(MEF90MatProp3D_Type), intent(IN)            :: defaultMaterial
-      type(MEF90Ctx_Type), intent(IN)                  :: MEF90Ctx
+      type(MEF90Ctx_Type), target, intent(IN)                    :: MEF90Ctx
       PetscErrorCode, intent(INOUT)                    :: ierr
 
       type(tIS)                                        :: setIS
@@ -323,7 +323,7 @@ contains
       character(len=MEF90MXSTRLEN)                     :: setName, setprefix, IOBuffer
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      MEF90GlobalOptions => MEF90Ctx%globalOptions
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(PETSC_COMM_WORLD, setIS, ierr))
       PetscCall(ISGetLocalSize(setIS, numSet, ierr))

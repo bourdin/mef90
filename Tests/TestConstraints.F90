@@ -246,7 +246,9 @@ program TestDofOrdering
    MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
    MEF90GlobalOptions_default%elementOrder = 1
 
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))

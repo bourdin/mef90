@@ -40,7 +40,9 @@ program TestDMPlexComputeGeometry
    PetscCallMPI(MPI_Comm_size(PETSC_COMM_WORLD, numProc, ierr))
 
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
-   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr)
+   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr)
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
 
    PetscCall(PetscPrintf(PETSC_COMM_WORLD, MEF90Ctx%geometryfile, ierr))
    PetscCall(DMPlexCreateFromFile(PETSC_COMM_WORLD, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))

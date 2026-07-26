@@ -30,7 +30,7 @@ contains
 !!!      2022 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90CtxOpenEXO(MEF90Ctx, Viewer, mode, ierr)
-      type(MEF90Ctx_Type), intent(IN)                 :: MEF90Ctx
+      type(MEF90Ctx_Type), target, intent(IN)                   :: MEF90Ctx
       type(tPetscViewer), intent(INOUT)               :: Viewer
       type(ePetscFileMode), intent(IN)                :: mode
       PetscErrorCode, intent(INOUT)                   :: ierr

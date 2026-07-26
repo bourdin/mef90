@@ -75,7 +75,6 @@ contains
       PetscCall(MEF90MPIInitialize_Private(ierr))
       PetscCall(MEF90MaterialsInitialize_Private(ierr))
       PetscCall(MEF90ElementsInitialize_Private(ierr))
-      PetscCall(MEF90CtxInitialize_Private(ierr))
       PetscCall(PetscLogDefaultBegin(ierr))
    end subroutine MEF90Initialize
 

@@ -76,7 +76,9 @@ program TestDMPlexVecGetClosure
    MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
    MEF90GlobalOptions_default%elementOrder = 1_ki
 
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))

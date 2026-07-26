@@ -42,14 +42,10 @@ HeatXfer:${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer
 
 ${MEF90_DIR}/${PETSC_ARCH}/bin/HeatXfer: HeatXfer.o
 	-@echo "      $@"
-	-@${FLINKER} -o $@ HeatXfer.o m_HeatXferDefault.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} 
+	-@${FLINKER} -o $@ HeatXfer.o ${MEF90_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} 
 
-HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS} m_HeatXferDefault.o
+HeatXfer.o: ${BASE_DIR}/HeatXfer.F90 ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-m_HeatXferDefault.o: ${BASE_DIR}/m_HeatXferDefault.F90 ${MEF90_HEATXFER_OBJS}
-	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 testHeatXfer:

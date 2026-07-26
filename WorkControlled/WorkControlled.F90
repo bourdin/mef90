@@ -79,16 +79,6 @@ Program WorkControlled
 
 
 !!! Default values of the contexts
-   Type(MEF90CtxGlobalOptions_Type),Parameter         :: vDefDefaultGlobalOptions = MEF90CtxGlobalOptions_Type( &
-                                                         1,                             & ! verbose
-                                                         PETSC_FALSE,                   & ! validate
-                                                         MEF90TimeInterpolation_linear, & ! timeInterpolation
-                                                         0.0_Kr,                        & ! timeMin
-                                                         1.0_Kr,                        & ! timeMax
-                                                         11,                            & ! timeNumStep
-                                                         0,                             & ! timeSkip
-                                                         1.0_Kr,                        & ! frequency
-                                                         MEF90FileFormat_EXOSingle)       ! fileFormat
 
 
    Type(MEF90DefMechGlobalOptions_Type),Parameter     :: vDefDefMechDefaultGlobalOptions2D = MEF90DefMechGlobalOptions_Type( &
@@ -221,8 +211,10 @@ Program WorkControlled
 
 
    !!! Get all MEF90-wide options
-   Call MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,vDefDefaultGlobalOptions,ierr);CHKERRQ(ierr)
-   Call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr);CHKERRQ(ierr)
+   Call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr);CHKERRQ(ierr)
+   MEF90Ctx%globalOptions%verbose = 1
+   call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    !!! Get DM from mesh
    Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)

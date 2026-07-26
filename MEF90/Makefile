@@ -42,7 +42,7 @@ m_MEF90_BaseClass.o: ${MEF90_DIR}/MEF90/m_MEF90_BaseClass.F90 \
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 m_MEF90_Ctx.o: ${MEF90_DIR}/MEF90/m_MEF90_Ctx.F90 \
-        m_MEF90_Parameters.o m_MEF90_Utils.o m_MEF90_Elements.o
+        m_MEF90_Parameters.o m_MEF90_Utils.o m_MEF90_Elements.o m_MEF90_BaseClass.o
 	@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 

@@ -52,7 +52,7 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
    PetscReal, dimension(:), pointer                :: temperatureDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
    type(MEF90_VECT)                                :: advectionVec
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90HeatXferCtx%fluxLocal, dmFlux, ierr))
@@ -264,7 +264,7 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
    PetscReal, dimension(:), pointer                  :: matDof
    type(MEF90_VECT)                                :: advectionVec
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 
@@ -420,7 +420,7 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
    energy = 0.0_kr
    bodyWork = 0.0_kr
    surfaceWork = 0.0_kr
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 
@@ -582,7 +582,7 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
    PetscReal, dimension(:), pointer                  :: temperatureDof, temperatureDotDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
    type(MEF90_VECT)                                :: advectionVec
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90HeatXferCtx%fluxLocal, dmFlux, ierr))
@@ -818,7 +818,7 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
    PetscReal, dimension(:), pointer                  :: matDof
    type(MEF90_VECT)                                :: advectionVec
 
-   PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90HeatXferCtx%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 

@@ -24,7 +24,9 @@ program TestExoRead_Part
    MEF90GlobalOptions_default%timeMax = 1.0_kr
    MEF90GlobalOptions_default%timeNumStep = 11
 
-   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr)
+   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr)
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
 
    cpu_ws = 0
    io_ws = 0

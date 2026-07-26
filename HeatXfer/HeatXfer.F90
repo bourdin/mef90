@@ -3,7 +3,6 @@ Program HeatXfer
 #include "petsc/finclude/petsc.h"
    Use m_MEF90
    Use m_MEF90_HeatXfer
-   Use m_MEF90_HeatXferDefault
    implicit none (type, external)   
 
    PetscErrorCode                                     :: ierr
@@ -42,8 +41,11 @@ Program HeatXfer
    PetscCallA(MEF90Initialize(PETSC_COMM_WORLD,ierr))
 
    !!! Get all MEF90-wide options
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD,MEF90Ctx,MEF90DefaultGlobalOptions,ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag,MEF90GlobalOptions,ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   !!! HeatXfer is verbose by default
+   MEF90Ctx%globalOptions%verbose = 1
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))

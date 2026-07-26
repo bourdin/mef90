@@ -8,7 +8,6 @@ program vDefHF
    use m_MEF90_DefMech
    use m_MEF90_HeatXfer_class
    use m_MEF90_HeatXfer
-   use m_vDefDefault
    implicit none(type, external)
 
    PetscErrorCode                                     :: ierr
@@ -87,8 +86,9 @@ program vDefHF
    call PetscLogStageRegister('IO          ', logStageIO, ierr); CHKERRQ(ierr)
 
    !!! Get all MEF90-wide options
-   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90CtxDefaultGlobalOptions, ierr); CHKERRQ(ierr)
-   call PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr); CHKERRQ(ierr)
+   call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr); CHKERRQ(ierr)
+   call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
 
    !!! Get DM from mesh
    call MEF90CtxGetDMMeshEXO(MEF90Ctx, Mesh, ierr); CHKERRQ(ierr)

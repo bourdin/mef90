@@ -124,7 +124,7 @@ contains
       type(tDM), dimension(:), pointer              :: dmList
       type(tPetscSF)                                :: dummySF
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+      MEF90GlobalOptions => MEF90Ctx%globalOptions
 
       HeatXfer%MEF90Ctx => MEF90Ctx
       HeatXfer%comm = MEF90Ctx%comm

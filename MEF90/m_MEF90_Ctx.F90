@@ -1,58 +1,28 @@
-module m_MEF90_Ctx_Type
-#include "petsc/finclude/petsc.h"
-   use petscbag
-   use m_MEF90_Parameters
-   use m_MEF90_Utils
-   use m_MEF90_LinAlg
-   use m_MEF90_Elements
-   use, intrinsic :: iso_c_binding
-   implicit none(type, external)
-   private
-   public :: MEF90Ctx_Type
-   public :: MEF90CtxGlobalOptions_Type
-
-   type MEF90Ctx_Type
-      MPIU_Comm                                        :: comm
-      PetscMPIInt                                     :: rank, numProcs
-      character(len=MEF90MXSTRLEN, kind=c_char)       :: geometryfile, resultfile
-      type(tPetscBag)                                 :: GlobalOptionsBag
-      type(tPetscViewer)                              :: resultViewer
-   end type MEF90Ctx_Type
-
-   type MEF90CtxGlobalOptions_Type
-      PetscInt                                        :: verbose
-      PetscBool                                       :: dryrun
-      PetscEnum                                       :: timeInterpolation
-      PetscReal                                       :: timeMin
-      PetscReal                                       :: timeMax
-      PetscInt                                        :: timeNumStep
-      PetscInt                                        :: timeSkip
-      PetscInt                                        :: timeNumCycle
-      PetscEnum                                       :: elementFamily
-      PetscInt                                        :: elementOrder
-   end type MEF90CtxGlobalOptions_Type
-end module m_MEF90_Ctx_Type
-
+#include "../MEF90/mef90.inc"
 module m_MEF90_Ctx
 #include "petsc/finclude/petsc.h"
    use, intrinsic :: iso_c_binding
    use petscbag
+   use petscsys
    use m_MEF90_Parameters
    use m_MEF90_Utils
    use m_MEF90_LinAlg
    use m_MEF90_Elements
-   use m_MEF90_Ctx_Type
+   use m_MEF90_BaseClass
 
    implicit none(type)
 
    public :: MEF90Ctx_Type
    public :: MEF90CtxGlobalOptions_Type
-   public :: MEF90CtxInitialize_Private
-   public :: PetscBagGetDataMEF90CtxGlobalOptions
    public :: MEF90CtxGetTime
-   public :: sizeofMEF90CtxGlobalOptions
 
-   PetscSizeT, protected    :: sizeofMEF90CtxGlobalOptions
+!!!
+!!!
+!!!  MEF90Ctx_Type: The class holding the MEF90-wide state and options
+!!!
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2026      Blaise Bourdin bourdin@mcmaster.ca
+!!!
 
    enum, bind(c)
       enumerator ::  MEF90Scaling_CST = 0, &
@@ -61,7 +31,15 @@ module m_MEF90_Ctx
          MEF90Scaling_Expr, &
          MEF90Scaling_Null
    end enum
-   character(len=MEF90MXSTRLEN), dimension(8), protected  :: MEF90ScalingList
+   character(len=MEF90MXSTRLEN), dimension(8), protected  :: MEF90ScalingList = [character(len=MEF90MXSTRLEN) :: &
+      'constant', &
+      'linear', &
+      'file', &
+      'expression', &
+      'null', &
+      'MEF90scaling', &
+      '_MEF90Scaling', &
+      '']
 
    enum, bind(c)
       enumerator  :: MEF90TimeInterpolation_linear = 0, &
@@ -69,98 +47,43 @@ module m_MEF90_Ctx
          MEF90TimeInterpolation_quadratic, &
          MEF90TimeInterpolation_exo
    end enum
-   character(len=MEF90MXSTRLEN), dimension(7), protected  :: MEF90TimeInterpolationList
+   character(len=MEF90MXSTRLEN), dimension(7), protected  :: MEF90TimeInterpolationList = [character(len=MEF90MXSTRLEN) :: &
+      'linear', &
+      'Vcycle', &
+      'quadratic', &
+      'exo', &
+      'MEF90TimeInterpolation', &
+      '_MEF90TimeInterpolation', &
+      '']
+
+!!!
+!!!  MEF90CtxGlobalOptions_Type: the MEF90-wide options.
+!!!                              The values given here are the defaults used by setFromOptions
+!!!
+   type MEF90CtxGlobalOptions_Type
+      PetscInt                                        :: verbose = 0_ki
+      PetscBool                                       :: dryrun = PETSC_FALSE
+      PetscEnum                                       :: timeInterpolation = MEF90TimeInterpolation_linear
+      PetscReal                                       :: timeMin = 0.0_kr
+      PetscReal                                       :: timeMax = 1.0_kr
+      PetscInt                                        :: timeNumStep = 11_ki
+      PetscInt                                        :: timeSkip = 0_ki
+      PetscInt                                        :: timeNumCycle = 1_ki
+      PetscEnum                                       :: elementFamily = MEF90ElementFamilyLagrange
+      PetscInt                                        :: elementOrder = 1_ki
+   end type MEF90CtxGlobalOptions_Type
+
+   type, extends(MEF90Object) :: MEF90Ctx_Type
+      PetscMPIInt                                     :: rank, numProcs
+      character(len=MEF90MXSTRLEN, kind=c_char)       :: geometryfile, resultfile
+      type(MEF90CtxGlobalOptions_Type)                :: globalOptions
+      type(tPetscViewer)                              :: resultViewer
+   contains
+      procedure, pass(self) :: setFromOptions => MEF90CtxSetFromOptions
+      procedure, pass(self) :: view => MEF90CtxView
+   end type MEF90Ctx_Type
 
 contains
-#undef __FUNCT__
-#define __FUNCT__ "MEF90Ctx_InitializePrivate"
-!!!
-!!!
-!!!  MEF90Ctx_InitializePrivate:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
-!!!
-
-   subroutine MEF90CtxInitialize_Private(ierr)
-      PetscErrorCode, intent(OUT)                   :: ierr
-
-      type(MEF90CtxGlobalOptions_Type)             :: MEF90CtxGlobalOptions
-      character(len=1), pointer                     :: dummychar(:)
-      PetscSizeT                                   :: sizeofchar
-
-      PetscCall(PetscDataTypeGetSize(PETSC_CHAR, sizeofchar, ierr))
-      sizeofMEF90CtxGlobalOptions = size(transfer(MEF90CtxGlobalOptions, dummychar)) * sizeofchar
-
-      MEF90ScalingList(1) = 'constant'
-      MEF90ScalingList(2) = 'linear'
-      MEF90ScalingList(3) = 'file'
-      MEF90ScalingList(4) = 'expression'
-      MEF90ScalingList(5) = 'null'
-      MEF90ScalingList(6) = 'MEF90scaling'
-      MEF90ScalingList(7) = '_MEF90Scaling'
-      MEF90ScalingList(8) = ''
-
-      MEF90TimeInterpolationList(1) = 'linear'
-      MEF90TimeInterpolationList(2) = 'Vcycle'
-      MEF90TimeInterpolationList(3) = 'quadratic'
-      MEF90TimeInterpolationList(4) = 'exo'
-      MEF90TimeInterpolationList(5) = 'MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(6) = '_MEF90TimeInterpolation'
-      MEF90TimeInterpolationList(7) = ''
-   end subroutine MEF90CtxInitialize_Private
-
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagGetDataMEF90CtxGlobalOptions"
-!!!
-!!!
-!!!  PetscBagGetDataMEF90CtxGlobalOptions:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
-!!!
-
-   subroutine PetscBagGetDataMEF90CtxGlobalOptions(bag, data, ierr)
-      type(tPetscBag), intent(IN)                           :: bag
-      type(MEF90CtxGlobalOptions_Type), pointer, intent(OUT) :: data
-      PetscErrorCode, intent(INOUT)                         :: ierr
-
-      PetscCall(PetscBagGetData(bag, data, ierr))
-   end subroutine PetscBagGetDataMEF90CtxGlobalOptions
-
-#undef __FUNCT__
-#define __FUNCT__ "PetscBagRegisterMEF90CtxGlobalOptions"
-!!!
-!!!
-!!!  PetscBagRegisterMEF90CtxGlobalOptions:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
-!!!
-
-   subroutine PetscBagRegisterMEF90CtxGlobalOptions(bag, name, prefix, default, ierr)
-      type(tPetscBag), intent(IN)                      :: bag
-      character(len=*), intent(IN)                     :: prefix, name
-      type(MEF90CtxGlobalOptions_Type), intent(IN)     :: default
-      PetscErrorCode, intent(INOUT)                    :: ierr
-
-      type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
-
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(bag, MEF90CtxGlobalOptions, ierr))
-      PetscCall(PetscBagSetName(bag, trim(name), "MEF90 Global options object", ierr))
-      PetscCall(PetscBagSetOptionsPrefix(bag, trim(prefix), ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%verbose, default%verbose, 'verbose', 'Verbosity: level', ierr))
-      PetscCall(PetscBagRegisterBool(bag, MEF90CtxGlobalOptions%dryrun, default%dryrun, 'dryrun', 'Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions%timeInterpolation, MEF90TimeInterpolationList, default%timeInterpolation, 'time_interpolation', 'Time: interpolation type', ierr))
-      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions%timeMin, default%timeMin, 'time_min', 'Time: min', ierr))
-      PetscCall(PetscBagRegisterReal(bag, MEF90CtxGlobalOptions%timeMax, default%timeMax, 'time_max', 'Time: max', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timeNumStep, default%timeNumStep, 'time_numstep', 'Time: number of time steps', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timeSkip, default%timeSkip, 'time_skip', 'Time: number of time steps', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%timenumCycle, default%timenumCycle, 'time_numCycle', 'Time: number of cycles', ierr))
-      PetscCall(PetscBagRegisterEnum(bag, MEF90CtxGlobalOptions%ElementFamily, MEF90ElementFamilyList, default%ElementFamily, 'element_family', 'Element family (possibly overridden in application contexts)', ierr))
-      PetscCall(PetscBagRegisterInt(bag, MEF90CtxGlobalOptions%ElementOrder, default%ElementOrder, 'element_order', 'Element order (possibly overridden in application contexts)', ierr))
-   end subroutine PetscBagRegisterMEF90CtxGlobalOptions
-
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCreate"
 !!!
@@ -171,13 +94,12 @@ contains
 !!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90CtxCreate(comm, MEF90Ctx, default, ierr)
+   subroutine MEF90CtxCreate(comm, MEF90Ctx, prefix, ierr)
       MPIU_Comm, intent(IN)                         :: comm
       type(MEF90Ctx_type), intent(OUT)              :: MEF90Ctx
-      type(MEF90CtxGlobalOptions_Type), intent(IN)  :: default
+      character(len=*), intent(IN)                  :: prefix
       PetscErrorCode, intent(INOUT)                 :: ierr
 
-      type(MEF90CtxGlobalOptions_Type), pointer     :: GlobalOptions
       character(len=MEF90MXSTRLEN)                  :: IOBuffer, tmpPrefix
       PetscBool                                     :: hasPrefix, hasGeometry, hasResult
 
@@ -187,6 +109,7 @@ contains
 #endif
 
       MEF90Ctx%comm = comm
+      MEF90Ctx%prefix = prefix
       PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm, MEF90Ctx%rank, ierr))
       PetscCallMPI(MPI_COMM_SIZE(MEF90Ctx%comm, MEF90Ctx%numProcs, ierr))
       PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-prefix', tmpPrefix, hasPrefix, ierr))
@@ -212,30 +135,12 @@ contains
             MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
          end if
       end if
-      PetscCall(PetscBagCreate(comm, sizeofMEF90CtxGlobalOptions, MEF90Ctx%GlobalOptionsBag, ierr))
-      PetscCall(PetscBagRegisterMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, 'MEF90Ctx', PETSC_NULL_CHARACTER, default, ierr))
-
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
-
 #ifdef PETSC_USE_DEBUG
       PetscCallMPI(MPI_Get_processor_name(procName, procNameLength, ierr))
       write (IOBuffer, "(' # Task ',I6,'/',I6,' running on processor ',A,'\n')") MEF90Ctx%rank, MEF90Ctx%numProcs, trim(procName)
       PetscCall(PetscSynchronizedPrintf(MEF90Ctx%comm, IOBuffer, ierr))
       PetscCall(PetscSynchronizedFlush(MEF90Ctx%comm, PETSC_STDOUT, ierr))
 #endif
-
-      if (GlobalOptions%verbose > 0) then
-         write (IOBuffer, *) 'MEF90 Global Context: \n'
-         PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  geometry file:       ',(A),'\n')") trim(MEF90Ctx%geometryFile)
-         PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  result file:         ',(A),'\n')") trim(MEF90Ctx%resultFile)
-         PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         write (IOBuffer, "('  log file:            ',(A),'\n')") trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.log'
-         PetscCall(PetscPrintf(comm, IOBuffer, ierr))
-         PetscCall(PetscBagView(MEF90Ctx%GlobalOptionsBag, PETSC_VIEWER_STDOUT_WORLD, ierr))
-         PetscCall(PetscPrintf(comm, "\n", ierr))
-      end if
 
       !!! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
       if (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') then
@@ -257,17 +162,85 @@ contains
       type(MEF90Ctx_Type), intent(INOUT)               :: MEF90Ctx
       PetscErrorCode, intent(OUT)                      :: ierr
 
-      type(MEF90CtxGlobalOptions_Type), pointer        :: GlobalOptions
-
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
-      if (GlobalOptions%dryrun) then
+      if (MEF90Ctx%globalOptions%dryrun) then
          PetscCall(PetscOptionsLeft(PETSC_NULL_OPTIONS, ierr))
       end if
-      PetscCall(PetscBagDestroy(MEF90Ctx%GlobalOptionsBag, ierr))
       if (.not. PetscObjectIsNull(MEF90Ctx%resultViewer)) then
          PetscCall(PetscViewerDestroy(MEF90Ctx%resultViewer, ierr))
       end if
    end subroutine MEF90CtxDestroy
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CtxSetFromOptions"
+!!!
+!!!
+!!!  MEF90CtxSetFromOptions: initializes a MEF90Ctx_Type from options
+!!!
+!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
+!!!      2026      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90CtxSetFromOptions(self, ierr)
+      class(MEF90Ctx_Type), intent(INOUT)             :: self
+      PetscErrorCode, intent(INOUT)                   :: ierr
+
+      PetscCall(PetscOptionsBegin(self%comm, trim(self%prefix), "Options for MEF90Ctx_Type", "mef90", ierr))
+         PetscCall(PetscOptionsInt('-verbose', 'Verbosity: level', 'mef90', self%globalOptions%verbose, self%globalOptions%verbose, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool('-dryrun', 'Dry run in order to validate the options file. Use in combination with -h to print help or -verbose 1 to check input deck', 'mef90', self%globalOptions%dryrun, self%globalOptions%dryrun, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsEnum('-time_interpolation', 'Time: interpolation type', 'mef90', MEF90TimeInterpolationList, self%globalOptions%timeInterpolation, self%globalOptions%timeInterpolation, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-time_min', 'Time: min', 'mef90', self%globalOptions%timeMin, self%globalOptions%timeMin, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsReal('-time_max', 'Time: max', 'mef90', self%globalOptions%timeMax, self%globalOptions%timeMax, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsInt('-time_numstep', 'Time: number of time steps', 'mef90', self%globalOptions%timeNumStep, self%globalOptions%timeNumStep, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsInt('-time_skip', 'Time: number of time steps', 'mef90', self%globalOptions%timeSkip, self%globalOptions%timeSkip, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsInt('-time_numCycle', 'Time: number of cycles', 'mef90', self%globalOptions%timeNumCycle, self%globalOptions%timeNumCycle, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsEnum('-element_family', 'Element family (possibly overridden in application contexts)', 'mef90', MEF90ElementFamilyList, self%globalOptions%elementFamily, self%globalOptions%elementFamily, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsInt('-element_order', 'Element order (possibly overridden in application contexts)', 'mef90', self%globalOptions%elementOrder, self%globalOptions%elementOrder, PETSC_NULL_BOOL, ierr))
+      PetscCall(PetscOptionsEnd(ierr))
+
+      if (self%globalOptions%verbose > 0) then
+         call self%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+      end if
+   end subroutine MEF90CtxSetFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90CtxView"
+!!!
+!!!
+!!!  MEF90CtxView: the default viewer for a MEF90Ctx_Type
+!!!
+!!!  (c) 2026      Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90CtxView(self, viewer, ierr)
+      class(MEF90Ctx_Type), intent(IN)                :: self
+      type(tPetscViewer), intent(IN)                  :: viewer
+      PetscErrorCode, intent(INOUT)                   :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)       :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)       :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType /= 'ascii') return
+
+      PetscCall(PetscViewerASCIIPrintf(viewer, "MEF90 Global Context: \n", ierr))
+      write (IOBuffer, "('  geometry file:       ',(A),'\n')") trim(self%geometryFile)
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  result file:         ',(A),'\n')") trim(self%resultFile)
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  log file:            ',(A),'\n')") trim(MEF90FilePrefix(self%resultFile))//'.log'
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  verbose / dryrun:    ',I4,' / ',L1,'\n')") self%globalOptions%verbose, self%globalOptions%dryrun
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  time interpolation:  ',(A),'\n')") trim(MEF90TimeInterpolationList(self%globalOptions%timeInterpolation + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  time min / max:      ',ES12.5,' / ',ES12.5,'\n')") self%globalOptions%timeMin, self%globalOptions%timeMax
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  time numstep / skip / numCycle: ',3(I6,' '),'\n')") self%globalOptions%timeNumStep, self%globalOptions%timeSkip, self%globalOptions%timeNumCycle
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('  element family / order: ',(A),' / ',I4,'\n')") trim(MEF90ElementFamilyList(self%globalOptions%elementFamily + 1)), self%globalOptions%elementOrder
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      PetscCall(PetscViewerASCIIPrintf(viewer, "\n", ierr))
+   end subroutine MEF90CtxView
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxGetTime"
@@ -279,7 +252,9 @@ contains
 !!!
 
    subroutine MEF90CtxGetTime(MEF90Ctx, t, ierr)
-      type(MEF90Ctx_Type), intent(INOUT)              :: MEF90Ctx
+      !!! MEF90Ctx has the target attribute since GlobalOptions below aliases its options, which this
+      !!! routine updates when reading the time values from an exodus file
+      type(MEF90Ctx_Type), target, intent(INOUT)      :: MEF90Ctx
       PetscReal, dimension(:), pointer                :: t
       PetscErrorCode, intent(OUT)                     :: ierr
 
@@ -293,7 +268,7 @@ contains
       character(len=MEF90MXSTRLEN)                    :: IOBuffer
 
       i = 0 ! silence gfortran silly warning
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, GlobalOptions, ierr))
+      GlobalOptions => MEF90Ctx%globalOptions
       select case (GlobalOptions%timeInterpolation)
       case (MEF90TimeInterpolation_linear)
          allocate (t(GlobalOptions%timeNumStep))

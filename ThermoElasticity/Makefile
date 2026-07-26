@@ -25,16 +25,12 @@ BASE_DIR=${MEF90_DIR}/ThermoElasticity
 ThermoElasticity:${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	-@echo "      $@"
 
-${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity: ThermoElasticity.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
+${MEF90_DIR}/${PETSC_ARCH}/bin/ThermoElasticity: ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} 
 	-@echo "      $@"
-	-@${FLINKER} -o $@ ThermoElasticity.o m_vDefDefault.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
+	-@${FLINKER} -o $@ ThermoElasticity.o ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SNLP_LIB} ${SNLP_FORTRAN_LIB}
 
-ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS} m_vDefDefault.o
+ThermoElasticity.o: ${BASE_DIR}/ThermoElasticity.F90 ${MEF90_OBJS}  ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
 	@echo "      $<"
-	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
-
-m_vDefDefault.o: ${BASE_DIR}/m_vDefDefault.F90 ${MEF90_OBJS} ${MEF90_DEFMECH_OBJS} ${MEF90_HEATXFER_OBJS}
-	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 

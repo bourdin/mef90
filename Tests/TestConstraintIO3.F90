@@ -2,7 +2,6 @@ module localFunctions
 #include <petsc/finclude/petsc.h>
    use m_MEF90
    use m_MEF90_DefMech
-   use m_vDefDefault
    implicit none(type, external)
 
 contains
@@ -94,8 +93,10 @@ program TestConstraintIO3
    MEF90GlobalOptions_default%elementFamily = MEF90ElementFamilyLagrange
    MEF90GlobalOptions_default%elementOrder = 1
 
-   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, MEF90GlobalOptions_default, ierr))
-   PetscCallA(PetscBagGetDataMEF90CtxGlobalOptions(MEF90Ctx%GlobalOptionsBag, MEF90GlobalOptions, ierr))
+   PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
+   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90Ctx%setFromOptions(ierr))
+   MEF90GlobalOptions => MEF90Ctx%globalOptions
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
 
    ! Create DM from file
@@ -146,6 +147,7 @@ program TestConstraintIO3
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
    PetscCallA(MEF90DefMechCreate(MEF90DefMechCtx, dm, MEF90Ctx, "", ierr))
+   MEF90DefMechCtx%globalOptions = MEF90GlobalOptions_default
    PetscCallA(MEF90DefMechCtx%setFromOptions(ierr))
    MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
    PetscCallA(DMDestroy(dm, ierr))

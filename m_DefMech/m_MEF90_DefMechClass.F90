@@ -312,7 +312,7 @@ contains
       !!! Create Vecs and SF
       PetscCall(DMGetDimension(dm, DefMech%dim, ierr))
 
-      PetscCall(PetscBagGetDataMEF90CtxGlobalOptions(DefMech%MEF90Ctx%GlobalOptionsBag, MEF90CtxGlobalOptions, ierr))
+      MEF90CtxGlobalOptions => DefMech%MEF90Ctx%globalOptions
 
       vecName = "Displacement"
       allocate (DefMech%displacementLocal, stat=ierr)
