@@ -52,6 +52,7 @@ program vDefHF
 
    PetscBool                                          :: flg
    character(len=MEF90MXSTRLEN)                      :: IOBuffer
+   character(len=MEF90MXSTRLEN)                      :: setPrefix
    type(PetscViewer)                                  :: logViewer, pressureViewer
    integer                                            :: numfield
 
@@ -155,19 +156,19 @@ program vDefHF
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (elasticEnergySet(MEF90DefMechCtx%numCellSet))
    elasticEnergySet = 0.0_kr
-   allocate (surfaceEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (surfaceEnergySet(MEF90DefMechCtx%numCellSet))
    surfaceEnergySet = 0.0_kr
-   allocate (forceWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (forceWorkSet(MEF90DefMechCtx%numCellSet))
    forceWorkSet = 0.0_kr
-   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (cohesiveEnergySet(MEF90DefMechCtx%numCellSet))
    cohesiveEnergySet = 0.0_kr
-   allocate (thermalEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (thermalEnergySet(MEF90DefMechCtx%numCellSet))
    thermalEnergySet = 0.0_kr
-   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (heatFluxWorkSet(MEF90DefMechCtx%numCellSet))
    heatFluxWorkSet = 0.0_kr
-   allocate (CrackVolumeSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (CrackVolumeSet(MEF90DefMechCtx%numCellSet))
    CrackVolumeSet = 0.0_kr
 
    allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))
@@ -195,13 +196,14 @@ program vDefHF
    end if
 
    !!! Create logical list of blocks where crack pressure or work control is activated
-   allocate (ActivatedCrackPressureBlocksList(size(MEF90DefMechCtx%cellSetOptions)))
-   allocate (ActivatedWorkControlledBlocksList(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (ActivatedCrackPressureBlocksList(MEF90DefMechCtx%numCellSet))
+   allocate (ActivatedWorkControlledBlocksList(MEF90DefMechCtx%numCellSet))
    call DMmeshGetLabelIdIS(MEF90DefMechCtx%CellDMVect, 'Cell Sets', CellSetGlobalIS, ierr); CHKERRQ(ierr)
    call MEF90ISAllGatherMerge(PETSC_COMM_WORLD, CellSetGlobalIS, ierr); CHKERRQ(ierr)
    call ISGetIndices(CellSetGlobalIS, setID, ierr); CHKERRQ(ierr)
    do set = 1, size(setID)
-      cellSetOptions = MEF90DefMechCtx%cellSetOptions(set)
+      write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
+      call MEF90DefMechCellSetOptionsSetFromOptions(MEF90DefMechCtx%comm, setPrefix, cellSetOptions, ierr); CHKERRQ(ierr)
       ActivatedCrackPressureBlocksList(set) = cellSetOptions%CrackVolumeControlled
       ActivatedWorkControlledBlocksList(set) = cellSetOptions%WorkControlled
    end do

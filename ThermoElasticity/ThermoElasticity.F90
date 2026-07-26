@@ -178,9 +178,9 @@ program ThermoElasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (bodyForceWork(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (boundaryForceWork(size(MEF90HeatXferCtx%faceSetOptions)))
+   allocate (energy(MEF90HeatXferCtx%numCellSet))
+   allocate (bodyForceWork(MEF90HeatXferCtx%numCellSet))
+   allocate (boundaryForceWork(MEF90HeatXferCtx%numFaceSet))
 
    !!!
    !!! Actual computations / time stepping

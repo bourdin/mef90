@@ -128,9 +128,9 @@ Program HeatXfer
    !!! 
    !!! Allocate array of works and energies
    !!!
-   Allocate(energy(size(MEF90HeatXferCtx%cellSetOptions)))
-   Allocate(cellWork(size(MEF90HeatXferCtx%cellSetOptions)))
-   Allocate(faceWork(size(MEF90HeatXferCtx%faceSetOptions)))
+   Allocate(energy(MEF90HeatXferCtx%numCellSet))
+   Allocate(cellWork(MEF90HeatXferCtx%numCellSet))
+   Allocate(faceWork(MEF90HeatXferCtx%numFaceSet))
 
    !!!
    !!! Actual computations / time stepping

@@ -268,16 +268,16 @@ program ThermoElastoPlasticity
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (energy(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (energy(MEF90DefMechCtx%numCellSet))
    energy = 0.0_kr
 
-   allocate (plasticDissipationvariation(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (plasticDissipationvariation(MEF90DefMechCtx%numCellSet))
    plasticDissipationvariation = 0.0_kr
 
-   allocate (plasticDissipation(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (plasticDissipation(MEF90DefMechCtx%numCellSet))
    plasticDissipation = 0.0_kr
 
-   allocate (work(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (work(MEF90DefMechCtx%numCellSet))
    work = 0.0_kr
 
    !!!

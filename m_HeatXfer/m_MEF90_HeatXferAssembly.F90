@@ -42,6 +42,7 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
    PetscInt                                        :: cell, iDof, jDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
    type(MEF90HeatXferFaceSetOptions_Type)          :: faceSetOptions
+   character(len=MEF90MXSTRLEN)                    :: setPrefix
    type(MEF90_MATPROP), pointer                    :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer :: elem
    type(MEF90ElementType)                          :: elementType
@@ -77,7 +78,8 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
-            cellSetOptions = MEF90HeatXferCtx%cellSetOptions(set)
+            write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -158,7 +160,8 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
+            write (setPrefix, '(A,"fs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, faceSetOptions, ierr))
 
             if (faceSetOptions%boundaryFlux /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
@@ -251,6 +254,7 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
    PetscInt                                        :: cell, iDof, jDof, iGauss, nbDof
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
+   character(len=MEF90MXSTRLEN)                     :: setPrefix
    type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
@@ -275,7 +279,8 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
-            cellSetOptions = MEF90HeatXferCtx%cellSetOptions(set)
+            write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -335,7 +340,8 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
+            write (setPrefix, '(A,"fs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, faceSetOptions, ierr))
 
             if (faceSetOptions%surfaceThermalConductivity /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
@@ -399,6 +405,7 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
    PetscInt                                        :: cell, iDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
+   character(len=MEF90MXSTRLEN)                     :: setPrefix
    type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
@@ -436,7 +443,8 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
-            cellSetOptions = MEF90HeatXferCtx%cellSetOptions(set)
+            write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -499,7 +507,8 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
          mySurfaceWork = 0.0_kr
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
+            write (setPrefix, '(A,"fs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, faceSetOptions, ierr))
             if (faceSetOptions%boundaryFlux /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
                PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -563,6 +572,7 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
    PetscInt                                        :: cell, iDof, jDof, iGauss
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
+   character(len=MEF90MXSTRLEN)                     :: setPrefix
    type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
@@ -603,7 +613,8 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
-            cellSetOptions = MEF90HeatXferCtx%cellSetOptions(set)
+            write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -700,7 +711,8 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
+            write (setPrefix, '(A,"fs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, faceSetOptions, ierr))
 
             if (faceSetOptions%boundaryFlux /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
@@ -796,6 +808,7 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
    PetscInt                                        :: cell, iDof, jDof, iGauss, nbDof
    type(MEF90HeatXferCellSetOptions_Type)          :: cellSetOptions
    type(MEF90HeatXferFaceSetOptions_Type)           :: faceSetOptions
+   character(len=MEF90MXSTRLEN)                     :: setPrefix
    type(MEF90_MATPROP), pointer                     :: matpropSet
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
@@ -820,7 +833,8 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             PetscCall(PetscBagGetDataMEF90MatProp(MEF90HeatXferCtx%MaterialPropertiesBag(set), matpropSet, ierr))
-            cellSetOptions = MEF90HeatXferCtx%cellSetOptions(set)
+            write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, cellSetOptions, ierr))
 
             PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
             PetscCall(DMPlexGetCellType(dmTemperature, setPointID(1), cellType, ierr))
@@ -894,7 +908,8 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
       do set = 1, size(setID)
          PetscCall(DMGetStratumIS(dmTemperature, MEF90FaceSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
-            faceSetOptions = MEF90HeatXferCtx%faceSetOptions(set)
+            write (setPrefix, '(A,"fs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
+            PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, faceSetOptions, ierr))
 
             if (faceSetOptions%surfaceThermalConductivity /= 0.0_kr) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))

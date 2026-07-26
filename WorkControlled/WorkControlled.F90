@@ -300,17 +300,17 @@ Program WorkControlled
    !!!
    !!! Allocate array of works and energies
    !!!
-   Allocate(elasticEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(elasticEnergySet(MEF90DefMechCtx%numCellSet))
    elasticEnergySet = 0.0_Kr
-   Allocate(surfaceEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(surfaceEnergySet(MEF90DefMechCtx%numCellSet))
    surfaceEnergySet = 0.0_Kr
-   Allocate(forceWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(forceWorkSet(MEF90DefMechCtx%numCellSet))
    forceWorkSet = 0.0_Kr
-   Allocate(cohesiveEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(cohesiveEnergySet(MEF90DefMechCtx%numCellSet))
    cohesiveEnergySet = 0.0_Kr
-   Allocate(thermalEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(thermalEnergySet(MEF90DefMechCtx%numCellSet))
    thermalEnergySet = 0.0_Kr
-   Allocate(heatFluxWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   Allocate(heatFluxWorkSet(MEF90DefMechCtx%numCellSet))
    heatFluxWorkSet = 0.0_Kr
 
    Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))

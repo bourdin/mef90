@@ -224,10 +224,13 @@ module m_MEF90_DefMech_class
       type(tPetscSF)                            :: plasticStrainToIOSF, IOToPlasticStrainSF
       type(tPetscSF)                            :: cumulatedPlasticDissToIOSF, IOToCumulatedPlasticDissSF
 
-      type(MEF90DefMechGlobalOptions_Type)                            :: globalOptions
-      type(MEF90DefMechCellSetOptions_Type), dimension(:), pointer    :: cellSetOptions => null()
-      type(MEF90DefMechFaceSetOptions_Type), dimension(:), pointer    :: faceSetOptions => null()
-      type(MEF90DefMechVertexSetOptions_Type), dimension(:), pointer  :: vertexSetOptions => null()
+      type(MEF90DefMechGlobalOptions_Type)      :: globalOptions
+      !!! Per-set options are not stored: they are read from the options database where they are needed,
+      !!! with MEF90DefMech[Cell,Face,Vertex]SetOptionsSetFromOptions, the same way the AT model, the
+      !!! energy split, and the Hooke's law are obtained. Only the number of sets is kept here.
+      PetscInt                                  :: numCellSet = 0
+      PetscInt                                  :: numFaceSet = 0
+      PetscInt                                  :: numVertexSet = 0
       type(tPetscBag), dimension(:), pointer    :: MaterialPropertiesBag => null()
 
       type(tPetscViewer)                        :: globalEnergyViewer
@@ -268,7 +271,7 @@ contains
 
       type(MEF90CtxGlobalOptions_Type), pointer                 :: MEF90CtxGlobalOptions
       type(tIS)                                                 :: setIS
-      PetscInt                                                  :: set, numSet
+      PetscInt                                                  :: set
       PetscInt, dimension(:), pointer                           :: setID
       character(len=MEF90MXSTRLEN)                              :: filename, IOBuffer
       character(len=MEF90MXSTRLEN)                              :: vecName
@@ -281,24 +284,21 @@ contains
       DefMech%PETScCtx = c_loc(DefMech)
 
       !!!
-      !!! Allocate the per-set options. Their values are set in setFromOptions
+      !!! Count the sets. The per-set options themselves are read on demand, see MEF90DefMech_Type
       !!!
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (DefMech%cellSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, DefMech%numCellSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90FaceSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (DefMech%faceSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, DefMech%numFaceSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90VertexSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (DefMech%vertexSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, DefMech%numVertexSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       !!!
@@ -431,9 +431,6 @@ contains
       PetscInt                                        :: set
 
       DefMech%PETScCtx = C_NULL_PTR
-      deallocate (DefMech%cellSetOptions)
-      deallocate (DefMech%faceSetOptions)
-      deallocate (DefMech%vertexSetOptions)
 
       !!!
       !!! Close energy viewers
@@ -608,18 +605,18 @@ contains
    end subroutine MEF90DefMechGlobalOptionsSetFromOptions_Private
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechCellSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90DefMechCellSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90DefMechCellSetOptionsSetFromOptions_Private: reads the options of a single cell set
+!!!  MEF90DefMechCellSetOptionsSetFromOptions: reads the options of a single cell set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechCellSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90DefMechCellSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                  :: comm
       character(len=*), intent(IN)                           :: prefix
-      type(MEF90DefMechCellSetOptions_Type), intent(INOUT)   :: options
+      type(MEF90DefMechCellSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
@@ -644,21 +641,21 @@ contains
          PetscCall(PetscOptionsBool('-WorkControlled', 'Force magnitude controlled by its work in this block (Y/N)', 'mef90DefMech', options%WorkControlled, options%WorkControlled, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90DefMechCellSetOptionsSetFromOptions_Private
+   end subroutine MEF90DefMechCellSetOptionsSetFromOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechFaceSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90DefMechFaceSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90DefMechFaceSetOptionsSetFromOptions_Private: reads the options of a single face set
+!!!  MEF90DefMechFaceSetOptionsSetFromOptions: reads the options of a single face set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechFaceSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90DefMechFaceSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                  :: comm
       character(len=*), intent(IN)                           :: prefix
-      type(MEF90DefMechFaceSetOptions_Type), intent(INOUT)   :: options
+      type(MEF90DefMechFaceSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
@@ -678,21 +675,21 @@ contains
          PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90DefMechFaceSetOptionsSetFromOptions_Private
+   end subroutine MEF90DefMechFaceSetOptionsSetFromOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90DefMechVertexSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90DefMechVertexSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90DefMechVertexSetOptionsSetFromOptions_Private: reads the options of a single vertex set
+!!!  MEF90DefMechVertexSetOptionsSetFromOptions: reads the options of a single vertex set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechVertexSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90DefMechVertexSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                  :: comm
       character(len=*), intent(IN)                           :: prefix
-      type(MEF90DefMechVertexSetOptions_Type), intent(INOUT) :: options
+      type(MEF90DefMechVertexSetOptions_Type), intent(OUT)   :: options
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
@@ -709,7 +706,7 @@ contains
          PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): boundaryDamage', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90DefMechVertexSetOptionsSetFromOptions_Private
+   end subroutine MEF90DefMechVertexSetOptionsSetFromOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetFromOptions"
@@ -729,6 +726,8 @@ contains
       PetscInt, dimension(:), pointer                        :: setID
       PetscInt                                               :: set
       character(len=MEF90MXSTRLEN)                           :: setPrefix
+      type(MEF90DefMechCellSetOptions_Type)                  :: cellSetOptions
+      type(MEF90DefMechFaceSetOptions_Type)                  :: faceSetOptions
       PetscBool                                              :: printHelp
 
       !!!
@@ -737,54 +736,35 @@ contains
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions_Private(self%comm, trim(self%prefix), self%globalOptions, ierr))
 
       !!!
-      !!! Cell set options
+      !!! The per-set options are read where they are needed, but they have to be visited once here so
+      !!! that they are registered with the options database, and so that the displacement bounds of all
+      !!! sets are known before the solvers are set up
       !!!
+      self%hasDisplacementBounds = PETSC_FALSE
+
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%cellSetOptions(set), ierr))
+         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
+         self%hasDisplacementBounds = any(cellSetOptions%displacementLowerBound /= MEF90NINFINITY) .or. self%hasDisplacementBounds
+         self%hasDisplacementBounds = any(cellSetOptions%displacementUpperBound /= MEF90INFINITY) .or. self%hasDisplacementBounds
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
-      !!!
-      !!! Face set options
-      !!!
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90FaceSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'fs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90DefMechFaceSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%faceSetOptions(set), ierr))
+         PetscCall(MEF90DefMechFaceSetOptionsSetFromOptions(self%comm, trim(setPrefix), faceSetOptions, ierr))
+         self%hasDisplacementBounds = any(faceSetOptions%displacementLowerBound /= MEF90NINFINITY) .or. self%hasDisplacementBounds
+         self%hasDisplacementBounds = any(faceSetOptions%displacementUpperBound /= MEF90INFINITY) .or. self%hasDisplacementBounds
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
-
-      !!!
-      !!! Vertex set options
-      !!!
-      PetscCall(DMGetLabelIdIS(self%megaDM, MEF90VertexSetLabelName, setIS, ierr))
-      PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
-      PetscCall(ISGetIndices(setIS, setID, ierr))
-      do set = 1, size(setID)
-         write (setPrefix, "(A,'vs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90DefMechVertexSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%vertexSetOptions(set), ierr))
-      end do
-      PetscCall(ISRestoreIndices(setIS, setID, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
-
-      !!! Identify if any of the displacement bounds are set
-      self%hasDisplacementBounds = PETSC_FALSE
-      do set = 1, size(self%cellSetOptions)
-         self%hasDisplacementBounds = any(self%cellSetOptions(set)%displacementLowerBound /= MEF90NINFINITY) .or. self%hasDisplacementBounds
-         self%hasDisplacementBounds = any(self%cellSetOptions(set)%displacementUpperBound /= MEF90INFINITY) .or. self%hasDisplacementBounds
-      end do
-      do set = 1, size(self%faceSetOptions)
-         self%hasDisplacementBounds = any(self%faceSetOptions(set)%displacementLowerBound /= MEF90NINFINITY) .or. self%hasDisplacementBounds
-         self%hasDisplacementBounds = any(self%faceSetOptions(set)%displacementUpperBound /= MEF90INFINITY) .or. self%hasDisplacementBounds
-      end do
 
       PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
       if (printHelp) then
@@ -811,6 +791,10 @@ contains
       type(tIS)                                              :: setIS
       PetscInt, dimension(:), pointer                        :: setID
       PetscInt                                               :: set
+      character(len=MEF90MXSTRLEN)                           :: setPrefix
+      type(MEF90DefMechCellSetOptions_Type)                  :: cellSetOptions
+      type(MEF90DefMechFaceSetOptions_Type)                  :: faceSetOptions
+      type(MEF90DefMechVertexSetOptions_Type)                :: vertexSetOptions
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType /= 'ascii') return
@@ -841,14 +825,16 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
          write (IOBuffer, "(A,'cs',I4.4,': body force: ',3(ES12.5,' '),'plasticity: ',A,'\n')") &
-            trim(self%prefix), setID(set), self%cellSetOptions(set)%bodyForce, trim(MEF90DefMech_plasticityTypeList(self%cellSetOptions(set)%plasticityType + 1))
+            trim(self%prefix), setID(set), cellSetOptions%bodyForce, trim(MEF90DefMech_plasticityTypeList(cellSetOptions%plasticityType + 1))
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            self%cellSetOptions(set)%Has_displacementBC, self%cellSetOptions(set)%boundaryDisplacement
+            cellSetOptions%Has_displacementBC, cellSetOptions%boundaryDisplacement
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            self%cellSetOptions(set)%Has_damageBC, self%cellSetOptions(set)%boundaryDamage
+            cellSetOptions%Has_damageBC, cellSetOptions%boundaryDamage
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
@@ -858,14 +844,16 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'fs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90DefMechFaceSetOptionsSetFromOptions(self%comm, trim(setPrefix), faceSetOptions, ierr))
          write (IOBuffer, "(A,'fs',I4.4,': boundary force: ',3(ES12.5,' '),'pressure force: ',ES12.5,'\n')") &
-            trim(self%prefix), setID(set), self%faceSetOptions(set)%boundaryForce, self%faceSetOptions(set)%pressureForce
+            trim(self%prefix), setID(set), faceSetOptions%boundaryForce, faceSetOptions%pressureForce
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            self%faceSetOptions(set)%Has_displacementBC, self%faceSetOptions(set)%boundaryDisplacement
+            faceSetOptions%Has_displacementBC, faceSetOptions%boundaryDisplacement
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            self%faceSetOptions(set)%Has_damageBC, self%faceSetOptions(set)%boundaryDamage
+            faceSetOptions%Has_damageBC, faceSetOptions%boundaryDamage
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
@@ -875,11 +863,13 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'vs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90DefMechVertexSetOptionsSetFromOptions(self%comm, trim(setPrefix), vertexSetOptions, ierr))
          write (IOBuffer, "(A,'vs',I4.4,': displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            trim(self%prefix), setID(set), self%vertexSetOptions(set)%Has_displacementBC, self%vertexSetOptions(set)%boundaryDisplacement
+            trim(self%prefix), setID(set), vertexSetOptions%Has_displacementBC, vertexSetOptions%boundaryDisplacement
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            self%vertexSetOptions(set)%Has_damageBC, self%vertexSetOptions(set)%boundaryDamage
+            vertexSetOptions%Has_damageBC, vertexSetOptions%boundaryDamage
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))

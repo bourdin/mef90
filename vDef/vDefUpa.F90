@@ -165,19 +165,19 @@ program CoupledPlasticityDamage
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (elasticEnergySet(MEF90DefMechCtx%numCellSet))
    elasticEnergySet = 0.0_kr
-   allocate (surfaceEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (surfaceEnergySet(MEF90DefMechCtx%numCellSet))
    surfaceEnergySet = 0.0_kr
-   allocate (forceWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (forceWorkSet(MEF90DefMechCtx%numCellSet))
    forceWorkSet = 0.0_kr
-   allocate (cohesiveEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (cohesiveEnergySet(MEF90DefMechCtx%numCellSet))
    cohesiveEnergySet = 0.0_kr
-   allocate (thermalEnergySet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (thermalEnergySet(MEF90DefMechCtx%numCellSet))
    thermalEnergySet = 0.0_kr
-   allocate (heatFluxWorkSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (heatFluxWorkSet(MEF90DefMechCtx%numCellSet))
    heatFluxWorkSet = 0.0_kr
-   allocate (plasticDissipationSet(size(MEF90DefMechCtx%cellSetOptions)))
+   allocate (plasticDissipationSet(MEF90DefMechCtx%numCellSet))
    plasticDissipationSet = 0.0_kr
 
    allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))

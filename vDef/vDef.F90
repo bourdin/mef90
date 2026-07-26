@@ -204,11 +204,11 @@ program vDef
    !!!
    !!! Allocate array of works and energies
    !!!
-   allocate (elasticEnergy(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (bodyForceWork(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (cohesiveEnergy(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (surfaceEnergy(size(MEF90HeatXferCtx%cellSetOptions)))
-   allocate (boundaryForceWork(size(MEF90HeatXferCtx%faceSetOptions)))
+   allocate (elasticEnergy(MEF90HeatXferCtx%numCellSet))
+   allocate (bodyForceWork(MEF90HeatXferCtx%numCellSet))
+   allocate (cohesiveEnergy(MEF90HeatXferCtx%numCellSet))
+   allocate (surfaceEnergy(MEF90HeatXferCtx%numCellSet))
+   allocate (boundaryForceWork(MEF90HeatXferCtx%numFaceSet))
 
    !!!
    !!! Format Exodus file if needed

@@ -83,10 +83,12 @@ module m_MEF90_HeatXfer_class
       type(tPetscSF)                          :: fluxToIOSF, IOTofluxSF
       type(tPetscSF)                          :: boundaryFluxToIOSF, IOToboundaryFluxSF
 
-      type(MEF90HeatXferGlobalOptions_Type)                            :: globalOptions
-      type(MEF90HeatXferCellSetOptions_Type), dimension(:), pointer    :: cellSetOptions => null()
-      type(MEF90HeatXferFaceSetOptions_Type), dimension(:), pointer    :: faceSetOptions => null()
-      type(MEF90HeatXferVertexSetOptions_Type), dimension(:), pointer  :: vertexSetOptions => null()
+      type(MEF90HeatXferGlobalOptions_Type)   :: globalOptions
+      !!! Per-set options are not stored: they are read from the options database where they are needed,
+      !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. Only the number of sets is kept here.
+      PetscInt                                :: numCellSet = 0
+      PetscInt                                :: numFaceSet = 0
+      PetscInt                                :: numVertexSet = 0
       type(tPetscBag), dimension(:), pointer  :: MaterialPropertiesBag => null()
 
       !!! Handle on self, to be used as the application context of SNES, TS, etc. Since MEF90HeatXfer_Type
@@ -121,7 +123,6 @@ contains
 
       type(MEF90CtxGlobalOptions_Type), pointer     :: MEF90GlobalOptions
       type(tIS)                                     :: setIS
-      PetscInt                                      :: numSet
       character(len=MEF90MXSTRLEN)                  :: vecName
       type(tDM), dimension(:), pointer              :: dmList
       type(tPetscSF)                                :: dummySF
@@ -134,25 +135,22 @@ contains
       HeatXfer%PETScCtx = c_loc(HeatXfer)
 
       !!!
-      !!! Allocate the per-set options. Their values are set in setFromOptions.
-      !!! I need to allocate for the overall number of sets, not the local one
+      !!! Count the sets, over the whole communicator and not just the local ones. The per-set options
+      !!! themselves are read on demand, see MEF90HeatXfer_Type
       !!!
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (HeatXfer%cellSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, HeatXfer%numCellSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (HeatXfer%faceSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, HeatXfer%numFaceSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90VertexSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
-      PetscCall(ISGetLocalSize(setIS, numSet, ierr))
-      allocate (HeatXfer%vertexSetOptions(numSet), stat=ierr)
+      PetscCall(ISGetLocalSize(setIS, HeatXfer%numVertexSet, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
       PetscCall(DMGetDimension(dm, HeatXfer%dim, ierr))
@@ -242,10 +240,6 @@ contains
 
       nullify (HeatXfer%MEF90Ctx)
 
-      deallocate (HeatXfer%cellSetOptions)
-      deallocate (HeatXfer%faceSetOptions)
-      deallocate (HeatXfer%vertexSetOptions)
-
       do set = 1, size(HeatXfer%MaterialPropertiesBag)
          PetscCall(PetscBagDestroy(HeatXfer%MaterialPropertiesBag(set), ierr))
       end do
@@ -284,18 +278,18 @@ contains
    end subroutine MEF90HeatXferGlobalOptionsSetFromOptions_Private
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferCellSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90HeatXferCellSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90HeatXferCellSetOptionsSetFromOptions_Private: reads the options of a single cell set
+!!!  MEF90HeatXferCellSetOptionsSetFromOptions: reads the options of a single cell set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferCellSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90HeatXferCellSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                   :: comm
       character(len=*), intent(IN)                            :: prefix
-      type(MEF90HeatXferCellSetOptions_Type), intent(INOUT)   :: options
+      type(MEF90HeatXferCellSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                           :: ierr
 
       PetscInt                                                :: nOpt
@@ -307,21 +301,21 @@ contains
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-advectionVector', '[m.s^(-1)] (V): advection vector', 'mef90HeatXfer', options%advectionVector, nOpt, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90HeatXferCellSetOptionsSetFromOptions_Private
+   end subroutine MEF90HeatXferCellSetOptionsSetFromOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferFaceSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90HeatXferFaceSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90HeatXferFaceSetOptionsSetFromOptions_Private: reads the options of a single face set
+!!!  MEF90HeatXferFaceSetOptionsSetFromOptions: reads the options of a single face set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferFaceSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90HeatXferFaceSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                   :: comm
       character(len=*), intent(IN)                            :: prefix
-      type(MEF90HeatXferFaceSetOptions_Type), intent(INOUT)   :: options
+      type(MEF90HeatXferFaceSetOptions_Type), intent(OUT)     :: options
       PetscErrorCode, intent(INOUT)                           :: ierr
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90HeatXfer_Type face set", "mef90HeatXfer", ierr))
@@ -331,28 +325,28 @@ contains
          PetscCall(PetscOptionsBool('-TemperatureBC', 'Temperature has Dirichlet boundary Condition (Y/N)', 'mef90HeatXfer', options%Has_BC, options%Has_BC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryTemperature', 'Temperature boundary value', 'mef90HeatXfer', options%boundaryTemperature, options%boundaryTemperature, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90HeatXferFaceSetOptionsSetFromOptions_Private
+   end subroutine MEF90HeatXferFaceSetOptionsSetFromOptions
 
 #undef __FUNCT__
-#define __FUNCT__ "MEF90HeatXferVertexSetOptionsSetFromOptions_Private"
+#define __FUNCT__ "MEF90HeatXferVertexSetOptionsSetFromOptions"
 !!!
 !!!
-!!!  MEF90HeatXferVertexSetOptionsSetFromOptions_Private: reads the options of a single vertex set
+!!!  MEF90HeatXferVertexSetOptionsSetFromOptions: reads the options of a single vertex set
 !!!
 !!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90HeatXferVertexSetOptionsSetFromOptions_Private(comm, prefix, options, ierr)
+   subroutine MEF90HeatXferVertexSetOptionsSetFromOptions(comm, prefix, options, ierr)
       MPIU_Comm, intent(IN)                                   :: comm
       character(len=*), intent(IN)                            :: prefix
-      type(MEF90HeatXferVertexSetOptions_Type), intent(INOUT) :: options
+      type(MEF90HeatXferVertexSetOptions_Type), intent(OUT)   :: options
       PetscErrorCode, intent(INOUT)                           :: ierr
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90HeatXfer_Type vertex set", "mef90HeatXfer", ierr))
          PetscCall(PetscOptionsBool('-TemperatureBC', 'Temperature has Dirichlet boundary Condition (Y/N)', 'mef90HeatXfer', options%Has_BC, options%Has_BC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryTemperature', 'Temperature boundary value', 'mef90HeatXfer', options%boundaryTemperature, options%boundaryTemperature, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
-   end subroutine MEF90HeatXferVertexSetOptionsSetFromOptions_Private
+   end subroutine MEF90HeatXferVertexSetOptionsSetFromOptions
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetFromOptions"
@@ -372,6 +366,9 @@ contains
       PetscInt, dimension(:), pointer                         :: setID
       PetscInt                                                :: set
       character(len=MEF90MXSTRLEN)                            :: setPrefix
+      type(MEF90HeatXferCellSetOptions_Type)                  :: cellSetOptions
+      type(MEF90HeatXferFaceSetOptions_Type)                  :: faceSetOptions
+      type(MEF90HeatXferVertexSetOptions_Type)                :: vertexSetOptions
       PetscBool                                               :: printHelp
 
       !!!
@@ -380,40 +377,35 @@ contains
       PetscCall(MEF90HeatXferGlobalOptionsSetFromOptions_Private(self%comm, trim(self%prefix), self%globalOptions, ierr))
 
       !!!
-      !!! Cell set options
+      !!! The per-set options are read where they are needed, but they have to be visited once here so
+      !!! that they are registered with the options database
       !!!
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%cellSetOptions(set), ierr))
+         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
-      !!!
-      !!! Face set options
-      !!!
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90FaceSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'fs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%faceSetOptions(set), ierr))
+         PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(self%comm, trim(setPrefix), faceSetOptions, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
 
-      !!!
-      !!! Vertex set options
-      !!!
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90VertexSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          write (setPrefix, "(A,'vs',I4.4,'_')") trim(self%prefix), setID(set)
-         PetscCall(MEF90HeatXferVertexSetOptionsSetFromOptions_Private(self%comm, trim(setPrefix), self%vertexSetOptions(set), ierr))
+         PetscCall(MEF90HeatXferVertexSetOptionsSetFromOptions(self%comm, trim(setPrefix), vertexSetOptions, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
@@ -443,6 +435,10 @@ contains
       type(tIS)                                               :: setIS
       PetscInt, dimension(:), pointer                         :: setID
       PetscInt                                                :: set
+      character(len=MEF90MXSTRLEN)                            :: setPrefix
+      type(MEF90HeatXferCellSetOptions_Type)                  :: cellSetOptions
+      type(MEF90HeatXferFaceSetOptions_Type)                  :: faceSetOptions
+      type(MEF90HeatXferVertexSetOptions_Type)                :: vertexSetOptions
 
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType /= 'ascii') return
@@ -466,11 +462,13 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), cellSetOptions, ierr))
          write (IOBuffer, "(A,'cs',I4.4,': flux: ',ES12.5,' advection vector: ',3(ES12.5,' '),'\n')") &
-            trim(self%prefix), setID(set), self%cellSetOptions(set)%flux, self%cellSetOptions(set)%advectionVector
+            trim(self%prefix), setID(set), cellSetOptions%flux, cellSetOptions%advectionVector
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         temperature BC: ',L1,' value: ',ES12.5,'\n')") &
-            self%cellSetOptions(set)%Has_BC, self%cellSetOptions(set)%boundaryTemperature
+            cellSetOptions%Has_BC, cellSetOptions%boundaryTemperature
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
@@ -480,11 +478,13 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'fs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90HeatXferFaceSetOptionsSetFromOptions(self%comm, trim(setPrefix), faceSetOptions, ierr))
          write (IOBuffer, "(A,'fs',I4.4,': boundary flux: ',ES12.5,' surface thermal conductivity: ',ES12.5,'\n')") &
-            trim(self%prefix), setID(set), self%faceSetOptions(set)%boundaryFlux, self%faceSetOptions(set)%surfaceThermalConductivity
+            trim(self%prefix), setID(set), faceSetOptions%boundaryFlux, faceSetOptions%surfaceThermalConductivity
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write (IOBuffer, "('         external temperature: ',ES12.5,' temperature BC: ',L1,' value: ',ES12.5,'\n')") &
-            self%faceSetOptions(set)%externalTemperature, self%faceSetOptions(set)%Has_BC, self%faceSetOptions(set)%boundaryTemperature
+            faceSetOptions%externalTemperature, faceSetOptions%Has_BC, faceSetOptions%boundaryTemperature
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
@@ -494,8 +494,10 @@ contains
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
+         write (setPrefix, "(A,'vs',I4.4,'_')") trim(self%prefix), setID(set)
+         PetscCall(MEF90HeatXferVertexSetOptionsSetFromOptions(self%comm, trim(setPrefix), vertexSetOptions, ierr))
          write (IOBuffer, "(A,'vs',I4.4,': temperature BC: ',L1,' value: ',ES12.5,'\n')") &
-            trim(self%prefix), setID(set), self%vertexSetOptions(set)%Has_BC, self%vertexSetOptions(set)%boundaryTemperature
+            trim(self%prefix), setID(set), vertexSetOptions%Has_BC, vertexSetOptions%boundaryTemperature
          PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
