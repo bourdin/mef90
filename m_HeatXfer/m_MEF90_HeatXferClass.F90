@@ -184,8 +184,6 @@ contains
       type(MEF90HeatXfer_Type), intent(INOUT)          :: HeatXfer
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      PetscInt                                         :: set
-
       HeatXfer%PETScCtx = C_NULL_PTR
       if (associated(HeatXfer%temperatureLocal)) then
          PetscCall(VecDestroy(HeatXfer%temperatureLocal, ierr))

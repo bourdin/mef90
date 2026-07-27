@@ -539,14 +539,6 @@ program vDef
 401 format(" [ERROR]: ", A, " TAOSolve failed with TAOConvergedReason ", I2, ". \n Check https://petsc.org/release/docs/manualpages/TAO/TAOConvergedReason/ for error code meaning.\n")
 
    !!! Clean up and exit nicely
-   select case (MEF90DefMechGlobalOptions%timeSteppingType)
-   case (MEF90DefMech_timeSTeppingTypeQuasiStatic)
-      PetscCallA(SNESDestroy(displacementSNES, ierr))
-      PetscCallA(VecDestroy(displacementResidual, ierr))
-      PetscCallA(VecDestroy(displacement, ierr))
-   end select
-
-   !!! Clean up and exit nicely
    select case (MEF90HeatXferGlobalOptions%timeSteppingType)
    case (MEF90HeatXFer_timeSteppingTypeSteadyState)
       PetscCallA(SNESDestroy(temperatureSNES, ierr))
