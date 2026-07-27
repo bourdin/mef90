@@ -13,61 +13,61 @@ mef90version.h: chkpaths
 MEF90: mef90version.h chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../MEF90/Makefile MEF90 || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../MEF90/Makefile MEF90 || exit 1
 
 m_HeatXfer: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_HeatXfer/Makefile m_HeatXfer || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../m_HeatXfer/Makefile m_HeatXfer || exit 1
 
 HeatXfer: mef90version.h MEF90 m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../HeatXfer/Makefile HeatXfer || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../HeatXfer/Makefile HeatXfer || exit 1
 
 m_DefMech: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_DefMech/Makefile m_DefMech || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../m_DefMech/Makefile m_DefMech || exit 1
 
 m_Elasticity: mef90version.h MEF90 chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../m_Elasticity/Makefile m_Elasticity || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../m_Elasticity/Makefile m_Elasticity || exit 1
 
 ThermoElasticity: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElasticity/Makefile ThermoElasticity || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../ThermoElasticity/Makefile ThermoElasticity || exit 1
 
 ThermoElastoPlasticity: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../ThermoElastoPlasticity/Makefile ThermoElastoPlasticity || exit 1
 
 WorkControlled: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../WorkControlled/Makefile WorkControlled || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../WorkControlled/Makefile WorkControlled || exit 1
 
 vDef: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef || exit 1
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef || exit 1
 #	-@make -C ${PETSC_ARCH}/objs -f ../../vDef/Makefile vDef vDefP vDefUpa vDefBT vDefHF
 
 Utils: mef90version.h MEF90 m_DefMech m_HeatXfer chkpaths
 	-@bin/makeversion.sh ${MEF90_DIR}/mef90version.h
 	-@echo "Building $@ with PETSC_ARCH=${PETSC_ARCH}"
-	-@make -C ${PETSC_ARCH}/objs -f ../../Utils/Makefile all
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../Utils/Makefile all
 
 test: MEF90 chkpaths
-	-@make -s -C HeatXfer test
-	-@make -s -C ThermoElasticity test
-	-@make -s -C vDef test
+	${MAKE} -s -C HeatXfer test
+	${MAKE} -s -C ThermoElasticity test
+	${MAKE} -s -C vDef test
 
 runtests: MEF90 chkpaths
-	-@make -C ${PETSC_ARCH}/objs -f ../../Tests/Makefile runall
+	${MAKE} -C ${PETSC_ARCH}/objs -f ../../Tests/Makefile runall
 
 chkpaths: ${PETSC_ARCH}/objs ${PETSC_ARCH}/bin
 ${PETSC_ARCH}/objs:
@@ -87,7 +87,7 @@ clean:
 	-@rm ${MEF90_DIR}/mef90version.h
 	-@rm -Rf ${PETSC_ARCH}/objs
 	-@rm -Rf ${PETSC_ARCH}/bin
-	-@make -C HeatXfer testclean
-	-@make -C ThermoElasticity testclean
-	-@make -C vDef testclean
-	-@make -C Tests clean
+	${MAKE} -C HeatXfer testclean
+	${MAKE} -C ThermoElasticity testclean
+	${MAKE} -C vDef testclean
+	${MAKE} -C Tests clean

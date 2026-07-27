@@ -100,7 +100,7 @@ module m_MEF90_HeatXfer_class
       type(c_ptr)                             :: PETScCtx = C_NULL_PTR
    contains
       procedure, pass(self) :: setFromOptions => MEF90HeatXferSetFromOptions
-      procedure, pass(self) :: view => MEF90HeatXferView
+      procedure, pass(self) :: view_internal => MEF90HeatXferView
    end type MEF90HeatXfer_Type
 
 contains
@@ -133,6 +133,7 @@ contains
       HeatXfer%MEF90Ctx => MEF90Ctx
       HeatXfer%comm = MEF90Ctx%comm
       HeatXfer%prefix = prefix
+      HeatXfer%name = trim(prefix)//"HeatXfer"
       HeatXfer%PETScCtx = c_loc(HeatXfer)
 
       PetscCall(DMGetDimension(dm, HeatXfer%dim, ierr))
@@ -207,14 +208,14 @@ contains
       end if
 
       !!! Destroy SFs
-      PetscCall(PetscSFDestroy(HeatXfer%temperatureToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%IOToTemperatureSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%externalTemperatureToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%IOToExternalTemperatureSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%fluxToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%IOToFluxSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%boundaryFluxToIOSF, ierr))
-      PetscCall(PetscSFDestroy(HeatXfer%IOToBoundaryFluxSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%temperatureToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%IOToTemperatureSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%externalTemperatureToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%IOToExternalTemperatureSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%fluxToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%IOToFluxSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%boundaryFluxToIOSF, ierr))
+      ! PetscCall(PetscSFDestroy(HeatXfer%IOToBoundaryFluxSF, ierr))
 
       PetscCall(PetscSFDestroy(HeatXfer%boundaryToTemperatureSF, ierr))
 

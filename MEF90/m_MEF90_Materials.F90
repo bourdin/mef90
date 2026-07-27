@@ -533,8 +533,8 @@ contains
          MEF90HookesLaw3DXMat3D%YY = A%lambda * X%XX + C1 * X%YY + A%lambda * X%ZZ
          MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
 
-         MEF90HookesLaw3DXMat3D%XZ = C2 * X%XZ
-         MEF90HookesLaw3DXMat3D%YZ = C2 * X%YZ
+         MEF90HookesLaw3DXMat3D%ZX = C2 * X%ZX
+         MEF90HookesLaw3DXMat3D%ZY = C2 * X%ZY
          MEF90HookesLaw3DXMat3D%ZZ = A%lambda * X%XX + A%lambda * X%YY + C1 * X%ZZ
       case (MEF90HookesLawTypeFull)
          MEF90HookesLaw3DXMat3D = A%fullTensor * X

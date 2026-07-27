@@ -447,6 +447,8 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
          myEnergy = 0.0_kr
          myBodyWork = 0.0_kr
          PetscCall(DMGetStratumIS(dmTemperature, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
+         myenergy = 0.0_kr
+         myBodyWork = 0.0_kr
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (setPrefix, '(A,"cs",I4.4,"_")') trim(MEF90HeatXferCtx%prefix), setID(set)
             PetscCall(MEF90HeatXferCellSetOptionsSetFromOptions(MEF90HeatXferCtx%comm, setPrefix, MEF90_DIM, cellSetOptions, ierr))

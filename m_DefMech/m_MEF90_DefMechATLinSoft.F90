@@ -58,7 +58,7 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      aLinSoft = (1.0_kr - alpha)**2 / (self%k + (1.0_kr - self%k) * (1.0_kr * alpha)**2)
+      aLinSoft = (1.0_kr - alpha)**2 / (self%k + (1.0_kr - self%k) * (1.0_kr - alpha)**2)
    end function aLinSoft
 
 #undef __FUNCT__
@@ -72,8 +72,7 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      DaLinSoft = -2.0_kr * alpha * (1.0_kr - alpha)**2 * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
-                  + (2.0_kr * alpha - 2.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)
+      DaLinSoft = -2.0_kr * self%k * (1.0_kr - alpha) / (self%k + (1.0_kr - self%k) * (1.0_kr - alpha)**2)**2
    end function DaLinSoft
 
 #undef __FUNCT__
@@ -87,10 +86,8 @@ contains
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
       PetscReal                                        :: alpha
 
-      D2aLinSoft = 8.0_kr * alpha**2 * (1.0_kr - alpha)**2 * (self%k - 1.0_kr)**2 / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**3 &
-                   - 4.0_kr * alpha * (2.0_kr * alpha - 2.0_kr) * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
-                   - 2.0_kr * (1.0_kr - alpha)**2 * (self%k - 1.0_kr) / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)**2 &
-                   + 2.0_kr / (alpha**2 * (self%k - 1.0_kr) + 1.0_kr)
+      D2aLinSoft = 2.0_kr * self%k / (self%k + (1.0_kr - self%k) * (1.0_kr - alpha)**2)**2 &
+                   - 8.0_kr * self%k * (1.0_kr - self%k) * (1.0_kr - alpha)**2 / (self%k + (1.0_kr - self%k) * (1.0_kr - alpha)**2)**3
    end function D2aLinSoft
 
 #undef __FUNCT__

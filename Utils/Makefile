@@ -70,12 +70,12 @@ ${MEF90_DIR}/${PETSC_ARCH}/bin/HookeLaws: HookeLaws.o
 	-@${RM} $<
 
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 
 clean::
 	-@rm -f gmsh2exo viewSets viewDAG YAMLValidator HookeLaws 
 allclean:
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 
 debug::
 	@echo FFLAGS              ${FFLAGS} 

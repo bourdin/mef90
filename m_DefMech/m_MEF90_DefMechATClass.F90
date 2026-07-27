@@ -34,8 +34,8 @@ module m_MEF90_DefMechAT_class
       character(len=MEF90MXSTRLEN) :: type = ''
 
    contains
-      ! procedure, pass(self) :: setFromOptions => MEF90DefMechAT_setFromOptions
-      procedure, pass(self) :: view => MEF90DefMechAT_View
+      procedure, pass(self) :: setFromOptions => MEF90DefMechAT_setFromOptions
+      procedure, pass(self) :: view_internal => MEF90DefMechAT_View
       procedure(ATInterface), pass(self), deferred :: a
       procedure(ATInterface), pass(self), deferred :: Da
       procedure(ATInterface), pass(self), deferred :: D2a
@@ -72,11 +72,11 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90DefMechAT_type\n')") trim(self%prefix) // "damage"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         type: ',A,'\n')") trim(self%type)
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         fracture toughness (Gc): ',ES12.5,' [N.m^(-1)]\n')") self%fractureToughness
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          select type (k => self%toughnessAnisotropyMatrix)
          type is (MatS2D)
             write(IOBuffer, "('         fracture toughness anisotropy matrix (): ', 2(ES12.5,', '), ES12.5, ' []\n')") k
@@ -85,13 +85,13 @@ contains
          class default
             write(IOBuffer, *) 'somehow fracture toughness anisotropy matrix is neither MatS2D not MatS3D. This is wrong\n'
          end select
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         internalLength (ell): ',ES12.5,' [m]\n')") self%internalLength
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         residualStiffness (eta): ',ES12.5,' []\n')") self%residualStiffness
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         elastic (): ',L1,' [bool]\n')") self%isElastic
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine MEF90DefMechAT_View
 
@@ -100,15 +100,15 @@ contains
 !!!
 !!!
 !!!  MEF90DefMechAT_setFromOptions: initializes a MEF90_DefMechAT_Type from options
-!!!                                 subclasses may implement their own setFromOptions if they have additional 
+!!!                                 subclasses may implement their own setFromOptions if they have additional
 !!!                                 parameters, but it is expected that these will call MEF90DefMechAT_setFromOptions
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine MEF90DefMechAT_setFromOptions(self,ierr)
+   subroutine MEF90DefMechAT_setFromOptions(self, ierr)
       class(MEF90DefMechAT_Type), intent(inout) :: self
       PetscErrorCode,intent(inout) :: ierr
 
-      PetscBool :: printHelp
+      PetscInt :: verbose = 0
       PetscReal, dimension(:), allocatable :: tmpArray
       PetscInt :: nOpt
 
@@ -123,23 +123,23 @@ contains
          type is (MatS2D)
             nOpt = 3
             allocate(tmpArray(nOpt))
-            tmpArray = k !MEF90MatS2DIdentity
+            tmpArray = k
             PetscCallA(PetscOptionsRealArray('-toughnessAnisotropyMatrix', 'toughness anisotropy matrix', '[]', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
             k = tmpArray
             deallocate(tmpArray)
          type is (MatS3D)
             nOpt = 6
             allocate(tmpArray(nOpt))
-            tmpArray = k !MEF90MatS2DIdentity
+            tmpArray = k
             PetscCallA(PetscOptionsRealArray('-toughnessAnisotropyMatrix', 'toughness anisotropy matrix', '[]', tmpArray, nOpt, PETSC_NULL_BOOL, ierr))
             k = tmpArray
             deallocate(tmpArray)
          end select
       PetscCall(PetscOptionsEnd(ierr))
 
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
-         call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         call self%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
       end if
    end subroutine MEF90DefMechAT_setFromOptions
 end module m_MEF90_DefMechAT_class

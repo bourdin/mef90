@@ -1607,7 +1607,7 @@ contains
          PetscCall(PetscSFRestoreGraph(tempSF, tempNRoots, tempNLeaves, tempLocal, tempRemote, ierr))
          deallocate (glLocal)
          deallocate (glRemote)
-         PetscCall(PetscSFRestoreGraph(tempSF, tempNRoots, tempNLeaves, tempLocal, tempRemote, ierr))
+         ! PetscCall(PetscSFRestoreGraph(tempSF, tempNRoots, tempNLeaves, tempLocal, tempRemote, ierr))
          PetscCall(PetscSFRestoreGraph(sf, lgNRoots, lgNLeaves, lgLocal, lgRemote, ierr))
          PetscCall(PetscSFDestroy(tempSF, ierr))
       end if
@@ -1703,9 +1703,9 @@ contains
          end do
          PetscCall(ISCreateGeneral(MEF90Ctx%comm, nleaves, ilocal, PETSC_COPY_VALUES, locfacesIS(set), ierr))
          PetscCall(ISDestroy(faceIS, ierr))
+         PetscCall(PetscSFRestoreGraph(sf, nroots, nleaves, emptyInd, iremote, ierr))
          PetscCall(PetscSFDestroy(sf, ierr))
          deallocate (ilocal)
-         PetscCall(PetscSFRestoreGraph(sf, nroots, nleaves, emptyInd, iremote, ierr))
       end do
       do set = 1, numSS
          PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, locfacesIS(set), ierr))

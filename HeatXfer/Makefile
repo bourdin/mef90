@@ -1,33 +1,33 @@
 NP=2
 all:
-	-@make -C ${MEF90_DIR} HeatXfer
+	-@${MAKE} -C ${MEF90_DIR} HeatXfer
 test: test2D test3D testTransient2D testTransient3D
 test1:
 	-@for OPTIONSFILE in test1.yaml; do \
-	make -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE}; done
+	${MAKE} -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE}; done
 test2D:
 	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
-	make -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=SquareNG_Y.gen OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=SquareNG_X.gen OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=SquareNG_Y.gen OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D:
 	-@for OPTIONSFILE in test1.yaml test2.yaml test3.yaml; do \
-	make -s testHeatXfer PREFIX=CubeNG_X.msh  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Y.msh  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=CubeNG_Z.msh  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=CubeNG_X.msh  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=CubeNG_Y.msh  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=CubeNG_Z.msh  OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 testTransient2D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=1;\
-	make -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=2;\
+	${MAKE} -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=1;\
+	${MAKE} -s testHeatXfer PREFIX=Beam1x10-tri.gen OPTIONSFILE=$${OPTIONSFILE} ORDER=2;\
 	done
 
 testTransient3D:
 	-@for OPTIONSFILE in test5.yaml test6.yaml; do \
-	make -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testHeatXfer PREFIX=Beam3D1x10-tet.gen OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -57,15 +57,15 @@ testHeatXfer:
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
 	
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_HeatXfer:
-	make -C ${MEF90_DIR} m_HeatXfer
+	${MAKE} -C ${MEF90_DIR} m_HeatXfer
 	
 testclean::
 	-@rm -f data/*out.gen data/*log
 
 allclean: testclean
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 	
 debug::
 	@echo FFLAGS ${FFLAGS} 

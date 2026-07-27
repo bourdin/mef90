@@ -144,6 +144,6 @@ m_MEF90_DefMechPlasticityCtx3D.o: ${BASE_DIR}/m_MEF90_DefMechPlasticityCtx.F90 m
 
 
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 allclean:
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean

@@ -127,6 +127,7 @@ subroutine MEF90H1DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
       numDof = size(elem(1)%BF(:, 1))
       numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
+      allocate (Vloc(numDof), source=0.0_kr)
       do point = 1, size(setPointID)
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, U, setPointID(point), PETSC_NULL_INTEGER, Uloc, ierr))
          PetscCall(DMPlexVecGetClosure(dm, PETSC_NULL_SECTION, V, setPointID(point), PETSC_NULL_INTEGER, Vloc, ierr))
@@ -144,6 +145,7 @@ subroutine MEF90H1DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
       end do ! point
       ! Flop computation is different for scalar and Vec
       deallocate (Uloc, stat=ierr)
+      deallocate (Vloc, stat=ierr)
    end if
    PetscCall(ISRestoreIndices(setPointIS, setPointID, ierr))
    PetscCall(ISDestroy(setPointIS, ierr))

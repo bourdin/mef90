@@ -1,16 +1,16 @@
 NP=2 
 all:
-	-@make -C ${MEF90_DIR} WorkControlled
+	-@${MAKE} -C ${MEF90_DIR} WorkControlled
 test: test2D test3D
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
-	make -s testWorkControlled PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testWorkControlled PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testWorkControlled PREFIX=Beam1x10-tri3 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testWorkControlled PREFIX=Beam1x10-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/WorkControlled
 	-@for OPTIONSFILE in test7.yaml test8.yaml; do \
-	make -s testWorkControlled PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testWorkControlled PREFIX=Beam1x10-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
 	done
 	#make -s testWorkControlled PREFIX=Beam1x10-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 
@@ -43,16 +43,16 @@ testWorkControlled:
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
 	
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_HeatXfer:
-	make -C ${MEF90_DIR} m_HeatXfer
+	${MAKE} -C ${MEF90_DIR} m_HeatXfer
 m_DEFMECH:
-	make -C ${MEF90_DIR} m_DEFMECH
+	${MAKE} -C ${MEF90_DIR} m_DEFMECH
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
 
 allclean: testclean
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 	
 debug::
 	@echo FFLAGS ${FFLAGS} 

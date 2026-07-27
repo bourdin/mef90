@@ -722,7 +722,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
                do cell = 1, size(setPointID)
                   PetscCall(PetscSectionGetOffset(sectionPressureForce, setPointID(cell), vecOffset, ierr))
                   PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
-                  pressureForce = boundaryForceArray(vecOffset + 1) * elemVect(cell)%outerNormal
+                  pressureForce = pressureForceArray(vecOffset + 1) * elemVect(cell)%outerNormal
                   do iGauss = 1, numGauss
                      do iDof = 1, numDofDisplacement
                         myWork = myWork + elemVect(cell)%Gauss_C(iGauss) * displacementDof(iDof) * (pressureForce .DotP. elemVect(cell)%BF(iDof, iGauss))
@@ -817,9 +817,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
                      do iDof = 1, numDofDisplacement
                         U0Gauss = U0Gauss + (displacementDof(iDof) - cohesiveDisplacementDof(iDof)) * elemVect(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDisplacement
-                     do iDof = 1, numDofDisplacement
-                        myCohesiveEnergy = myCohesiveEnergy + elemVect(cell)%Gauss_C(iGauss) * cellSetOptions%cohesiveStiffness * (U0Gauss .DotP. U0Gauss)
-                     end do ! iDof numDofDisplacement
+                     myCohesiveEnergy = myCohesiveEnergy + 0.5_kr * elemVect(cell)%Gauss_C(iGauss) * cellSetOptions%cohesiveStiffness * (U0Gauss .DotP. U0Gauss)
                   end do ! iGauss
                   PetscCall(DMPlexVecRestoreClosure(dmCohesiveDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%cohesiveDisplacement, setPointID(cell), PETSC_NULL_INTEGER, cohesiveDisplacementDof, ierr))
                   PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
@@ -827,6 +825,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
             end if ! cohesiveDisplacement
 
             PetscCall(MEF90ElementDestroy(elemVect, ierr))
+            PetscCall(ISRestoreIndices(setPointIS, setPointID, ierr))
             PetscCall(ISDestroy(setPointIS, ierr))
          end if ! setPointIS
          PetscCallMPI(MPI_AllReduce(myCohesiveEnergy, cohesiveEnergy(set), 1, MPIU_SCALAR, MPI_SUM, MEF90DefMechCtx%MEF90Ctx%comm, ierr))
@@ -1212,7 +1211,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    type(tVec), intent(IN)                              :: damage
    type(tVec), intent(INOUT)                           :: residual
    type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
-   PetscErrorCode, intent(OUT)                         :: ierr
+   PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
    type(tPetscSection)                                 :: sectionPlasticStrain
@@ -1425,7 +1424,7 @@ subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, MEF90DefMe
    type(tVec), intent(IN)                              :: damage
    type(tVec), intent(INOUT)                           :: residual
    type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
-   PetscErrorCode, intent(OUT)                         :: ierr
+   PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tSNES)                                         :: dummySNES
    type(tDM)                                           :: dmDamage
@@ -1451,7 +1450,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    type(tVec), intent(IN)                              :: damage
    type(tMat), intent(INOUT)                           :: A, M
    type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
-   PetscErrorCode, intent(OUT)                         :: ierr
+   PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tDM)                                           :: dmDisplacement, dmDamage, dmTemperature, dmCohesiveDisplacement, dmPlasticStrain
    type(tPetscSection)                                 :: sectionPlasticStrain
@@ -1602,7 +1601,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
-               PetscCall(DMPlexMatSetClosure(dmDamage, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDamage,numDofDamage]), ADD_VALUES, ierr))
+               PetscCall(DMPlexMatSetClosure(dmDamage, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDamage*numDofDamage]), ADD_VALUES, ierr))
             end do ! cell
 
             deallocate (matDof)
@@ -1637,7 +1636,7 @@ subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, MEF90DefMechCtx
    type(tVec), intent(IN)                              :: damage
    type(tMat), intent(INOUT)                           :: A, M
    type(MEF90DefMech_Type), intent(IN)                 :: MEF90DefMechCtx
-   PetscErrorCode, intent(OUT)                         :: ierr
+   PetscErrorCode, intent(INOUT)                       :: ierr
 
    type(tSNES)                                         :: dummySNES
    type(tDM)                                           :: dmDamage
@@ -1886,10 +1885,8 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
                      displacementCell = displacementCell + displacementDof(iDof) * elemVect(cell)%BF(iDof, iGauss)
                   end do ! iDof numDofDisplacement
 
-                  do iDof = 1, numDofDamage
-                     myCrackVolume = myCrackVolume + elemScal(cell)%Gauss_C(iGauss) * ( &
-                                     gradDamageGauss .DotP. displacementCell)
-                  end do ! iDof numDofDamage
+                  myCrackVolume = myCrackVolume + elemScal(cell)%Gauss_C(iGauss) * ( &
+                                  gradDamageGauss .DotP. displacementCell)
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))

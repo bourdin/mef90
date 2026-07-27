@@ -248,7 +248,7 @@ module m_MEF90_DefMech_class
       type(c_ptr)                               :: PETScCtx = C_NULL_PTR
    contains
       procedure, pass(self) :: setFromOptions => MEF90DefMechSetFromOptions
-      procedure, pass(self) :: view => MEF90DefMechView
+      procedure, pass(self) :: view_internal => MEF90DefMechView
    end type MEF90DefMech_Type
 
 contains
@@ -283,6 +283,7 @@ contains
       DefMech%MEF90Ctx => MEF90Ctx
       DefMech%comm = MEF90Ctx%comm
       DefMech%prefix = prefix
+      DefMech%name = trim(prefix)//"DefMech"
       DefMech%PETScCtx = c_loc(DefMech)
 
       !!!

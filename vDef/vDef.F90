@@ -34,6 +34,7 @@ program vDef
    type(tTao)                                         :: damageTAO
    type(eSNESConvergedReason)                         :: displacementSNESConvergedReason, damageSNESConvergedReason
    type(eTaoConvergedReason)                          :: damageTAOConvergedReason
+   ! character(len=MEF90MXSTRLEN)                       :: convergeReasonString
    type(tVec)                                         :: displacement, displacementResidual, damage, damageResidual
    type(tVec)                                         :: damageAltMinOld
    type(tVec)                                         :: damageLB, damageUB
@@ -57,6 +58,7 @@ program vDef
 
    PetscInt                                           :: step
    PetscExodusIIInt                                   :: EXOstep
+   Integer                                            :: exoid
    PetscInt                                           :: AltMinIter, AltMinStep = 0_ki
    PetscReal                                          :: damageMaxChange, damageMin, damageMax
 
@@ -220,6 +222,13 @@ program vDef
       if (MEF90GlobalOptions%verbose > 1) then
          PetscCallA(PetscPrintf(MEF90Ctx%comm, "Done Formatting result file\n", ierr))
       end if
+   else
+      !!! Make sure time steps in the file are correct
+      PetscCall(PetscViewerExodusIIGetId(MEF90Ctx%resultViewer, exoid, ierr))
+      do step = 1, size(time)
+         call exptim(exoid, step, time(step), ierr)
+      end do
+      PetscCall(PetscViewerFlush(MEF90Ctx%resultViewer, ierr))
    end if
    if (MEF90GlobalOptions%verbose > 1) then
       PetscCallA(PetscViewerView(MEF90Ctx%resultViewer, PETSC_VIEWER_STDOUT_WORLD, ierr))
@@ -270,7 +279,8 @@ program vDef
             PetscCallA(SNESSolve(temperatureSNES, PETSC_NULL_VEC, temperature, ierr))
             PetscCallA(SNESGetConvergedReason(temperatureSNES, temperatureSNESConvergedReason, ierr))
             if (temperatureSNESConvergedReason%v < 0) then
-               write (IOBuffer, 400) "temperature", temperatureSNESConvergedReason
+               ! PetscCallA(SNESGetConvergedReasonString(temperatureSNES, convergeReasonString, ierr))
+               write (IOBuffer, 400) "temperature", temperatureSNESConvergedReason!, trim(convergeReasonString)
                PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
             end if
 
@@ -348,8 +358,8 @@ program vDef
 
                AltMin: do AltMinIter = 1, MEF90DefMechGlobalOptions%damageMaxIt
                   AltMinStep = AltMinStep + 1
-                  write (IObuffer, 208) AltMinIter
-                  PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
+                  ! write (IObuffer, 208) AltMinIter
+                  ! PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
 
                   if (mod(AltMinIter - 1, MEF90DefMechGlobalOptions%PCLag) == 0) then
                      PetscCallA(SNESSetLagPreconditioner(displacementSNES, -2_ki, ierr))
@@ -363,7 +373,8 @@ program vDef
                   PetscCallA(SNESSolve(displacementSNES, PETSC_NULL_VEC, displacement, ierr))
                   PetscCallA(SNESGetConvergedReason(displacementSNES, displacementSNESConvergedReason, ierr))
                   if (displacementSNESConvergedReason%v < 0) then
-                     write (IOBuffer, 400) "displacement", displacementSNESConvergedReason
+                     ! PetscCallA(SNESGetConvergedReasonString(displacementSNES, convergeReasonString, ierr))
+                     write (IOBuffer, 400) "displacement", displacementSNESConvergedReason!, trim(convergeReasonString)
                      PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                   end if
 
@@ -382,12 +393,13 @@ program vDef
                      PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage, ierr))
                      PetscCallA(SNESGetConvergedReason(damageSNES, damageSNESConvergedReason, ierr))
                      if (damageSNESConvergedReason%v < 0) then
-                        write (IOBuffer, 400) "damage", damageSNESConvergedReason
+                        ! PetscCallA(SNESGetConvergedReasonString(damageSNES, convergeReasonString, ierr))
+                        write (IOBuffer, 400) "damage", damageSNESConvergedReason!, trim(convergeReasonString)
                         PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                      end if
                   case (MEF90DefMech_DamageSolverTypeTao)
                      PetscCallA(TAOSolve(damageTAO, ierr))
-                     PetscCallA(TAOGetConvergedReason(damageTAO, damageTAOConvergedReason, ierr))
+                     ! PetscCallA(TAOGetConvergedReason(damageTAO, damageTAOConvergedReason, ierr))
                      if (damageTAOConvergedReason%v < 0) then
                         write (IOBuffer, 401) "damage", damageTAOConvergedReason
                         PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
@@ -434,7 +446,7 @@ program vDef
                   PetscCallA(VecMax(damage, PETSC_NULL_INTEGER, damageMax, ierr))
                   PetscCallA(VecAxPy(damageAltMinOld, -1.0_kr, damage, ierr))
                   PetscCallA(VecNorm(damageAltMinOld, NORM_INFINITY, damageMaxChange, ierr))
-                  write (IOBuffer, 209) damageMin, damageMax, damageMaxChange
+                  write (IOBuffer, 209) AltMinIter, damageMin, damageMax, damageMaxChange
                   PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                   PetscCallA(PetscLogStagePop(ierr))
 
@@ -532,12 +544,11 @@ program vDef
 202 format("======= Total: elastic energy: ", ES12.5, " work: ", ES12.5, " cohesive: ", ES12.5, " surface: ", ES12.5, " total: ", ES12.5, "\n")
 500 format(I6, 6(ES16.5), "\n")
 
-208 format("   Alt. Min. step ", I5, " ")
-209 format(" alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5, "\n")
+209 format("   Alt. Min. step ", I5, " alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5, "\n")
 
-400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ". \n Check https://petsc.org/release/docs/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
+! 400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ": ", A, "\n")
+400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ". \n Check https://petsc.org/release/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
 401 format(" [ERROR]: ", A, " TAOSolve failed with TAOConvergedReason ", I2, ". \n Check https://petsc.org/release/docs/manualpages/TAO/TAOConvergedReason/ for error code meaning.\n")
-
    !!! Clean up and exit nicely
    select case (MEF90HeatXferGlobalOptions%timeSteppingType)
    case (MEF90HeatXFer_timeSteppingTypeSteadyState)

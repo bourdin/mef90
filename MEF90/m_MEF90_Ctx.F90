@@ -79,7 +79,7 @@ module m_MEF90_Ctx
       type(tPetscViewer)                              :: resultViewer
    contains
       procedure, pass(self) :: setFromOptions => MEF90CtxSetFromOptions
-      procedure, pass(self) :: view => MEF90CtxView
+      procedure, pass(self) :: view_internal => MEF90CtxView
    end type MEF90Ctx_Type
 
 contains
@@ -109,6 +109,7 @@ contains
 
       MEF90Ctx%comm = comm
       MEF90Ctx%prefix = prefix
+      MEF90Ctx%name = trim(prefix)//"MEF90Ctx"
       PetscCallMPI(MPI_COMM_RANK(MEF90Ctx%comm, MEF90Ctx%rank, ierr))
       PetscCallMPI(MPI_COMM_SIZE(MEF90Ctx%comm, MEF90Ctx%numProcs, ierr))
       PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, '-prefix', tmpPrefix, hasPrefix, ierr))
@@ -273,7 +274,7 @@ contains
          allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
          if (GlobalOptions%timeNumStep > 1) then
-            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1.0_kr)
+            dt = (GlobalOptions%timeMax - GlobalOptions%timeMin) / real(GlobalOptions%timeNumStep - 1)
          end if
          t = [(GlobalOptions%timeMin + i * dt, i = 0, GlobalOptions%timeNumStep - 1)]
          t(GlobalOptions%timeNumStep) = GlobalOptions%timeMax

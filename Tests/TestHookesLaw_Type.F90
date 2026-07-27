@@ -15,11 +15,13 @@ program TestHookesLaw_Type
 
    call MEF90GetHookesLaw(PETSC_COMM_WORLD, prefix1, 2, HookesLaw1, ierr)
    call HookesLaw1%SetFromOptions(ierr)
-   call HookesLaw1%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+   ! call HookesLaw1%view(ierr)
+   call MEF90GetHookesLaw(PETSC_COMM_WORLD, prefix1, 2, HookesLaw1, ierr)
+   call HookesLaw1%SetFromOptions(ierr)
 
    call MEF90GetHookesLaw(PETSC_COMM_WORLD, prefix2, 2, HookesLaw2, ierr)
    call HookesLaw2%SetFromOptions(ierr)
-   call HookesLaw2%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+   ! call HookesLaw2%view(ierr)
 
 
    PetscCallA(MEF90Finalize(ierr))

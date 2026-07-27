@@ -1,23 +1,23 @@
 NP=2 
 all:
-	-@make -C ${MEF90_DIR} ThermoElastoPlasticity
+	-@${MAKE} -C ${MEF90_DIR} ThermoElastoPlasticity
 test: test2D test3D
 test2D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
-	make -s testThermoElastoPlasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=SquareNG_X-tri3 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=SquareNG_X-tri6 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=SquareNG_Y-tri3 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=SquareNG_Y-tri6 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 test3D: ${MEF90_DIR}/bin/${PETSC_ARCH}/ThermoElastoPlasticity
 	-@for OPTIONSFILE in test1.opts test2.opts test3.opts test4.opts; do \
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_Y-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_Z-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
-	make -s testThermoElastoPlasticity PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_X-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_X-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_Y-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_Y-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_Z-tetra4  OPTIONSFILE=$${OPTIONSFILE};\
+	${MAKE} -s testThermoElastoPlasticity PREFIX=CubeNG_Z-tetra10 OPTIONSFILE=$${OPTIONSFILE};\
 	done
 
 include ${PETSC_DIR}/lib/petsc/conf/variables
@@ -49,15 +49,15 @@ testThermoElastoPlasticity:
 	-@${RM} $${PREFIX}-$${OPTIONSFILE}.out 
 	
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_DefMech:
-	make -C ${MEF90_DIR} m_DefMech
+	${MAKE} -C ${MEF90_DIR} m_DefMech
 	
 testclean::
 	-@rm -f data/*out.gen data/*log data/*ener*
 
 allclean: testclean
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 	
 debug::
 	@echo FFLAGS ${FFLAGS} 

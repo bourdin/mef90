@@ -48,7 +48,7 @@ contains
       type(MEF90HeatXfer_Type), intent(INOUT)          :: MEF90HeatXferCtx
       PetscInt, intent(IN)                             :: step
       PetscReal, intent(IN)                            :: time
-      PetscErrorCode, intent(OUT)                      :: ierr
+      PetscErrorCode, intent(INOUT)                      :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
       type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
@@ -128,7 +128,7 @@ contains
       type(tVec), intent(INOUT)                           :: residual
       type(c_ptr), intent(IN)                             :: PETScCtx
       type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                       :: ierr
 
       call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
@@ -155,7 +155,7 @@ contains
       type(tMat), intent(INOUT)                           :: A, M
       type(c_ptr), intent(IN)                             :: PETScCtx
       type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                       :: ierr
 
       call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
@@ -206,7 +206,7 @@ contains
       type(tVec), intent(INOUT)                           :: F
       type(c_ptr), intent(IN)                             :: PETScCtx
       type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                       :: ierr
 
       call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
@@ -235,7 +235,7 @@ contains
       type(tMat), intent(INOUT)                           :: A, M
       type(c_ptr), intent(IN)                             :: PETScCtx
       type(MEF90HeatXfer_Type), pointer                   :: MEF90HeatXferCtx
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                       :: ierr
 
       call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
       if (MEF90HeatXferCtx%dim == 2) then
@@ -259,7 +259,7 @@ contains
    subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
       type(MEF90HeatXfer_Type), intent(IN)                :: MEF90HeatXferCtx
       PetscExodusIIInt, intent(IN)                        :: step
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type)               :: MEF90HeatXferGlobalOptions
 
@@ -284,7 +284,7 @@ contains
       type(MEF90HeatXfer_Type), target, intent(IN)        :: MEF90HeatXferCtx
       type(tSNES), intent(OUT)                            :: snesTemp
       type(tVec), intent(IN)                              :: residual
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
@@ -295,7 +295,7 @@ contains
 
       MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
-      PetscCall(DMCreateMatrix(dm, matTemp, iErr))
+      PetscCall(DMCreateMatrix(dm, matTemp, ierr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matTemp, MAT_SPD, PETSC_TRUE, ierr))
@@ -346,7 +346,7 @@ contains
       type(tTS), intent(OUT)                              :: tsTemp
       type(tVec), intent(IN)                              :: residual
       PetscReal, intent(IN)                               :: initialTime, initialStep
-      PetscErrorCode, intent(OUT)                         :: ierr
+      PetscErrorCode, intent(INOUT)                         :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
       type(tDM)                                          :: dm
@@ -358,7 +358,7 @@ contains
 
       MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
-      PetscCall(DMCreateMatrix(dm, matTemp, iErr))
+      PetscCall(DMCreateMatrix(dm, matTemp, ierr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
       PetscCall(MatSetOption(matTemp, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matTemp, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
@@ -366,6 +366,7 @@ contains
       if (MEF90HeatXferGlobalOptions%addNullSpace) then
          PetscCall(MatNullSpaceCreate(MEF90HeatXferCtx%MEF90Ctx%Comm, PETSC_TRUE, 0_ki, PETSC_NULL_VEC_ARRAY, nspTemp, ierr))
          PetscCall(MatSetNullSpace(matTemp, nspTemp, ierr))
+         PetscCall(MatNullSpaceDestroy(nspTemp, ierr))
       end if
       PetscCall(MatSetFromOptions(matTemp, ierr))
 
@@ -382,7 +383,7 @@ contains
       PetscCall(TSSetProblemType(tsTemp, TS_LINEAR, ierr))
       PetscCall(VecSet(MEF90HeatXferCtx%temperatureLocal, MEF90HeatXferGlobalOptions%initialTemperature, ierr))
       PetscCall(TSSetSolution(tsTemp, MEF90HeatXferCtx%temperatureLocal, ierr))
-      PetscCall(TsSetTime(tsTemp, initialTime, ierr))
+      PetscCall(TSSetTime(tsTemp, initialTime, ierr))
       PetscCall(TSSetTimeStep(tsTemp, initialStep, ierr))
 
       PetscCall(TSSetExactFinalTime(tsTemp, TS_EXACTFINALTIME_MATCHSTEP, ierr))

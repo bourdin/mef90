@@ -61,7 +61,7 @@ subroutine MEF90_MassMatrixAssembleSet(M, dm, setType, setID, elem, elemType, ie
          end do ! iGauss
          PetscCall(DMPlexMatSetClosure(dm, PETSC_NULL_SECTION, PETSC_NULL_SECTION, M, setPointID(point), MatElem, ADD_VALUES, ierr))
       end do ! point
-      deallocate (MatElem, stat=ierr)
+      deallocate (MatElem)
    end if
    PetscCall(ISRestoreIndices(setPointIS, setPointID, ierr))
    PetscCall(ISDestroy(setPointIS, ierr))

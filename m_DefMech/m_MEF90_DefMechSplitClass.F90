@@ -23,7 +23,6 @@ public :: MEF90DefMechSplit_D2SmoothPositiveSquare
 
 type, extends(MEF90Object), abstract :: MEF90DefMechSplit
    character(len=MEF90MXSTRLEN)                          :: type = ''
-   ! integer                                               :: damageOrder = 0
    integer                                               :: quadratureOrder = 0
    PetscBool                                             :: isHybrid = PETSC_FALSE
    class(mef90Mat), allocatable                          :: strain
@@ -45,7 +44,7 @@ abstract interface
       class(mef90Mat), intent(IN)             :: Strain
       PetscErrorCode, intent(inout)           :: ierr
    end subroutine setupInterface
-   
+
    subroutine EEDInterface(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
       use m_MEF90
       import :: MEF90DefMechSplit

@@ -13,7 +13,7 @@ module m_MEF90_HookesLawZero
    type, extends(MEF90HookesLaw) :: MEF90HookesLawZero
    contains
          procedure :: setFromOptions => MEF90HookesLawZero_setFromOptions
-         procedure :: view => MEF90HookesLawZero_view
+         procedure :: view_internal => MEF90HookesLawZero_view
          procedure :: mult => MEF90HookesLawZero_mult
          procedure :: multmult => MEF90HookesLawZero_multmult
    end type MEF90HookesLawZero
@@ -31,11 +31,11 @@ contains
       class(MEF90HookesLawZero), intent(inout)        :: self
       PetscErrorCode,intent(inout)                    :: ierr
 
-      PetscBool                                       :: printHelp
+      PetscInt                                        :: printHelp
 
       ! no options
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
+      if (printHelp > 1) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90HookesLawZero_setFromOptions

@@ -33,9 +33,9 @@ contains
 !!!  MEF90DefMechAT1_setFromOptions: initializes a MEF90_DefMechAT1_Type from options
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
-   subroutine MEF90DefMechAT1_setFromOptions(self,ierr)
+   subroutine MEF90DefMechAT1_setFromOptions(self, ierr)
       class(MEF90DefMechAT1_Type), intent(inout) :: self
-      PetscErrorCode,intent(inout) :: ierr
+      PetscErrorCode, intent(inout) :: ierr
 
       self%cw = 2.0_kr / 3.0_kr
       self%aorder = 2

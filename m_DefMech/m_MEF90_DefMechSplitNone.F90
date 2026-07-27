@@ -11,7 +11,7 @@ public :: MEF90DefMechSplitNone
 type, extends(MEF90DefMechSplit) :: MEF90DefMechSplitNone
 contains
    procedure, pass(self)  :: setFromOptions => MEF90DefMechSplitNone_setFromOptions
-   procedure, pass(self)  :: view => MEF90DefMechSplitNone_view
+   procedure, pass(self)  :: view_internal => MEF90DefMechSplitNone_view
    procedure, pass(self)  :: setup => setupNONE
    procedure, pass(self)  :: EED => EEDNone
    procedure, pass(self)  :: DEED => DEEDNone
@@ -31,15 +31,15 @@ contains
    subroutine MEF90DefMechSplitNone_setFromOptions(self, ierr)
       class(MEF90DefMechSplitNone), intent(inout) :: self
       PetscErrorCode, intent(inout)               :: ierr
-      PetscBool                                   :: printHelp
+      PetscInt                                    :: verbose = 0
 
       ! self%damageOrder = 0
       self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitNone'
 
       !!! MEF90DefMechSplitNone has no options
-      PetscCall(PetscOptionsGetBool(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", printHelp, PETSC_NULL_BOOL, ierr))
-      if (printHelp) then
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)
       end if
    end subroutine MEF90DefMechSplitNone_setFromOptions
@@ -62,11 +62,11 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType == 'ascii') then
          write(IOBuffer, "(A,': Options for MEF90DefMechSplit\n')") trim(self%prefix) // "split"
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         type: none\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
          write(IOBuffer, "('         No options\n')")
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))  
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       end if
    end subroutine MEF90DefMechSplitNone_view
 

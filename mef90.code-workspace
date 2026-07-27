@@ -8,6 +8,9 @@
         "files.trimTrailingWhitespace": true,
         "editor.insertSpaces": true,
         "editor.tabSize": 3,
-        "editor.trimAutoWhitespace": true
-    }
+        "editor.trimAutoWhitespace": true,
+        "files.exclude": {
+            "main-*/": true,
+            "arch-*/": true},
+        }
 }

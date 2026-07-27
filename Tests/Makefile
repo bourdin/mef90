@@ -15,13 +15,22 @@ include ${MEF90_DIR}/m_HeatXfer/Makefile.include
 include ${MEF90_DIR}/m_DefMech/Makefile.include
 
 
+TestEXOFormat.o: ${MEF90_DIR}/Tests/TestEXOFormat.F90 MEF90
+	-@echo "      $<"
+	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
+
+TestEXOFormat: TestEXOFormat.o
+	-@echo " $@"
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB}
+	-@${RM} $<
+
 TestHookesLaw_Type.o: ${MEF90_DIR}/Tests/TestHookesLaw_Type.F90 MEF90
 	-@echo "      $<"
 	-@${FC} ${FC_FLAGS} ${FCPPFLAGS} -I${MEF90_INCLUDE} -c -o $@ $<
 
 TestHookesLaw_Type: TestHookesLaw_Type.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB} 
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB}
 	-@${RM} $<
 
 TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
@@ -30,7 +39,7 @@ TestLinAlg.o: ${MEF90_DIR}/Tests/TestLinAlg.F90 MEF90
 
 TestLinAlg: TestLinAlg.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB} 
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB}
 	-@${RM} $<
 
 TestParser.o: ${MEF90_DIR}/Tests/TestParser.F90 MEF90
@@ -39,7 +48,7 @@ TestParser.o: ${MEF90_DIR}/Tests/TestParser.F90 MEF90
 
 TestParser: TestParser.o
 	-@echo " $@"
-	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB} 
+	-@${FLINKER} -o $@ $< ${MEF90_OBJS} ${PETSC_FORTRAN_LIB} ${PETSC_LIB} ${MEF90_EXTRA_LIB} ${SYMENGINEF90_LIB}
 	-@${RM} $<
 
 TestOffsets.o: ${MEF90_DIR}/Tests/TestOffsets.F90 MEF90
@@ -463,16 +472,16 @@ runTestVonMises3D: TestVonMises3D
 	${RM} -f $@.out $@.exo
 
 MEF90:
-	make -C ${MEF90_DIR} MEF90
+	${MAKE} -C ${MEF90_DIR} MEF90
 m_HeatXfer:
-	make -C ${MEF90_DIR} m_HeatXfer
+	${MAKE} -C ${MEF90_DIR} m_HeatXfer
 m_DefMech:
-	make -C ${MEF90_DIR} m_DefMech
+	${MAKE} -C ${MEF90_DIR} m_DefMech
 
 clean::
 	-@rm -f TestMEF90Ctx testHeatXfer testLeak
 allclean:
-	make -C ${MEF90_DIR} clean
+	${MAKE} -C ${MEF90_DIR} clean
 
 debug::
 	@echo FFLAGS              ${FFLAGS}
