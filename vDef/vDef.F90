@@ -13,7 +13,7 @@ program vDef
 
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                        :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer          :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    type(MEF90DefMech_Type), target                    :: MEF90DefMechCtx
@@ -74,8 +74,7 @@ program vDef
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    if (MEF90GlobalOptions%verbose > 1) then
       PetscCallA(PetscPrintf(MEF90Ctx%comm, "Reading geometry\n", ierr))
    end if
@@ -524,7 +523,7 @@ program vDef
             PetscCallA(PetscViewerDestroy(logViewer,ierr))
          end select ! timeStepingType
 
-         if (step == MEF90GlobalOptions%timeNumStep) then
+         if (step == size(time)) then
             exit mainloopQS
          else
             step = step + 1

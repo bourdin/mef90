@@ -8,7 +8,7 @@ Program HeatXfer
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
 
-   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
    Type(MEF90HeatXfer_Type), target                   :: MEF90HeatXferCtx
    Type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
                                                          
@@ -43,10 +43,9 @@ Program HeatXfer
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
    !!! HeatXfer is verbose by default
-   MEF90Ctx%globalOptions%verbose = 1
+   MEF90GlobalOptions%verbose = 1
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm,MEF90Ctx%geometryFile,PETSC_NULL_CHARACTER,PETSC_TRUE,dm,ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm,PETSC_FALSE,ierr))
    PetscCallA(DMSetUseNatural(dm,PETSC_TRUE,ierr))
@@ -146,7 +145,7 @@ Program HeatXfer
       End If
    End If
 
-   Do step = MEF90GlobalOptions%timeSkip+1,MEF90GlobalOptions%timeNumStep
+   Do step = MEF90GlobalOptions%timeSkip+1,size(time)
       Select Case (MEF90HeatXferGlobalOptions%timeSteppingType)
       Case (MEF90HeatXFer_timeSteppingTypeSteadyState) 
          Write(IOBuffer,100) step,time(step)

@@ -10,7 +10,7 @@ program ThermoElasticity
 
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
@@ -53,8 +53,7 @@ program ThermoElasticity
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    if (MEF90GlobalOptions%verbose > 1) then
       PetscCallA(PetscPrintf(PETSC_COMM_WORLD, "Reading geometry\n", ierr))
    end if
@@ -183,7 +182,7 @@ program ThermoElasticity
    !!! Actual computations / time stepping
    !!!
    if ((MEF90DefMechGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL) .or. (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)) then
-      do step = 1, MEF90GlobalOptions%timeNumStep
+      do step = 1, size(time)
          write (IOBuffer, 100) step, time(step)
          PetscCallA(PetscPrintf(MEF90Ctx%comm, IOBuffer, ierr))
 

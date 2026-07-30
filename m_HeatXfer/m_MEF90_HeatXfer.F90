@@ -51,13 +51,13 @@ contains
       PetscErrorCode, intent(INOUT)                      :: ierr
 
       type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
-      type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
+      type(MEF90CtxGlobalOptions_Type)                 :: MEF90GlobalOptions
       type(tDM)                                        :: dm
       type(tVec)                                       :: tmpVec
       PetscExodusIIInt                                 :: exoStep
 
       EXOStep = step
-      MEF90GlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+      PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
       MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
 
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))

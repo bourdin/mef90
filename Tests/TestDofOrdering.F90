@@ -11,7 +11,7 @@ program TestDofOrdering
    type(tPetscSection)                            :: sectionU
    PetscBool                                      :: interpolate = PETSC_TRUE
    character(len=MEF90MXSTRLEN)                   :: name
-   type(MEF90CtxGlobalOptions_Type), pointer       :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                :: MEF90GlobalOptions
 
    PetscInt                                       :: nVal, i, dim
    type(tVec)                                     :: U
@@ -32,10 +32,9 @@ program TestDofOrdering
    MEF90GlobalOptions_default%elementOrder = 1
 
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
-   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   MEF90GlobalOptions = MEF90GlobalOptions_default
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))

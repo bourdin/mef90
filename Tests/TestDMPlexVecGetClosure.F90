@@ -54,6 +54,7 @@ program TestDMPlexVecGetClosure
    PetscErrorCode                      :: ierr
    type(MEF90Ctx_Type), target          :: MEF90Ctx
    type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
+   type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions
 
    type(tDM)                           :: dm
    PetscBool                           :: interpolate = PETSC_TRUE
@@ -77,7 +78,8 @@ program TestDMPlexVecGetClosure
    MEF90GlobalOptions_default%elementOrder = 1_ki
 
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
-   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   MEF90GlobalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
    PetscCallA(MEF90CtxGetTime(MEF90Ctx, time, ierr))
 

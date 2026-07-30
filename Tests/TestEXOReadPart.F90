@@ -14,6 +14,7 @@ program TestExoRead_Part
    PetscErrorCode                      :: ierr
    type(MEF90Ctx_Type), target          :: MEF90Ctx
    type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions_default
+   type(MEF90CtxGlobalOptions_Type)    :: MEF90GlobalOptions
 
    PetscCallA(PetscInitialize(ierr))
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
@@ -25,7 +26,8 @@ program TestExoRead_Part
    MEF90GlobalOptions_default%timeNumStep = 11
 
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr)
-   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   MEF90GlobalOptions = MEF90GlobalOptions_default
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
 
    cpu_ws = 0

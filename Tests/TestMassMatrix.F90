@@ -102,7 +102,7 @@ program TestMassMatrix
    PetscReal                                      :: Mass
    type(tDM)                                      :: dmU, dmU0
    type(tMat)                                     :: M, M0
-   type(MEF90CtxGlobalOptions_Type), pointer       :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                :: MEF90GlobalOptions
    type(MEF90Element2DScal), dimension(:), pointer  :: elem2D
    type(MEF90Element3DScal), dimension(:), pointer  :: elem3D
    PetscInt                                       :: quadratureOrder
@@ -127,10 +127,9 @@ program TestMassMatrix
    PetscCallA(PetscInitialize(ierr))
    call MEF90Initialize(PETSC_COMM_WORLD, ierr)
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr)
-   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   MEF90GlobalOptions = MEF90GlobalOptions_default
    call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryfile, PETSC_NULL_CHARACTER, interpolate, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))

@@ -47,12 +47,12 @@ subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer       :: MEF90CtxGlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                :: MEF90CtxGlobalOptions
    type(MEF90HeatXferGlobalOptions_Type)           :: MEF90HeatXferGlobalOptions
    PetscReal, dimension(:), pointer                :: temperatureDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
    type(MEF90_VECT)                                :: advectionVec
 
-   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+   PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90HeatXferCtx%fluxLocal, dmFlux, ierr))
@@ -262,12 +262,12 @@ subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                 :: MEF90CtxGlobalOptions
    type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
    PetscReal, dimension(:), pointer                  :: matDof
    type(MEF90_VECT)                                :: advectionVec
 
-   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+   PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 
@@ -416,7 +416,7 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                 :: MEF90CtxGlobalOptions
    type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
    PetscReal, dimension(:), pointer                  :: TemperatureDof, fluxArray, boundaryFluxArray
    type(MEF90_VECT)                                :: gradTemperatureCell
@@ -426,7 +426,7 @@ subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, 
    energy = 0.0_kr
    bodyWork = 0.0_kr
    surfaceWork = 0.0_kr
-   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+   PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 
@@ -588,12 +588,12 @@ subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ie
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                 :: MEF90CtxGlobalOptions
    type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
    PetscReal, dimension(:), pointer                  :: temperatureDof, temperatureDotDof, fluxArray, boundaryFluxArray, externalTemperatureArray, residualDof
    type(MEF90_VECT)                                :: advectionVec
 
-   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+   PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90HeatXferCtx%fluxLocal, dmFlux, ierr))
@@ -827,12 +827,12 @@ subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXfer
    type(MEF90_ELEMENT_SCAL), dimension(:), pointer   :: elem
    type(MEF90ElementType)                          :: elementType
    DMPolytopeType                                  :: cellType
-   type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90CtxGlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                 :: MEF90CtxGlobalOptions
    type(MEF90HeatXferGlobalOptions_Type)            :: MEF90HeatXferGlobalOptions
    PetscReal, dimension(:), pointer                  :: matDof
    type(MEF90_VECT)                                :: advectionVec
 
-   MEF90CtxGlobalOptions => MEF90HeatXferCtx%MEF90Ctx%globalOptions
+   PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90HeatXferCtx%MEF90Ctx%comm, trim(MEF90HeatXferCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    MEF90HeatXferGlobalOptions = MEF90HeatXferCtx%globalOptions
    PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dmTemperature, ierr))
 

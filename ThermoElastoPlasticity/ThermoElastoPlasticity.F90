@@ -12,7 +12,7 @@ program ThermoElastoPlasticity
 
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    type(MEF90DefMech_Type), target                    :: MEF90DefMechCtx
@@ -176,10 +176,9 @@ program ThermoElastoPlasticity
 
    !!! Get all MEF90-wide options
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr); CHKERRQ(ierr)
-   MEF90Ctx%globalOptions%verbose = 1
+   MEF90GlobalOptions%verbose = 1
    call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    !!! Get DM from mesh
    call MEF90CtxGetDMMeshEXO(MEF90Ctx, Mesh, ierr); CHKERRQ(ierr)
    call DMMeshGetDimension(Mesh, dim, ierr); CHKERRQ(ierr)
@@ -285,7 +284,7 @@ program ThermoElastoPlasticity
    !!! Actual computations / time stepping
    !!!
    if (MEF90DefMechGlobalOptions%timeSteppingType == MEF90DefMech_timeSteppingTypeQuasiStatic) then
-      do step = 1, MEF90GlobalOptions%timeNumStep
+      do step = 1, size(time)
          write (IOBuffer, 100) step, time(step)
          call PetscPrintf(MEF90Ctx%comm, IOBuffer, ierr); CHKERRQ(ierr)
 

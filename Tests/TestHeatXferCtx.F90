@@ -7,7 +7,7 @@ program TestHeatXferCtx
 
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
    type(MEF90HeatXfer_Type), target                    :: MEF90HeatXferCtx
    type(MEF90HeatXferGlobalOptions_Type)              :: MEF90HeatXferGlobalOptions
    type(tDM)                                          :: dm
@@ -27,8 +27,7 @@ program TestHeatXferCtx
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
    PetscCallA(DMPlexDistributeSetDefault(dm, PETSC_FALSE, ierr))
    PetscCallA(DMSetUseNatural(dm, PETSC_TRUE, ierr))

@@ -21,7 +21,7 @@ program TestQuadrature
    PetscInt                            :: QuadOrderMax, QuadOrder
 
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
    type(MEF90CtxGlobalOptions_Type)                   :: MEF90GlobalOptions_default
 
    !!! Initialize MEF90
@@ -41,10 +41,9 @@ program TestQuadrature
 
    !!! Get all MEF90-wide options
    PetscCallA(MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr))
-   MEF90Ctx%globalOptions = MEF90GlobalOptions_default
+   MEF90GlobalOptions = MEF90GlobalOptions_default
    PetscCallA(MEF90Ctx%setFromOptions(ierr))
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    PetscCallA(DMPlexCreateFromFile(MEF90Ctx%Comm, MEF90Ctx%geometryFile, PETSC_NULL_CHARACTER, PETSC_TRUE, dm, ierr))
    PetscCallA(DMSetFromOptions(dm, ierr))
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OPTIONS, "-dm_view", ierr))
@@ -146,7 +145,7 @@ contains
       PetscErrorCode, intent(OUT)                         :: ierr
 
       type(tDM)                                          :: dm
-      type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
+      type(MEF90CtxGlobalOptions_Type)                    :: MEF90CtxGlobalOptions
       type(tIS)                                          :: setIS, setPointIS
       type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elem
       type(MEF90ElementType)                             :: elementType
@@ -159,7 +158,7 @@ contains
       i1 = 0.0_kr
       i2 = 0.0_kr
 
-      MEF90CtxGlobalOptions => MEF90Ctx%globalOptions
+      PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(DMGetDimension(dm, dim, ierr))
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
@@ -210,7 +209,7 @@ contains
       PetscErrorCode, intent(OUT)                         :: ierr
 
       type(tDM)                                          :: dm
-      type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90CtxGlobalOptions
+      type(MEF90CtxGlobalOptions_Type)                    :: MEF90CtxGlobalOptions
       type(tIS)                                          :: setIS, setPointIS
       type(MEF90_ELEMENT_SCAL), dimension(:), pointer      :: elem
       type(MEF90ElementType)                             :: elementType
@@ -223,7 +222,7 @@ contains
       i1 = 0.0_kr
       i2 = 0.0_kr
 
-      MEF90CtxGlobalOptions => MEF90Ctx%globalOptions
+      PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(DMGetDimension(dm, dim, ierr))
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))

@@ -12,7 +12,7 @@ Program WorkControlled
 
    PetscErrorCode                                     :: ierr
    Type(MEF90Ctx_Type),target                         :: MEF90Ctx
-   Type(MEF90CtxGlobalOptions_Type),pointer           :: MEF90GlobalOptions
+   Type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    Type(MEF90DefMech_Type), target                    :: MEF90DefMechCtx
@@ -212,10 +212,9 @@ Program WorkControlled
 
    !!! Get all MEF90-wide options
    Call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr);CHKERRQ(ierr)
-   MEF90Ctx%globalOptions%verbose = 1
+   MEF90GlobalOptions%verbose = 1
    call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    !!! Get DM from mesh
    Call MEF90CtxGetDMMeshEXO(MEF90Ctx,Mesh,ierr);CHKERRQ(ierr)
    Call DMMeshGetDimension(Mesh,dim,ierr);CHKERRQ(ierr)
@@ -302,15 +301,15 @@ Program WorkControlled
    Allocate(heatFluxWorkSet(numCellSet))
    heatFluxWorkSet = 0.0_Kr
 
-   Allocate(elasticEnergy(MEF90GlobalOptions%timeNumStep))
+   Allocate(elasticEnergy(size(time)))
    elasticEnergy = 0.0_Kr
-   Allocate(surfaceEnergy(MEF90GlobalOptions%timeNumStep))
+   Allocate(surfaceEnergy(size(time)))
    surfaceEnergy = 0.0_Kr
-   Allocate(forceWork(MEF90GlobalOptions%timeNumStep))
+   Allocate(forceWork(size(time)))
    forceWork = 0.0_Kr
-   Allocate(cohesiveEnergy(MEF90GlobalOptions%timeNumStep))
+   Allocate(cohesiveEnergy(size(time)))
    cohesiveEnergy = 0.0_Kr
-   Allocate(totalMechanicalEnergy(MEF90GlobalOptions%timeNumStep))
+   Allocate(totalMechanicalEnergy(size(time)))
    totalMechanicalEnergy = 0.0_Kr
 
    !!!
@@ -562,7 +561,7 @@ Program WorkControlled
          Call PetscLogView(logViewer,ierr);CHKERRQ(ierr)
          Call PetscViewerDestroy(logViewer,ierr);CHKERRQ(ierr)
 
-         If (step == MEF90GlobalOptions%timeNumStep) Then
+         If (step == size(time)) Then
             EXIT
          Else
             step = step + 1

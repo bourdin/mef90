@@ -96,17 +96,13 @@ module m_MEF90_DefMech_class
       enumerator :: MEF90DefMech_unilateralContactTypeNone = 0, &
          MEF90DefMech_unilateralContactTypeHydrostaticDeviatoric, &
          MEF90DefMech_unilateralContactTypeHydrostatic, &
-         MEF90DefMech_unilateralContactTypeDeviatoric, &
-         MEF90DefMech_unilateralContactTypePrincipalStrains, &
-         MEF90DefMech_unilateralContactTypeMasonry
+         MEF90DefMech_unilateralContactTypeDeviatoric
    end enum
-   character(len=MEF90MXSTRLEN), dimension(9), protected   :: MEF90DefMech_unilateralContactTypeList = [character(len=MEF90MXSTRLEN) :: &
+   character(len=MEF90MXSTRLEN), dimension(7), protected   :: MEF90DefMech_unilateralContactTypeList = [character(len=MEF90MXSTRLEN) :: &
       'None', &
       'HydrostaticDeviatoric', &
       'Hydrostatic', &
       'Deviatoric', &
-      'PrincipalStrains', &
-      'Masonry', &
       'MEF90DefMech_unilateralContactTypeList', &
       '_MEF90DefMech_unilateralContactTypeList', &
       '']
@@ -136,6 +132,7 @@ module m_MEF90_DefMech_class
       PetscInt                               :: PCLag = 10_ki
       PetscReal                              :: SOROmega = 1.0_kr
       PetscReal                              :: irrevthres = 0.0_kr
+      PetscBool                              :: MultiPhaseField = PETSC_FALSE
       PetscEnum                              :: BTType = MEF90DefMech_BTTypeNULL
       PetscInt                               :: BTInterval = -1_ki
       PetscInt                               :: BTScope = -1_ki
@@ -200,8 +197,8 @@ module m_MEF90_DefMech_class
       !!!  vertex based vec
       type(tVec), pointer                       :: displacementLocal => null()
       type(tVec), pointer                       :: displacementPreviousStepLocal => null()
-      type(tVec), pointer                       :: damageLocal => null()
-      type(tVec), pointer                       :: damagePreviousStepLocal => null()
+      type(tVec), pointer         :: damageLocal => null()
+      type(tVec), pointer         :: damagePreviousStepLocal => null()
       type(tVec), pointer                       :: displacementLowerBoundLocal => null()
       type(tVec), pointer                       :: displacementUpperBoundLocal => null()
       type(tVec), pointer                       :: temperatureLocal => null()
@@ -271,7 +268,7 @@ contains
       character(len=*), intent(IN)                              :: prefix
       PetscErrorCode, intent(INOUT)                             :: ierr
 
-      type(MEF90CtxGlobalOptions_Type), pointer                 :: MEF90CtxGlobalOptions
+      type(MEF90CtxGlobalOptions_Type)                          :: MEF90CtxGlobalOptions
       type(tIS)                                                 :: setIS
       PetscInt                                                  :: set
       PetscInt, dimension(:), pointer                           :: setID
@@ -317,8 +314,7 @@ contains
       !!! Create Vecs and SF
       PetscCall(DMGetDimension(dm, DefMech%dim, ierr))
 
-      MEF90CtxGlobalOptions => DefMech%MEF90Ctx%globalOptions
-
+      PetscCall(MEF90CtxGlobalOptionsSetFromOptions(DefMech%MEF90Ctx%comm, trim(DefMech%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
       vecName = "Displacement"
       allocate (DefMech%displacementLocal, stat=ierr)
       PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, DefMech%dim, vecName, DefMech%displacementLocal, ierr))
@@ -333,6 +329,10 @@ contains
       PetscCall(PetscObjectSetName(DefMech%displacementUpperBoundLocal, "DisplacementUpperBound", ierr))
 
       vecName = "Damage"
+      ! if (DefMech)
+               !!! get number of sets and teir ID
+         ! allocate the damage,, create localVectors,  give name according to ID
+
       allocate (DefMech%damageLocal, stat=ierr)
       PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMech%damageLocal, ierr))
       allocate (DefMech%damagePreviousStepLocal, stat=ierr)
@@ -576,6 +576,7 @@ contains
          PetscCall(PetscOptionsInt('-defmech_pclag', 'Interval at which the PC is recomputed during alternate minimization', 'mef90DefMech', options%PCLag, options%PCLag, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_SOR_Omega', 'Alterate Minimization over relaxation factor (>0 for limited, <0 for projected)', 'mef90DefMech', options%SOROmega, options%SOROmega, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_irrevThres', 'Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)', 'mef90DefMech', options%irrevthres, options%irrevthres, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool('-multiPhaseField', 'Use one phase field variable per cell set', 'mef90DefMech', options%multiPhaseField, options%multiPhaseField, PETSC_NULL_BOOL, ierr))
 
          PetscCall(PetscOptionsEnum('-BT_Type', 'Backtracking type', 'mef90DefMech', MEF90DefMech_BTTypeList, options%BTType, options%BTType, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Interval', 'Interval at which Backtracking is run in inner loop (0 for outer loop)', 'mef90DefMech', options%BTInterval, options%BTInterval, PETSC_NULL_BOOL, ierr))

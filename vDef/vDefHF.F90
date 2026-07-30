@@ -12,7 +12,7 @@ program vDefHF
 
    PetscErrorCode                                     :: ierr
    type(MEF90Ctx_Type), target                         :: MEF90Ctx
-   type(MEF90CtxGlobalOptions_Type), pointer           :: MEF90GlobalOptions
+   type(MEF90CtxGlobalOptions_Type)                    :: MEF90GlobalOptions
 
    !!! Defect mechanics contexts
    type(MEF90DefMech_Type), target                     :: MEF90DefMechCtx
@@ -88,8 +88,7 @@ program vDefHF
    !!! Get all MEF90-wide options
    call MEF90CtxCreate(PETSC_COMM_WORLD, MEF90Ctx, "", ierr); CHKERRQ(ierr)
    call MEF90Ctx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90GlobalOptions => MEF90Ctx%globalOptions
-
+   PetscCallA(MEF90CtxGlobalOptionsSetFromOptions(MEF90Ctx%comm, trim(MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
    !!! Get DM from mesh
    call MEF90CtxGetDMMeshEXO(MEF90Ctx, Mesh, ierr); CHKERRQ(ierr)
    call DMMeshGetDimension(Mesh, dim, ierr); CHKERRQ(ierr)
@@ -168,17 +167,17 @@ program vDefHF
    allocate (CrackVolumeSet(numCellSet))
    CrackVolumeSet = 0.0_kr
 
-   allocate (elasticEnergy(MEF90GlobalOptions%timeNumStep))
+   allocate (elasticEnergy(size(time)))
    elasticEnergy = 0.0_kr
-   allocate (surfaceEnergy(MEF90GlobalOptions%timeNumStep))
+   allocate (surfaceEnergy(size(time)))
    surfaceEnergy = 0.0_kr
-   allocate (forceWork(MEF90GlobalOptions%timeNumStep))
+   allocate (forceWork(size(time)))
    forceWork = 0.0_kr
-   allocate (cohesiveEnergy(MEF90GlobalOptions%timeNumStep))
+   allocate (cohesiveEnergy(size(time)))
    cohesiveEnergy = 0.0_kr
-   allocate (totalMechanicalEnergy(MEF90GlobalOptions%timeNumStep))
+   allocate (totalMechanicalEnergy(size(time)))
    totalMechanicalEnergy = 0.0_kr
-   allocate (WorkControlled(MEF90GlobalOptions%timeNumStep))
+   allocate (WorkControlled(size(time)))
    WorkControlled = 0.0_kr
 
    !!!
@@ -539,7 +538,7 @@ program vDefHF
          call PetscLogView(logViewer, ierr); CHKERRQ(ierr)
          call PetscViewerFlush(logViewer, ierr); CHKERRQ(ierr)
 
-         if (step == MEF90GlobalOptions%timeNumStep) then
+         if (step == size(time)) then
             exit
          else
             step = step + 1

@@ -93,14 +93,14 @@ contains
       PetscErrorCode, intent(INOUT)                    :: ierr
 
       type(MEF90DefMechGlobalOptions_Type)             :: MEF90DefMechGlobalOptions
-      type(MEF90CtxGlobalOptions_Type), pointer        :: MEF90GlobalOptions
+      type(MEF90CtxGlobalOptions_Type)                 :: MEF90GlobalOptions
       type(tDM)                                        :: dmDisplacement, dmDamage, dmCohesiveDisplacement
       type(tVec)                                       :: tmpVec
       character(len=MEF90MXSTRLEN)                     :: IOBuffer
       PetscExodusIIInt                                 :: EXOstep
 
       EXOstep = step
-      MEF90GlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
+      PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
 
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
