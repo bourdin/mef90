@@ -97,7 +97,7 @@ program vDef
    !!! Create DefMech context, get all DefMech options
    call MEF90DefMechCreate(MEF90DefMechCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)
    call MEF90DefMechCtx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+   call MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
 
    !!! Create HeatXfer context, get all HeatXfer options
    call MEF90HeatXferCreate(MEF90HeatXferCtx, Mesh, MEF90Ctx, "", ierr); CHKERRQ(ierr)

@@ -147,9 +147,8 @@ program TestConstraintIO3
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90dm_view", ierr))
 
    PetscCallA(MEF90DefMechCreate(MEF90DefMechCtx, dm, MEF90Ctx, "", ierr))
-   MEF90DefMechCtx%globalOptions = MEF90GlobalOptions_default
    PetscCallA(MEF90DefMechCtx%setFromOptions(ierr))
-   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+   PetscCallA(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCallA(DMDestroy(dm, ierr))
 
    PetscCallA(VecGetDM(MEF90DefMechCtx%displacementLocal, dmU, ierr))

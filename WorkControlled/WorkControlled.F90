@@ -228,7 +228,7 @@ Program WorkControlled
    !!! Create DefMech context, get all DefMech options
    Call MEF90DefMechCreate(MEF90DefMechCtx,Mesh,MEF90Ctx, "", ierr);CHKERRQ(ierr)
    call MEF90DefMechCtx%setFromOptions(ierr); CHKERRQ(ierr)
-   MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+   call MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr); CHKERRQ(ierr)
 
    !!! Create HeatXfer context, get all HeatXfer options
    Call MEF90HeatXferCreate(MEF90HeatXferCtx,Mesh,MEF90Ctx, "", ierr); CHKERRQ(ierr)

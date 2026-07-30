@@ -101,7 +101,7 @@ contains
 
       EXOstep = step
       MEF90GlobalOptions => MEF90DefMechCtx%MEF90Ctx%globalOptions
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
 
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
@@ -562,7 +562,7 @@ contains
       type(MEF90DefMechGlobalOptions_Type)                 :: MEF90DefMechGlobalOptions
       PetscInt                                           :: numFields, offset
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       allocate (nameG(0))
 
       numFields = 0
@@ -677,7 +677,7 @@ contains
 
       type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
 
       if (MEF90DefMechGlobalOptions%displacementExport) then
          PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
@@ -720,7 +720,7 @@ contains
       type(tVec)                                         :: gCoord
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDisplacement, ierr))
       PetscCall(MatSetOptionsPrefix(matDisplacement, "Displacement_", ierr))
@@ -788,7 +788,7 @@ contains
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
@@ -855,7 +855,7 @@ contains
       type(tVec)                                         :: UB, LB
       PetscReal                                          :: rtol, dtol, atol, stol
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
@@ -923,7 +923,7 @@ contains
       PetscInt                                           :: i
       type(MEF90DefMechGlobalOptions_Type)               :: MEF90DefMechGlobalOptions
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
@@ -966,7 +966,7 @@ contains
       PetscInt                                           :: i
       type(MEF90DefMechGlobalOptions_Type)               :: MEF90DefMechGlobalOptions
 
-      MEF90DefMechGlobalOptions = MEF90DefMechCtx%globalOptions
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
       PetscCall(VecGetDM(alpha, dm, ierr))
       PetscCall(DMGetGlobalVector(dm, LB, ierr))
       PetscCall(DMGetGlobalVector(dm, UB, ierr))
