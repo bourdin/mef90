@@ -14,6 +14,46 @@ module m_MEF90_baseClass
 !!!
 !!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
+!!!  NOTE FOR CLASSES THAT ARE HANDED TO PETSc AS AN APPLICATION CONTEXT
+!!!
+!!!  Extending MEF90Object gives a type deferred bindings, hence type-bound procedures, and Fortran
+!!!  forbids passing a derived type that has type-bound or final procedures to an assumed-type dummy
+!!!  argument. All of the PETSc Fortran context arguments are assumed-type,
+!!!
+!!!     subroutine SNESSetFunction(snes, r, f, ctx, ierr)
+!!!        type(*) :: ctx
+!!!
+!!!  so an extension of MEF90Object can no longer be passed to SNESSetFunction, SNESSetJacobian,
+!!!  TSSetIFunction, TAOSetObjective, ... the way a plain derived type could before mef90 0.5.2. The
+!!!  compiler rejects it with
+!!!
+!!!     Error: Actual argument to assumed-type dummy has type parameters or is of derived type with
+!!!            type-bound or FINAL procedures
+!!!
+!!!  The way out, used by MEF90DefMech_Type and MEF90HeatXfer_Type, is to give the class a
+!!!
+!!!     type(c_ptr) :: PETScCtx = C_NULL_PTR
+!!!
+!!!  component, set once at creation with PETScCtx = c_loc(self), and to hand THAT to PETSc. The
+!!!  callbacks then declare their context argument as type(c_ptr) and recover the object with
+!!!  call c_f_pointer(PETScCtx, self).
+!!!
+!!!  Two properties of that component are load-bearing, and both are easy to break:
+!!!
+!!!    - It must OUTLIVE every callback. Fortran passes actual arguments by reference, so what PETSc
+!!!      records is the address of the argument it was given, not the address that argument contains.
+!!!      Passing a local of the routine that registers the callbacks, or an inline c_loc(self) whose
+!!!      result lives in a compiler temporary, makes PETSc record a stack slot that is dead by the time
+!!!      the solver calls back. That is a use-after-scope, and it only misbehaves once the frame has
+!!!      been reused, so it can survive a short test and corrupt a long run. Giving the component the
+!!!      lifetime of the object it points to is what makes this safe.
+!!!    - It must be ONE PER INSTANCE, which is why a local with the save attribute will not do: a saved
+!!!      local is shared by every call of its routine, so creating a second context would silently
+!!!      repoint the first solver at it.
+!!!
+!!!  The cost of the detour is that PETScCtx is an untyped address: c_f_pointer will happily reinterpret
+!!!  whatever it is given, so handing a callback the wrong context is not a compile error.
+!!!
 
    type, abstract :: MEF90Object
       MPIU_Comm :: comm

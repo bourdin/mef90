@@ -132,7 +132,6 @@ module m_MEF90_DefMech_class
       PetscInt                               :: PCLag = 10_ki
       PetscReal                              :: SOROmega = 1.0_kr
       PetscReal                              :: irrevthres = 0.0_kr
-      PetscBool                              :: MultiPhaseField = PETSC_FALSE
       PetscEnum                              :: BTType = MEF90DefMech_BTTypeNULL
       PetscInt                               :: BTInterval = -1_ki
       PetscInt                               :: BTScope = -1_ki
@@ -238,10 +237,16 @@ module m_MEF90_DefMech_class
       PetscBool                                 :: hasDisplacementBounds = PETSC_FALSE
       PetscBool                                 :: hasUnilateralContact = PETSC_FALSE
 
-      !!! Handle on self, to be used as the application context of SNES, TAO, etc. Since MEF90DefMech_Type
-      !!! extends MEF90Object, it has type-bound procedures and cannot be passed to the assumed-type (type(*))
-      !!! context arguments of the PETSc Fortran API. PETSc callbacks recover the context with
-      !!! call c_f_pointer(PETScCtx, MEF90DefMechCtx)
+      !!! Handle on self, set once in MEF90DefMechCreate with PETScCtx = c_loc(DefMech), and handed to
+      !!! PETSc wherever an application context is expected: SNESSetFunction, SNESSetJacobian,
+      !!! TAOSetObjective, ... The callbacks in m_MEF90_DefMech recover the context with
+      !!!    call c_f_pointer(PETScCtx, MEF90DefMechCtx)
+      !!!
+      !!! MEF90DefMech_Type cannot be passed to PETSc directly, the way MEF90DefMechCtx_Type was up to
+      !!! mef90 0.5.2, because extending MEF90Object gives it type-bound procedures and PETSc declares
+      !!! its context arguments as assumed-type. This has to be a component rather than a local or an
+      !!! inline c_loc(), for lifetime reasons that are easy to get wrong: see the note at the top of
+      !!! MEF90/m_MEF90_BaseClass.F90 before changing any of this.
       type(c_ptr)                               :: PETScCtx = C_NULL_PTR
    contains
       procedure, pass(self) :: setFromOptions => MEF90DefMechSetFromOptions
@@ -576,8 +581,6 @@ contains
          PetscCall(PetscOptionsInt('-defmech_pclag', 'Interval at which the PC is recomputed during alternate minimization', 'mef90DefMech', options%PCLag, options%PCLag, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_SOR_Omega', 'Alterate Minimization over relaxation factor (>0 for limited, <0 for projected)', 'mef90DefMech', options%SOROmega, options%SOROmega, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_irrevThres', 'Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)', 'mef90DefMech', options%irrevthres, options%irrevthres, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsBool('-multiPhaseField', 'Use one phase field variable per cell set', 'mef90DefMech', options%multiPhaseField, options%multiPhaseField, PETSC_NULL_BOOL, ierr))
-
          PetscCall(PetscOptionsEnum('-BT_Type', 'Backtracking type', 'mef90DefMech', MEF90DefMech_BTTypeList, options%BTType, options%BTType, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Interval', 'Interval at which Backtracking is run in inner loop (0 for outer loop)', 'mef90DefMech', options%BTInterval, options%BTInterval, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Scope', 'Backtracking scope (0 for unlimited)', 'mef90DefMech', options%BTScope, options%BTScope, PETSC_NULL_BOOL, ierr))

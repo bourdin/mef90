@@ -93,10 +93,16 @@ module m_MEF90_HeatXfer_class
       !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. The number of sets is obtained
       !!! from the megaDM with MEF90DMGetNumSets.
 
-      !!! Handle on self, to be used as the application context of SNES, TS, etc. Since MEF90HeatXfer_Type
-      !!! extends MEF90Object, it has type-bound procedures and cannot be passed to the assumed-type (type(*))
-      !!! context arguments of the PETSc Fortran API. PETSc callbacks recover the context with
-      !!! call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
+      !!! Handle on self, set once in MEF90HeatXferCreate with PETScCtx = c_loc(HeatXfer), and handed to
+      !!! PETSc wherever an application context is expected: SNESSetFunction, SNESSetJacobian,
+      !!! TSSetIFunction, TSSetIJacobian, ... The callbacks in m_MEF90_HeatXfer recover the context with
+      !!!    call c_f_pointer(PETScCtx, MEF90HeatXferCtx)
+      !!!
+      !!! MEF90HeatXfer_Type cannot be passed to PETSc directly, the way MEF90HeatXferCtx_Type was up to
+      !!! mef90 0.5.2, because extending MEF90Object gives it type-bound procedures and PETSc declares
+      !!! its context arguments as assumed-type. This has to be a component rather than a local or an
+      !!! inline c_loc(), for lifetime reasons that are easy to get wrong: see the note at the top of
+      !!! MEF90/m_MEF90_BaseClass.F90 before changing any of this.
       type(c_ptr)                             :: PETScCtx = C_NULL_PTR
    contains
       procedure, pass(self) :: setFromOptions => MEF90HeatXferSetFromOptions
