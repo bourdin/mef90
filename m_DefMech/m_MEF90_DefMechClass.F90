@@ -132,6 +132,7 @@ module m_MEF90_DefMech_class
       PetscInt                               :: PCLag = 10_ki
       PetscReal                              :: SOROmega = 1.0_kr
       PetscReal                              :: irrevthres = 0.0_kr
+      PetscBool                              :: multiPhaseField = PETSC_FALSE
       PetscEnum                              :: BTType = MEF90DefMech_BTTypeNULL
       PetscInt                               :: BTInterval = -1_ki
       PetscInt                               :: BTScope = -1_ki
@@ -204,8 +205,8 @@ module m_MEF90_DefMech_class
       !!!  vertex based vec
       type(tVec), pointer                       :: displacementLocal => null()
       type(tVec), pointer                       :: displacementPreviousStepLocal => null()
-      type(tVec), pointer         :: damageLocal => null()
-      type(tVec), pointer         :: damagePreviousStepLocal => null()
+      type(tVec), dimension(:), pointer         :: damageLocal => null()
+      type(tVec), pointer                       :: damagePreviousStepLocal => null()
       type(tVec), pointer                       :: displacementLowerBoundLocal => null()
       type(tVec), pointer                       :: displacementUpperBoundLocal => null()
       type(tVec), pointer                       :: temperatureLocal => null()
@@ -272,16 +273,18 @@ contains
 !!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechCreate(DefMech, dm, MEF90Ctx, prefix, ierr)
+   subroutine MEF90DefMechCreate(DefMechCtx, dm, MEF90Ctx, prefix, ierr)
       !!! DefMech has the target attribute so that DefMech%PETScCtx can be handed over to PETSc as an
       !!! application context. The actual argument MUST therefore also have the target attribute.
-      type(MEF90DefMech_Type), target, intent(OUT)              :: DefMech
+      type(MEF90DefMech_Type), target, intent(OUT)              :: DefMechCtx
       type(tDM), target, intent(IN)                             :: dm
       type(MEF90Ctx_Type), target, intent(IN)                   :: MEF90Ctx
       character(len=*), intent(IN)                              :: prefix
       PetscErrorCode, intent(INOUT)                             :: ierr
 
       type(MEF90CtxGlobalOptions_Type)                          :: MEF90CtxGlobalOptions
+      type(MEF90DefMechGlobalOptions_Type)                      :: DefMechGlobalOptions
+      PetscInt                                                  :: numPF
       type(tIS)                                                 :: setIS
       PetscInt                                                  :: set
       PetscInt, dimension(:), pointer                           :: setID
@@ -290,126 +293,139 @@ contains
       type(tDM), dimension(:), pointer                          :: dmList
       type(tPetscSF)                                            :: dummySF
 
-      DefMech%MEF90Ctx => MEF90Ctx
-      DefMech%comm = MEF90Ctx%comm
-      DefMech%prefix = prefix
-      DefMech%name = trim(prefix)//"DefMech"
-      DefMech%PETScCtx = c_loc(DefMech)
+      DefMechCtx%MEF90Ctx => MEF90Ctx
+      DefMechCtx%comm = MEF90Ctx%comm
+      DefMechCtx%prefix = prefix
+      DefMechCtx%name = trim(prefix)//"DefMech"
+      DefMechCtx%PETScCtx = c_loc(DefMechCtx)
 
       !!!
       !!! Create energy viewers
       !!!
       filename = trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.ener'
-      PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm, filename, DefMech%globalEnergyViewer, ierr))
-      PetscCall(PetscViewerASCIIPrintf(DefMech%globalEnergyViewer, "# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n", ierr))
-      PetscCall(PetscViewerFlush(DefMech%globalEnergyViewer, ierr))
+      PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm, filename, DefMechCtx%globalEnergyViewer, ierr))
+      PetscCall(PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer, "# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n", ierr))
+      PetscCall(PetscViewerFlush(DefMechCtx%globalEnergyViewer, ierr))
 
       PetscCall(DMGetLabelIdIS(dm, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(MEF90Ctx%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
 
-      allocate (DefMech%setEnergyViewer(size(setID)), stat=ierr)
+      allocate (DefMechCtx%setEnergyViewer(size(setID)), stat=ierr)
       do set = 1, size(setID)
          write (filename, 101) trim(MEF90FilePrefix(MEF90Ctx%resultFile)), setID(set)
-         PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm, filename, DefMech%setEnergyViewer(set), ierr))
+         PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm, filename, DefMechCtx%setEnergyViewer(set), ierr))
          write (IOBuffer, 102) setID(set)
-         PetscCall(PetscViewerASCIIPrintf(DefMech%setEnergyViewer(set), IOBuffer, ierr))
-         PetscCall(PetscViewerASCIIPrintf(DefMech%setEnergyViewer(set), "# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation\n", ierr))
-         PetscCall(PetscViewerFlush(DefMech%setEnergyViewer(set), ierr))
+         PetscCall(PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set), IOBuffer, ierr))
+         PetscCall(PetscViewerASCIIPrintf(DefMechCtx%setEnergyViewer(set), "# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation\n", ierr))
+         PetscCall(PetscViewerFlush(DefMechCtx%setEnergyViewer(set), ierr))
       end do
-      PetscCall(ISRestoreIndices(setIS, setID, ierr))
-      PetscCall(ISDestroy(setIS, ierr))
 101   format(A, '-', I4.4, '.enerblk')
 102   format("# cell set ", I4, "\n")
-      DefMech%analysisTime = 0.0_kr
-      DefMech%timeStep = 0.0_kr
+      DefMechCtx%analysisTime = 0.0_kr
+      DefMechCtx%timeStep = 0.0_kr
 
       !!! Create Vecs and SF
-      PetscCall(DMGetDimension(dm, DefMech%dim, ierr))
+      PetscCall(DMGetDimension(dm, DefMechCtx%dim, ierr))
 
-      PetscCall(MEF90CtxGlobalOptionsSetFromOptions(DefMech%MEF90Ctx%comm, trim(DefMech%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
+      PetscCall(MEF90CtxGlobalOptionsSetFromOptions(DefMechCtx%MEF90Ctx%comm, trim(DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
+      PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(DefMechCtx%comm, trim(DefMechCtx%prefix), DefMechGlobalOptions, ierr))
       vecName = "Displacement"
-      allocate (DefMech%displacementLocal, stat=ierr)
-      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, DefMech%dim, vecName, DefMech%displacementLocal, ierr))
-      allocate (DefMech%displacementPreviousStepLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%displacementLocal, DefMech%displacementPreviousStepLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMech%displacementPreviousStepLocal, "DisplacementPreviousStep", ierr))
-      allocate (DefMech%displacementLowerBoundLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%displacementLocal, DefMech%displacementLowerBoundLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMech%displacementLowerBoundLocal, "DisplacementLowerBound", ierr))
-      allocate (DefMech%displacementUpperBoundLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%displacementLocal, DefMech%displacementUpperBoundLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMech%displacementUpperBoundLocal, "DisplacementUpperBound", ierr))
+      allocate (DefMechCtx%displacementLocal, stat=ierr)
+      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, DefMechCtx%dim, vecName, DefMechCtx%displacementLocal, ierr))
+      allocate (DefMechCtx%displacementPreviousStepLocal, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%displacementLocal, DefMechCtx%displacementPreviousStepLocal, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%displacementPreviousStepLocal, "DisplacementPreviousStep", ierr))
+      allocate (DefMechCtx%displacementLowerBoundLocal, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%displacementLocal, DefMechCtx%displacementLowerBoundLocal, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%displacementLowerBoundLocal, "DisplacementLowerBound", ierr))
+      allocate (DefMechCtx%displacementUpperBoundLocal, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%displacementLocal, DefMechCtx%displacementUpperBoundLocal, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%displacementUpperBoundLocal, "DisplacementUpperBound", ierr))
 
+      if (DefMechGlobalOptions%multiPhaseField) then
+         numPF = size(setID) + 1
+      else
+         numPF = 1
+      end if
+      allocate (DefMechCtx%damageLocal(numPF), stat=ierr)
+      !!! damage(1) is either THE damage or a composite vector
       vecName = "Damage"
-      ! if (DefMech)
-               !!! get number of sets and teir ID
-         ! allocate the damage,, create localVectors,  give name according to ID
+      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(1), ierr))
+      !!! for multiPhaseField, we use damage(2:)
+      !!! get number of sets and teir ID
+      ! allocate the damage,, create localVectors,  give name according to ID
+      do set = 2, numPF
+         write(Vecname,'("Damage-",I4.4)') set
+         PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(set), ierr))
+      end do
+      
+      allocate (DefMechCtx%damagePreviousStepLocal, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%damageLocal(1), DefMechCtx%damagePreviousStepLocal, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%damagePreviousStepLocal, "damagePreviousStep", ierr))
 
-      allocate (DefMech%damageLocal, stat=ierr)
-      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMech%damageLocal, ierr))
-      allocate (DefMech%damagePreviousStepLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%damageLocal, DefMech%damagePreviousStepLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMech%damagePreviousStepLocal, "damagePreviousStep", ierr))
-
-      allocate (DefMech%TemperatureLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%damageLocal, DefMech%TemperatureLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMech%TemperatureLocal, "Temperature", ierr))
+      allocate (DefMechCtx%TemperatureLocal, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%damageLocal(1), DefMechCtx%TemperatureLocal, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%TemperatureLocal, "Temperature", ierr))
 
       vecName = "cohesiveDisplacement"
-      allocate (DefMech%cohesiveDisplacement, stat=ierr)
-      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, DefMech%dim, vecName, DefMech%cohesiveDisplacement, ierr))
+      allocate (DefMechCtx%cohesiveDisplacement, stat=ierr)
+      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, DefMechCtx%dim, vecName, DefMechCtx%cohesiveDisplacement, ierr))
       vecName = "bodyForce"
-      allocate (DefMech%bodyForce, stat=ierr)
-      PetscCall(MEF90CreateCellVector(dm, DefMech%dim, vecName, DefMech%bodyForce, ierr))
+      allocate (DefMechCtx%bodyForce, stat=ierr)
+      PetscCall(MEF90CreateCellVector(dm, DefMechCtx%dim, vecName, DefMechCtx%bodyForce, ierr))
       vecName = "boundaryForce"
-      allocate (DefMech%boundaryForce, stat=ierr)
-      PetscCall(MEF90CreateBoundaryCellVector(dm, DefMech%dim, vecName, DefMech%boundaryForce, ierr))
+      allocate (DefMechCtx%boundaryForce, stat=ierr)
+      PetscCall(MEF90CreateBoundaryCellVector(dm, DefMechCtx%dim, vecName, DefMechCtx%boundaryForce, ierr))
       vecName = "pressureForce"
-      allocate (DefMech%pressureForce, stat=ierr)
-      PetscCall(MEF90CreateBoundaryCellVector(dm, 1_ki, vecName, DefMech%pressureForce, ierr))
+      allocate (DefMechCtx%pressureForce, stat=ierr)
+      PetscCall(MEF90CreateBoundaryCellVector(dm, 1_ki, vecName, DefMechCtx%pressureForce, ierr))
 
       vecName = "plasticStrain"
-      allocate (DefMech%plasticStrain, stat=ierr)
-      PetscCall(MEF90CreateCellVector(dm, (DefMech%dim * (DefMech%dim + 1_ki)) / 2_ki, vecName, DefMech%plasticStrain, ierr))
-      allocate (DefMech%cumulatedPlasticDissipation, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%plasticStrain, DefMech%cumulatedPlasticDissipation, ierr))
-      PetscCall(PetscObjectSetName(DefMech%cumulatedPlasticDissipation, "cumulatedPlasticDissipation", ierr))
-      allocate (DefMech%stress, stat=ierr)
-      PetscCall(VecDuplicate(DefMech%plasticStrain, DefMech%stress, ierr))
-      PetscCall(PetscObjectSetName(DefMech%stress, "Stress", ierr))
+      allocate (DefMechCtx%plasticStrain, stat=ierr)
+      PetscCall(MEF90CreateCellVector(dm, (DefMechCtx%dim * (DefMechCtx%dim + 1_ki)) / 2_ki, vecName, DefMechCtx%plasticStrain, ierr))
+      allocate (DefMechCtx%cumulatedPlasticDissipation, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%plasticStrain, DefMechCtx%cumulatedPlasticDissipation, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%cumulatedPlasticDissipation, "cumulatedPlasticDissipation", ierr))
+      allocate (DefMechCtx%stress, stat=ierr)
+      PetscCall(VecDuplicate(DefMechCtx%plasticStrain, DefMechCtx%stress, ierr))
+      PetscCall(PetscObjectSetName(DefMechCtx%stress, "Stress", ierr))
 
       !!! Create megaDM
       allocate (dmList(7))
-      PetscCall(VecGetDM(DefMech%displacementLocal, dmList(1), ierr))
-      PetscCall(VecGetDM(DefMech%damageLocal, dmList(2), ierr))
-      PetscCall(VecGetDM(DefMech%temperatureLocal, dmList(3), ierr))
-      PetscCall(VecGetDM(DefMech%bodyForce, dmList(4), ierr))
-      PetscCall(VecGetDM(DefMech%boundaryForce, dmList(5), ierr))
-      PetscCall(VecGetDM(DefMech%pressureForce, dmList(6), ierr))
-      PetscCall(VecGetDM(DefMech%plasticStrain, dmList(7), ierr))
-      PetscCall(DMCreateSuperDM(dmList, 7_ki, PETSC_NULL_IS_POINTER, DefMech%megaDM, ierr))
+      PetscCall(VecGetDM(DefMechCtx%displacementLocal, dmList(1), ierr))
+      PetscCall(VecGetDM(DefMechCtx%damageLocal(1), dmList(2), ierr))
+      PetscCall(VecGetDM(DefMechCtx%temperatureLocal, dmList(3), ierr))
+      PetscCall(VecGetDM(DefMechCtx%bodyForce, dmList(4), ierr))
+      PetscCall(VecGetDM(DefMechCtx%boundaryForce, dmList(5), ierr))
+      PetscCall(VecGetDM(DefMechCtx%pressureForce, dmList(6), ierr))
+      PetscCall(VecGetDM(DefMechCtx%plasticStrain, dmList(7), ierr))
+      PetscCall(DMCreateSuperDM(dmList, 7_ki, PETSC_NULL_IS_POINTER, DefMechCtx%megaDM, ierr))
       deallocate (dmList)
 
       !!! Create the IO SF for all fields
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%displacementLocal, DefMech%displacementToIOSF, DefMech%IOTodisplacementSF, ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%damageLocal, DefMech%damageToIOSF, DefMech%IOTodamageSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementToIOSF, DefMechCtx%IOTodisplacementSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%damageLocal(1), DefMechCtx%damageToIOSF, DefMechCtx%IOTodamageSF, ierr))
 
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%cohesiveDisplacement, DefMech%cohesiveDisplacementToIOSF, DefMech%IOToCohesiveDisplacementSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%cohesiveDisplacement, DefMechCtx%cohesiveDisplacementToIOSF, DefMechCtx%IOToCohesiveDisplacementSF, ierr))
 
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%temperatureLocal, DefMech%temperatureToIOSF, DefMech%IOTotemperatureSF, ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%bodyForce, DefMech%bodyForceToIOSF, DefMech%IOTobodyForceSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%temperatureLocal, DefMechCtx%temperatureToIOSF, DefMechCtx%IOTotemperatureSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%bodyForce, DefMechCtx%bodyForceToIOSF, DefMechCtx%IOTobodyForceSF, ierr))
       ! PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMech%boundaryForce,DefMech%boundaryForceToIOSF,DefMech%IOToboundaryForceSF,ierr))
       ! PetscCall(MEF90IOSFCreate(MEF90Ctx,DefMech%pressureForce,DefMech%pressureForceToIOSF,DefMech%IOTopressureForceSF,ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%stress, DefMech%stressToIOSF, DefMech%IOToStressSF, ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%plasticStrain, DefMech%plasticStrainToIOSF, DefMech%IOToplasticStrainSF, ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMech%cumulatedPlasticDissipation, DefMech%cumulatedPlasticDissToIOSF, DefMech%IOToCumulatedPlasticDissSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%stress, DefMechCtx%stressToIOSF, DefMechCtx%IOToStressSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%plasticStrain, DefMechCtx%plasticStrainToIOSF, DefMechCtx%IOToplasticStrainSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%cumulatedPlasticDissipation, DefMechCtx%cumulatedPlasticDissToIOSF, DefMechCtx%IOToCumulatedPlasticDissSF, ierr))
 
       !!! Create the SF to exchange boundary values of the displacement and damage.
-      PetscCall(MEF90ConstraintSFCreate(DefMech%MEF90Ctx, DefMech%displacementLocal, DefMech%displacementLocal, DefMech%displacementConstraintsSF, dummySF, ierr))
+      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementLocal, DefMechCtx%displacementConstraintsSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
-      PetscCall(MEF90ConstraintSFCreate(DefMech%MEF90Ctx, DefMech%damageLocal, DefMech%damageLocal, DefMech%damageConstraintsSF, dummySF, ierr))
+      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%damageLocal(1), DefMechCtx%damageLocal(1), DefMechCtx%damageConstraintsSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
+
+      PetscCall(ISRestoreIndices(setIS, setID, ierr))
+      PetscCall(ISDestroy(setIS, ierr))
+
    end subroutine MEF90DefMechCreate
 
 #undef __FUNCT__
@@ -426,7 +442,7 @@ contains
       type(MEF90DefMech_Type), intent(INOUT)           :: DefMech
       PetscErrorCode, intent(INOUT)                    :: ierr
 
-      PetscInt                                        :: set
+      PetscInt                                         :: set
 
       DefMech%PETScCtx = C_NULL_PTR
 
@@ -462,7 +478,9 @@ contains
       end if
 
       if (associated(DefMech%damageLocal)) then
-         PetscCall(VecDestroy(DefMech%damageLocal, ierr))
+         do set = 1, size(DefMech%damageLocal)
+            PetscCall(VecDestroy(DefMech%damageLocal(set), ierr))
+         end do
          deallocate (DefMech%damageLocal)
          nullify (DefMech%damageLocal)
       end if
@@ -595,6 +613,7 @@ contains
          PetscCall(PetscOptionsInt('-defmech_pclag', 'Interval at which the PC is recomputed during alternate minimization', 'mef90DefMech', options%PCLag, options%PCLag, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_SOR_Omega', 'Alterate Minimization over relaxation factor (>0 for limited, <0 for projected)', 'mef90DefMech', options%SOROmega, options%SOROmega, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_irrevThres', 'Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)', 'mef90DefMech', options%irrevthres, options%irrevthres, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool('-multiPhaseField', 'Use one damage variable per cell set', 'mef90DefMech', options%multiPhaseField, options%multiPhaseField, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsEnum('-BT_Type', 'Backtracking type', 'mef90DefMech', MEF90DefMech_BTTypeList, options%BTType, options%BTType, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Interval', 'Interval at which Backtracking is run in inner loop (0 for outer loop)', 'mef90DefMech', options%BTInterval, options%BTInterval, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Scope', 'Backtracking scope (0 for unlimited)', 'mef90DefMech', options%BTScope, options%BTScope, PETSC_NULL_BOOL, ierr))

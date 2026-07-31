@@ -161,7 +161,7 @@ program vDef
    PetscCallA(VecDuplicate(displacement, displacementResidual, ierr))
    PetscCallA(PetscObjectSetName(displacementResidual, "displacementResidual", ierr))
 
-   PetscCallA(VecGetDM(MEF90DefMechCtx%damageLocal, damageDM, ierr))
+   PetscCallA(VecGetDM(MEF90DefMechCtx%damageLocal(1), damageDM, ierr))
    !!! This only borrows a reference so we do not need to delete it
    PetscCallA(DMCreateGlobalVector(damageDM, damage, ierr))
    PetscCallA(PetscObjectSetName(damage, "damage", ierr))
@@ -252,7 +252,7 @@ program vDef
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
          case (MEF90DefMech_timeSteppingTypeQuasiStatic)
             PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90Ctx%resultViewer, EXOstep, MEF90DefMechCtx%dim, ierr))
-            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
+            PetscCallA(MEF90EXOVecLoad(MEF90DefMechCtx%damageLocal(1), MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
          end select
       end if
 
@@ -378,14 +378,14 @@ program vDef
                   end if
 
                   PetscCallA(DMGlobalToLocal(displacementDM, displacement, INSERT_VALUES, MEF90DefMechCtx%displacementLocal, ierr))
-                  PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal, INSERT_VALUES, damage, ierr))
+                  PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(1), INSERT_VALUES, damage, ierr))
                   PetscCallA(PetscLogStagePop(ierr))
 
                   PetscCallA(PetscLogStagePush(logStageDamage, ierr))
                   PetscCallA(VecCopy(damage, damageAltMinOld, ierr))
 
                   !!! Solve for damage field
-                  PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal, INSERT_VALUES, damage, ierr))
+                  PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(1), INSERT_VALUES, damage, ierr))
                   PetscCallA(VecCopy(damage, damageAltMinOld, ierr))
                   select case (MEF90DefMechGlobalOptions%damageSolverType)
                   case (MEF90DefMech_DamageSolverTypeSNES)
@@ -405,7 +405,7 @@ program vDef
                      end if
                      PetscCallA(TAOGetSolution(damageTAO, damage, ierr))
                   end select ! MEF90DefMechGlobalOptions%damageSolverType
-                  PetscCallA(DMGlobalToLocal(damageDM, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
+                  PetscCallA(DMGlobalToLocal(damageDM, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(1), ierr))
 
                   !!! Over relaxation of the damage variable
                   if (AltMinIter > 1) then
