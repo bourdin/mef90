@@ -142,6 +142,48 @@ From there, it should be as simple as
 Note that the default setting is to link with shared libraries, and set their path using rpath (so that `$LD_LIBRARY_PATH` or equivalent does not have to be set).
 This means that `$PETSC_DIR/$PETSC_ARCH/lib` needs to be readable from the compute nodes. If PETSc libraries are moved, use chrpath to change the search path after building vDef
 
+## Optional: PETSc code completion in an editor
+
+Editors driven by [fortls](https://fortls.fortran-lang.org) (VS Code with the *Modern Fortran* extension,
+Neovim, Emacs `lsp-mode`, ...) will not resolve PETSc symbols out of the box: fortls cannot read the compiled
+`.mod` files, PETSc assembles its Fortran modules out of `#include`'d `.h90` fragments that fortls does not
+splice in, and its include-path regex accepts neither `<angle brackets>` nor a `/`, so `petsc/finclude/petsc.h`
+is never opened. Running
+
+```bash
+   [bourdin@bbserv ~]$ $MEF90_DIR/bin/petsc-fortls-setup.sh
+```
+
+works around all three by generating
+
+  * `$MEF90_DIR/$PETSC_ARCH/petsc-ftn-mod/` — cpp-expanded copies of PETSc's Fortran modules. They live inside
+    the repository, so fortls's recursive scan picks them up with no configuration; `make clean` leaves them alone.
+  * `$MEF90_DIR/.fortlsrc` — `pp_defs` for the PETSc type macros (`PetscReal`, `PetscInt`, `Vec`, `Mat`, `SNES`, ...),
+    so that variables declared with them are typed rather than unknown.
+
+Both are ignored by git, and both must be regenerated after reconfiguring or updating PETSc. The script needs
+`MEF90_DIR`, `PETSC_DIR` and `PETSC_ARCH`; if PETSc was installed with `--prefix`, its Fortran module sources are
+not part of the installation, so also set `PETSC_SRC` to the source tree that was configured with that `PETSC_ARCH`:
+
+```bash
+   [bourdin@bbserv ~]$ PETSC_SRC=/opt/HPC/src/petsc/main $MEF90_DIR/bin/petsc-fortls-setup.sh
+   wrote 9 modules to /home/bourdin/Development/mef90/main-gcc-g/petsc-ftn-mod
+   wrote 438 pp_defs to /home/bourdin/Development/mef90/.fortlsrc
+```
+
+Compiler diagnostics are a separate matter: point your linter at the PETSc headers and at mef90's own modules,
+e.g. for the VS Code extension, in `.vscode/settings.json`
+
+```json
+    "fortran.linter.includePaths": [
+        "/opt/HPC/dist/petsc/main-gcc-g/include",
+        "${workspaceFolder}/main-gcc-g/objs"
+    ]
+```
+
+Note that the modules mef90 synthesizes per dimension (`m_MEF90_DefMechAssembly2D`, `...3D`, built by `MEF90_APPEND`
+in `MEF90/mef90.inc`) remain invisible to fortls, since no single expansion of `MEF90_DIM` is correct for all sources.
+
 ## Testing:
   run `make test` in `$MEF90_DIR/HeatXfer` and `$MEF90_DIR/vDef`
   Differences in number of iterations, or round-off error are acceptable
