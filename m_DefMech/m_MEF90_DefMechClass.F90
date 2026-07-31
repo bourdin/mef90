@@ -111,7 +111,7 @@ module m_MEF90_DefMech_class
 !!!  MEF90DefMechGlobalOptions_Type: the problem-wide options of a MEF90DefMech_Type.
 !!!                                  The values given here are the defaults used by setFromOptions
 !!!
-   type MEF90DefMechGlobalOptions_Type
+   type, extends(MEF90Object) :: MEF90DefMechGlobalOptions_Type
       PetscEnum                              :: timeSteppingType = MEF90DefMech_TimeSteppingTypeQuasiStatic
       PetscEnum                              :: solverType = MEF90DefMech_SolverTypeAltMin
       PetscEnum                              :: damageSolverType = MEF90DefMech_DamageSolverTypeSNES
@@ -146,9 +146,11 @@ module m_MEF90_DefMech_class
       PetscBool                              :: stressExport = PETSC_TRUE
       PetscBool                              :: plasticStrainExport = PETSC_FALSE
       PetscBool                              :: cumulatedPlasticDissipationExport = PETSC_FALSE
+   contains
+      procedure, pass(self) :: view_internal => MEF90DefMechGlobalOptionsView
    end type MEF90DefMechGlobalOptions_Type
 
-   type MEF90DefMechCellSetOptions_Type
+   type, extends(MEF90Object) :: MEF90DefMechCellSetOptions_Type
       PetscReal, dimension(3)                 :: bodyforce = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal                               :: crackPressure = 0.0_kr
       PetscEnum                               :: plasticityType = MEF90DefMech_plasticityTypeNone
@@ -165,9 +167,11 @@ module m_MEF90_DefMech_class
       !!! dependent and allocated by MEF90DefMechCellSetOptionsSetFromOptions
       class(mef90Mat), allocatable            :: linearThermalExpansion
       PetscReal                               :: cohesiveStiffness = 0.0_kr
+   contains
+      procedure, pass(self) :: view_internal => MEF90DefMechCellSetOptionsView
    end type MEF90DefMechCellSetOptions_Type
 
-   type MEF90DefMechFaceSetOptions_Type
+   type, extends(MEF90Object) :: MEF90DefMechFaceSetOptions_Type
       PetscReal, dimension(3)                 :: boundaryforce = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal                               :: pressureForce = 0.0_kr
       PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
@@ -176,15 +180,19 @@ module m_MEF90_DefMech_class
       PetscReal, dimension(3)                 :: displacementUpperBound = [MEF90INFINITY, MEF90INFINITY, MEF90INFINITY]
       PetscBool                               :: Has_damageBC = PETSC_FALSE
       PetscReal                               :: boundaryDamage = 0.0_kr
+   contains
+      procedure, pass(self) :: view_internal => MEF90DefMechFaceSetOptionsView
    end type MEF90DefMechFaceSetOptions_Type
 
-   type MEF90DefMechVertexSetOptions_Type
+   type, extends(MEF90Object) :: MEF90DefMechVertexSetOptions_Type
       PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
       PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal, dimension(3)                 :: displacementLowerBound = [MEF90NINFINITY, MEF90NINFINITY, MEF90NINFINITY]
       PetscReal, dimension(3)                 :: displacementUpperBound = [MEF90INFINITY, MEF90INFINITY, MEF90INFINITY]
       PetscBool                               :: Has_damageBC = PETSC_FALSE
       PetscReal                               :: boundaryDamage = 0.0_kr
+   contains
+      procedure, pass(self) :: view_internal => MEF90DefMechVertexSetOptionsView
    end type MEF90DefMechVertexSetOptions_Type
 
    type, extends(MEF90Object) :: MEF90DefMech_Type
@@ -554,6 +562,12 @@ contains
       type(MEF90DefMechGlobalOptions_Type), intent(OUT)      :: options
       PetscErrorCode, intent(INOUT)                          :: ierr
 
+      PetscInt                                               :: verbose = 0
+
+      options%comm = comm
+      options%prefix = prefix
+      options%name = trim(prefix)//"DefMechGlobalOptions"
+
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for MEF90DefMech_Type", "mef90DefMech", ierr))
          PetscCall(PetscOptionsEnum('-DefMech_TimeStepping_Type', 'Type of defect mechanics Time steping', 'mef90DefMech', MEF90DefMech_TimeSteppingTypeList, options%timeSteppingType, options%timeSteppingType, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsEnum('-DefMech_solver_Type', 'Type of defect mechanics solver', 'mef90DefMech', MEF90DefMech_SolverTypeList, options%solverType, options%solverType, PETSC_NULL_BOOL, ierr))
@@ -591,7 +605,77 @@ contains
          PetscCall(PetscOptionsReal('-defmech_dampingCoefficient_displacement', 'Damping coefficient on displacement field (0 for minimization, 1 for semi-implicit gradient flow)', 'mef90DefMech', options%dampingCoefficientDisplacement, options%dampingCoefficientDisplacement, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_dampingCoefficient_damage', 'Damping coefficient on damage field (0 for minimization, 1 for semi-implicit gradient flow)', 'mef90DefMech', options%dampingCoefficientDamage, options%dampingCoefficientDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
+
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !!! options are read where they are needed, which is not always on all ranks. view itself only
+         !!! prints the first time a given set is read, so it is collective only then.
+         call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+      end if
    end subroutine MEF90DefMechGlobalOptionsSetFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechGlobalOptionsView"
+!!!
+!!!
+!!!  MEF90DefMechGlobalOptionsView: the default viewer for a MEF90DefMechGlobalOptions_Type
+!!!
+!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90DefMechGlobalOptionsView(self, viewer, ierr)
+      class(MEF90DefMechGlobalOptions_Type), intent(IN)      :: self
+      type(tPetscViewer), intent(IN)                         :: viewer
+      PetscErrorCode, intent(INOUT)                          :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType /= 'ascii') return
+
+      write (IOBuffer, "(A,': Options for MEF90DefMechGlobalOptions_Type\n')") trim(self%prefix)//"defmech"
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         time stepping type: ',A,'\n')") trim(MEF90DefMech_TimeSteppingTypeList(self%timeSteppingType + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         solver type: ',A,'\n')") trim(MEF90DefMech_SolverTypeList(self%solverType + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damage solver type: ',A,'\n')") trim(MEF90DefMech_DamageSolverTypeList(self%damageSolverType + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damage atol / maxit: ',ES12.5,' / ',I6,'\n')") self%damageATol, self%damageMaxIt
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         PC lag: ',I6,' SOR omega: ',ES12.5,' irreversibility threshold: ',ES12.5,'\n')") &
+         self%PCLag, self%SOROmega, self%irrevthres
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         backtracking type: ',A,' interval: ',I6,' scope: ',I6,' tol: ',ES12.5,'\n')") &
+         trim(MEF90DefMech_BTTypeList(self%BTType + 1)), self%BTInterval, self%BTScope, self%BTTol
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         plastic strain atol / injected volume atol: ',ES12.5,' / ',ES12.5,'\n')") &
+         self%plasticStrainATol, self%InjectedVolumeATol
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damping coefficient displacement / damage: ',ES12.5,' / ',ES12.5,'\n')") &
+         self%dampingCoefficientDisplacement, self%dampingCoefficientDamage
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         scaling boundary displacement / lower bound / upper bound: ',A,' / ',A,' / ',A,'\n')") &
+         trim(MEF90ScalingList(self%boundaryDisplacementScaling + 1)), &
+         trim(MEF90ScalingList(self%displacementLowerBoundScaling + 1)), &
+         trim(MEF90ScalingList(self%displacementUpperBoundScaling + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         scaling cohesive displacement / boundary damage: ',A,' / ',A,'\n')") &
+         trim(MEF90ScalingList(self%cohesiveDisplacementScaling + 1)), trim(MEF90ScalingList(self%boundaryDamageScaling + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         scaling body force / boundary force / pressure force / crack pressure: ',A,' / ',A,' / ',A,' / ',A,'\n')") &
+         trim(MEF90ScalingList(self%bodyForceScaling + 1)), trim(MEF90ScalingList(self%boundaryForceScaling + 1)), &
+         trim(MEF90ScalingList(self%pressureForceScaling + 1)), trim(MEF90ScalingList(self%CrackPressureScaling + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         export displacement / damage / stress: ',3(L1,' '),'\n')") &
+         self%displacementExport, self%damageExport, self%stressExport
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         export temperature / plastic strain / cumulated plastic dissipation: ',3(L1,' '),'\n')") &
+         self%temperatureExport, self%plasticStrainExport, self%cumulatedPlasticDissipationExport
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+   end subroutine MEF90DefMechGlobalOptionsView
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCellSetOptionsSetFromOptions"
@@ -611,6 +695,11 @@ contains
 
       PetscInt                                               :: nOpt
       PetscReal, dimension(:), allocatable                   :: tmpArray
+      PetscInt                                               :: verbose = 0
+
+      options%comm = comm
+      options%prefix = prefix
+      options%name = trim(prefix)//"DefMechCellSetOptions"
 
       select case (dim)
       case (2)
@@ -658,7 +747,70 @@ contains
             deallocate (tmpArray)
          end select
       PetscCall(PetscOptionsEnd(ierr))
+
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !!! options are read where they are needed, which is not always on all ranks. view itself only
+         !!! prints the first time a given set is read, so it is collective only then.
+         call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+      end if
    end subroutine MEF90DefMechCellSetOptionsSetFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechCellSetOptionsView"
+!!!
+!!!
+!!!  MEF90DefMechCellSetOptionsView: the default viewer for a MEF90DefMechCellSetOptions_Type
+!!!
+!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90DefMechCellSetOptionsView(self, viewer, ierr)
+      class(MEF90DefMechCellSetOptions_Type), intent(IN)     :: self
+      type(tPetscViewer), intent(IN)                         :: viewer
+      PetscErrorCode, intent(INOUT)                          :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType /= 'ascii') return
+
+      write (IOBuffer, "(A,': Options for MEF90DefMechCellSetOptions_Type\n')") trim(self%prefix)
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         body force: ',3(ES12.5,' '),'crack pressure: ',ES12.5,'\n')") &
+         self%bodyForce, self%crackPressure
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         plasticity type: ',A,'\n')") trim(MEF90DefMech_plasticityTypeList(self%plasticityType + 1))
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         cohesive displacement: ',3(ES12.5,' '),'stiffness: ',ES12.5,'\n')") &
+         self%cohesiveDisplacement, self%cohesiveStiffness
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
+         self%Has_displacementBC, self%boundaryDisplacement
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
+         self%displacementLowerBound, self%displacementUpperBound
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
+         self%Has_damageBC, self%boundaryDamage
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         crack volume controlled / work controlled: ',L1,' / ',L1,'\n')") &
+         self%CrackVolumeControlled, self%WorkControlled
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      if (allocated(self%linearThermalExpansion)) then
+         select type (alpha => self%linearThermalExpansion)
+         type is (MatS2D)
+            write (IOBuffer, "('         linear thermal expansion (alpha): ',2(ES12.5,', '),ES12.5,' [K^(-1)]\n')") alpha
+         type is (MatS3D)
+            write (IOBuffer, "('         linear thermal expansion (alpha): ',5(ES12.5,', '),ES12.5,' [K^(-1)]\n')") alpha
+         class default
+            write (IOBuffer, *) 'somehow linear thermal expansion is neither MatS2D nor MatS3D. This is wrong\n'
+         end select
+         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      end if
+   end subroutine MEF90DefMechCellSetOptionsView
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechFaceSetOptionsSetFromOptions"
@@ -676,6 +828,11 @@ contains
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
+      PetscInt                                               :: verbose = 0
+
+      options%comm = comm
+      options%prefix = prefix
+      options%name = trim(prefix)//"DefMechFaceSetOptions"
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90DefMech_Type face set", "mef90DefMech", ierr))
          nOpt = 3
@@ -692,7 +849,51 @@ contains
          PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
+
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !!! options are read where they are needed, which is not always on all ranks. view itself only
+         !!! prints the first time a given set is read, so it is collective only then.
+         call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+      end if
    end subroutine MEF90DefMechFaceSetOptionsSetFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechFaceSetOptionsView"
+!!!
+!!!
+!!!  MEF90DefMechFaceSetOptionsView: the default viewer for a MEF90DefMechFaceSetOptions_Type
+!!!
+!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90DefMechFaceSetOptionsView(self, viewer, ierr)
+      class(MEF90DefMechFaceSetOptions_Type), intent(IN)     :: self
+      type(tPetscViewer), intent(IN)                         :: viewer
+      PetscErrorCode, intent(INOUT)                          :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType /= 'ascii') return
+
+      write (IOBuffer, "(A,': Options for MEF90DefMechFaceSetOptions_Type\n')") trim(self%prefix)
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         boundary force: ',3(ES12.5,' '),'pressure force: ',ES12.5,'\n')") &
+         self%boundaryForce, self%pressureForce
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
+         self%Has_displacementBC, self%boundaryDisplacement
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
+         self%displacementLowerBound, self%displacementUpperBound
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
+         self%Has_damageBC, self%boundaryDamage
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+   end subroutine MEF90DefMechFaceSetOptionsView
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechVertexSetOptionsSetFromOptions"
@@ -710,6 +911,11 @@ contains
       PetscErrorCode, intent(INOUT)                          :: ierr
 
       PetscInt                                               :: nOpt
+      PetscInt                                               :: verbose = 0
+
+      options%comm = comm
+      options%prefix = prefix
+      options%name = trim(prefix)//"DefMechVertexSetOptions"
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90DefMech_Type vertex set", "mef90DefMech", ierr))
          nOpt = 3
@@ -723,7 +929,48 @@ contains
          PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): boundaryDamage', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
+
+      PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
+      if (verbose > 0) then
+         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !!! options are read where they are needed, which is not always on all ranks. view itself only
+         !!! prints the first time a given set is read, so it is collective only then.
+         call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
+      end if
    end subroutine MEF90DefMechVertexSetOptionsSetFromOptions
+
+#undef __FUNCT__
+#define __FUNCT__ "MEF90DefMechVertexSetOptionsView"
+!!!
+!!!
+!!!  MEF90DefMechVertexSetOptionsView: the default viewer for a MEF90DefMechVertexSetOptions_Type
+!!!
+!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!
+
+   subroutine MEF90DefMechVertexSetOptionsView(self, viewer, ierr)
+      class(MEF90DefMechVertexSetOptions_Type), intent(IN)   :: self
+      type(tPetscViewer), intent(IN)                         :: viewer
+      PetscErrorCode, intent(INOUT)                          :: ierr
+
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: IOBuffer
+      character(len=MEF90MXSTRLEN, kind=c_char)              :: viewerType
+
+      PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
+      if (viewerType /= 'ascii') return
+
+      write (IOBuffer, "(A,': Options for MEF90DefMechVertexSetOptions_Type\n')") trim(self%prefix)
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
+         self%Has_displacementBC, self%boundaryDisplacement
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
+         self%displacementLowerBound, self%displacementUpperBound
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
+         self%Has_damageBC, self%boundaryDamage
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+   end subroutine MEF90DefMechVertexSetOptionsView
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetFromOptions"
@@ -804,7 +1051,6 @@ contains
       type(tPetscViewer), intent(IN)                         :: viewer
       PetscErrorCode, intent(INOUT)                          :: ierr
 
-      character(len=MEF90MXSTRLEN, kind=c_char)              :: IOBuffer
       character(len=MEF90MXSTRLEN, kind=c_char)              :: viewerType
       type(tIS)                                              :: setIS
       PetscInt, dimension(:), pointer                        :: setID
@@ -818,28 +1064,10 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType /= 'ascii') return
 
+      !!! The problem-wide and per-set options print themselves: each of the option types below has its
+      !!! own view, and MEF90Object%view makes sure that a given set is only ever printed once.
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(self%comm, trim(self%prefix), globalOptions, ierr))
-      write (IOBuffer, "(A,': Options for MEF90DefMech_Type\n')") trim(self%prefix)//"defmech"
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         time stepping type: ',A,'\n')") trim(MEF90DefMech_TimeSteppingTypeList(globalOptions%timeSteppingType + 1))
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         solver type: ',A,'\n')") trim(MEF90DefMech_SolverTypeList(globalOptions%solverType + 1))
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         damage solver type: ',A,'\n')") trim(MEF90DefMech_DamageSolverTypeList(globalOptions%damageSolverType + 1))
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         damage atol / maxit: ',ES12.5,' / ',I6,'\n')") globalOptions%damageATol, globalOptions%damageMaxIt
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         SOR omega: ',ES12.5,' irreversibility threshold: ',ES12.5,'\n')") globalOptions%SOROmega, globalOptions%irrevthres
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         backtracking type: ',A,' interval: ',I6,' scope: ',I6,' tol: ',ES12.5,'\n')") &
-         trim(MEF90DefMech_BTTypeList(globalOptions%BTType + 1)), globalOptions%BTInterval, globalOptions%BTScope, globalOptions%BTTol
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         export displacement / damage / stress: ',3(L1,' '),'\n')") &
-         globalOptions%displacementExport, globalOptions%damageExport, globalOptions%stressExport
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         export temperature / plastic strain / cumulated plastic dissipation: ',3(L1,' '),'\n')") &
-         globalOptions%temperatureExport, globalOptions%plasticStrainExport, globalOptions%cumulatedPlasticDissipationExport
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      call globalOptions%view(viewer, ierr)
 
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90CellSetLabelName, setIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
@@ -847,15 +1075,7 @@ contains
       do set = 1, size(setID)
          write (setPrefix, "(A,'cs',I4.4,'_')") trim(self%prefix), setID(set)
          PetscCall(MEF90DefMechCellSetOptionsSetFromOptions(self%comm, trim(setPrefix), self%dim, cellSetOptions, ierr))
-         write (IOBuffer, "(A,'cs',I4.4,': body force: ',3(ES12.5,' '),'plasticity: ',A,'\n')") &
-            trim(self%prefix), setID(set), cellSetOptions%bodyForce, trim(MEF90DefMech_plasticityTypeList(cellSetOptions%plasticityType + 1))
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-         write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            cellSetOptions%Has_displacementBC, cellSetOptions%boundaryDisplacement
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-         write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            cellSetOptions%Has_damageBC, cellSetOptions%boundaryDamage
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+         call cellSetOptions%view(viewer, ierr)
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
@@ -866,15 +1086,7 @@ contains
       do set = 1, size(setID)
          write (setPrefix, "(A,'fs',I4.4,'_')") trim(self%prefix), setID(set)
          PetscCall(MEF90DefMechFaceSetOptionsSetFromOptions(self%comm, trim(setPrefix), faceSetOptions, ierr))
-         write (IOBuffer, "(A,'fs',I4.4,': boundary force: ',3(ES12.5,' '),'pressure force: ',ES12.5,'\n')") &
-            trim(self%prefix), setID(set), faceSetOptions%boundaryForce, faceSetOptions%pressureForce
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-         write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            faceSetOptions%Has_displacementBC, faceSetOptions%boundaryDisplacement
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-         write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            faceSetOptions%Has_damageBC, faceSetOptions%boundaryDamage
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+         call faceSetOptions%view(viewer, ierr)
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
@@ -885,12 +1097,7 @@ contains
       do set = 1, size(setID)
          write (setPrefix, "(A,'vs',I4.4,'_')") trim(self%prefix), setID(set)
          PetscCall(MEF90DefMechVertexSetOptionsSetFromOptions(self%comm, trim(setPrefix), vertexSetOptions, ierr))
-         write (IOBuffer, "(A,'vs',I4.4,': displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-            trim(self%prefix), setID(set), vertexSetOptions%Has_displacementBC, vertexSetOptions%boundaryDisplacement
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-         write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-            vertexSetOptions%Has_damageBC, vertexSetOptions%boundaryDamage
-         PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+         call vertexSetOptions%view(viewer, ierr)
       end do
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
       PetscCall(ISDestroy(setIS, ierr))
