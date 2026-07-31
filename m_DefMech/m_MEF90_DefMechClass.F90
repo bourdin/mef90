@@ -662,6 +662,8 @@ contains
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         damage solver type: ',A,'\n')") trim(MEF90DefMech_DamageSolverTypeList(self%damageSolverType + 1))
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
+      write (IOBuffer, "('         multi phase field: ',L1,'\n')") self%multiPhaseField
+      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         damage atol / maxit: ',ES12.5,' / ',I6,'\n')") self%damageATol, self%damageMaxIt
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         PC lag: ',I6,' SOR omega: ',ES12.5,' irreversibility threshold: ',ES12.5,'\n')") &
