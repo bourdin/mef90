@@ -101,8 +101,8 @@ contains
 !             if (AA%isPlaneStress .eqv. BB%isPlaneStress) then
 !                MEF90HookesLawSumIso2D = AA
 !                MEF90HookesLawSumIso2D%isPlaneStress = AA%isPlaneStress
-!                MEF90HookesLawSumIso2D%lambda = AA%lambda + BB% lambda
-!                MEF90HookesLawSumIso2D%mu = AA%mu + BB% mu
+!                MEF90HookesLawSumIso2D%lambda = AA%lambda + BB%lambda
+!                MEF90HookesLawSumIso2D%mu = AA%mu + BB%mu
 !                MEF90HookesLawSumIso2D%BulkModulus = MEF90HookesLawSumIso2D%lambda + MEF90HookesLawSumIso2D%mu
 !                if (AA%isPlaneStress) then
 !                   MEF90HookesLawSumIso2D%PoissonRatio = MEF90HookesLawSumIso2D%lambda / (MEF90HookesLawSumIso2D%lambda + MEF90HookesLawSumIso2D%mu) * 0.5_kr
