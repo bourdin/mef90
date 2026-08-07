@@ -297,7 +297,7 @@ contains
       PetscCall(VecGetDM(MEF90HeatXferCtx%temperatureLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matTemp, ierr))
       PetscCall(MatSetOptionsPrefix(matTemp, "Temperature_", ierr))
-      !!! The matrix is not symmetric if the advection vector is /= 0
+      !! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matTemp, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matTemp, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matTemp, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
@@ -317,9 +317,9 @@ contains
       PetscCall(SNESSetFunction(snesTemp, residual, MEF90HeatXferOperator, MEF90HeatXferCtx%PETScCtx, ierr))
       PetscCall(SNESSetJacobian(snesTemp, matTemp, matTemp, MEF90HeatXferBilinearForm, MEF90HeatXferCtx%PETScCtx, ierr))
       PetscCall(SNESSetFromOptions(snesTemp, ierr))
-      !!!
-      !!! Set some KSP options
-      !!!
+      !!
+      !! Set some KSP options
+      !!
       PetscCall(SNESGetKSP(snesTemp, kspTemp, ierr))
       PetscCall(KSPSetType(kspTemp, KSPCG, ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp, PETSC_TRUE, ierr))
@@ -388,9 +388,9 @@ contains
 
       PetscCall(TSSetExactFinalTime(tsTemp, TS_EXACTFINALTIME_MATCHSTEP, ierr))
       PetscCall(TSSetFromOptions(tsTemp, ierr))
-      !!!
-      !!! Set some KSP options
-      !!!
+      !!
+      !! Set some KSP options
+      !!
       PetscCall(SNESGetKSP(snesTemp, kspTemp, ierr))
       PetscCall(KSPSetType(kspTemp, KSPCG, ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspTemp, PETSC_TRUE, ierr))

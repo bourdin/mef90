@@ -159,13 +159,13 @@ contains
       PetscCall(PetscSectionSetChart(sectionV, pStart, pEnd, ierr))
 
       PetscCall(DMGetLabelIdIS(dmV, MEF90CellSetLabelName, setIS, ierr))
-        !!! Get a GLOBAL cell set IS
+        !! Get a GLOBAL cell set IS
       ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
       if (.not. PetscObjectIsNull(setIS)) then
          PetscCall(ISGetIndices(setIS, setID, ierr))
          do set = 1, size(setID)
-                !!! Get cell type in order to pick the proper element type.
-                !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+                !! Get cell type in order to pick the proper element type.
+                !! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
             PetscCall(DMGetStratumIS(dmV, MEF90CellSetLabelName, setID(set), pointIS, ierr))
             if (.not. PetscObjectIsNull(pointIS)) then
                PetscCall(ISGetIndices(pointIS, pointID, ierr))
@@ -282,7 +282,7 @@ contains
       end if
 
       PetscCall(DMGetLabelIdIS(dmV, MEF90CellSetLabelName, setIS, ierr))
-        !!! Get a GLOBAL cell set IS
+        !! Get a GLOBAL cell set IS
       ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
       if (.not. PetscObjectIsNull(setIS)) then
          PetscCall(ISGetIndices(setIS, setID, ierr))
@@ -375,13 +375,13 @@ contains
       PetscCall(PetscSectionSetChart(sectionV, pStart, pEnd, ierr))
 
       PetscCall(DMGetLabelIdIS(dmV, MEF90FaceSetLabelName, setIS, ierr))
-        !!! Get a GLOBAL cell set IS
+        !! Get a GLOBAL cell set IS
       ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
       if (.not. PetscObjectIsNull(setIS)) then
          PetscCall(ISGetIndices(setIS, setID, ierr))
          do set = 1, size(setID)
-                !!! Get cell type in order to pick the proper element type.
-                !!! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
+                !! Get cell type in order to pick the proper element type.
+                !! We assume that all cells in a set have the same type, so all we need it to query the first cell in the set
             PetscCall(DMGetStratumIS(dmV, MEF90FaceSetLabelName, setID(set), pointIS, ierr))
             if (.not. PetscObjectIsNull(pointIS)) then
                PetscCall(ISGetIndices(pointIS, pointID, ierr))
@@ -485,7 +485,7 @@ contains
       end if
 
       PetscCall(DMGetLabelIdIS(dmV, MEF90FaceSetLabelName, setIS, ierr))
-        !!! Get a GLOBAL cell set IS
+        !! Get a GLOBAL cell set IS
       ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
       if (.not. PetscObjectIsNull(setIS)) then
          PetscCall(ISGetIndices(setIS, setID, ierr))
@@ -605,8 +605,8 @@ contains
       PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
       if (.not. PetscObjectIsNull(setPointIS)) then
          PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
-            !!! This can probably be optimized by allocating closure outside of the loop
-            !!! But I can't figure out how it is done at the moment.
+            !! This can probably be optimized by allocating closure outside of the loop
+            !! But I can't figure out how it is done at the moment.
          nullify (closure)
          do point = 1, size(setPointID)
             PetscCall(DMPlexGetTransitiveClosure(dm, setPointID(point), PETSC_TRUE, PETSC_NULL_INTEGER, closure, ierr))
@@ -653,8 +653,8 @@ contains
             PetscCall(DMGetStratumIS(dm, 'Cell Sets', setID(set), setPointIS, ierr))
             if (.not. PetscObjectIsNull(setPointIS)) then
                PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
-                    !!! This can probably be optimized by allocating closure outside of the loop
-                    !!! But I can't figure out how it is done at the moment.
+                    !! This can probably be optimized by allocating closure outside of the loop
+                    !! But I can't figure out how it is done at the moment.
                nullify (closure)
                do point = 1, size(setPointID)
                   PetscCall(DMPlexGetTransitiveClosure(dm, setPointID(point), PETSC_TRUE, PETSC_NULL_INTEGER, closure, ierr))
@@ -703,8 +703,8 @@ contains
       PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
       if (.not. PetscObjectIsNull(setPOintIS)) then
          PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
-            !!! This can probably be optimized by allocating closure outside of the loop
-            !!! But I can't figure out how it is done at the moment.
+            !! This can probably be optimized by allocating closure outside of the loop
+            !! But I can't figure out how it is done at the moment.
          nullify (closure)
          do point = 1, size(setPointID)
             PetscCall(DMPlexGetTransitiveClosure(dm, setPointID(point), PETSC_TRUE, PETSC_NULL_INTEGER, closure, ierr))
@@ -1060,7 +1060,7 @@ contains
                PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(ValueKey), Val, numOpt, flg, ierr))
                if (numOpt > 0) then
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
-                        !!! Set the values on the closure of the current point
+                        !! Set the values on the closure of the current point
                   if (.not. PetscObjectIsNull(pointIS)) then
                      PetscCall(ISGetIndices(pointIS, pointID, ierr))
                      do point = 1, size(pointID)
@@ -1132,13 +1132,13 @@ contains
                numBC = bs
                PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCOptionKey), setBC, numBC, flg, ierr))
                if (any(setBC)) then
-                        !!! At least 1 dof has a boundary condition
-                        !!! Get the unit BC value on the set
+                        !! At least 1 dof has a boundary condition
+                        !! Get the unit BC value on the set
                   write (BCValueKey, '("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType), setID(set), trim(name)
                   numBC = bs
                   PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCValueKey), BCVal, numBC, flg, ierr))
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
-                        !!! Set the boundary values on the closure of the current point
+                        !! Set the boundary values on the closure of the current point
                   if (.not. PetscObjectIsNull(pointIS)) then
                      PetscCall(ISGetIndices(pointIS, pointID, ierr))
                      do point = 1, size(pointID)
@@ -1231,13 +1231,13 @@ contains
                      write (IOBuffer, "(A,' was expecting ',I2,' expressions but got ',I2,' for key ',A)") __FUNCT__, bs, size(ExprStrComp), trim(ValueKey)
                      SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, IOBuffer)
                   end if
-                        !!! create parsers
+                        !! create parsers
                   do c = 1, bs
                      exprs(c) = parse(ExprStrComp(c))
                      exprs(c) = exprs(c)%subs(Symbol("t"), RealDouble(t))
                   end do
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
-                        !!! Set the values on the closure of the current point
+                        !! Set the values on the closure of the current point
                   if (.not. PetscObjectIsNull(pointIS)) then
                      PetscCall(ISGetIndices(pointIS, pointID, ierr))
                      do point = 1, size(pointID)
@@ -1249,8 +1249,8 @@ contains
                               PetscCall(PetscSectionGetDof(section, closure(p), numDof, ierr))
                               if (numDof > 0) then
                                  dof = dof + 1
-                                            !!! Get the coordinates of the dof associated with the point
-                                            !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+                                            !! Get the coordinates of the dof associated with the point
+                                            !! trick: the coordinate of a point is the average of the coordinates of the points in its closure
                                  PetscCall(DMPlexVecGetClosure(dm, coordSection, coordVec, closure(p), PETSC_NULL_INTEGER, coordArray, ierr))
                                  do i = 1, dim
                                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
@@ -1350,8 +1350,8 @@ contains
                numBC = bs
                PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCOptionKey), setBC, numBC, flg, ierr))
                if (any(setBC)) then
-                        !!! At least 1 dof has a boundary condition
-                        !!! Get the unit BC value on the set
+                        !! At least 1 dof has a boundary condition
+                        !! Get the unit BC value on the set
                   write (BCValueKey, '("-",a2,I4.4,"_Boundary",a,"Expr")') MEF90SetPrefix(setType), setID(set), trim(name)
                   PetscCall(PetscOptionsGetString(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCValueKey), ExprStr, flg, ierr))
                   numOpt = MEF90StrCount(ExprStr, delim)
@@ -1360,14 +1360,14 @@ contains
                      write (IOBuffer, "(A,' was expecting ',I2,' expressions but got ',I2,' for key ',A)") __FUNCT__, bs, size(ExprStrComp), trim(BCValueKey)
                      SETERRQ(PETSC_COMM_SELF, PETSC_ERR_ARG_SIZ, IOBuffer)
                   end if
-                        !!! create parsers
+                        !! create parsers
                   do c = 1, bs
                      exprs(c) = parse(ExprStrComp(c))
                      exprs(c) = exprs(c)%subs(Symbol("t"), RealDouble(t))
                   end do
 
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
-                        !!! Set the boundary values on the closure of the current point
+                        !! Set the boundary values on the closure of the current point
                   if (.not. PetscObjectIsNull(pointIS)) then
                      PetscCall(ISGetIndices(pointIS, pointID, ierr))
                      do point = 1, size(pointID)
@@ -1379,8 +1379,8 @@ contains
                               PetscCall(PetscSectionGetDof(section, closure(p), numDof, ierr))
                               if (numDof > 0) then
                                  dof = dof + 1
-                                            !!! Get the coordinates of the dof associated with the point
-                                            !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+                                            !! Get the coordinates of the dof associated with the point
+                                            !! trick: the coordinate of a point is the average of the coordinates of the points in its closure
                                  PetscCall(DMPlexVecGetClosure(dm, coordSection, coordVec, closure(p), PETSC_NULL_INTEGER, coordArray, ierr))
                                  do i = 1, dim
                                     xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)
@@ -1421,7 +1421,7 @@ contains
 #endif
    end subroutine MEF90VecSetBCValuesFromOptionsExpr
 
-!!! Private functions below
+!! Private functions below
 #undef __FUNCT__
 #define __FUNCT__ "CreateNaturalToIOSF_Private"
 !!!

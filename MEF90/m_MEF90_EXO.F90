@@ -106,7 +106,7 @@ contains
       PetscCall(PetscViewerExodusIIGetId(Viewer, exoid, ierr))
       call exinq(exoid, EX_INQ_ELEM_BLK, numCS, rJunk, sjunk, ierr)
 
-   !!! Write truth tables
+   !! Write truth tables
       numC = size(nameC)
       if (numC > 0) then
          allocate (truthtable(numCS, numC))
@@ -236,8 +236,8 @@ contains
       PetscCall(MEF90VecCopySF(iov, v, invSF, ierr))
       PetscCall(VecDestroy(iov, ierr))
 
-      !!! Make sure that the halo values in the local vector are updated by doing a L2G followed by a G2L
-      !!! This is probably only needed for nodal vectors, unless we have distributed the mesh with an overlap.
+      !! Make sure that the halo values in the local vector are updated by doing a L2G followed by a G2L
+      !! This is probably only needed for nodal vectors, unless we have distributed the mesh with an overlap.
       PetscCall(VecGetDM(V, locDM, ierr))
       PetscCall(DMGetOutputDM(locDM, oDM, ierr))
       PetscCall(DMGetGlobalVector(oDM, vGlob, ierr))

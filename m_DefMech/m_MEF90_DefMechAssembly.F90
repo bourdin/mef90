@@ -107,7 +107,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLocal, 0.0_kr, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -134,7 +134,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -142,7 +142,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -155,7 +155,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                do iGauss = 1, numGauss
-                  !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
+                  !! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
                   if (.not. ATModel%isElastic) then
                      PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -182,8 +182,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
                   ! #if MEF90_DIM == 2
-   !!! We need something along these lines
-   !!! Adding terms in planestrain for plasticity with tr(p) = 0
+   !! We need something along these lines
+   !! Adding terms in planestrain for plasticity with tr(p) = 0
                   ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
                   !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
                   ! End If
@@ -211,8 +211,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             if (norm2(cellSetOptions%bodyForce) /= 0.0_kr) then
                do cell = 1, size(setPointID)
                   residualDof = 0.0_kr
-                  !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
-                  !!! If this happens, we will need to protect this loop
+                  !! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+                  !! If this happens, we will need to protect this loop
                   PetscCall(PetscSectionGetOffset(sectionBodyForce, setPointID(cell), vecOffset, ierr))
                   bodyForce = bodyForceArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_VECT)
                   do iGauss = 1, numGauss
@@ -247,7 +247,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             !    End Do ! cell
             ! End If ! damping
 
-               !!! Cohesive force
+               !! Cohesive force
             if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (cellSetOptions%cohesiveStiffness /= 0.0_kr)) then
                do cell = 1, size(setPointID)
                   residualDof = 0.0_kr
@@ -309,7 +309,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
       PetscCall(ISDestroy(setIS, ierr))
    end if ! setIS
 
-   !!! face-based contributions
+   !! face-based contributions
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90FaceSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
    if (.not. PetscObjectIsNull(setIS)) then
@@ -326,7 +326,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-              !!! Allocate elements
+              !! Allocate elements
             QuadratureOrder = 2 * elemVectType%order
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -440,7 +440,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
 
    PetscCall(MatZeroEntries(A, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -466,7 +466,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -474,7 +474,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -487,7 +487,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
                do iGauss = 1, numGauss
-                     !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
+                     !! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
                   if (.not. ATModel%isElastic) then
                      PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -513,8 +513,8 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
-!!! We need something along these lines
-!!! Adding terms in planestrain for plasticity with tr(p) = 0
+!! We need something along these lines
+!! Adding terms in planestrain for plasticity with tr(p) = 0
 ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
 !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
 ! End If
@@ -558,7 +558,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             !    End Do ! cell
             ! End If ! damping
 
-               !!! Cohesive force
+               !! Cohesive force
             if ((norm2(cellSetOptions%cohesiveDisplacement) /= 0.0_kr) .and. (cellSetOptions%cohesiveStiffness /= 0.0_kr)) then
                do cell = 1, size(setPointID)
                   matDof = 0.0_kr
@@ -638,7 +638,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -657,7 +657,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = 2 * (elemVectType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -689,7 +689,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
       PetscCall(ISDestroy(setIS, ierr))
    end if ! setIS
 
-   !!! face-based contributions
+   !! face-based contributions
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90FaceSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -708,7 +708,7 @@ subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, i
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetTypeBoundary(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = 2 * elemVectType%order
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -792,7 +792,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -810,7 +810,7 @@ subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
             PetscCall(DMPlexGetCellType(dmDisplacement, setPointID(1), cellGeometry, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometry, elemVectType, ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = 2 * (elemVectType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
 
@@ -914,7 +914,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -943,7 +943,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -951,7 +951,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -986,13 +986,13 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
-!!! We need something along these lines
-!!! Adding terms in planestrain for plasticity with tr(p) = 0
+!! We need something along these lines
+!! Adding terms in planestrain for plasticity with tr(p) = 0
 ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
 !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
 ! End If
 ! #endif
-                  !!! Not actually sure if the split should be computed at totalStrainGauss or at totalStrainGauss - plasticStrainCell
+                  !! Not actually sure if the split should be computed at totalStrainGauss or at totalStrainGauss - plasticStrainCell
                   call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                   call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDPlus, EEDMinus, ierr)
                   if (ATModel%isElastic) then
@@ -1094,7 +1094,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
 
    PetscCall(VecSet(stress, 0.0_kr, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1121,7 +1121,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -1129,7 +1129,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1166,8 +1166,8 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
-!!! We need something along these lines
-!!! Adding terms in planestrain for plasticity with tr(p) = 0
+!! We need something along these lines
+!! Adding terms in planestrain for plasticity with tr(p) = 0
 ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
 !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
 ! End If
@@ -1176,8 +1176,8 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                   PetscCall(PetscSectionGetOffset(sectionPlasticStrain, setPointID(cell), vecOffset, ierr))
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
-                  !!! This is really silly but since I decided that EED, DEED, and D2EED would return directinal derivatives instead of linear operators,
-                  !!! I have to call DEED for each component of the stress tensor (plus it only works for a linear law)
+                  !! This is really silly but since I decided that EED, DEED, and D2EED would return directinal derivatives instead of linear operators,
+                  !! I have to call DEED for each component of the stress tensor (plus it only works for a linear law)
                   do ij = 1, SIZEOFMEF90_MATS
                      call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                      call Split%DEED(HookesLaw, eij(ij), stressGaussPlus, stressGaussMinus, ierr)
@@ -1287,7 +1287,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLoc, 0.0_kr, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1310,7 +1310,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -1318,7 +1318,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1354,8 +1354,8 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
                   ! #if MEF90_DIM == 2
-   !!! We need something along these lines
-   !!! Adding terms in planestrain for plasticity with tr(p) = 0
+   !! We need something along these lines
+   !! Adding terms in planestrain for plasticity with tr(p) = 0
                   ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
                   !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
                   ! End If
@@ -1365,14 +1365,14 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
 
-                  !!! begin ugly hack
-                  !!! The following won't work until I overload the LinAlg operations to work with the parent classes
+                  !! begin ugly hack
+                  !! The following won't work until I overload the LinAlg operations to work with the parent classes
                   ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
                   select type (k => ATModel%toughnessAnisotropyMatrix)
                      type is (MEF90_MATS)
                         C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
                   end select
-                  !!! end ugly hack
+                  !! end ugly hack
 
                   EEDGaussPlus = 0.0_kr
                   if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
@@ -1530,7 +1530,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
 
    PetscCall(MatZeroEntries(A, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1553,7 +1553,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
             PetscCall(MEF90DefMechGetSplit(MEF90DefMechCtx%comm, prefix, Split, ierr))
@@ -1561,7 +1561,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             PetscCall(MEF90GetHookesLaw(MEF90DefMechCtx%Comm, prefix, MEF90_DIM, HookesLaw, ierr))
             PetscCall(HookesLaw%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(2 * elemVectType%order, Split%quadratureOrder)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
@@ -1594,8 +1594,8 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   totalStrainGauss = totalStrainGauss - (temperatureGauss * linearThermalExpansion)
 
 ! #if MEF90_DIM == 2
-!!! We need something along these lines
-!!! Adding terms in planestrain for plasticity with tr(p) = 0
+!! We need something along these lines
+!! Adding terms in planestrain for plasticity with tr(p) = 0
 ! If (.NOT. matProp%HookesLaw%isPlaneStress) Then
 !    stressGauss = stressGauss +  stiffness * ( matProp%HookesLaw%lambda*trace(plasticStrainCell)*MEF90MatS2DIdentity )
 ! End If
@@ -1605,14 +1605,14 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   plasticStrainCell = plasticStrainArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_MATS)
 
 
-                  !!! begin ugly hack
-                  !!! The following won't work until I overload the LinAlg operations to work with the parent classes
+                  !! begin ugly hack
+                  !! The following won't work until I overload the LinAlg operations to work with the parent classes
                   ! C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * ATModel%toughnessAnisotropyMatrix
                   select type (k => ATModel%toughnessAnisotropyMatrix)
                      type is (MEF90_MATS)
                         C2 = ATModel%fractureToughness / ATModel%cw * 0.5_kr * ATModel%internalLength * k
                   end select
-                  !!! end ugly hack
+                  !! end ugly hack
 
                   EEDGaussPlus = 0.0_kr
                  if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
@@ -1718,7 +1718,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1736,10 +1736,10 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             PetscCall(DMPlexGetCellType(dmDamage, setPointID(1), cellGeometryScal, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel object
+            !! get the ATModel object
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = max(ATmodel%wOrder, 2 * (elemScalType%order - 1))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))
 
@@ -1761,7 +1761,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
                      end do ! iDof numDofDamage
                   end if
                   
-                  !!! UGLY but until I can figure out how to handle polymorphism, this has to be this way:
+                  !! UGLY but until I can figure out how to handle polymorphism, this has to be this way:
                   select type (k => ATModel%toughnessAnisotropyMatrix)
                      type is (MEF90_MATS)
                         myEnergy = myEnergy + elemScal(cell)%Gauss_C(iGauss) * &
@@ -1805,7 +1805,7 @@ subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMec
    PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1866,7 +1866,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
 
-   !!! get IS for cell sets
+   !! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
@@ -1886,11 +1886,11 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryVect, elemVectType, ierr))
             PetscCall(MEF90ElementGetType(MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, cellGeometryScal, elemScalType, ierr))
 
-            !!! get the ATModel and split objects
+            !! get the ATModel and split objects
             PetscCall(MEF90DefMechGetATModel(MEF90DefMechCtx%comm, prefix, dim, ATModel, ierr))
             PetscCall(ATModel%setFromOptions(ierr))
 
-            !!! Allocate elements
+            !! Allocate elements
             QuadratureOrder = 2 * (elemScalType%order - 1)
             PetscCall(MEF90ElementCreate(dmDisplacement, setPointIS, elemVect, QuadratureOrder, elemVectType, ierr))
             PetscCall(MEF90ElementCreate(dmDamage, setPointIS, elemScal, QuadratureOrder, elemScalType, ierr))

@@ -71,7 +71,7 @@ contains
       write (IOBuffer, *) "# or ""FreeBSD"") license. See the LICENSE file in the root of the software distribution\n\n"
       PetscCall(PetscPrintf(comm, IOBuffer, ierr))
 
-      !!! Individual modules runtime initialization should be called here
+      !! Individual modules runtime initialization should be called here
       PetscCall(MEF90MPIInitialize_Private(ierr))
       PetscCall(MEF90MaterialsInitialize_Private(ierr))
       PetscCall(MEF90ElementsInitialize_Private(ierr))

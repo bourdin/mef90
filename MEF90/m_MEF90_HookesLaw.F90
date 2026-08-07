@@ -63,8 +63,8 @@ contains
             select case(dim)
                case(2)
                   HookesLaw = MEF90HookesLawIsotropic2D(comm = comm, prefix = prefix)
-                  !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawIsotropic2D_type extends
-                  !!! MEF90Object_Type, so that the order of positional arguments is not clear.
+                  !! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawIsotropic2D_type extends
+                  !! MEF90Object_Type, so that the order of positional arguments is not clear.
                case(3)
                   HookesLaw = MEF90HookesLawIsotropic3D(comm = comm, prefix = prefix)
                case default
@@ -73,8 +73,8 @@ contains
             end select
          ! case (MEF90HookesLawEnumZero)
          !    HookesLaw = MEF90HookesLawZero(comm = comm, prefix = prefix)
-            !!! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawNul2D_type extends
-            !!! MEF90Object_Type, so that the order of positional arguments is not clear.
+            !! I think that I need to use comm = comm, prefix = prefix because MEF90HookesLawNul2D_type extends
+            !! MEF90Object_Type, so that the order of positional arguments is not clear.
       end select
    end subroutine MEF90GetHookesLaw
 

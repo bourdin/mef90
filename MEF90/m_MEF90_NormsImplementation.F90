@@ -54,9 +54,9 @@ subroutine MEF90L2DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
    PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
    PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
    if (size(setPointID) > 0) then
-         !!! This is really misleading: elemType doesn't know the number of component since we now use the
-         !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
-         !!! Maybe I need to change this to the old behaviour.
+         !! This is really misleading: elemType doesn't know the number of component since we now use the
+         !! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
+         !! Maybe I need to change this to the old behaviour.
       numDof = size(elem(1)%BF(:, 1))
       numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
@@ -121,9 +121,9 @@ subroutine MEF90H1DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
    PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
    PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
    if (size(setPointID) > 0) then
-         !!! This is really misleading: elemType doesn't know the number of component since we now use the
-         !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
-         !!! Maybe I need to change this to the old behaviour.
+         !! This is really misleading: elemType doesn't know the number of component since we now use the
+         !! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
+         !! Maybe I need to change this to the old behaviour.
       numDof = size(elem(1)%BF(:, 1))
       numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
@@ -184,9 +184,9 @@ subroutine MEF90H1SymDotProductSet(myDotProductSet, U, V, setType, setID, elem, 
    PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
    PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
    if (size(setPointID) > 0) then
-         !!! This is really misleading: elemType doesn't know the number of component since we now use the
-         !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
-         !!! Maybe I need to change this to the old behaviour.
+         !! This is really misleading: elemType doesn't know the number of component since we now use the
+         !! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
+         !! Maybe I need to change this to the old behaviour.
       numDof = size(elem(1)%BF(:, 1))
       numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)
@@ -248,9 +248,9 @@ subroutine MEF90L2NormSet(myNormSet, U, setType, setID, elem, elemType, ierr)
    PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID, setPointIS, ierr))
    PetscCall(ISGetIndices(setPointIS, setPointID, ierr))
    if (size(setPointID) > 0) then
-            !!! This is really misleading: elemType doesn't know the number of component since we now use the
-            !!! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
-            !!! Maybe I need to change this to the old behaviour.
+            !! This is really misleading: elemType doesn't know the number of component since we now use the
+            !! same elemType for scalar and Vect elements, elem%numDof is NOT the number of dof...
+            !! Maybe I need to change this to the old behaviour.
       numDof = size(elem(1)%BF(:, 1))
       numGauss = size(elem(1)%Gauss_C)
       allocate (Uloc(numDof), source=0.0_kr)

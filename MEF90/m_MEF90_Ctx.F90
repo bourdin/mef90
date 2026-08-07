@@ -130,7 +130,7 @@ contains
          !SETERRQ(comm,PETSC_ERR_FILE_OPEN,"no file prefix given\n")
       end if
       if (hasPrefix) then
-         !!! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
+         !! Old style calling sequence: geometryFile is <prefix>.gen, resultFile is <prefix>_out.gen
          MEF90Ctx%geometryFile = trim(tmpPrefix)//'.gen'
          MEF90Ctx%resultFile = trim(MEF90FilePrefix(MEF90Ctx%geometryFile))//'_out.gen'
       else
@@ -145,7 +145,7 @@ contains
       PetscCall(PetscSynchronizedFlush(MEF90Ctx%comm, PETSC_STDOUT, ierr))
 #endif
 
-      !!! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
+      !! Not sure if this should be there, but PETSc's gmsh reader defaults to ignoring vertex sets, which we defintely don't want...
       if (MEF90FileExtension(MEF90Ctx%geometryfile) == 'msh') then
          PetscCallA(PetscOptionsInsertString(PETSC_NULL_OPTIONS, "-dm_plex_gmsh_mark_vertices", ierr))
       end if
@@ -326,7 +326,7 @@ contains
          t(cycleLength * GlobalOptions%timeNumCycle + 1:GlobalOptions%timeNumStep) = t(cycleLength * GlobalOptions%timeNumCycle)
 
       case (MEF90TimeInterpolation_quadratic)
-         !!! Natural time scale for the heat equation
+         !! Natural time scale for the heat equation
          allocate (t(GlobalOptions%timeNumStep))
          dt = 0.0_kr
          if (GlobalOptions%timeNumStep > 1) then

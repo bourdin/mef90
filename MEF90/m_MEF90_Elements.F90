@@ -33,7 +33,7 @@ module m_MEF90_Elements
       PetscInt                                     :: coDim
       !!! The co-dimension of the cell associated with the element
       PetscInt                                     :: order
-      !!! The polynomial order
+      !! The polynomial order
    end type MEF90ElementType
 
    enum, bind(c)
@@ -412,8 +412,8 @@ contains
                allocate (BBinv(4))
                do iELoc = 1, size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm, cellID(iELoc), v0, BB, BBinv, detBBinv, ierr))
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
+                  !! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
+                  !! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1) * 0.5_kr; Bt%XY = BBinv(3) * 0.5_kr
                   Bt%YX = BBinv(2) * 0.5_kr; Bt%YY = BBinv(4) * 0.5_kr
                   detBBinv = 4.0_kr * abs(detBBinv)
@@ -477,8 +477,8 @@ contains
                allocate (BBinv(4))
                Do_Elem_iE: do iELoc = 1, size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm, cellID(iELoc), v0, BB, BBinv, detBBinv, ierr))
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
+                  !! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
+                  !! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1) * 0.5_kr; Bt%XY = BBinv(3) * 0.5_kr
                   Bt%YX = BBinv(2) * 0.5_kr; Bt%YY = BBinv(4) * 0.5_kr
                   detBBinv = 4.0_kr * abs(detBBinv)
@@ -542,8 +542,8 @@ contains
                allocate (BBinv(9))
                Do_Elem_iE: do iELoc = 1, size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm, cellID(iELoc), v0, BB, BBinv, detBBinv, ierr))
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
+                  !! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
+                  !! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1) * 0.5_kr; Bt%XY = BBinv(4) * 0.5_kr; Bt%XZ = BBinv(7) * 0.5_kr
                   Bt%YX = BBinv(2) * 0.5_kr; Bt%YY = BBinv(5) * 0.5_kr; Bt%YZ = BBinv(8) * 0.5_kr
                   Bt%ZX = BBinv(3) * 0.5_kr; Bt%ZY = BBinv(6) * 0.5_kr; Bt%ZZ = BBinv(9) * 0.5_kr
@@ -608,8 +608,8 @@ contains
                allocate (BBinv(9))
                Do_Elem_iE: do iELoc = 1, size(CellID)
                   PetscCall(DMPlexComputeCellGeometryAffineFEM(dm, cellID(iELoc), v0, BB, BBinv, detBBinv, ierr))
-                  !!! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
-                  !!! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
+                  !! Petsc uses a reference simplex with vertices at (-1,-1), (1,-1) and (-1,1)
+                  !! Whereas MEF90 uses (0,0), (1,0), (0,1), so we need to rescale the affine transform
                   Bt%XX = BBinv(1) * 0.5_kr; Bt%XY = BBinv(4) * 0.5_kr; Bt%XZ = BBinv(7) * 0.5_kr
                   Bt%YX = BBinv(2) * 0.5_kr; Bt%YY = BBinv(5) * 0.5_kr; Bt%YZ = BBinv(8) * 0.5_kr
                   Bt%ZX = BBinv(3) * 0.5_kr; Bt%ZY = BBinv(6) * 0.5_kr; Bt%ZZ = BBinv(9) * 0.5_kr
@@ -723,7 +723,7 @@ contains
             dElem%Gauss_C(5:7) = 0.12593918054482717 / 2.0_kr * detBinv
             dElem%Gauss_C(Nb_Gauss) = detBinv / 2.0_kr - sum(dElem%Gauss_C(1:Nb_Gauss - 1))
          case (-6)
-         !!! It seems to me that this is really a quadrature rule of order 5...
+         !! It seems to me that this is really a quadrature rule of order 5...
             Nb_Gauss = 9
             allocate (Xi(Nb_Gauss), stat=ierr)
             allocate (dElem%Gauss_C(Nb_Gauss), stat=ierr)
@@ -833,7 +833,7 @@ contains
             Num_DoF = 6
             allocate (PhiHat(Num_DoF, Nb_Gauss), stat=ierr)
             allocate (GradPhiHat(Num_DoF, Nb_Gauss), stat=ierr)
-         !!! See Dof local Ordering.md for the unusual dof ordering
+         !! See Dof local Ordering.md for the unusual dof ordering
             PhiHat(4, :) = (1.0_kr - Xi%X - Xi%Y) * (1.0_kr - 2.0_kr * Xi%X - 2.0_kr * Xi%Y)
             PhiHat(5, :) = Xi%X * (2.0_kr * Xi%X - 1.0_kr)
             PhiHat(6, :) = Xi%Y * (2.0_kr * Xi%Y - 1.0_kr)
@@ -947,7 +947,7 @@ contains
          case (2)
             Num_DoF = 3
             allocate (dElem%BF(Num_DoF, Num_Gauss), stat=ierr)
-         !!! See Dof local Ordering.md for the unusual dof ordering
+         !! See Dof local Ordering.md for the unusual dof ordering
             dElem%BF(2, :) = Xi * (Xi - 1.0_kr)*.5_kr
             dElem%BF(3, :) = Xi * (Xi + 1.0_kr)*.5_kr
             dElem%BF(1, :) = (1.0_kr - Xi) * (1.0_kr + Xi)

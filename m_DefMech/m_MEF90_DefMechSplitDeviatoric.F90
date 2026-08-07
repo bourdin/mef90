@@ -147,7 +147,7 @@ contains
       type is (MatS2D)
          call HookesLaw%multmult(DeviatoricPart(e), phi, DEEDPlus, ierr)
          call HookesLaw%multmult(HydrostaticPart(e), phi, DEEDMinus, ierr)
-         !!! Note that we use the orthogonality property A phi^s.psi^D = 0
+         !! Note that we use the orthogonality property A phi^s.psi^D = 0
       type is (MatS3D)
          call HookesLaw%multmult(DeviatoricPart(e), phi, DEEDPlus, ierr)
          call HookesLaw%multmult(HydrostaticPart(e), phi, DEEDMinus, ierr)
@@ -172,7 +172,7 @@ contains
       type is (MatS2D)
          call HookesLaw%multmult(DeviatoricPart(e), phi, D2EEDPlus, ierr)
          call HookesLaw%multmult(HydrostaticPart(e), phi, D2EEDMinus, ierr)
-         !!! Note that we use the orthogonality property A phi^s.psi^D = 0
+         !! Note that we use the orthogonality property A phi^s.psi^D = 0
       type is (MatS3D)
          call HookesLaw%multmult(DeviatoricPart(e), phi, D2EEDPlus, ierr)
          call HookesLaw%multmult(HydrostaticPart(e), phi, D2EEDMinus, ierr)

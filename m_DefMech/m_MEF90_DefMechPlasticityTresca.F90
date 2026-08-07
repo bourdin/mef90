@@ -33,7 +33,7 @@ subroutine FHG_TRESCA(x, f, h, g, myctx) bind(c)
    type(MEF90_MATS)                          :: MatDiagPrincipalBasis
 
    xMatS = x(1:SIZEOFMEF90_MATS)
-      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      !! This is the fortran equivalent of casting ctx into a c_ptr
    call c_f_pointer(myctx, myctx_ptr)
 
    !write(*,*) 'A.e(u):         ', myctx_ptr%HookesLaw*myctx_ptr%Strain

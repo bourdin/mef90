@@ -198,7 +198,7 @@ contains
       A%ZZZZ = lambda + mu * 2.0_kr
    end subroutine MEF90HookeLawIsoENu3D
 
-!!! Overloading linear algebra functions with Hookes Laws.
+!! Overloading linear algebra functions with Hookes Laws.
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DSum"
 !!!

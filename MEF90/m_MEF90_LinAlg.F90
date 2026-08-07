@@ -2280,7 +2280,7 @@ contains
       PetscInt, dimension(3)                       :: ipiv
       PetscReal, dimension(3)                      :: work
 
-      !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
+      !! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpArray = T
       call DGETRF(3, 3, TmpArray, 3, ipiv, ierr)
       call DGETRI(3, TmpArray, 3, ipiv, work, 3, ierr)
@@ -2297,7 +2297,7 @@ contains
       PetscInt, dimension(6)                       :: ipiv
       PetscReal, dimension(6)                      :: work
 
-      !!! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
+      !! We convert T in a matrix using Mandel notations,invert the matrix then write back in a tensor
       TmpArray = T
       call DGETRF(6, 6, TmpArray, 6, ipiv, ierr)
       call DGETRI(6, TmpArray, 6, ipiv, work, 6, ierr)

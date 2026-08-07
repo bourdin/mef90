@@ -36,10 +36,10 @@ subroutine FHG_VONMISES(x, f, h, g, myctx) bind(c)
    type(MEF90_MATS)                          :: Stress
 
    xMatS = x(1:SIZEOFMEF90_MATS)
-      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      !! This is the fortran equivalent of casting ctx into a c_ptr
    call c_f_pointer(myctx, myctx_ptr)
 
-      !!! Select which softening young model
+      !! Select which softening young model
    if (myctx_ptr%CoefficientLinSoft == 0) then
       StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
       StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
@@ -91,10 +91,10 @@ subroutine FHG_VONMISESPLANETHEORY(x, f, h, g, myctx) bind(c)
    type(MatS3D)                              :: Strain, PlasticStrainFlow, Stress
 
    xMatS = x(1:SIZEOFMEF90_MATS)
-      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      !! This is the fortran equivalent of casting ctx into a c_ptr
    call c_f_pointer(myctx, myctx_ptr)
 
-      !!! Select which softening young model
+      !! Select which softening young model
    if (myctx_ptr%CoefficientLinSoft == 0) then
       StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
       StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
@@ -109,7 +109,7 @@ subroutine FHG_VONMISESPLANETHEORY(x, f, h, g, myctx) bind(c)
    lambda = E * nu / (1.0_kr + nu) / (1 - 2.0_kr * nu)
 
    if (myctx_ptr%isPlaneStress .eqv. .true.) then
-         !!! If plane stress
+         !! If plane stress
       Strain = 0.0_kr
       Strain%XX = myctx_ptr%totalStrain%XX
       Strain%YY = myctx_ptr%totalStrain%YY
@@ -128,7 +128,7 @@ subroutine FHG_VONMISESPLANETHEORY(x, f, h, g, myctx) bind(c)
       Stress%XY = 2 * mu * (Strain%XY - xMatS%XY)
       Stress%ZZ = lambda * (Trace(Strain)) + 2 * mu * (Strain%ZZ + Trace(xMatS))
    else
-         !!! If plane strain
+         !! If plane strain
       Strain = 0.0_kr
       Strain%XX = myctx_ptr%totalStrain%XX
       Strain%YY = myctx_ptr%totalStrain%YY
@@ -183,10 +183,10 @@ subroutine FHG_VONMISES1D(x, f, h, g, myctx) bind(c)
    type(MEF90_MATS)                          :: xMatS, Stress
 
    xMatS = x(1:SIZEOFMEF90_MATS)
-      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      !! This is the fortran equivalent of casting ctx into a c_ptr
    call c_f_pointer(myctx, myctx_ptr)
 
-       !!! Select which softening young model
+       !! Select which softening young model
    if (myctx_ptr%CoefficientLinSoft == 0) then
       StiffnessA = (1.0_kr - myctx_ptr%Damage)**2
       StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower

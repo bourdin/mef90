@@ -124,7 +124,7 @@ subroutine MEF90HookesLawIsotropic2D_View(self, viewer, ierr)
       character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
       PetscErrorCode, intent(inout)                :: ierr
 
-      !!! This is really absurd
+      !! This is really absurd
       select type (phi2D => phi)
          type is (MatS2D)
          select type (psi2D => psi)
@@ -261,7 +261,7 @@ contains
       character(len=MEF90MXSTRLEN, kind=c_char)    :: IOBuffer
       PetscErrorCode, intent(inout)                :: ierr
 
-      !!! This is really absurd
+      !! This is really absurd
       select type (phi3D => phi)
          type is (MatS3D)
          select type (psi3D => psi)

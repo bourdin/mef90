@@ -318,9 +318,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechWork"
-!!!
-!!!
-!!!  MEF90DefMechWork: wraps calls to MEF90DefMechWork from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechWork: wraps calls to MEF90DefMechWork from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-22 Blaise Bourdin bourdin@lsu.edu
@@ -340,9 +340,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCohesiveEnergy"
-!!!
-!!!
-!!!  MEF90DefMechCohesiveEnergy: wraps calls to MEF90DefMechCohesiveEnergy from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechCohesiveEnergy: wraps calls to MEF90DefMechCohesiveEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
@@ -362,9 +362,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechElasticEnergy"
-!!!
-!!!
-!!!  MEF90DefMechElasticEnergy: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechElasticEnergy: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
@@ -384,9 +384,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticDissipation"
-!!!
-!!!
-!!!  MEF90DefMechPlasticDissipation: wraps calls to MEF90DefMechPlasticDissipation from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechPlasticDissipation: wraps calls to MEF90DefMechPlasticDissipation from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-14 Erwan TANNE erwan.tanne@gmail.com
@@ -408,9 +408,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechStress"
-!!!
-!!!
-!!!  MEF90DefMechStress: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechStress: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
@@ -553,9 +553,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSurfaceEnergy"
-!!!
-!!!
-!!!  MEF90DefMechSurfaceEnergy: wraps calls to MEF90DefMechSurfaceEnergy from m_MEF90_DefMechAssembly
+!!
+!!
+!!  MEF90DefMechSurfaceEnergy: wraps calls to MEF90DefMechSurfaceEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
@@ -798,9 +798,9 @@ contains
       PetscCall(MatSetOption(matDisplacement, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDisplacement, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDisplacement, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
-      !!!
-      !!! Set the matrix near null-space consisting of all rigid motions.
-      !!!
+      !!
+      !! Set the matrix near null-space consisting of all rigid motions.
+      !!
       PetscCall(DMGetGlobalVector(dm, gCoord, ierr))
       PetscCall(MEF90DefMechProjectCoordinates_Private(gCoord, ierr))
       PetscCall(MatNullSpaceCreateRigidBody(gCoord, nspDisplacement, ierr))
@@ -822,9 +822,9 @@ contains
       stol = 1.0d-7
       PetscCall(SNESSetTolerances(snesDisplacement, atol, rtol, stol, PETSC_DEFAULT_INTEGER, PETSC_DEFAULT_INTEGER, ierr))
       PetscCall(SNESSetFromOptions(snesDisplacement, ierr))
-      !!!
-      !!! Set some KSP options
-      !!!
+      !!
+      !! Set some KSP options
+      !!
       PetscCall(SNESGetKSP(snesDisplacement, kspDisplacement, ierr))
       PetscCall(KSPSetType(kspDisplacement, KSPCG, ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspDisplacement, PETSC_TRUE, ierr))
@@ -863,7 +863,7 @@ contains
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
-      !!! The matrix is not symmetric if the advection vector is /= 0
+      !! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matDamage, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDamage, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDamage, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
@@ -890,9 +890,9 @@ contains
       stol = 1.0d-7
       PetscCall(SNESSetTolerances(snesDamage, atol, rtol, stol, PETSC_DEFAULT_INTEGER, PETSC_DEFAULT_INTEGER, ierr))
       PetscCall(SNESSetFromOptions(snesDamage, ierr))
-      !!!
-      !!! Set some KSP options
-      !!!
+      !!
+      !! Set some KSP options
+      !!
       PetscCall(SNESGetKSP(snesDamage, kspDamage, ierr))
       PetscCall(KSPSetType(kspDamage, KSPCG, ierr))
       PetscCall(KSPSetInitialGuessNonzero(kspDamage, PETSC_TRUE, ierr))
@@ -930,7 +930,7 @@ contains
       PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
-      !!! The matrix is not symmetric if the advection vector is /= 0
+      !! The matrix is not symmetric if the advection vector is /= 0
       PetscCall(MatSetOption(matDamage, MAT_SPD, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDamage, MAT_SYMMETRY_ETERNAL, PETSC_TRUE, ierr))
       PetscCall(MatSetOption(matDamage, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE, ierr))
@@ -1112,7 +1112,7 @@ contains
          PetscCall(PetscSectionGetDof(s, p, numDof, ierr))
          PetscCall(PetscSectionGetConstraintDof(s, p, cNumDof, ierr))
          if ((numDof > 0) .and. (cNumDof == 0)) then
-            !!! trick: the coordinate of a point is the average of the coordinates of the points in its closure
+            !! trick: the coordinate of a point is the average of the coordinates of the points in its closure
             PetscCall(DMPlexVecGetClosure(dm, coordSection, coordVec, p, PETSC_NULL_INTEGER, coordArray, ierr))
             do i = 1, dim
                xyz(i) = sum(coordArray(i:size(coordArray):dim)) * dim / size(coordArray)

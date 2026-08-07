@@ -299,9 +299,9 @@ contains
       DefMechCtx%name = trim(prefix)//"DefMech"
       DefMechCtx%PETScCtx = c_loc(DefMechCtx)
 
-      !!!
-      !!! Create energy viewers
-      !!!
+      !!
+      !! Create energy viewers
+      !!
       filename = trim(MEF90FilePrefix(MEF90Ctx%resultFile))//'.ener'
       PetscCall(PetscViewerASCIIOpen(MEF90Ctx%comm, filename, DefMechCtx%globalEnergyViewer, ierr))
       PetscCall(PetscViewerASCIIPrintf(DefMechCtx%globalEnergyViewer, "# step     load            elastic energy  work            cohesive energy surface energy  total energy   plastic dissipation \n", ierr))
@@ -325,7 +325,7 @@ contains
       DefMechCtx%analysisTime = 0.0_kr
       DefMechCtx%timeStep = 0.0_kr
 
-      !!! Create Vecs and SF
+      !! Create Vecs and SF
       PetscCall(DMGetDimension(dm, DefMechCtx%dim, ierr))
 
       PetscCall(MEF90CtxGlobalOptionsSetFromOptions(DefMechCtx%MEF90Ctx%comm, trim(DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
@@ -386,8 +386,8 @@ contains
       PetscCall(VecDuplicate(DefMechCtx%plasticStrain, DefMechCtx%stress, ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%stress, "Stress", ierr))
 
-      !!! Create megaDM
-      !!! This needs to be modified to add the individual damage fields if needed
+      !! Create megaDM
+      !! This needs to be modified to add the individual damage fields if needed
       allocate (dmList(7))
       PetscCall(VecGetDM(DefMechCtx%displacementLocal, dmList(1), ierr))
       PetscCall(VecGetDM(DefMechCtx%damageLocal, dmList(2), ierr))
@@ -399,7 +399,7 @@ contains
       PetscCall(DMCreateSuperDM(dmList, 7_ki, PETSC_NULL_IS_POINTER, DefMechCtx%megaDM, ierr))
       deallocate (dmList)
 
-      !!! Create the IO SF for all fields
+      !! Create the IO SF for all fields
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementToIOSF, DefMechCtx%IOTodisplacementSF, ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%damageLocal, DefMechCtx%damageToIOSF, DefMechCtx%IOTodamageSF, ierr))
 
@@ -413,7 +413,7 @@ contains
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%plasticStrain, DefMechCtx%plasticStrainToIOSF, DefMechCtx%IOToplasticStrainSF, ierr))
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%cumulatedPlasticDissipation, DefMechCtx%cumulatedPlasticDissToIOSF, DefMechCtx%IOToCumulatedPlasticDissSF, ierr))
 
-      !!! Create the SF to exchange boundary values of the displacement and damage.
+      !! Create the SF to exchange boundary values of the displacement and damage.
       PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementLocal, DefMechCtx%displacementConstraintsSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
       PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%damageLocal, DefMechCtx%damageLocal, DefMechCtx%damageConstraintsSF, dummySF, ierr))
@@ -442,16 +442,16 @@ contains
 
       DefMech%PETScCtx = C_NULL_PTR
 
-      !!!
-      !!! Close energy viewers
-      !!!
+      !!
+      !! Close energy viewers
+      !!
       PetscCall(PetscViewerDestroy(DefMech%globalEnergyViewer, ierr))
       do set = 1, size(DefMech%setEnergyViewer)
          PetscCall(PetscViewerDestroy(DefMech%setEnergyViewer(set), ierr))
       end do
       deallocate (DefMech%setEnergyViewer)
 
-      !!! Destroy Vecs and SF and deAllocate them
+      !! Destroy Vecs and SF and deAllocate them
       if (associated(DefMech%displacementLocal)) then
          PetscCall(VecDestroy(DefMech%displacementLocal, ierr))
          deallocate (DefMech%displacementLocal)
@@ -531,7 +531,7 @@ contains
          nullify (DefMech%Stress)
       end if
 
-      !!! Destroy all PetscSF
+      !! Destroy all PetscSF
       PetscCall(PetscSFDestroy(DefMech%displacementToIOSF, ierr))
       PetscCall(PetscSFDestroy(DefMech%IOTodisplacementSF, ierr))
       PetscCall(PetscSFDestroy(DefMech%cohesiveDisplacementToIOSF, ierr))
@@ -554,11 +554,11 @@ contains
       PetscCall(PetscSFDestroy(DefMech%cumulatedPlasticDissToIOSF, ierr))
       PetscCall(PetscSFDestroy(DefMech%IOToCumulatedPlasticDissSF, ierr))
 
-      !!! Destroy the SF to exchange boundary values of the displacement and damage.
+      !! Destroy the SF to exchange boundary values of the displacement and damage.
       PetscCall(PetscSFDestroy(DefMech%displacementConstraintsSF, ierr))
       PetscCall(PetscSFDestroy(DefMech%damageConstraintsSF, ierr))
 
-      !!! Destroy the megaDM
+      !! Destroy the megaDM
       PetscCall(DMDestroy(DefMech%megaDM, ierr))
    end subroutine MEF90DefMechDestroy
 
@@ -624,9 +624,9 @@ contains
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then
-         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
-         !!! options are read where they are needed, which is not always on all ranks. view itself only
-         !!! prints the first time a given set is read, so it is collective only then.
+         !! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !! options are read where they are needed, which is not always on all ranks. view itself only
+         !! prints the first time a given set is read, so it is collective only then.
          call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
       end if
    end subroutine MEF90DefMechGlobalOptionsSetFromOptions
@@ -768,9 +768,9 @@ contains
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then
-         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
-         !!! options are read where they are needed, which is not always on all ranks. view itself only
-         !!! prints the first time a given set is read, so it is collective only then.
+         !! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !! options are read where they are needed, which is not always on all ranks. view itself only
+         !! prints the first time a given set is read, so it is collective only then.
          call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
       end if
    end subroutine MEF90DefMechCellSetOptionsSetFromOptions
@@ -870,9 +870,9 @@ contains
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then
-         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
-         !!! options are read where they are needed, which is not always on all ranks. view itself only
-         !!! prints the first time a given set is read, so it is collective only then.
+         !! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !! options are read where they are needed, which is not always on all ranks. view itself only
+         !! prints the first time a given set is read, so it is collective only then.
          call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
       end if
    end subroutine MEF90DefMechFaceSetOptionsSetFromOptions
@@ -950,9 +950,9 @@ contains
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then
-         !!! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
-         !!! options are read where they are needed, which is not always on all ranks. view itself only
-         !!! prints the first time a given set is read, so it is collective only then.
+         !! PETSC_VIEWER_STDOUT_WORLD and not PetscViewerASCIIGetStdout: the latter is collective, and the
+         !! options are read where they are needed, which is not always on all ranks. view itself only
+         !! prints the first time a given set is read, so it is collective only then.
          call options%view(PETSC_VIEWER_STDOUT_WORLD, ierr)
       end if
    end subroutine MEF90DefMechVertexSetOptionsSetFromOptions
@@ -1013,16 +1013,16 @@ contains
       type(MEF90DefMechFaceSetOptions_Type)                  :: faceSetOptions
       PetscBool                                              :: printHelp
 
-      !!!
-      !!! Problem-wide options
-      !!!
+      !!
+      !! Problem-wide options
+      !!
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(self%comm, trim(self%prefix), globalOptions, ierr))
 
-      !!!
-      !!! The per-set options are read where they are needed, but they have to be visited once here so
-      !!! that they are registered with the options database, and so that the displacement bounds of all
-      !!! sets are known before the solvers are set up
-      !!!
+      !!
+      !! The per-set options are read where they are needed, but they have to be visited once here so
+      !! that they are registered with the options database, and so that the displacement bounds of all
+      !! sets are known before the solvers are set up
+      !!
       self%hasDisplacementBounds = PETSC_FALSE
 
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90CellSetLabelName, setIS, ierr))
@@ -1082,8 +1082,8 @@ contains
       PetscCall(PetscViewerGetType(viewer, viewerType, ierr))
       if (viewerType /= 'ascii') return
 
-      !!! The problem-wide and per-set options print themselves: each of the option types below has its
-      !!! own view, and MEF90Object%view makes sure that a given set is only ever printed once.
+      !! The problem-wide and per-set options print themselves: each of the option types below has its
+      !! own view, and MEF90Object%view makes sure that a given set is only ever printed once.
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(self%comm, trim(self%prefix), globalOptions, ierr))
       call globalOptions%view(viewer, ierr)
 

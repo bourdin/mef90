@@ -89,9 +89,9 @@ module m_MEF90_HeatXfer_class
       type(tPetscSF)                          :: boundaryFluxToIOSF, IOToboundaryFluxSF
 
       type(MEF90HeatXferGlobalOptions_Type)   :: globalOptions
-      !!! Per-set options are not stored: they are read from the options database where they are needed,
-      !!! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. The number of sets is obtained
-      !!! from the megaDM with MEF90DMGetNumSets.
+      !! Per-set options are not stored: they are read from the options database where they are needed,
+      !! with MEF90HeatXfer[Cell,Face,Vertex]SetOptionsSetFromOptions. The number of sets is obtained
+      !! from the megaDM with MEF90DMGetNumSets.
 
       !!! Handle on self, set once in MEF90HeatXferCreate with PETScCtx = c_loc(HeatXfer), and handed to
       !!! PETSc wherever an application context is expected: SNESSetFunction, SNESSetJacobian,
@@ -156,7 +156,7 @@ contains
       allocate (HeatXfer%boundaryFluxLocal)
       PetscCall(MEF90CreateBoundaryCellVector(dm, 1_ki, vecName, HeatXfer%boundaryFluxLocal, ierr))
 
-      !!! Create the  unknowns and parameters superDM
+      !! Create the  unknowns and parameters superDM
       allocate (dmList(4))
       PetscCall(VecGetDM(HeatXfer%temperatureLocal, dmList(1), ierr))
       PetscCall(VecGetDM(HeatXfer%externalTemperatureLocal, dmList(2), ierr))
@@ -171,7 +171,7 @@ contains
       PetscCall(MEF90IOSFCreate(MEF90Ctx, HeatXfer%fluxLocal, HeatXfer%fluxToIOSF, HeatXfer%IOToFluxSF, ierr))
       ! PetscCall(MEF90IOSFCreate(MEF90Ctx,HeatXfer%boundaryFluxLocal,HeatXfer%boundaryFluxToIOSF,HeatXfer%IOToBoundaryFluxSF,ierr))
 
-      !!! Create the SF to exchange boundary values of the temperature.
+      !! Create the SF to exchange boundary values of the temperature.
       PetscCall(MEF90ConstraintSFCreate(HeatXfer%MEF90Ctx, HeatXfer%TemperatureLocal, HeatXfer%temperatureLocal, HeatXfer%boundaryToTemperatureSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
    end subroutine MEF90HeatXferCreate
@@ -212,7 +212,7 @@ contains
          nullify (HeatXfer%boundaryFluxLocal)
       end if
 
-      !!! Destroy SFs
+      !! Destroy SFs
       ! PetscCall(PetscSFDestroy(HeatXfer%temperatureToIOSF, ierr))
       ! PetscCall(PetscSFDestroy(HeatXfer%IOToTemperatureSF, ierr))
       ! PetscCall(PetscSFDestroy(HeatXfer%externalTemperatureToIOSF, ierr))
@@ -381,15 +381,15 @@ contains
       type(MEF90HeatXferVertexSetOptions_Type)                :: vertexSetOptions
       PetscBool                                               :: printHelp
 
-      !!!
-      !!! Problem-wide options
-      !!!
+      !!
+      !! Problem-wide options
+      !!
       PetscCall(MEF90HeatXferGlobalOptionsSetFromOptions_Private(self%comm, trim(self%prefix), self%globalOptions, ierr))
 
-      !!!
-      !!! The per-set options are read where they are needed, but they have to be visited once here so
-      !!! that they are registered with the options database
-      !!!
+      !!
+      !! The per-set options are read where they are needed, but they have to be visited once here so
+      !! that they are registered with the options database
+      !!
       PetscCall(DMGetLabelIdIS(self%megaDM, MEF90CellSetLabelName, SetIS, ierr))
       PetscCall(MEF90ISAllGatherMerge(self%comm, setIS, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))

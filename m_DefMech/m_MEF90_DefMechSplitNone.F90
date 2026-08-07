@@ -37,7 +37,7 @@ contains
       self%quadratureOrder = 2
       self%type = 'MEF90DefMechSplitNone'
 
-      !!! MEF90DefMechSplitNone has no options
+      !! MEF90DefMechSplitNone has no options
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
       if (verbose > 0) then
          call self%view(PETSC_VIEWER_STDOUT_WORLD,ierr)

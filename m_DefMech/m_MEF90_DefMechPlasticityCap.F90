@@ -34,10 +34,10 @@ subroutine FHG_CAPMODEL(x, f, h, g, myctx) bind(c)
    type(MEF90_MATS)                          :: Stress
 
    xMatS = x(1:SIZEOFMEF90_MATS)
-      !!! This is the fortran equivalent of casting ctx into a c_ptr
+      !! This is the fortran equivalent of casting ctx into a c_ptr
    call c_f_pointer(myctx, myctx_ptr)
 
-      !!! Select which softening young model
+      !! Select which softening young model
    if (myctx_ptr%CoefficientLinSoft == 0) then
       StiffnessA = (1.0_kr - myctx_ptr%Damage)**2 + myctx_ptr%residualStiffness
       StiffnessB = (1.0_kr - myctx_ptr%Damage)**myctx_ptr%DuctileCouplingPower + myctx_ptr%residualStiffness
