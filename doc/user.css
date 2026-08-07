@@ -1,0 +1,6 @@
+/* FORD user stylesheet (see ford.md: css).
+   Repeated `author:` metadata lines in a docstring are joined with
+   newlines; render each author on its own line in the info bar. */
+#meta-author {
+    white-space: pre-line;
+}
