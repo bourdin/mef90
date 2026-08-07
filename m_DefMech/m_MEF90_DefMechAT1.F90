@@ -47,11 +47,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1"
+!> @author: Blaise Bourdin (bourdin@lsu.edu, bourdin@mcmaster.ca)
+!!! date: 2020, 2026
 !!!
-!!!
-!!!  aAT1: the "a" function of the standard AT1 model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
+!!!  aAT1: the "a" function of the standard AT1 model, i.e. $a(\alpha) = (1-\alpha)^2$
 !!!
    PetscReal function aAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self

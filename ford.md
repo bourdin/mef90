@@ -12,6 +12,7 @@ output_dir: doc/html
 fpp_extensions: F90
 preprocess: true
 preprocessor: /opt/homebrew/bin/gcc-16 -traditional-cpp -E -x f95-cpp-input -D__GFORTRAN__
+mathjax_config: doc/mathjax-config.js
 docmark: >
 predocmark: !!
 macro: MEF90_DIM=3
