@@ -5,6 +5,10 @@
 window.MathJax = {
     tex2jax: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
-        processEscapes: true
+        processEscapes: true,
+        /* MathJax skips pre/code by default, which leaves math in the
+           colorized source listings raw; skip only the tags where
+           typesetting can never make sense. */
+        skipTags: ['script', 'noscript', 'style', 'textarea']
     }
 };
