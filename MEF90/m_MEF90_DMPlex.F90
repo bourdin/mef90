@@ -1104,12 +1104,12 @@ contains
       PetscEnum                               :: setType
       PetscInt                                :: set, point, c
       type(tIS)                               :: setIS, pointIS
-      PetscInt, dimension(:), pointer           :: setID, pointID
+      PetscInt, dimension(:), pointer         :: setID, pointID
       character(len=MEF90MXSTRLEN)            :: BCOptionKey, BCValueKey, name
-      PetscBool, dimension(:), pointer          :: setBC
+      PetscBool, dimension(:), pointer        :: setBC
       PetscBool                               :: flg
       PetscInt                                :: dim, numBC, bs, numDofClosure
-      PetscReal, dimension(:), pointer          :: BCVal, vArray
+      PetscReal, dimension(:), pointer        :: BCVal, vArray
       type(tPetscSection)                     :: section
 
       PetscCall(VecGetDM(v, dm, ierr))

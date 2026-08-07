@@ -147,6 +147,7 @@ module m_MEF90_DefMech_class
       PetscBool                              :: stressExport = PETSC_TRUE
       PetscBool                              :: plasticStrainExport = PETSC_FALSE
       PetscBool                              :: cumulatedPlasticDissipationExport = PETSC_FALSE
+      PetscInt                               :: currentSet = 0_Ki ! used to pass the PF number in multiPhaseField
    contains
       procedure, pass(self) :: view_internal => MEF90DefMechGlobalOptionsView
    end type MEF90DefMechGlobalOptions_Type
@@ -353,11 +354,13 @@ contains
       vecName = "Damage"
       PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(1), ierr))
       !!! for multiPhaseField, we use damage(2:)
-      !!! get number of sets and teir ID
-      ! allocate the damage,, create localVectors,  give name according to ID
       do set = 2, numPF
-         write(Vecname,'("Damage-",I4.4)') set
+         !!! I need to cheat here:
+         !!! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
+         vecName = "Damage"
          PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(set), ierr))
+         write(Vecname,'("Damage-", I4.4)') set - 1
+         PetscCall(PetscObjectSetName(DefMechCtx%damageLocal(set), vecName, ierr))
       end do
       
       allocate (DefMechCtx%damagePreviousStepLocal, stat=ierr)
@@ -392,6 +395,7 @@ contains
       PetscCall(PetscObjectSetName(DefMechCtx%stress, "Stress", ierr))
 
       !!! Create megaDM
+      !!! This needs to be modified to add the individual damage fields if needed
       allocate (dmList(7))
       PetscCall(VecGetDM(DefMechCtx%displacementLocal, dmList(1), ierr))
       PetscCall(VecGetDM(DefMechCtx%damageLocal(1), dmList(2), ierr))
