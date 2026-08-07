@@ -14,6 +14,7 @@ preprocess: true
 preprocessor: /opt/homebrew/bin/gcc-16 -traditional-cpp -E -x f95-cpp-input -D__GFORTRAN__
 mathjax_config: doc/mathjax-config.js
 css: doc/user.css
+md_extensions: doi_link
 docmark: >
 predocmark: !!
 macro: MEF90_DIM=3
@@ -58,6 +59,10 @@ unlinked.
 To rebuild these pages:
 
 ```
-python3 -m venv .venv-ford && .venv-ford/bin/pip install ford
+python3 -m venv .venv-ford && .venv-ford/bin/pip install ford ./doc/doi-link
 .venv-ford/bin/ford ford.md
 ```
+
+DOI identifiers written as plain text (`doi:10.xxxx/...`) are linked to
+`https://doi.org/...` automatically by the `doi_link` markdown extension in
+`doc/doi-link/`.

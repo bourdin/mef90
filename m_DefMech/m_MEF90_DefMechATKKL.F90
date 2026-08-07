@@ -1,11 +1,11 @@
 #include "../MEF90/mef90.inc"
 !!!
 !!! KKL (v2) model, which can be rewritten as a regular GD model with
-!!!  a(\alpha) = g(\alpha) and w(\alpha) = 1-g(\alpha)
-!!!  where g(\alpha) = 4(1-\alpha)^3 - 3 (1-\alpha)^4
-!!! [Karma et al., 2001] Karma, A., Kessler, D. A., and Levine, H. (2001).
-!!! Phase-field model of mode III dynamic fracture. Phys. Rev. Lett., 87(4):045501.
-
+!!!  $a(\alpha) = g(\alpha)$ and $w(\alpha) = 1-g(\alpha)$
+!!!  where $g(\alpha) = 4(1-\alpha)^3 - 3 (1-\alpha)^4$
+!!! Karma, A., Kessler, D. A., and Levine, H. (2001).
+!!! Phase-field model of mode III dynamic fracture. Phys. Rev. Lett., 87(4):045501. doi:10.1103/PhysRevLett.87.045501
+!!! 
 module m_MEF90_DefMechATKKL
 #include "petsc/finclude/petsc.h"
    use petscsys

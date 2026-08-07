@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doi-link"
+version = "1.0.0"
+description = "Python-Markdown extension: auto-link doi:10.xxxx/... identifiers"
+requires-python = ">=3.8"
+dependencies = ["markdown"]
+
+[tool.setuptools]
+py-modules = ["doi_link"]

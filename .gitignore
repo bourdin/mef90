@@ -45,3 +45,5 @@ compile_commands.json
 # FORD-generated documentation
 doc/html/
 .venv-ford/
+doc/doi-link/build/
+doc/doi-link/*.egg-info/
