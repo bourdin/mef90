@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Preprocessor wrapper for FORD (see ford.md).
+
+Runs gcc's traditional preprocessor (required for the MEF90_APPEND
+token-pasting trick), then demotes `!!!` comments that FORD would
+mis-attach: with `predocmark: !!`, a `!!!` comment documents the entity
+that follows it. That is what we want for the banner blocks preceding
+each procedure and for comments preceding declarations, but `!!!`
+section headers inside a procedure body precede *executable* statements,
+and FORD glues those onto the enclosing procedure's docstring. Any `!!!`
+block whose next code line is not a declaration or definition is
+rewritten as a plain `!` comment so FORD ignores it.
+"""
+import re
+import subprocess
+import sys
+
+GCC = "/opt/homebrew/bin/gcc-16"
+FLAGS = ["-traditional-cpp", "-E", "-x", "f95-cpp-input", "-D__GFORTRAN__"]
+
+result = subprocess.run([GCC, *FLAGS, *sys.argv[1:]],
+                        capture_output=True, text=True, errors="replace")
+sys.stderr.write(result.stderr)
+if result.returncode != 0:
+    sys.exit(result.returncode)
+
+lines = result.stdout.splitlines()
+
+predoc = re.compile(r"^\s*!!!")
+# lines to skip when looking for the next code line: cpp linemarkers,
+# non-predoc comments, blanks
+skip = re.compile(r"^\s*(#|!(?!!!)|$)")
+# code lines whose preceding !!! comment FORD can attach correctly:
+# declarations (::) and definitions / specification statements
+documentable = re.compile(
+    r"^\s*(?!type\s+is\b|class\s+is\b)"
+    r"(module\b|submodule\b|program\b|pure\b|impure\b|elemental\b|recursive\b"
+    r"|subroutine\b|function\b|interface\b|abstract\b|type\b|class\b"
+    r"|enum\b|enumerator\b|procedure\b|generic\b|use\b|import\b|implicit\b"
+    r"|public\b|private\b|protected\b"
+    r"|.*::)",
+    re.IGNORECASE)
+
+i = 0
+while i < len(lines):
+    if not predoc.match(lines[i]):
+        i += 1
+        continue
+    j = i
+    while j < len(lines) and predoc.match(lines[j]):
+        j += 1
+    k = j
+    while k < len(lines) and skip.match(lines[k]):
+        k += 1
+    if k >= len(lines) or not documentable.match(lines[k]):
+        for m in range(i, j):
+            lines[m] = lines[m].replace("!!!", "!", 1)
+    i = j
+
+sys.stdout.write("\n".join(lines) + "\n")
