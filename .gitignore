@@ -41,3 +41,7 @@ arch-*
 main-*
 **/.DS_Store
 compile_commands.json
+
+# FORD-generated documentation
+doc/html/
+.venv-ford/
