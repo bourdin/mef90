@@ -12,6 +12,8 @@ output_dir: doc/html
 fpp_extensions: F90
 preprocess: true
 preprocessor: /opt/homebrew/bin/gcc-16 -traditional-cpp -E -x f95-cpp-input -D__GFORTRAN__
+docmark: >
+predocmark: !!
 macro: MEF90_DIM=3
        MEF90_ELEMENTTYPE=MEF90Element3DVect
        MEF90_ELEMENTTYPE_VECT
@@ -36,6 +38,11 @@ search: true
 
 Documentation for the mef90 / vDef codebase, generated with
 [FORD](https://forddocs.readthedocs.io).
+
+Doc-comment convention: the `!!!` banner blocks placed immediately *before* a
+module, type, or procedure definition are picked up as its documentation
+(`predocmark: !!`). Trailing doc comments, if ever needed, use `!>`
+(`docmark: >`). Plain `!!` comments are ignored.
 
 Note on preprocessor templates: several files are compiled multiple times by the
 Makefiles with different macros (`MEF90_DIM=2/3`, `MEF90_ELEMENTTYPE=...`). FORD
