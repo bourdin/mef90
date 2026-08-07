@@ -47,8 +47,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1"
-!> @author: Blaise Bourdin (bourdin@lsu.edu, bourdin@mcmaster.ca)
-!!! date: 2020, 2026
+!!! author: Blaise Bourdin (bourdin@lsu.edu, bourdin@mcmaster.ca)
+!!! date: 2020
+!!! author: somebody else (bourdin@lsu.edu, bourdin@mcmaster.ca)
+!!! date: 2026
 !!!
 !!!  aAT1: the "a" function of the standard AT1 model, i.e. $a(\alpha) = (1-\alpha)^2$
 !!!
