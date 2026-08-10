@@ -120,6 +120,7 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             damageNum = set+1
          end if
+! Write(*,*) __FUNCT__,  '    damageNum = ', damageNum
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -453,6 +454,7 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             damageNum = set+1
          end if
+! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -1275,11 +1277,18 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
 
    PetscCall(DMGetLocalVector(dmDamage, residualLoc, ierr))
    if (MEF90DefMechGlobalOptions%multiPhaseField) then
-      damageNum = MEF90DefMechGlobalOptions%currentSet+1
+      damageNum = MEF90DefMechCtx%currentSet+1
    else
       damageNum = 1
    end if
+! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum, 'set: ', MEF90DefMechCtx%currentSet
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
+! block
+!    PetscReal :: dmin, dmax
+!    PetscCall(VecMin(MEF90DefMechCtx%damageLocal(damageNum), PETSC_NULL_INTEGER, dmin, ierr))
+!    PetscCall(VecMax(MEF90DefMechCtx%damageLocal(damageNum), dmax, ierr))
+! write(*,*) __FUNCT__, " damageNum: ", damageNum, dmin, dmax
+! end block
    !!! Something subtle is going on here:
    !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
    !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
@@ -1329,6 +1338,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
 
             allocate (residualDof(numDofDamage))
 
+! Write(*,*) __FUNCT__, "Assembling U/alpha coupling term: ", ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))), ATModel%isElastic, MEF90DefMechGlobalOptions%multiPhaseField, MEF90DefMechCtx%currentSet, set
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -1337,12 +1347,13 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
-                  if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechGlobalOptions%currentSet == set))) then                     
+
+                  ! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                         gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
                      end do ! iDof numDofDamage
-                  end if
+                  ! end if
 
                   totalStrainGauss = 0.0_kr
                   do iDof = 1, numDofDisplacement
@@ -1377,7 +1388,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   !!! end ugly hack
 
                   EEDGaussPlus = 0.0_kr
-                 if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechGlobalOptions%currentSet == set))) then                     
+                  if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
                      call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                      call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDGaussPlus, EEDGaussMinus, ierr)
                   end if
@@ -1502,7 +1513,6 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    class(MEF90DefMechAT_Type), allocatable             :: ATModel
    class(MEF90DefMechSplit), allocatable               :: Split
    type(MEF90_MATS)                                    :: totalStrainGauss, C2
-   type(MEF90_VECT)                                    :: gradDamageGauss
    PetscReal                                           :: damageGauss, temperatureGauss, EEDGaussMinus, EEDGaussPlus, C1, C3
    PetscInt                                            :: iDof, jDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
@@ -1521,10 +1531,12 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
    if (MEF90DefMechGlobalOptions%multiPhaseField) then
-      damageNum = MEF90DefMechGlobalOptions%currentSet+1
+      damageNum = MEF90DefMechCtx%currentSet+1
    else
       damageNum = 1
    end if
+! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum, 'set: ', MEF90DefMechCtx%currentSet
+
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
    !!! Something subtle is going on here:
    !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
@@ -1575,6 +1587,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
 
             allocate (matDof(numDofDamage, numDofDamage))
 
+! Write(*,*) __FUNCT__, "Assembling U/alpha coupling term: ", ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))), ATModel%isElastic, MEF90DefMechGlobalOptions%multiPhaseField, MEF90DefMechCtx%currentSet, set
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -1582,13 +1595,9 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
-                  gradDamageGauss = 0.0_kr
-                  if (.not. ATModel%isElastic) then
-                     do iDof = 1, numDofDamage
-                        damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
-                        gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
-                     end do ! iDof numDofDamage
-                  end if
+                  do iDof = 1, numDofDamage
+                     damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
+                  end do ! iDof numDofDamage
 
                   totalStrainGauss = 0.0_kr
                   do iDof = 1, numDofDisplacement
@@ -1623,7 +1632,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   !!! end ugly hack
 
                   EEDGaussPlus = 0.0_kr
-                 if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechGlobalOptions%currentSet == set))) then                     
+                 if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
                      call Split%setup(totalStrainGauss - plasticStrainCell, ierr)
                      call Split%EED(HookesLaw, totalStrainGauss - plasticStrainCell, EEDGaussPlus, EEDGaussMinus, ierr)
                   end if

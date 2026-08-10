@@ -147,7 +147,6 @@ module m_MEF90_DefMech_class
       PetscBool                              :: stressExport = PETSC_TRUE
       PetscBool                              :: plasticStrainExport = PETSC_FALSE
       PetscBool                              :: cumulatedPlasticDissipationExport = PETSC_FALSE
-      PetscInt                               :: currentSet = 0_Ki ! used to pass the PF number in multiPhaseField
    contains
       procedure, pass(self) :: view_internal => MEF90DefMechGlobalOptionsView
    end type MEF90DefMechGlobalOptions_Type
@@ -247,6 +246,7 @@ module m_MEF90_DefMech_class
       PetscBool                                 :: hasDisplacementBounds = PETSC_FALSE
       PetscBool                                 :: hasUnilateralContact = PETSC_FALSE
 
+      PetscInt                               :: currentSet = 0_Ki ! used to pass the PF number in multiPhaseField
       !!! Handle on self, set once in MEF90DefMechCreate with PETScCtx = c_loc(DefMech), and handed to
       !!! PETSc wherever an application context is expected: SNESSetFunction, SNESSetJacobian,
       !!! TAOSetObjective, ... The callbacks in m_MEF90_DefMech recover the context with
@@ -353,16 +353,17 @@ contains
       !!! damage(1) is either THE damage or a composite vector
       vecName = "Damage"
       PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(1), ierr))
+
       !!! for multiPhaseField, we use damage(2:)
       do set = 2, numPF
          !!! I need to cheat here:
          !!! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
          vecName = "Damage"
          PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(set), ierr))
-         write(Vecname,'("Damage-", I4.4)') set - 1
+         write(Vecname,'("Damage-", I4.4, "p")') set - 1
          PetscCall(PetscObjectSetName(DefMechCtx%damageLocal(set), vecName, ierr))
       end do
-      
+
       allocate (DefMechCtx%damagePreviousStepLocal, stat=ierr)
       PetscCall(VecDuplicate(DefMechCtx%damageLocal(1), DefMechCtx%damagePreviousStepLocal, ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%damagePreviousStepLocal, "damagePreviousStep", ierr))

@@ -179,7 +179,7 @@ program vDef
    PetscCallA(DMCreateGlobalVector(damageDM, damage(1), ierr))
    PetscCallA(PetscObjectSetName(damage(1), "damage", ierr))
    do set = 2, numPF
-      write(VecName,'("Damage-", I4.4)') set - 1
+      write(VecName,'("Damage-", I4.4,"p")') set - 1
       PetscCallA(DMCreateGlobalVector(damageDM, damage(set), ierr))
       PetscCallA(PetscObjectSetName(damage(set), VecName, ierr))
    end do
@@ -359,14 +359,12 @@ program vDef
 
          !!! Solve for displacement and damage
          PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx, step, time(step), ierr))
-         do set = 1, size(damage)
-            select case (MEF90DefMechGlobalOptions%damageSolverType)
-               case (MEF90DefMech_DamageSolverTypeSNES)
-                  PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(set), ierr))
-               case (MEF90DefMech_DamageSolverTypeTao)
-                  PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(set), ierr))
-            end select ! MEF90DefMechGlobalOptions%damageSolverType
-         end do
+         select case (MEF90DefMechGlobalOptions%damageSolverType)
+            case (MEF90DefMech_DamageSolverTypeSNES)
+               PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
+            case (MEF90DefMech_DamageSolverTypeTao)
+               PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
+         end select ! MEF90DefMechGlobalOptions%damageSolverType
          PetscCallA(DMLocalToGlobal(displacementDM, MEF90DefMechCtx%displacementLocal, INSERT_VALUES, displacement, ierr))
 
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
@@ -380,7 +378,6 @@ program vDef
 
                AltMin: do AltMinIter = 1, MEF90DefMechGlobalOptions%damageMaxIt
                AltMinStep = AltMinStep + 1
-Write(*,*) 'Altmin step: ***', Altminstep
 
                   if (mod(AltMinIter - 1, MEF90DefMechGlobalOptions%PCLag) == 0) then
                      PetscCallA(SNESSetLagPreconditioner(displacementSNES, -2_ki, ierr))
@@ -408,39 +405,39 @@ Write(*,*) 'Altmin step: ***', Altminstep
                   Do set = PFmin, numPF
                      !!! Solve for damage field
                      if (MEF90DefMechGlobalOptions%multiPhaseField) then
-                        MEF90DefMechGlobalOptions%currentSet = set - 1
-                        write(VecName,'("Damage-", I4.4)') set
+                        MEF90DefMechCtx%currentSet = set - 1
+                        write(VecName,'("Damage-", I4.4, "p")') set
                      else 
-                        MEF90DefMechGlobalOptions%currentSet = 1
+                        MEF90DefMechCtx%currentSet = 1
                         vecName = "Damage"
                      end if
-Write(*,*) 'solving for PF ', MEF90DefMechGlobalOptions%currentSet, '/', size(MEF90DefMechCtx%damageLocal)-1
 
-                     PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(MEF90DefMechGlobalOptions%currentSet), INSERT_VALUES, damage(set), ierr))
+                     PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(MEF90DefMechCtx%currentSet), INSERT_VALUES, damage(set), ierr))
                      select case (MEF90DefMechGlobalOptions%damageSolverType)
                      case (MEF90DefMech_DamageSolverTypeSNES)
-                        PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage(MEF90DefMechGlobalOptions%currentSet), ierr))
+                        PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage(MEF90DefMechCtx%currentSet), ierr))
                         PetscCallA(SNESGetConvergedReason(damageSNES, damageSNESConvergedReason, ierr))
                         if (damageSNESConvergedReason%v < 0) then
                            PetscCallA(SNESGetConvergedReasonString(damageSNES, convergedReasonString, ierr))
-                              write (IOBuffer, 400) vecName, damageSNESConvergedReason, trim(convergedReasonString)
+                              write (IOBuffer, 400) trim(vecName), damageSNESConvergedReason, trim(convergedReasonString)
                            PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                         end if
                      case (MEF90DefMech_DamageSolverTypeTao)
-                        PetscCallA(TAOSetSolution(damageTAO, damage(MEF90DefMechGlobalOptions%currentSet), ierr))
+                        PetscCallA(TAOSetSolution(damageTAO, damage(MEF90DefMechCtx%currentSet), ierr))
                         PetscCallA(TAOSolve(damageTAO, ierr))
                         PetscCallA(TAOGetConvergedReason(damageTAO, damageTAOConvergedReason, ierr))
                         PetscCallA(TAOGetConvergedReasonString(damageTAO, convergedReasonString, ierr))
                         if (damageTAOConvergedReason%v < 0) then
-                           write (IOBuffer, 401) "damage", damageTAOConvergedReason, trim(convergedReasonString)
+                           write (IOBuffer, 401)  trim(vecName), damageTAOConvergedReason, trim(convergedReasonString)
                            PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                         end if
-                        PetscCallA(TAOGetSolution(damageTAO, damage(MEF90DefMechGlobalOptions%currentSet), ierr))
+                        PetscCallA(TAOGetSolution(damageTAO, damage(MEF90DefMechCtx%currentSet), ierr))
                      end select ! MEF90DefMechGlobalOptions%damageSolverType
-                     PetscCallA(DMGlobalToLocal(damageDM, damage(MEF90DefMechGlobalOptions%currentSet), INSERT_VALUES, MEF90DefMechCtx%damageLocal(MEF90DefMechGlobalOptions%currentSet), ierr))
-                  end do
+                     PetscCallA(DMGlobalToLocal(damageDM, damage(MEF90DefMechCtx%currentSet), INSERT_VALUES, MEF90DefMechCtx%damageLocal(MEF90DefMechCtx%currentSet), ierr))
+                  end do ! set
 
                   if (MEF90DefMechGlobalOptions%multiPhaseField) then
+                     PetscCallA(MEF90DefMechComputeCompositeDamage(MEF90DefMechCtx%damageLocal, ierr))
                      PetscCallA(MEF90DefMechComputeCompositeDamage(damage, ierr))
                   end if
 
@@ -482,7 +479,6 @@ Write(*,*) 'solving for PF ', MEF90DefMechGlobalOptions%currentSet, '/', size(ME
                   PetscCallA(VecMax(damage(1), PETSC_NULL_INTEGER, damageMax, ierr))
                   PetscCallA(VecAxPy(damageAltMinOld, -1.0_kr, damage(1), ierr))
                   PetscCallA(VecNorm(damageAltMinOld, NORM_INFINITY, damageMaxChange, ierr))
-write (*,*) AltMinIter, damageMin, damageMax, damageMaxChange
                   write (IOBuffer, 209) AltMinIter, damageMin, damageMax, damageMaxChange
                   PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                   PetscCallA(PetscLogStagePop(ierr))

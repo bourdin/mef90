@@ -83,8 +83,7 @@ contains
 !!!  MEF90DefMechComputeCompositeDamage: Reconstruct a global damage field by taking the min of all set damage fields
 !!!                                      Use in multi-phase field for I/O, error on altmin etc
 !!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
+!!!  (c) 2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechComputeCompositeDamage(damageSets, ierr)
@@ -93,7 +92,7 @@ contains
 
       PetscInt                          :: set
 
-      do set = 1, size(damageSets)-1
+      do set = 2, size(damageSets)
          PetscCall(VecPointwiseMin(damageSets(1), damageSets(set), damageSets(1), ierr))
       end do
    end subroutine MEF90DefMechComputeCompositeDamage
@@ -105,7 +104,8 @@ contains
 !!!  MEF90DefMechSetTransients:
 !!!
 !!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!  (c)    2022 Alexis Marboeuf marboeua@mcmaster.ca
+!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
+!!!      2022    Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechSetTransients(MEF90DefMechCtx, step, time, ierr)
@@ -153,9 +153,8 @@ contains
             if (set == 1) then
                vecName = "Damage"
             else 
-               write(VecName,'("Damage-", I4.4)') set-1
+               write(Vecname,'("Damage-", I4.4, "p")') set - 1
             end if
-Write(*,*) __FUNCT__, "loading ", VecName
             PetscCall(PetscObjectSetName(tmpVec, vecName, ierr))
             PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
             PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%damageLocal(set), MEF90DefMechCtx%damageConstraintsSF, ierr))
@@ -594,8 +593,8 @@ Write(*,*) __FUNCT__, "loading ", VecName
 !!!
 !!!  MEF90DefMechFormatEXO:
 !!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
+!!!  (c) 2014      Blaise Bourdin bourdin@lsu.edu
+!!!      2022-2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx, time, ierr)
@@ -639,7 +638,7 @@ Write(*,*) __FUNCT__, "loading ", VecName
          offset = offset + 1
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             do set = 1, numSet
-               write(nameN(offset),'("Damage-", I4.4)') set
+               write(nameN(offset),'("Damage-", I4.4, "p")') set
                offset = offset + 1
             end do
          end if
@@ -708,9 +707,6 @@ Write(*,*) __FUNCT__, "loading ", VecName
             nameC(offset + 5) = "CumulatedPlasticDissipation_XY"
          end if
       end if
-write(*,*) 'G: ', nameG
-write(*,*) 'Z: ', nameC
-write(*,*) 'N: ', nameN
       PetscCall(MEF90EXOFormat(MEF90DefMechCtx%MEF90Ctx%resultViewer, nameG, nameC, nameN, time, ierr))
       deallocate (nameG)
       deallocate (nameN)
@@ -723,7 +719,8 @@ write(*,*) 'N: ', nameN
 !!!
 !!!  MEF90DefMechViewEXO: Save all fields in a MEF90DefMech_Type in an exodus file
 !!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
+!!!  (c) 2014 Blaise Bourdin, bourdin@lsu.edu
+!!!      2026 Blaise Bourdin, bourdin@mcmaster.ca
 !!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
@@ -734,7 +731,6 @@ write(*,*) 'N: ', nameN
 
       type(MEF90DefMechGlobalOptions_Type)                :: MEF90DefMechGlobalOptions
       PetscInt                                            :: set
-character(len=MEF90MXSTRLEN)                              :: vecName
 
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
 
@@ -743,8 +739,6 @@ character(len=MEF90MXSTRLEN)                              :: vecName
       end if
       if (MEF90DefMechGlobalOptions%damageExport) then
          do set = 1, size(MEF90DefMechCtx%damageLocal)
-PetscCall(PetscObjectGetName(MEF90DefMechCtx%damageLocal(set), vecname, ierr))
-write(*,*) __FUNCT__, set, 'writing ', vecname
             PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal(set), MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
          end do
       end if

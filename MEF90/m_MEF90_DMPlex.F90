@@ -1096,9 +1096,9 @@ contains
 !!!
 
    subroutine MEF90VecSetBCValuesFromOptions(v, scalingFactor, ierr)
-      type(tVec), intent(INOUT)                :: v
-      PetscReal, intent(IN)                    :: scalingFactor
-      PetscErrorCode, intent(INOUT)            :: ierr
+      type(tVec), intent(INOUT)               :: v
+      PetscReal, intent(IN)                   :: scalingFactor
+      PetscErrorCode, intent(INOUT)           :: ierr
 
       type(tDM)                               :: dm
       PetscEnum                               :: setType
@@ -1531,7 +1531,7 @@ contains
 !!!
 
    subroutine CreateCGlobalToLocalSF_Private(MEF90Ctx, dm, sf, ierr)
-      type(tDM), intent(IN)                    :: dm
+      type(tDM), intent(IN)                     :: dm
       type(MEF90Ctx_type), intent(IN)           :: MEF90Ctx
       type(tPetscSF), intent(OUT)               :: sf
       PetscErrorCode, intent(INOUT)             :: ierr
