@@ -93,7 +93,7 @@ contains
       PetscInt                          :: set
 
       do set = 2, size(damageSets)
-         PetscCall(VecPointwiseMin(damageSets(1), damageSets(set), damageSets(1), ierr))
+         PetscCall(VecPointwiseMax(damageSets(1), damageSets(1), damageSets(set), ierr))
       end do
    end subroutine MEF90DefMechComputeCompositeDamage
 

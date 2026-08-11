@@ -1296,6 +1296,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
 
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLoc, 0.0_kr, ierr))
+
    !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
@@ -1337,8 +1338,9 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             numGauss = size(elemScal(1)%Gauss_C)
 
             allocate (residualDof(numDofDamage))
-
-! Write(*,*) __FUNCT__, "Assembling U/alpha coupling term: ", ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))), ATModel%isElastic, MEF90DefMechGlobalOptions%multiPhaseField, MEF90DefMechCtx%currentSet, set
+! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then
+!    Write(*,*) __FUNCT__, "     Assembling U/alpha coupling term: ",  MEF90DefMechCtx%currentSet, set, damageNum
+! end if
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -1588,6 +1590,9 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             allocate (matDof(numDofDamage, numDofDamage))
 
 ! Write(*,*) __FUNCT__, "Assembling U/alpha coupling term: ", ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))), ATModel%isElastic, MEF90DefMechGlobalOptions%multiPhaseField, MEF90DefMechCtx%currentSet, set
+! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then
+!    Write(*,*) __FUNCT__, " Assembling U/alpha coupling term: ",  MEF90DefMechCtx%currentSet, set, damageNum
+! end if
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))

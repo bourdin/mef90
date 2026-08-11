@@ -7,7 +7,7 @@ time:
 heatxfer:
   timestepping:
     type: null
-multiPhaseField: true
+multiPhaseField: false
 defmech:
   timestepping:
     type: quasistatic
@@ -23,7 +23,7 @@ displacement:
   snes:
     type: ksponly
   pc:
-    type: gamg
+    type: hypre
 damage:
   snes:
     atol: 1e-6
@@ -33,7 +33,7 @@ cs0011:
     type: AT1
     FractureToughness: 1
     elastic: no
-    internallength: 0.3
+    internallength: 0.1
     residualstiffness: 1.0e-5
   hookesLaw:
     type: isotropic
@@ -50,7 +50,7 @@ cs0012:
     type: AT1
     FractureToughness: 1
     elastic: no
-    internallength: 0.3
+    internallength: 0.1
     residualstiffness: 1.0e-5
   hookesLaw:
     type: isotropic
@@ -67,7 +67,7 @@ cs0013:
     type: AT1
     FractureToughness: 1
     elastic: no
-    internallength: 0.3
+    internallength: 0.1
     residualstiffness: 1.0e-5
   hookesLaw:
     type: isotropic
@@ -84,7 +84,7 @@ cs0014:
     type: AT1
     FractureToughness: 1
     elastic: no
-    internallength: 0.3
+    internallength: 0.1
     residualstiffness: 1.0e-5
   hookesLaw:
     type: isotropic

@@ -359,12 +359,12 @@ program vDef
 
          !!! Solve for displacement and damage
          PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx, step, time(step), ierr))
-         select case (MEF90DefMechGlobalOptions%damageSolverType)
-            case (MEF90DefMech_DamageSolverTypeSNES)
-               PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
-            case (MEF90DefMech_DamageSolverTypeTao)
-               PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
-         end select ! MEF90DefMechGlobalOptions%damageSolverType
+         ! select case (MEF90DefMechGlobalOptions%damageSolverType)
+         !    case (MEF90DefMech_DamageSolverTypeSNES)
+         !       PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
+         !    case (MEF90DefMech_DamageSolverTypeTao)
+         !       PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
+         ! end select ! MEF90DefMechGlobalOptions%damageSolverType
          PetscCallA(DMLocalToGlobal(displacementDM, MEF90DefMechCtx%displacementLocal, INSERT_VALUES, displacement, ierr))
 
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
@@ -402,6 +402,7 @@ program vDef
                   PetscCallA(PetscLogStagePush(logStageDamage, ierr))
                   ! PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(1), INSERT_VALUES, damageAltMinOld, ierr))
                   PetscCallA(VecCopy(damage(1), damageAltMinOld, ierr))
+
                   Do set = PFmin, numPF
                      !!! Solve for damage field
                      if (MEF90DefMechGlobalOptions%multiPhaseField) then
@@ -412,10 +413,10 @@ program vDef
                         vecName = "Damage"
                      end if
 
-                     PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(MEF90DefMechCtx%currentSet), INSERT_VALUES, damage(set), ierr))
+                     PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(set), INSERT_VALUES, damage(set), ierr))
                      select case (MEF90DefMechGlobalOptions%damageSolverType)
                      case (MEF90DefMech_DamageSolverTypeSNES)
-                        PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage(MEF90DefMechCtx%currentSet), ierr))
+                        PetscCallA(SNESSolve(damageSNES, PETSC_NULL_VEC, damage(set), ierr))
                         PetscCallA(SNESGetConvergedReason(damageSNES, damageSNESConvergedReason, ierr))
                         if (damageSNESConvergedReason%v < 0) then
                            PetscCallA(SNESGetConvergedReasonString(damageSNES, convergedReasonString, ierr))
@@ -423,7 +424,7 @@ program vDef
                            PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                         end if
                      case (MEF90DefMech_DamageSolverTypeTao)
-                        PetscCallA(TAOSetSolution(damageTAO, damage(MEF90DefMechCtx%currentSet), ierr))
+                        PetscCallA(TAOSetSolution(damageTAO, damage(set), ierr))
                         PetscCallA(TAOSolve(damageTAO, ierr))
                         PetscCallA(TAOGetConvergedReason(damageTAO, damageTAOConvergedReason, ierr))
                         PetscCallA(TAOGetConvergedReasonString(damageTAO, convergedReasonString, ierr))
@@ -431,9 +432,19 @@ program vDef
                            write (IOBuffer, 401)  trim(vecName), damageTAOConvergedReason, trim(convergedReasonString)
                            PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                         end if
-                        PetscCallA(TAOGetSolution(damageTAO, damage(MEF90DefMechCtx%currentSet), ierr))
+                        PetscCallA(TAOGetSolution(damageTAO, damage(set), ierr))
                      end select ! MEF90DefMechGlobalOptions%damageSolverType
-                     PetscCallA(DMGlobalToLocal(damageDM, damage(MEF90DefMechCtx%currentSet), INSERT_VALUES, MEF90DefMechCtx%damageLocal(MEF90DefMechCtx%currentSet), ierr))
+                     PetscCallA(DMGlobalToLocal(damageDM, damage(set), INSERT_VALUES, MEF90DefMechCtx%damageLocal(set), ierr))
+                     
+                     if (MEF90DefMechGlobalOptions%multiPhaseField) then
+                        PetscCallA(VecMin(MEF90DefMechCtx%damageLocal(set), PETSC_NULL_INTEGER, damageMin, ierr))
+                        PetscCallMPI(MPI_AllReduce(MPI_IN_PLACE, damageMin, 1, MPIU_SCALAR, MPI_MIN, MEF90Ctx%comm, ierr))
+
+                        PetscCallA(VecMax(MEF90DefMechCtx%damageLocal(set), PETSC_NULL_INTEGER, damageMax, ierr))
+                        PetscCallMPI(MPI_AllReduce(MPI_IN_PLACE, damageMax, 1, MPIU_SCALAR, MPI_MAX, MEF90Ctx%comm, ierr))
+                        write (IOBuffer, 210) AltMinIter, MEF90DefMechCtx%currentSet, damageMin, damageMax
+                        PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
+                     end if
                   end do ! set
 
                   if (MEF90DefMechGlobalOptions%multiPhaseField) then
@@ -442,41 +453,44 @@ program vDef
                   end if
 
                   !!! Over relaxation of the damage variable (not implemented for multiPhaseField)
-                  ! if (AltMinIter > 1) then
-                  !    if ((MEF90DefMechGlobalOptions%SOROmega > 0.0_kr) .and. (MEF90DefMechGlobalOptions%SOROmega /= 1.0) .and. (.not. MEF90DefMechGlobalOptions%multiPhaseField)) then
-                  !       mySOROmega = MEF90DefMechGlobalOptions%SOROmega
-                  !       !!! LIMITED SOR
-                  !       PetscCallA(SNESVIGetVariableBounds(damageSNES, damageLB, damageUB, ierr))
-                  !       PetscCallA(VecGetArrayRead(damageLB, damageLBArray, ierr))
-                  !       PetscCallA(VecGetArrayRead(damageUB, damageUBArray, ierr))
-                  !       PetscCallA(VecGetArrayRead(damageAltMinOld, damageAltMinOldArray, ierr))
-                  !       PetscCallA(VecGetArrayRead(damage(1), damageArray, ierr))
-                  !       do iDof = 1, size(damageArray)
-                  !          if (damageArray(iDof) > damageAltMinOldArray(iDof)) then
-                  !             mySOROmega = min(mySOROmega, (damageUBArray(iDof) - damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                  !          else if (damageArray(iDof) < damageAltMinOldArray(iDof)) then
-                  !             mySOROmega = min(mySOROmega, (damageLBArray(iDof) - damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
-                  !          end if
-                  !       end do
-                  !       PetscCallA(VecRestoreArrayRead(damage(1), damageArray, ierr))
-                  !       PetscCallA(VecRestoreArrayRead(damageAltMinOld, damageAltMinOldArray, ierr))
-                  !       PetscCallA(VecRestoreArrayRead(damageUB, damageUBArray, ierr))
-                  !       PetscCallA(VecRestoreArrayRead(damageLB, damageLBArray, ierr))
-                  !       PetscCallA(MPI_AllReduce(mySOROmega, SOROmega, 1, MPIU_SCALAR, MPI_MIN, MEF90Ctx%comm, ierr))
-                  !       PetscCallA(VecAXPBY(damage(1), 1.0_kr - SOROmega, SOROmega, damageAltMinOld, ierr))
-                  !    else if (MEF90DefMechGlobalOptions%SOROmega < 0.0_kr) then
-                  !       !!! PROJECTED SOR
-                  !       SOROmega = -MEF90DefMechGlobalOptions%SOROmega
-                  !       PetscCallA(VecAXPBY(damage(1), 1.0_kr - SOROmega, SOROmega, damageAltMinOld, ierr))
-                  !       PetscCallA(SNESVIGetVariableBounds(damageSNES, damageLB, damageUB, ierr))
-                  !       PetscCallA(VecPointwiseMax(damage(1), damage(1), damageLB, ierr))
-                  !       PetscCallA(VecPointwiseMin(damage(1), damage(1), damageUB, ierr))
-                  !    end if
-                  ! end if
+                  if ((AltMinIter > 1) .and. (.not. MEF90DefMechGlobalOptions%multiPhaseFIeld)) then
+                     if ((MEF90DefMechGlobalOptions%SOROmega > 0.0_kr) .and. (MEF90DefMechGlobalOptions%SOROmega /= 1.0) .and. (.not. MEF90DefMechGlobalOptions%multiPhaseField)) then
+                        mySOROmega = MEF90DefMechGlobalOptions%SOROmega
+                        !!! LIMITED SOR
+                        PetscCallA(SNESVIGetVariableBounds(damageSNES, damageLB, damageUB, ierr))
+                        PetscCallA(VecGetArrayRead(damageLB, damageLBArray, ierr))
+                        PetscCallA(VecGetArrayRead(damageUB, damageUBArray, ierr))
+                        PetscCallA(VecGetArrayRead(damageAltMinOld, damageAltMinOldArray, ierr))
+                        PetscCallA(VecGetArrayRead(damage(1), damageArray, ierr))
+                        do iDof = 1, size(damageArray)
+                           if (damageArray(iDof) > damageAltMinOldArray(iDof)) then
+                              mySOROmega = min(mySOROmega, (damageUBArray(iDof) - damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                           else if (damageArray(iDof) < damageAltMinOldArray(iDof)) then
+                              mySOROmega = min(mySOROmega, (damageLBArray(iDof) - damageAltMinOldArray(iDof)) / (damageArray(iDof) - damageAltMinOldArray(iDof)))
+                           end if
+                        end do
+                        PetscCallA(VecRestoreArrayRead(damage(1), damageArray, ierr))
+                        PetscCallA(VecRestoreArrayRead(damageAltMinOld, damageAltMinOldArray, ierr))
+                        PetscCallA(VecRestoreArrayRead(damageUB, damageUBArray, ierr))
+                        PetscCallA(VecRestoreArrayRead(damageLB, damageLBArray, ierr))
+                        PetscCallA(MPI_AllReduce(mySOROmega, SOROmega, 1, MPIU_SCALAR, MPI_MIN, MEF90Ctx%comm, ierr))
+                        PetscCallA(VecAXPBY(damage(1), 1.0_kr - SOROmega, SOROmega, damageAltMinOld, ierr))
+                     else if (MEF90DefMechGlobalOptions%SOROmega < 0.0_kr) then
+                        !!! PROJECTED SOR
+                        SOROmega = -MEF90DefMechGlobalOptions%SOROmega
+                        PetscCallA(VecAXPBY(damage(1), 1.0_kr - SOROmega, SOROmega, damageAltMinOld, ierr))
+                        PetscCallA(SNESVIGetVariableBounds(damageSNES, damageLB, damageUB, ierr))
+                        PetscCallA(VecPointwiseMax(damage(1), damage(1), damageLB, ierr))
+                        PetscCallA(VecPointwiseMin(damage(1), damage(1), damageUB, ierr))
+                     end if
+                  end if ! SOR
 
                   !!! Monitor the progress of the Alt Min algorithm
-                  PetscCallA(VecMin(damage(1), PETSC_NULL_INTEGER, damageMin, ierr))
-                  PetscCallA(VecMax(damage(1), PETSC_NULL_INTEGER, damageMax, ierr))
+                  PetscCallA(VecMin(MEF90DefMechCtx%damageLocal(1), PETSC_NULL_INTEGER, damageMin, ierr))
+                  PetscCallMPI(MPI_AllReduce(MPI_IN_PLACE, damageMin, 1, MPIU_SCALAR, MPI_MIN, MEF90Ctx%comm, ierr))
+                  PetscCallA(VecMax(MEF90DefMechCtx%damageLocal(1), PETSC_NULL_INTEGER, damageMax, ierr))
+                  PetscCallMPI(MPI_AllReduce(MPI_IN_PLACE, damageMax, 1, MPIU_SCALAR, MPI_MAX, MEF90Ctx%comm, ierr))
+
                   PetscCallA(VecAxPy(damageAltMinOld, -1.0_kr, damage(1), ierr))
                   PetscCallA(VecNorm(damageAltMinOld, NORM_INFINITY, damageMaxChange, ierr))
                   write (IOBuffer, 209) AltMinIter, damageMin, damageMax, damageMaxChange
@@ -575,15 +589,15 @@ program vDef
 201 format("cell set ", I4, "  elastic energy: ", ES12.5, " work: ", ES12.5, " cohesive: ", ES12.5, " surface: ", ES12.5, " total: ", ES12.5, "\n")
 203 format("face set ", I4, "                      boundary work: ", ES12.5, "\n")
 202 format("======= Total: elastic energy: ", ES12.5, " work: ", ES12.5, " cohesive: ", ES12.5, " surface: ", ES12.5, " total: ", ES12.5, "\n")
-500 format(I6, 6(ES16.5), "\n")
-
 209 format("   Alt. Min. step ", I5, " alpha min / max", ES12.5, " / ", ES12.5, ", max change ", ES12.5, "\n")
+210 format("   Alt. Min. step ", I5, " set ", G0, " alpha min / max", ES12.5, " / ", ES12.5, "\n")
+
 
 400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ": ", A, "\n")
-! 400 format(" [ERROR]: ", A, " SNESSolve failed with SNESConvergedReason ", I2, ". \n Check https://petsc.org/release/manualpages/SNES/SNESConvergedReason/ for error code meaning.\n")
 401 format(" [ERROR]: ", A, " TAOSolve failed with TAOConvergedReason ", I2, ": ", A, "\n")
-! 401 format(" [ERROR]: ", A, " TAOSolve failed with TAOConvergedReason ", I2, ". \n Check https://petsc.org/release/docs/manualpages/TAO/TAOConvergedReason/ for error code meaning.\n")
-   !!! Clean up and exit nicely
+500 format(I6, 6(ES16.5), "\n")
+
+!!! Clean up and exit nicely
    select case (MEF90HeatXferGlobalOptions%timeSteppingType)
    case (MEF90HeatXFer_timeSteppingTypeSteadyState)
       PetscCallA(SNESDestroy(temperatureSNES, ierr))

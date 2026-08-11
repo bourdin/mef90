@@ -3,7 +3,7 @@ Mesh.Algorithm = 5;
 W = 4;
 D = 4;
 R = 1;
-h = 0.2;
+h = 0.05;
 
 Rectangle(1) = {-W/2, -D/2, 0, W/2, D/2, 0};
 Rectangle(2) = {0, -D/2, 0, W/2, D/2, 0};
