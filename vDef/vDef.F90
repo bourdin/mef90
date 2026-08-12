@@ -359,12 +359,12 @@ program vDef
 
          !!! Solve for displacement and damage
          PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx, step, time(step), ierr))
-         ! select case (MEF90DefMechGlobalOptions%damageSolverType)
-         !    case (MEF90DefMech_DamageSolverTypeSNES)
-         !       PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
-         !    case (MEF90DefMech_DamageSolverTypeTao)
-         !       PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
-         ! end select ! MEF90DefMechGlobalOptions%damageSolverType
+         select case (MEF90DefMechGlobalOptions%damageSolverType)
+            case (MEF90DefMech_DamageSolverTypeSNES)
+               PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
+            case (MEF90DefMech_DamageSolverTypeTao)
+               PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
+         end select ! MEF90DefMechGlobalOptions%damageSolverType
          PetscCallA(DMLocalToGlobal(displacementDM, MEF90DefMechCtx%displacementLocal, INSERT_VALUES, displacement, ierr))
 
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
