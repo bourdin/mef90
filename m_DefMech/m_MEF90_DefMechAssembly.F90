@@ -35,7 +35,7 @@ contains
 !!!
 !!!
 !!!  MEF90DefMechOperatorDisplacement: Build the operator. When called in SNES, the solution time should always match the target time,
-!!!                                    so there is no need for interpolation of the forcees, external, and boundary values
+!!!                                    so there is no need for interpolation of the forces, external, and boundary values
 !!!
 !!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
 !!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
@@ -120,7 +120,6 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             damageNum = set+1
          end if
-! Write(*,*) __FUNCT__,  '    damageNum = ', damageNum
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -153,7 +152,6 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             numGauss = size(elemVect(1)%Gauss_C)
 
             allocate (residualDof(numDofDisplacement))
-
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                do iGauss = 1, numGauss
@@ -213,8 +211,8 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
             if (norm2(cellSetOptions%bodyForce) /= 0.0_kr) then
                do cell = 1, size(setPointID)
                   residualDof = 0.0_kr
-                     !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
-                     !!! If this happens, we will need to protect this loop
+                  !!! This could break if TemperatureLocal had no dof in any point in the closure of setPointID(set)
+                  !!! If this happens, we will need to protect this loop
                   PetscCall(PetscSectionGetOffset(sectionBodyForce, setPointID(cell), vecOffset, ierr))
                   bodyForce = bodyForceArray(vecOffset + 1:vecOffset + 1 + SIZEOFMEF90_VECT)
                   do iGauss = 1, numGauss
@@ -454,7 +452,6 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             damageNum = set+1
          end if
-! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -487,7 +484,6 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
             numGauss = size(elemVect(1)%Gauss_C)
 
             allocate (matDof(numDofDisplacement, numDofDisplacement))
-
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
                do iGauss = 1, numGauss
@@ -1281,14 +1277,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    else
       damageNum = 1
    end if
-! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum, 'set: ', MEF90DefMechCtx%currentSet
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
-! block
-!    PetscReal :: dmin, dmax
-!    PetscCall(VecMin(MEF90DefMechCtx%damageLocal(damageNum), PETSC_NULL_INTEGER, dmin, ierr))
-!    PetscCall(VecMax(MEF90DefMechCtx%damageLocal(damageNum), dmax, ierr))
-! write(*,*) __FUNCT__, " damageNum: ", damageNum, dmin, dmax
-! end block
    !!! Something subtle is going on here:
    !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
    !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
@@ -1338,9 +1327,6 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             numGauss = size(elemScal(1)%Gauss_C)
 
             allocate (residualDof(numDofDamage))
-! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then
-!    Write(*,*) __FUNCT__, "     Assembling U/alpha coupling term: ",  MEF90DefMechCtx%currentSet, set, damageNum
-! end if
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
@@ -1350,12 +1336,10 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
 
-                  ! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then                     
-                     do iDof = 1, numDofDamage
-                        damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
-                        gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
-                     end do ! iDof numDofDamage
-                  ! end if
+                  do iDof = 1, numDofDamage
+                     damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
+                     gradDamageGauss = gradDamageGauss + damageDof(iDof) * elemScal(cell)%Grad_BF(iDof, iGauss)
+                  end do ! iDof numDofDamage
 
                   totalStrainGauss = 0.0_kr
                   do iDof = 1, numDofDisplacement
@@ -1537,7 +1521,6 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    else
       damageNum = 1
    end if
-! Write(*,*) __FUNCT__,  '  damageNum = ', damageNum, 'set: ', MEF90DefMechCtx%currentSet
 
    PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
    !!! Something subtle is going on here:
@@ -1588,11 +1571,6 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             numGauss = size(elemScal(1)%Gauss_C)
 
             allocate (matDof(numDofDamage, numDofDamage))
-
-! Write(*,*) __FUNCT__, "Assembling U/alpha coupling term: ", ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))), ATModel%isElastic, MEF90DefMechGlobalOptions%multiPhaseField, MEF90DefMechCtx%currentSet, set
-! if ((.not. ATModel%isElastic) .and. ((.not. (MEF90DefMechGlobalOptions%multiPhaseField)) .or. (MEF90DefMechCtx%currentSet == set))) then
-!    Write(*,*) __FUNCT__, " Assembling U/alpha coupling term: ",  MEF90DefMechCtx%currentSet, set, damageNum
-! end if
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
                PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))

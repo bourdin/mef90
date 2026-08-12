@@ -31,10 +31,10 @@ damage:
 cs0011:
   damage:
     type: AT1
-    FractureToughness: 1
+    FractureToughness: 0.5
     elastic: no
     internallength: 0.1
-    residualstiffness: 1.0e-5
+    residualstiffness: 0
   hookesLaw:
     type: isotropic
     isotropic:
@@ -51,7 +51,7 @@ cs0012:
     FractureToughness: 1
     elastic: no
     internallength: 0.1
-    residualstiffness: 1.0e-5
+    residualstiffness: 0
   hookesLaw:
     type: isotropic
     isotropic:
@@ -68,7 +68,7 @@ cs0013:
     FractureToughness: 1
     elastic: no
     internallength: 0.1
-    residualstiffness: 1.0e-5
+    residualstiffness: 0
   hookesLaw:
     type: isotropic
     isotropic:
@@ -82,10 +82,10 @@ cs0013:
 cs0014:
   damage:
     type: AT1
-    FractureToughness: 1
+    FractureToughness: 0.5
     elastic: no
     internallength: 0.1
-    residualstiffness: 1.0e-5
+    residualstiffness: 0
   hookesLaw:
     type: isotropic
     isotropic:

@@ -87,9 +87,9 @@ program vDef
    PetscCallA(DMSetFromOptions(dm, ierr))
    PetscCallA(DMViewFromOptions(dm, PETSC_NULL_OBJECT, "-mef90_dm_view", ierr))
 
-   !!! Calling Inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
+   !!! Calling inquire on all MPI ranks followed by exopen_par (MEF90CtxOpenEXO) can lead to a strange race condition
    !!! Strangely enough, adding an MPI_Barrier does not help.
-   !!! There is no real good reason to call Inquire on all ranks anyway.
+   !!! There is no real good reason to call inquire on all ranks anyway.
    if (MEF90Ctx%rank == 0) then
       inquire (file=MEF90Ctx%resultFile, exist=flg)
    end if
@@ -210,7 +210,6 @@ program vDef
          PetscCallA(MEF90DefMechCreateSNESDamage(MEF90DefMechCtx, damageSNES, damageResidual, ierr))
       case (MEF90DefMech_DamageSolverTypeTao)
          PetscCallA(MEF90DefMechCreateTAODamage(MEF90DefMechCtx, damageTAO, damageResidual, ierr))
-         ! PetscCallA(TAOSetSolution(damageTAO, damage(PF), ierr))
       end select ! MEF90DefMechGlobalOptions%damageSolverType
    case (MEF90DefMech_TimeSteppingTypeNULL)
       continue
@@ -255,8 +254,9 @@ program vDef
    !!!
    !!! Actual computations / time stepping
    !!!
-   if (((MEF90DefMechGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL) .or. (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)) .and. &
-       (.not. MEF90GlobalOptions%dryrun)) then
+   if (((MEF90DefMechGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)      &
+      .or. (MEF90HeatXferGlobalOptions%timeSteppingType /= MEF90DefMech_TimeSteppingTypeNULL)) &
+      .and. (.not. MEF90GlobalOptions%dryrun)) then
 
       !!! Reload current state if necessary
       if (MEF90GlobalOptions%timeSkip > 0) then
@@ -377,8 +377,8 @@ program vDef
                end if
 
                AltMin: do AltMinIter = 1, MEF90DefMechGlobalOptions%damageMaxIt
-               AltMinStep = AltMinStep + 1
-
+                  AltMinStep = AltMinStep + 1
+                  PetscCallA(VecCopy(damage(1), damageAltMinOld, ierr))
                   if (mod(AltMinIter - 1, MEF90DefMechGlobalOptions%PCLag) == 0) then
                      PetscCallA(SNESSetLagPreconditioner(displacementSNES, -2_ki, ierr))
                      if (MEF90DefMechGlobalOptions%damageSolverType == MEF90DefMech_DamageSolverTypeSNES) then
@@ -400,8 +400,7 @@ program vDef
                   PetscCallA(PetscLogStagePop(ierr))
 
                   PetscCallA(PetscLogStagePush(logStageDamage, ierr))
-                  ! PetscCallA(DMLocalToGlobal(damageDM, MEF90DefMechCtx%damageLocal(1), INSERT_VALUES, damageAltMinOld, ierr))
-                  PetscCallA(VecCopy(damage(1), damageAltMinOld, ierr))
+                  ! PetscCallA(VecCopy(damage(1), damageAltMinOld, ierr))
 
                   Do set = PFmin, numPF
                      !!! Solve for damage field
@@ -497,6 +496,8 @@ program vDef
                   PetscCallA(PetscPrintf(MEF90Ctx%Comm, IOBuffer, ierr))
                   PetscCallA(PetscLogStagePop(ierr))
 
+                  !!! This could be dangerous as it does not account for transfer between partial phase-fields
+                  !!! Is this a problem?
                   !!! Test for convergence based on the L^\infty norm of the increment
                   if (damageMaxChange <= MEF90DefMechGlobalOptions%damageATol) then
                      exit altMin
