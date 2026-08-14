@@ -78,13 +78,13 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
    character(len=MEF90MXSTRLEN)                        :: prefix
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%TemperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%bodyForce, dmBodyForce, ierr))
    PetscCall(DMGetLocalSection(dmBodyForce, sectionBodyForce, ierr))
@@ -111,14 +111,14 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
-   damageNum = 1
    if (.not. PetscObjectIsNull(setIS)) then
+      damageLocal => MEF90DefMechCtx%damageLocal
       PetscCall(VecGetArray(MEF90DefMechCtx%plasticStrain, plasticStrainArray, ierr))
       PetscCall(VecGetArray(MEF90DefMechCtx%bodyForce, bodyForceArray, ierr))
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
-            damageNum = set+1
+            damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          end if
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
@@ -158,11 +158,11 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
                   !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
                   if (.not. ATModel%isElastic) then
-                     PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+                     PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDamage
-                     PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                   end if
 
                   totalStrainGauss = 0.0_kr
@@ -423,13 +423,13 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
    PetscReal                                           :: D2EEDPlus, D2EEDMinus
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%temperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%plasticStrain, dmPlasticStrain, ierr))
    PetscCall(DMGetLocalSection(dmPlasticStrain, sectionPlasticStrain, ierr))
@@ -444,13 +444,13 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
-   damageNum = 1
    if (.not. PetscObjectIsNull(setIS)) then
+      damageLocal => MEF90DefMechCtx%damageLocal
       PetscCall(ISGetIndices(setIS, setID, ierr))
       PetscCall(VecGetArray(MEF90DefMechCtx%plasticStrain, plasticStrainArray, ierr))
       do set = 1, size(setID)
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
-            damageNum = set+1
+            damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          end if
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
@@ -490,11 +490,11 @@ subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, 
                      !!! Main term: [a(\alpha) sigma^+(u) + sigma^-(u)] . e(v)
                   damageGauss = 0.0_kr
                   if (.not. ATModel%isElastic) then
-                     PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+                     PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                      do iDof = 1, numDofDamage
                         damageGauss = damageGauss + damageDof(iDof) * elemScal(cell)%BF(iDof, iGauss)
                      end do ! iDof numDofDamage
-                     PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+                     PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                   end if
 
                   totalStrainGauss = 0.0_kr
@@ -902,12 +902,12 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%TemperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%plasticStrain, dmPlasticStrain, ierr))
    PetscCall(DMGetLocalSection(dmPlasticStrain, sectionPlasticStrain, ierr))
@@ -918,16 +918,16 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
    PetscCall(DMGetLabelIdIS(dmDisplacement, MEF90CellSetLabelName, setIS, ierr))
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
-   damageNum = 1
    energy = 0.0_kr
    if (.not. PetscObjectIsNull(setIS)) then
       PetscCall(VecGetArray(MEF90DefMechCtx%plasticStrain, plasticStrainArray, ierr))
+      damageLocal => MEF90DefMechCtx%damageLocal
       PetscCall(ISGetIndices(setIS, setID, ierr))
       do set = 1, size(setID)
          myEnergy = 0.0_kr
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
-            damageNum = set+1
          end if
+         damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -960,7 +960,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
             numDofDamage = size(elemScal(1)%BF(:, 1))
             numGauss = size(elemVect(1)%Gauss_C)
             do cell = 1, size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
 
@@ -1008,7 +1008,7 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
                   myEnergy = myEnergy + elemVect(cell)%Gauss_C(iGauss) * elasticEnergyDensityGauss
                end do ! iGauss
 
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
             end do ! cell
@@ -1066,7 +1066,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss, ij
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
 #if MEF90_DIM == 2
    type(MEF90_MATS), dimension(3)                      :: eij = [MatS2D(1.0_Kr, 0.0_Kr, 0.0_Kr), &
@@ -1085,7 +1085,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(stress, dmStress, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%TemperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%plasticStrain, dmPlasticStrain, ierr))
    PetscCall(DMGetLocalSection(dmPlasticStrain, sectionPlasticStrain, ierr))
@@ -1099,12 +1099,12 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
    PetscCall(MEF90ISAllGatherMerge(MEF90DefMechCtx%comm, setIS, ierr))
 
    if (.not. PetscObjectIsNull(setIS)) then
+      damageLocal => MEF90DefMechCtx%damageLocal
       PetscCall(ISGetIndices(setIS, setID, ierr))
       PetscCall(VecGetArray(MEF90DefMechCtx%plasticStrain, plasticStrainArray, ierr))
-      damageNum = 1
       do set = 1, size(setID)
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
-            damageNum = set+1
+            damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          end if
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
@@ -1141,7 +1141,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             allocate (stressDof(SIZEOFMEF90_MATS))
 
             do cell = 1, size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                stressDof = 0.0_kr
@@ -1195,7 +1195,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
                end do ! iGauss
                stressDof = stressDof / cellSize
                PetscCall(DMPlexVecSetClosure(dmStress, PETSC_NULL_SECTION, stress, setPointID(cell), stressDof, INSERT_VALUES, ierr))
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
             end do ! cell
@@ -1258,13 +1258,13 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    PetscInt                                            :: iDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%TemperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%plasticStrain, dmPlasticStrain, ierr))
    PetscCall(DMGetLocalSection(dmPlasticStrain, sectionPlasticStrain, ierr))
@@ -1272,16 +1272,16 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
    PetscCall(DMGetLocalVector(dmDamage, residualLoc, ierr))
-   if (MEF90DefMechGlobalOptions%multiPhaseField) then
-      damageNum = MEF90DefMechCtx%currentSet+1
-   else
-      damageNum = 1
-   end if
-   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
+
    !!! Something subtle is going on here:
    !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
    !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
    !!! This DOES create a side effect.
+   if (MEF90DefMechGlobalOptions%multiPhaseField) then
+      damageLocal => MEF90DefMechCtx%partialDamageLocal(MEF90DefMechCtx%currentSet)
+   else
+      damageLocal => MEF90DefMechCtx%damageLocal
+   end if
 
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLoc, 0.0_kr, ierr))
@@ -1329,7 +1329,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
             allocate (residualDof(numDofDamage))
             do cell = 1, size(setPointID)
                residualDof = 0.0_kr
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                do iGauss = 1, numGauss
@@ -1390,7 +1390,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecSetClosure(dmDamage, PETSC_NULL_SECTION, residualLoc, setPointID(cell), residualDof, ADD_VALUES, ierr))
             end do ! cellresidualLoc
 
@@ -1503,30 +1503,28 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    PetscInt                                            :: iDof, jDof, iGauss, numDofDisplacement, numDofDamage, numGauss
    character(len=MEF90MXSTRLEN)                        :: prefix
    class(MEF90HookesLaw), allocatable                  :: HookesLaw
-   PetscInt                                            :: damageNum
+   type(tVec), pointer                                 :: damageLocal
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%TemperatureLocal, dmTemperature, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%plasticStrain, dmPlasticStrain, ierr))
    PetscCall(DMGetLocalSection(dmPlasticStrain, sectionPlasticStrain, ierr))
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-   if (MEF90DefMechGlobalOptions%multiPhaseField) then
-      damageNum = MEF90DefMechCtx%currentSet+1
-   else
-      damageNum = 1
-   end if
-
-   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(damageNum), ierr))
    !!! Something subtle is going on here:
    !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
    !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
    !!! This DOES create a side effect.
+   if (MEF90DefMechGlobalOptions%multiPhaseField) then
+      damageLocal => MEF90DefMechCtx%partialDamageLocal(MEF90DefMechCtx%currentSet)
+   else
+      damageLocal => MEF90DefMechCtx%damageLocal
+   end if
 
    PetscCall(MatZeroEntries(A, ierr))
 
@@ -1573,7 +1571,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
             allocate (matDof(numDofDamage, numDofDamage))
             do cell = 1, size(setPointID)
                matDof = 0.0_kr
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                do iGauss = 1, numGauss
@@ -1631,7 +1629,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
                   end do ! jDof numDofDamage
                end do ! iGauss
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(damageNum), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                PetscCall(DMPlexMatSetClosure(dmDamage, PETSC_NULL_SECTION, PETSC_NULL_SECTION, A, setPointID(cell), reshape(matDof, [numDofDamage*numDofDamage]), ADD_VALUES, ierr))
             end do ! cell
@@ -1714,7 +1712,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
    PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
 
@@ -1750,7 +1748,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
             C2 = ATModel%fractureToughness / ATModel%cw * 0.25_kr * ATModel%internalLength
 
             do cell = 1, size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(1), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                do iGauss = 1, numGauss
                   damageGauss = 0.0_kr
                   gradDamageGauss = 0.0_kr
@@ -1768,7 +1766,7 @@ subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
                                  (C1 * ATModel%w(damageGauss) + C2 * ((k * gradDamageGauss) .DotP. gradDamageGauss))
                   end select 
                end do ! iGauss
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(1), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
             end do ! cell
             PetscCall(MEF90ElementDestroy(elemScal, ierr))
          end if ! setPointIS
@@ -1802,8 +1800,8 @@ subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMec
    type(tIS)                                           :: setIS
    PetscInt                                            :: numSet
 
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
-   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal(1), ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
+   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, MEF90DefMechCtx%damageLocal, ierr))
 
    !!! get IS for cell sets
    PetscCall(DMGetLabelIdIS(dmDamage, MEF90CellSetLabelName, setIS, ierr))
@@ -1861,7 +1859,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
    character(len=MEF90MXSTRLEN)                        :: prefix
 
    PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90CtxGlobalOptions, ierr))
-   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+   PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
    PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
 
    PetscCall(DMGetDimension(dmDamage, dim, ierr))
@@ -1900,7 +1898,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
             numGauss = size(elemScal(1)%Gauss_C)
 
             do cell = 1, size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(1), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                do iGauss = 1, numGauss
                   gradDamageGauss = 0.0_kr
@@ -1918,7 +1916,7 @@ subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
                   myCrackVolume = myCrackVolume + elemScal(cell)%Gauss_C(iGauss) * ( &
                                   gradDamageGauss .DotP. displacementCell)
                end do ! iGauss
-               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal(1), setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecRestoreClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecRestoreClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
             end do ! cell
 

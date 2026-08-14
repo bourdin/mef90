@@ -205,8 +205,8 @@ module m_MEF90_DefMech_class
       !!!  vertex based vec
       type(tVec), pointer                       :: displacementLocal => null()
       type(tVec), pointer                       :: displacementPreviousStepLocal => null()
-      type(tVec), dimension(:), pointer         :: damageLocal => null()
-      type(tVec), pointer                       :: damagePreviousStepLocal => null()
+      type(tVec), pointer                       :: damageLocal => null()
+      type(tVec), dimension(:), pointer         :: partialDamageLocal => null()
       type(tVec), pointer                       :: displacementLowerBoundLocal => null()
       type(tVec), pointer                       :: displacementUpperBoundLocal => null()
       type(tVec), pointer                       :: temperatureLocal => null()
@@ -285,7 +285,6 @@ contains
 
       type(MEF90CtxGlobalOptions_Type)                          :: MEF90CtxGlobalOptions
       type(MEF90DefMechGlobalOptions_Type)                      :: DefMechGlobalOptions
-      PetscInt                                                  :: numPF
       type(tIS)                                                 :: setIS
       PetscInt                                                  :: set
       PetscInt, dimension(:), pointer                           :: setID
@@ -344,32 +343,24 @@ contains
       PetscCall(VecDuplicate(DefMechCtx%displacementLocal, DefMechCtx%displacementUpperBoundLocal, ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%displacementUpperBoundLocal, "DisplacementUpperBound", ierr))
 
-      if (DefMechGlobalOptions%multiPhaseField) then
-         numPF = size(setID) + 1
-      else
-         numPF = 1
-      end if
-      allocate (DefMechCtx%damageLocal(numPF), stat=ierr)
-      !!! damage(1) is either THE damage or a composite vector
+      allocate (DefMechCtx%damageLocal, stat=ierr)
       vecName = "Damage"
-      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(1), ierr))
+      PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal, ierr))
 
-      !!! for multiPhaseField, we use damage(2:)
-      do set = 2, numPF
-         !!! I need to cheat here:
-         !!! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
-         vecName = "Damage"
-         PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%damageLocal(set), ierr))
-         write(Vecname,'("Damage-", I4.4, "p")') set - 1
-         PetscCall(PetscObjectSetName(DefMechCtx%damageLocal(set), vecName, ierr))
-      end do
-
-      allocate (DefMechCtx%damagePreviousStepLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMechCtx%damageLocal(1), DefMechCtx%damagePreviousStepLocal, ierr))
-      PetscCall(PetscObjectSetName(DefMechCtx%damagePreviousStepLocal, "damagePreviousStep", ierr))
-
+      if (DefMechGlobalOptions%multiPhaseField) then
+         allocate (DefMechCtx%partialDamageLocal(size(setID)), stat=ierr)
+         do set = 1, size(DefMechCtx%partialDamageLocal)
+            !!! I need to cheat here:
+            !!! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
+            vecName = "Damage"
+            PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%partialDamageLocal(set), ierr))
+            write(Vecname,'("partialDamage-", I4.4)') set
+            PetscCall(PetscObjectSetName(DefMechCtx%partialDamageLocal(set), vecName, ierr))
+         end do
+      end if
+ 
       allocate (DefMechCtx%TemperatureLocal, stat=ierr)
-      PetscCall(VecDuplicate(DefMechCtx%damageLocal(1), DefMechCtx%TemperatureLocal, ierr))
+      PetscCall(VecDuplicate(DefMechCtx%damageLocal, DefMechCtx%TemperatureLocal, ierr))
       PetscCall(PetscObjectSetName(DefMechCtx%TemperatureLocal, "Temperature", ierr))
 
       vecName = "cohesiveDisplacement"
@@ -399,7 +390,7 @@ contains
       !!! This needs to be modified to add the individual damage fields if needed
       allocate (dmList(7))
       PetscCall(VecGetDM(DefMechCtx%displacementLocal, dmList(1), ierr))
-      PetscCall(VecGetDM(DefMechCtx%damageLocal(1), dmList(2), ierr))
+      PetscCall(VecGetDM(DefMechCtx%damageLocal, dmList(2), ierr))
       PetscCall(VecGetDM(DefMechCtx%temperatureLocal, dmList(3), ierr))
       PetscCall(VecGetDM(DefMechCtx%bodyForce, dmList(4), ierr))
       PetscCall(VecGetDM(DefMechCtx%boundaryForce, dmList(5), ierr))
@@ -410,7 +401,7 @@ contains
 
       !!! Create the IO SF for all fields
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementToIOSF, DefMechCtx%IOTodisplacementSF, ierr))
-      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%damageLocal(1), DefMechCtx%damageToIOSF, DefMechCtx%IOTodamageSF, ierr))
+      PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%damageLocal, DefMechCtx%damageToIOSF, DefMechCtx%IOTodamageSF, ierr))
 
       PetscCall(MEF90IOSFCreate(MEF90Ctx, DefMechCtx%cohesiveDisplacement, DefMechCtx%cohesiveDisplacementToIOSF, DefMechCtx%IOToCohesiveDisplacementSF, ierr))
 
@@ -425,7 +416,7 @@ contains
       !!! Create the SF to exchange boundary values of the displacement and damage.
       PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%displacementLocal, DefMechCtx%displacementLocal, DefMechCtx%displacementConstraintsSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
-      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%damageLocal(1), DefMechCtx%damageLocal(1), DefMechCtx%damageConstraintsSF, dummySF, ierr))
+      PetscCall(MEF90ConstraintSFCreate(DefMechCtx%MEF90Ctx, DefMechCtx%damageLocal, DefMechCtx%damageLocal, DefMechCtx%damageConstraintsSF, dummySF, ierr))
       PetscCall(PetscSFDestroy(dummySF, ierr))
 
       PetscCall(ISRestoreIndices(setIS, setID, ierr))
@@ -483,16 +474,17 @@ contains
       end if
 
       if (associated(DefMech%damageLocal)) then
-         do set = 1, size(DefMech%damageLocal)
-            PetscCall(VecDestroy(DefMech%damageLocal(set), ierr))
-         end do
+         PetscCall(VecDestroy(DefMech%damageLocal, ierr))
          deallocate (DefMech%damageLocal)
          nullify (DefMech%damageLocal)
       end if
-      if (associated(DefMech%damagePreviousStepLocal)) then
-         PetscCall(VecDestroy(DefMech%damagePreviousStepLocal, ierr))
-         deallocate (DefMech%damagePreviousStepLocal)
-         nullify (DefMech%damagePreviousStepLocal)
+
+      if (associated(DefMech%partialDamageLocal)) then
+         do set = 1, size(DefMech%partialDamageLocal)
+            PetscCall(VecDestroy(DefMech%partialDamageLocal(set), ierr))
+         end do
+         deallocate (DefMech%partialDamageLocal)
+         nullify (DefMech%partialDamageLocal)
       end if
 
       if (associated(DefMech%temperatureLocal)) then

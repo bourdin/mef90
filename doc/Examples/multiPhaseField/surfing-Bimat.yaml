@@ -2,7 +2,7 @@ verbose: 1
 time:
   min: 0
   max: 10
-  numstep: 21
+  numstep: 101
 
 multiPhaseField: 1
 heatxfer:
@@ -65,7 +65,7 @@ cs0002:
   linearThermalExpansion: 0,0,0
   damage:
     type: AT1
-    FractureToughness: 1.0
+    FractureToughness: 0.75
     elastic: no
     internallength: 0.2
     residualstiffness: 0

@@ -86,14 +86,16 @@ contains
 !!!  (c) 2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
-   subroutine MEF90DefMechComputeCompositeDamage(damageSets, ierr)
+   subroutine MEF90DefMechComputeCompositeDamage(damage, damageSets, ierr)
+      type(tVec), intent(in)            :: damage
       type(tVec), dimension(:), pointer :: damageSets
       PetscErrorCode, intent(INOUT)     :: ierr
 
       PetscInt                          :: set
 
-      do set = 2, size(damageSets)
-         PetscCall(VecPointwiseMax(damageSets(1), damageSets(1), damageSets(set), ierr))
+      PetscCall(VecSet(damage, 0.0_Kr, ierr))
+      do set = 1, size(damageSets)
+         PetscCall(VecPointwiseMax(damage, damage, damageSets(set), ierr))
       end do
    end subroutine MEF90DefMechComputeCompositeDamage
 
@@ -126,7 +128,7 @@ contains
       PetscCall(MEF90CtxGlobalOptionsSetFromOptions(MEF90DefMechCtx%MEF90Ctx%comm, trim(MEF90DefMechCtx%MEF90Ctx%prefix), MEF90GlobalOptions, ierr))
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
 
-      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dmDamage, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dmDamage, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%displacementLocal, dmDisplacement, ierr))
       PetscCall(VecGetDM(MEF90DefMechCtx%cohesiveDisplacement, dmCohesiveDisplacement, ierr))
 
@@ -149,37 +151,46 @@ contains
       select case (MEF90DefMechGlobalOptions%boundaryDamageScaling)
       case (MEF90Scaling_File)
          PetscCall(DMGetLocalVector(dmDamage, tmpVec, ierr))
-         do set = 1, size(MEF90DefMechCtx%damageLocal)
-            if (set == 1) then
-               vecName = "Damage"
-            else 
-               write(Vecname,'("Damage-", I4.4, "p")') set - 1
-            end if
-            PetscCall(PetscObjectSetName(tmpVec, vecName, ierr))
-            PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
-            PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%damageLocal(set), MEF90DefMechCtx%damageConstraintsSF, ierr))
-         end do
+         PetscCall(PetscObjectSetName(tmpVec, "Damage", ierr))
+         PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
+         PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageConstraintsSF, ierr))
+         if (MEF90DefMechGlobalOptions%multiPhaseField) then
+            do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
+                  write(Vecname,'("partialDamage-", I4.4)') set
+               PetscCall(PetscObjectSetName(tmpVec, vecName, ierr))
+               PetscCall(MEF90EXOVecLoad(tmpVec, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, EXOstep, 1_ki, ierr))
+               PetscCall(MEF90VecCopySF(tmpVec, MEF90DefMechCtx%partialDamageLocal(set), MEF90DefMechCtx%damageConstraintsSF, ierr))
+            end do
+         end if
          PetscCall(DMRestoreLocalVector(dmDamage, tmpVec, ierr))
+
       case (MEF90Scaling_Linear)
          write (IOBuffer, '((A),": linear scaling of damage does not make any sense.\n")') __FUNCT__
          SETERRQ(MEF90DefMechCtx%MEF90Ctx%Comm, PETSC_ERR_ARG_WRONG, IOBuffer)
       case (MEF90Scaling_CST)
-         do set = 1, size(MEF90DefMechCtx%damageLocal)
-            !!! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
-            !!! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
-            PetscCall(PetscObjectGetName(MEF90DefMechCtx%damageLocal(set), vecName, ierr))
-            PetscCall(PetscObjectSetName(MEF90DefMechCtx%damageLocal(set), "Damage", ierr))
-            PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal(set), 1.0_kr, ierr))
-            PetscCall(PetscObjectSetName(MEF90DefMechCtx%damageLocal(set), vecName, ierr))
-         end do
+         PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal, 1.0_kr, ierr))
+         if (MEF90DefMechGlobalOptions%multiPhaseField) then
+            do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
+               !!! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
+               !!! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
+               PetscCall(PetscObjectGetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
+               PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), "Damage", ierr))
+               PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%partialDamageLocal(set), 1.0_kr, ierr))
+               PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
+            end do
+         end if
       case (MEF90Scaling_Expr)
-         do set = 1, size(MEF90DefMechCtx%damageLocal)
-            !!! Same as above
-            PetscCall(PetscObjectGetName(MEF90DefMechCtx%damageLocal(set), vecName, ierr))
-            PetscCall(PetscObjectSetName(MEF90DefMechCtx%damageLocal(set), "Damage", ierr))
-            PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%damageLocal(set), time, ierr))
-            PetscCall(PetscObjectSetName(MEF90DefMechCtx%damageLocal(set), vecName, ierr))
-         end do
+         PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%damageLocal, 1.0_kr, ierr))
+         if (MEF90DefMechGlobalOptions%multiPhaseField) then
+            do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
+               !!! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
+               !!! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
+               PetscCall(PetscObjectGetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
+               PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), "Damage", ierr))
+               PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%partialDamageLocal(set), 1.0_kr, ierr))
+               PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
+            end do
+         end if
       end select
 
       select case (MEF90DefMechGlobalOptions%cohesiveDisplacementScaling)
@@ -638,7 +649,7 @@ contains
          offset = offset + 1
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             do set = 1, numSet
-               write(nameN(offset),'("Damage-", I4.4, "p")') set
+               write(nameN(offset),'("partialDamage-", I4.4)') set
                offset = offset + 1
             end do
          end if
@@ -738,9 +749,12 @@ contains
          PetscCall(MEF90EXOVecView(MEF90DefMechCtx%displacementLocal, MEF90DefMechCtx%displacementToIOSF, MEF90DefMechCtx%IOToDisplacementSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim, ierr))
       end if
       if (MEF90DefMechGlobalOptions%damageExport) then
-         do set = 1, size(MEF90DefMechCtx%damageLocal)
-            PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal(set), MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
-         end do
+         PetscCall(MEF90EXOVecView(MEF90DefMechCtx%damageLocal, MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+         if (MEF90DefMechGlobalOptions%multiPhaseField) then
+            do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
+               PetscCall(MEF90EXOVecView(MEF90DefMechCtx%partialDamageLocal(set), MEF90DefMechCtx%damageToIOSF, MEF90DefMechCtx%IOToDamageSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, 1_ki, ierr))
+            end do
+         end if
       end if
       if (MEF90DefMechGlobalOptions%stressExport) then
          PetscCall(MEF90EXOVecView(MEF90DefMechCtx%stress, MEF90DefMechCtx%stressToIOSF, MEF90DefMechCtx%IOToStressSF, MEF90DefMechCtx%MEF90Ctx%resultViewer, step, MEF90DefMechCtx%dim * (MEF90DefMechCtx%dim + 1) / 2, ierr))
@@ -846,7 +860,7 @@ contains
       PetscReal                                          :: rtol, dtol, atol, stol
 
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dm, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
@@ -913,7 +927,7 @@ contains
       PetscReal                                          :: rtol, dtol, atol, stol
 
       PetscCall(MEF90DefMechGlobalOptionsSetFromOptions(MEF90DefMechCtx%comm, trim(MEF90DefMechCtx%prefix), MEF90DefMechGlobalOptions, ierr))
-      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal(1), dm, ierr))
+      PetscCall(VecGetDM(MEF90DefMechCtx%damageLocal, dm, ierr))
       PetscCall(DMCreateMatrix(dm, matDamage, ierr))
       PetscCall(MatSetOptionsPrefix(matDamage, "Damage_", ierr))
       !!! The matrix is not symmetric if the advection vector is /= 0
