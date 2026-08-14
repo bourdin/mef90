@@ -1,0 +1,95 @@
+verbose: 1
+time:
+  min: 0
+  max: 10
+  numstep: 21
+
+multiPhaseField: 1
+heatxfer:
+  timestepping:
+    type: null
+
+defmech:
+  irrevthres: 0
+  timestepping:
+    type: quasistatic
+  solver:
+    type: altmin
+  damage:
+    atol: 1e-3
+  sor:
+    omega: 1
+  pclag: 5
+
+displacement:
+  snes:
+    type: ksponly
+  pc:
+    type: hypre
+
+damage:
+  snes:
+    atol: 1e-6
+    rtol: 1e-5
+stress:
+  export: 1
+boundaryDisplacement:
+  scaling: expression
+
+cs0001:
+  # left
+  hookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1.0
+      PoissonRatio: 0.3
+      PlaneStress: 1
+  linearThermalExpansion: 0,0,0
+  damage:
+    type: AT1
+    FractureToughness: 1.0
+    elastic: no
+    internallength: 0.2
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+
+cs0002:
+  # right
+  hookesLaw:
+    type: isotropic
+    isotropic:
+      YoungsModulus: 1.0
+      PoissonRatio: 0.3
+      PlaneStress: 1
+  linearThermalExpansion: 0,0,0
+  damage:
+    type: AT1
+    FractureToughness: 1.0
+    elastic: no
+    internallength: 0.2
+    residualstiffness: 0
+  plasticity:
+    type: NONE
+
+fs0020:
+  # outer boundary
+  displacementBC: 1,1,1
+  # kappa = (3.0-nu)/(1.0+nu) = 2.07692307692
+  # mu = E / (1. + nu) * .5.  = 0.3846153846
+  # r = sqrt((x-t)^2+y^2)
+  # theta = atan2(y,x-t)
+  # ux = np.sqrt(r / np.pi * .5) / mu * .5 * np.cos(theta * .5) * (kappa - np.cos(theta))
+  # uy = np.sqrt(r / np.pi * .5) / mu * .5 * np.sin(theta * .5) * (kappa - np.cos(theta))
+  boundaryDisplacementExpr: "sqrt(sqrt((x-t)^2+y^2)/2./pi)/0.3846153846 /2 * cos(atan2(y,x-t)/2)*(2.07692307692-cos(atan2(y,x-t)));sqrt(sqrt((x-t)^2+y^2)/2./pi)/0.3846153846 /2 * sin(atan2(y,x-t)/2)*(2.07692307692-cos(atan2(y,x-t)));0."
+  damageBC: 1
+  boundaryDamage: 0
+fs0030:
+  # interface
+  displacementBC: 0,0,0
+  damageBC: 0
+fs0040:
+  # crack
+  displacementBC: 0,0,0
+  damageBC: 1
+  boundaryDamage: 1
