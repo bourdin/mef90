@@ -926,8 +926,8 @@ subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
       do set = 1, size(setID)
          myEnergy = 0.0_kr
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
+            damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          end if
-         damageLocal => MEF90DefMechCtx%partialDamageLocal(set)
          PetscCall(DMGetStratumIS(dmDisplacement, MEF90CellSetLabelName, setID(set), setPointIS, ierr))
          if (.not. PetscObjectIsNull(setPointIS)) then
             write (prefix, '(A,"cs",I4.4,"_")') trim(MEF90DefMechCtx%prefix), setID(set)
@@ -1141,7 +1141,7 @@ subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
             allocate (stressDof(SIZEOFMEF90_MATS))
 
             do cell = 1, size(setPointID)
-               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, MEF90DefMechCtx%damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
+               PetscCall(DMPlexVecGetClosure(dmDamage, PETSC_NULL_SECTION, damageLocal, setPointID(cell), PETSC_NULL_INTEGER, damageDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmDisplacement, PETSC_NULL_SECTION, MEF90DefMechCtx%displacementLocal, setPointID(cell), PETSC_NULL_INTEGER, displacementDof, ierr))
                PetscCall(DMPlexVecGetClosure(dmTemperature, PETSC_NULL_SECTION, MEF90DefMechCtx%TemperatureLocal, setPointID(cell), PETSC_NULL_INTEGER, temperatureDof, ierr))
                stressDof = 0.0_kr
@@ -1282,6 +1282,7 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
    else
       damageLocal => MEF90DefMechCtx%damageLocal
    end if
+   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, damageLocal, ierr))
 
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLoc, 0.0_kr, ierr))
@@ -1525,6 +1526,7 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
    else
       damageLocal => MEF90DefMechCtx%damageLocal
    end if
+   PetscCall(DMGlobalToLocal(dmDamage, damage, INSERT_VALUES, damageLocal, ierr))
 
    PetscCall(MatZeroEntries(A, ierr))
 

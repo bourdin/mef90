@@ -627,10 +627,12 @@ program vDef
    PetscCallA(VecDestroy(damageResidual, ierr))
    PetscCallA(VecDestroy(damageAltMinOld, ierr))
    PetscCallA(VecDestroy(damage, ierr))
-   do set = 1, size(partialDamage)
-      PetscCallA(VecDestroy(partialDamage(set), ierr))
-   end do
-   deallocate(partialDamage)
+   if (MEF90DefMechGlobalOptions%multiPhaseField) then
+      do set = 1, size(partialDamage)
+         PetscCallA(VecDestroy(partialDamage(set), ierr))
+      end do
+      deallocate(partialDamage)
+   end if
 
    deallocate (time)
    deallocate (elasticEnergy)
