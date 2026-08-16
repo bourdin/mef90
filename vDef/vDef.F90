@@ -360,12 +360,15 @@ program vDef
 
          !!! Solve for displacement and damage
          PetscCallA(MEF90DefMechSetTransients(MEF90DefMechCtx, step, time(step), ierr))
-         ! select case (MEF90DefMechGlobalOptions%damageSolverType)
-         !    case (MEF90DefMech_DamageSolverTypeSNES)
-         !       PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage(1), ierr))
-         !    case (MEF90DefMech_DamageSolverTypeTao)
-         !       PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage(1), ierr))
-         ! end select ! MEF90DefMechGlobalOptions%damageSolverType
+         if (.not. MEF90DefMechGlobalOptions%multiPhaseField) then
+            select case (MEF90DefMechGlobalOptions%damageSolverType)
+               case (MEF90DefMech_DamageSolverTypeSNES)
+                  PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, damage, ierr))
+               case (MEF90DefMech_DamageSolverTypeTao)
+                  PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, damage, ierr))
+            end select ! MEF90DefMechGlobalOptions%damageSolverType
+         end if
+
          PetscCallA(DMLocalToGlobal(displacementDM, MEF90DefMechCtx%displacementLocal, INSERT_VALUES, displacement, ierr))
 
          select case (MEF90DefMechGlobalOptions%timeSteppingType)
@@ -405,7 +408,7 @@ program vDef
 
                   damageSol => damage
                   damageSolLocal => MEF90DefMechCtx%damageLocal
-                  Do set = 1, numPF
+                  do set = 1, numPF
                      !!! if MEF90DefMechGlobalOptions%multiPhaseField is false, then numPF = 1 so we enter this loop only once
                      MEF90DefMechCtx%currentSet = set
                      vecName = "Damage"
@@ -415,6 +418,16 @@ program vDef
                         damageSolLocal => MEF90DefMechCtx%partialDamageLocal(set)
                         write(VecName,'("partialDamage-", I4.4)') set
                      end if
+
+                     if (MEF90DefMechGlobalOptions%multiPhaseField) then
+                        select case (MEF90DefMechGlobalOptions%damageSolverType)
+                           case (MEF90DefMech_DamageSolverTypeSNES)
+                              PetscCallA(MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, damageSNES, partialDamage(set), ierr))
+                           case (MEF90DefMech_DamageSolverTypeTao)
+                              PetscCallA(MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, damageTAO, partialDamage(set), ierr))
+                        end select ! MEF90DefMechGlobalOptions%damageSolverType
+                     end if
+
 
                      PetscCallA(DMLocalToGlobal(damageDM, damageSolLocal, INSERT_VALUES, damageSol, ierr))
                      select case (MEF90DefMechGlobalOptions%damageSolverType)
