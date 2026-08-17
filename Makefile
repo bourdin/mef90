@@ -78,6 +78,12 @@ ${PETSC_ARCH}/bin:
 FORD_VENV = ${MEF90_DIR}/.venv-ford
 FORD = ${FORD_VENV}/bin/ford
 
+# PETSc source tree, read to link the PETSc calls in the source listings to
+# their manual pages on petsc.org. PETSC_DIR is right when PETSc was built in
+# place; point PETSC_SRC at the sources when PETSc is a prefix install. The
+# PETSc links are simply left out if neither holds a src directory.
+PETSC_SRC ?= ${PETSC_DIR}
+
 ${FORD}:
 	-@echo "Creating the FORD virtualenv in ${FORD_VENV}"
 	python3 -m venv ${FORD_VENV} || exit 1
@@ -86,6 +92,7 @@ ${FORD}:
 ford: ${FORD}
 	-@echo "Building the source documentation in ${MEF90_DIR}/doc/html"
 	${FORD} ${MEF90_DIR}/ford.md || exit 1
+	${MEF90_DIR}/bin/ford-xref ${MEF90_DIR}/doc/html --petsc-src ${PETSC_SRC} || exit 1
 
 fordclean:
 	-@rm -Rf ${MEF90_DIR}/doc/html

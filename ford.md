@@ -76,3 +76,22 @@ python3 -m venv .venv-ford && .venv-ford/bin/pip install ford ./doc/doi-link
 DOI identifiers written as plain text (`doi:10.xxxx/...`) are linked to
 `https://doi.org/...` automatically by the `doi_link` markdown extension in
 `doc/doi-link/`.
+
+FORD does not cross-reference the source listings it generates, so `make ford`
+finishes by running `bin/ford-xref`, which
+
+  - links each identifier naming a documented module, type, or procedure to its
+    page, and colours it the way Pygments colours a function, class, or
+    namespace. The lexer itself gives user-defined names no colour at all;
+  - links PETSc calls to their manual pages on petsc.org. The section of those
+    URLs is not derivable from the routine name, so it is read out of the PETSc
+    sources exactly as PETSc's own `doc/build_man_pages.py` does it, from
+    `SUBMANSEC`/`MANSEC`. Set `PETSC_SRC` to a PETSc source tree if `PETSC_DIR`
+    is a prefix install; without it the PETSc links are simply left out;
+  - colours the PETSc error-checking macros (`PetscCall`, `SETERRQ`, ...), which
+    are preprocessor macros rather than Fortran keywords and so are invisible to
+    the lexer even though they open nearly every statement in this codebase.
+
+Because Fortran is case insensitive and the listings are only syntax
+highlighted, a local variable that shares a name with an entity is linked too;
+definition sites are left alone so that a procedure does not link to itself.

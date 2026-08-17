@@ -4,3 +4,42 @@
 #meta-author {
     white-space: pre-line;
 }
+
+/* Cross-reference links added to the source listings by bin/ford-xref.
+
+   FORD draws the line numbers of a listing with `.hl pre a::before`, so every
+   anchor inside the code block emits a number and bumps the counter. Anchors
+   that
+   are cross-references, not line markers, have to opt out of all of that, and
+   keep the syntax highlighting colour of the identifier they wrap. */
+.hl pre a.xref::before {
+    content: none;
+    counter-increment: none;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    background: none;
+    border: 0;
+}
+
+.hl pre a.xref {
+    display: inline;
+    height: auto;
+    margin: 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.hl pre a.xref:hover {
+    text-decoration: underline;
+}
+
+/* FORD emits an empty <a id="ln-N" href="#ln-N"> per line to hang the line
+   number off, and local.css gives it a 4.5em box pulled back up over the line.
+   The browser underlines it because it is a link with an href; that underline
+   is invisible while the anchor is empty, but once a cross-reference link sits
+   on the same line it gets painted across the code. Line numbers are not meant
+   to look like links anyway. */
+.hl pre a[id^="ln-"] {
+    text-decoration: none;
+}

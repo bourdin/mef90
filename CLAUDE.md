@@ -32,6 +32,9 @@ if invoked explicitly.
 creating the `.venv-ford` virtualenv on first use; `make fordclean` removes the output. `make doc`
 is unrelated — it builds the LaTeX user manual `doc/vDef.pdf`.
 
+Pass `PETSC_SRC=<petsc source tree>` to link the PETSc calls in the source listings to petsc.org;
+the default is `PETSC_DIR`, which only holds sources when PETSc was built in place.
+
 ## Testing
 
 Standard smoke test — delete the result file first, since vDef will not overwrite an existing one:

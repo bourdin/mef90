@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""Turn identifiers in FORD's source listings into links to their own pages.
+
+FORD highlights source files with Pygments and does not cross-reference them, so
+a call to MEF90DefMechCreate in vDef.F90 renders as plain text. Every documented
+entity does get a page at a predictable path, though (proc/<name>.html,
+type/<name>.html, ...), and Pygments tags every identifier with class="n". This
+walks sourcefile/*.html and wraps the identifiers that name a documented entity
+in a link to it.
+
+Fortran is case insensitive and Pygments does not distinguish a call site from a
+variable of the same name, so a local that shadows an entity name gets a link it
+did not ask for. It points somewhere related, which is why this is worth doing
+anyway. Definition sites are skipped so that a procedure does not link to itself.
+
+Run after ford, on the generated tree:
+
+    bin/ford-xref doc/html
+"""
+
+import argparse
+import html
+import os
+import re
+from pathlib import Path
+
+# Searched in order, so the first hit wins when a name is used for two things.
+# The class each kind is re-tagged with is a stock Pygments one, already given a
+# colour by FORD's pygments.css: Name.Function and Name.Class are blue, Name.
+# Namespace bold blue.
+KINDS = {'proc': 'nf', 'interface': 'nf', 'type': 'nc', 'module': 'nn',
+         'program': 'nn', 'blockdata': 'nn', 'namelist': 'nc'}
+
+# PETSc's error-checking macros wrap nearly every call in this codebase. They are
+# preprocessor macros rather than Fortran keywords, so the lexer leaves them as
+# plain names and the listings read as unpunctuated text. Name.Exception (red,
+# bold) is the closest stock class in meaning and stands out the way `call` does.
+MACROS = frozenset(name.lower() for name in [
+    'PetscCall', 'PetscCallA', 'PetscCallMPI', 'PetscCallMPIA',
+    'PetscCallAbort', 'PetscCheck', 'PetscCheckA',
+    'SETERRQ', 'SETERRA', 'CHKERRQ', 'CHKERRA', 'CHKMEMQ',
+])
+
+# A name introduced by one of these is being defined here, not referenced.
+DEFINES = re.compile(
+    r'^\s*(?:(?:pure|impure|elemental|recursive|module)\s+)*'
+    r'(?:subroutine|function|module|program|submodule|interface|end\s*\w*)'
+    r'\s+(\w+)', re.I)
+DEFINES_TYPE = re.compile(r'^\s*type\b[^:]*::\s*(\w+)', re.I)
+
+IDENT = re.compile(r'(<a [^>]*>\s*)?<span class="n">(\w+)</span>')
+TAG = re.compile(r'<[^>]+>')
+
+# PETSc calls are linked to the online manual pages. The section of the URL is
+# not derivable from the name (PetscSectionGetOffset is under PetscSection,
+# PetscViewerASCIIPrintf under Viewer, PetscPrintf under Sys), so it is read out
+# of the PETSc sources the same way PETSc's own doc/build_man_pages.py does it:
+# SUBMANSEC, else MANSEC, taken from the directory makefile if it names one and
+# from the source file otherwise. A manual page is a /*@ ... @*/ block whose
+# first line reads `Name - summary`.
+PETSC_URL = 'https://petsc.org/release/manualpages/{section}/{name}/'
+PETSC_BLOCK = re.compile(r'/\*@\w*\s*\n\s*(\w+)\s*[-–]', re.M)
+PETSC_SUFFIXES = ('.c', '.cxx', '.h', '.cu', '.cpp', '.hpp')
+
+
+def entity_pages(root):
+    """{lowercased entity name: (href relative to sourcefile/, pygments class)}"""
+    pages = {}
+    for kind, css_class in KINDS.items():
+        for page in sorted((root / kind).glob('*.html')):
+            pages.setdefault(page.stem.lower(),
+                             (f'../{kind}/{page.name}', css_class))
+    return pages
+
+
+def petsc_mansec(path):
+    """SUBMANSEC, else MANSEC, out of a makefile or a source file."""
+    try:
+        lines = open(path, errors='ignore').readlines()
+    except OSError:
+        return None
+    # Written as `SUBMANSEC = Foo` in a makefile and `/* SUBMANSEC = Foo */` in
+    # a source file; one pattern covers both.
+    sub = [l for l in lines if 'SUBMANSEC' in l and 'BFORT' not in l]
+    if sub:
+        m = re.search(r'SUBMANSEC[ ]*=[ ]*(\w+)', sub[0])
+        if m:
+            return m.group(1)
+    man = [l for l in lines if l.startswith('MANSEC')]
+    if man:
+        m = re.search(r'MANSEC[ ]*=[ ]*(\w+)', man[0])
+        if m:
+            return m.group(1)
+    return None
+
+
+def petsc_pages(src):
+    """{lowercased PETSc routine: (canonical name, manual page section)}"""
+    pages = {}
+    for top in ('src', 'include'):
+        for dirpath, dirnames, filenames in os.walk(src / top):
+            dirnames[:] = [d for d in dirnames
+                           if not d.startswith(('arch', '.'))]
+            in_makefile = petsc_mansec(os.path.join(dirpath, 'makefile'))
+            for filename in filenames:
+                if not filename.endswith(PETSC_SUFFIXES):
+                    continue
+                path = os.path.join(dirpath, filename)
+                section = in_makefile or petsc_mansec(path)
+                if not section:
+                    continue
+                try:
+                    text = open(path, errors='ignore').read()
+                except OSError:
+                    continue
+                for name in PETSC_BLOCK.findall(text):
+                    pages.setdefault(name.lower(), (name, section))
+    return pages
+
+
+def defined_here(line):
+    """The entity name this source line defines, lowercased, if any."""
+    text = html.unescape(TAG.sub('', line))
+    for pattern in (DEFINES, DEFINES_TYPE):
+        m = pattern.match(text)
+        if m:
+            return m.group(1).lower()
+    return None
+
+
+def link_line(line, pages, petsc):
+    skip = defined_here(line)
+
+    def replace(m):
+        anchor, name = m.group(1), m.group(2)
+        if anchor:                        # already linked, keep it as it is
+            return m.group(0)
+        if name.lower() in MACROS:
+            return f'<span class="ne">{name}</span>'
+        entry = pages.get(name.lower())
+        if entry is None:
+            external = petsc.get(name.lower())
+            if external is None:
+                return m.group(0)
+            canonical, section = external
+            url = PETSC_URL.format(section=section, name=canonical)
+            return (f'<a class="xref xref-petsc" href="{url}"'
+                    f' title="PETSc manual page">'
+                    f'<span class="nf">{name}</span></a>')
+        href, css_class = entry
+        if name.lower() == skip:          # its own definition: colour, no link
+            return f'<span class="{css_class}">{name}</span>'
+        # class="xref" is what doc/user.css keys off to undo FORD's styling of
+        # anchors inside a listing, which exists to draw the line numbers.
+        return (f'<a class="xref" href="{href}">'
+                f'<span class="{css_class}">{name}</span></a>')
+
+    return IDENT.sub(replace, line)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    parser.add_argument('output_dir', type=Path,
+                        help="FORD's output_dir, e.g. doc/html")
+    parser.add_argument('--petsc-src', type=Path, default=None,
+                        help='PETSc source tree, to link PETSc calls to their '
+                             'manual pages. Skipped if it holds no sources.')
+    parser.add_argument('-q', '--quiet', action='store_true')
+    args = parser.parse_args()
+
+    pages = entity_pages(args.output_dir)
+    petsc = {}
+    if args.petsc_src and (args.petsc_src / 'src').is_dir():
+        petsc = petsc_pages(args.petsc_src)
+    elif args.petsc_src and not args.quiet:
+        print(f'ford-xref: {args.petsc_src} holds no PETSc sources, '
+              f'not linking PETSc calls')
+
+    listings = sorted((args.output_dir / 'sourcefile').glob('*.html'))
+    links = external = 0
+    for listing in listings:
+        src = listing.read_text()
+        m = re.search(r'<pre>.*?</pre>', src, re.S)
+        if not m:
+            continue
+        linked = '\n'.join(link_line(l, pages, petsc)
+                           for l in m.group(0).split('\n'))
+        links += linked.count('<a class="xref"')
+        external += linked.count('<a class="xref xref-petsc"')
+        listing.write_text(src[:m.start()] + linked + src[m.end():])
+
+    if not args.quiet:
+        print(f'ford-xref: linked {links - external} identifiers and '
+              f'{external} PETSc calls in {len(listings)} source listings, '
+              f'against {len(pages)} entity and {len(petsc)} PETSc pages')
+
+
+if __name__ == '__main__':
+    main()
