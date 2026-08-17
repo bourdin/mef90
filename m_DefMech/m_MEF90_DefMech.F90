@@ -171,8 +171,8 @@ contains
          PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%damageLocal, 1.0_kr, ierr))
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
-               !!! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
-               !!! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
+               !! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
+               !! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
                PetscCall(PetscObjectGetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
                PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), "Damage", ierr))
                PetscCall(MEF90VecSetBCValuesFromOptions(MEF90DefMechCtx%partialDamageLocal(set), 1.0_kr, ierr))
@@ -183,8 +183,8 @@ contains
          PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%damageLocal, 1.0_kr, ierr))
          if (MEF90DefMechGlobalOptions%multiPhaseField) then
             do set = 1, size(MEF90DefMechCtx%partialDamageLocal)
-               !!! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
-               !!! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
+               !! MEF90VecSetBCValuesFromOptions retrieves BC from the option database, using a Vector's name as prefix
+               !! We temporarily change it to "Damage" so that we do not need to pass BC for each phase-field.
                PetscCall(PetscObjectGetName(MEF90DefMechCtx%partialDamageLocal(set), vecName, ierr))
                PetscCall(PetscObjectSetName(MEF90DefMechCtx%partialDamageLocal(set), "Damage", ierr))
                PetscCall(MEF90VecSetBCValuesFromOptionsExpr(MEF90DefMechCtx%partialDamageLocal(set), time, ierr))

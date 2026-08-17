@@ -99,10 +99,10 @@ subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, resi
 
    PetscCall(DMGetLocalVector(dmDisplacement, residualLocal, ierr))
    PetscCall(DMGlobalToLocal(dmDisplacement, displacement, INSERT_VALUES, MEF90DefMechCtx%displacementLocal, ierr))
-   !!! Something subtle is going on here:
-   !!! I _have_ to use MEF90DefMechCtx%displacementLocal because I need the constrained values, which would not be initialized if I were 
-   !!! to create a new local Vec, or duplicate MEF90DefMechCtx%displacementLocal
-   !!! This DOES create a side effect.
+   !! Something subtle is going on here:
+   !! I _have_ to use MEF90DefMechCtx%displacementLocal because I need the constrained values, which would not be initialized if I were 
+   !! to create a new local Vec, or duplicate MEF90DefMechCtx%displacementLocal
+   !! This DOES create a side effect.
 
    PetscCall(VecSet(residual, 0.0_kr, ierr))
    PetscCall(VecSet(residualLocal, 0.0_kr, ierr))
@@ -1273,10 +1273,10 @@ subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMech
 
    PetscCall(DMGetLocalVector(dmDamage, residualLoc, ierr))
 
-   !!! Something subtle is going on here:
-   !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
-   !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
-   !!! This DOES create a side effect.
+   !! Something subtle is going on here:
+   !! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
+   !! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
+   !! This DOES create a side effect.
    if (MEF90DefMechGlobalOptions%multiPhaseField) then
       damageLocal => MEF90DefMechCtx%partialDamageLocal(MEF90DefMechCtx%currentSet)
    else
@@ -1517,10 +1517,10 @@ subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMech
 
    PetscCall(DMGetDimension(dmDisplacement, dim, ierr))
 
-   !!! Something subtle is going on here:
-   !!! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
-   !!! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
-   !!! This DOES create a side effect.
+   !! Something subtle is going on here:
+   !! I _have_ to use MEF90DefMechCtx%damageLocal because I need the constrained values, which would not be initialized if I were 
+   !! to create a new local Vec, or duplicate MEF90DefMechCtx%damageLocal
+   !! This DOES create a side effect.
    if (MEF90DefMechGlobalOptions%multiPhaseField) then
       damageLocal => MEF90DefMechCtx%partialDamageLocal(MEF90DefMechCtx%currentSet)
    else

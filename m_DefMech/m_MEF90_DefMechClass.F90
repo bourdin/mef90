@@ -350,8 +350,8 @@ contains
       if (DefMechGlobalOptions%multiPhaseField) then
          allocate (DefMechCtx%partialDamageLocal(size(setID)), stat=ierr)
          do set = 1, size(DefMechCtx%partialDamageLocal)
-            !!! I need to cheat here:
-            !!! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
+            !! I need to cheat here:
+            !! I create the Vec with name "Damage" so that it inherits the proper damage BC, then change its name to the proper value
             vecName = "Damage"
             PetscCall(MEF90CreateLocalVector(dm, MEF90CtxGlobalOptions%elementFamily, MEF90CtxGlobalOptions%elementOrder, 1_ki, vecName, DefMechCtx%partialDamageLocal(set), ierr))
             write(Vecname,'("partialDamage-", I4.4)') set
