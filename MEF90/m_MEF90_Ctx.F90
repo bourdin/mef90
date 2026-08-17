@@ -98,7 +98,7 @@ contains
       character(len=*), intent(IN)                  :: prefix
       PetscErrorCode, intent(INOUT)                 :: ierr
 
-      character(len=MEF90MXSTRLEN)                  :: IOBuffer, tmpPrefix
+      character(len=MEF90MXSTRLEN)                  :: tmpPrefix
       PetscBool                                     :: hasPrefix, hasGeometry, hasResult
 
 #ifdef PETSC_USE_DEBUG

@@ -811,8 +811,8 @@ contains
          select case (dPolynomialOrder)
          case (1)
             Num_DoF = 3
-            allocate (PhiHat(Num_DoF, Nb_Gauss), stat=ierr)
-            allocate (GradPhiHat(Num_DoF, Nb_Gauss), stat=ierr)
+            allocate (PhiHat(Num_DoF, Nb_Gauss))
+            allocate (GradPhiHat(Num_DoF, Nb_Gauss))
             PhiHat(1, :) = 1.0_kr - Xi%X - Xi%Y
             PhiHat(2, :) = Xi%X
             PhiHat(3, :) = Xi%Y
@@ -823,8 +823,8 @@ contains
 
          case (2)
             Num_DoF = 6
-            allocate (PhiHat(Num_DoF, Nb_Gauss), stat=ierr)
-            allocate (GradPhiHat(Num_DoF, Nb_Gauss), stat=ierr)
+            allocate (PhiHat(Num_DoF, Nb_Gauss))
+            allocate (GradPhiHat(Num_DoF, Nb_Gauss))
          !! See Dof local Ordering.md for the unusual dof ordering
             PhiHat(4, :) = (1.0_kr - Xi%X - Xi%Y) * (1.0_kr - 2.0_kr * Xi%X - 2.0_kr * Xi%Y)
             PhiHat(5, :) = Xi%X * (2.0_kr * Xi%X - 1.0_kr)
@@ -1271,8 +1271,8 @@ contains
          select case (dPolynomialOrder)
          case (1)
             Num_DoF = 4
-            allocate (PhiHat(Num_DoF, Nb_Gauss), stat=ierr)
-            allocate (GradPhiHat(Num_DoF, Nb_Gauss), stat=ierr)
+            allocate (PhiHat(Num_DoF, Nb_Gauss))
+            allocate (GradPhiHat(Num_DoF, Nb_Gauss))
             PhiHat(1, :) = 1.0_kr - Xi%X - Xi%Y - Xi%Z
             PhiHat(2, :) = Xi(:)%Y
             PhiHat(3, :) = Xi(:)%X
@@ -1284,8 +1284,8 @@ contains
             GradPhiHat(4, :)%X = 0.0_kr; GradPhiHat(4, :)%Y = 0.0_kr; GradPhiHat(4, :)%Z = 1.0_kr
          case (2)
             Num_Dof = 10
-            allocate (PhiHat(Num_DoF, Nb_Gauss), stat=ierr)
-            allocate (GradPhiHat(Num_DoF, Nb_Gauss), stat=ierr)
+            allocate (PhiHat(Num_DoF, Nb_Gauss))
+            allocate (GradPhiHat(Num_DoF, Nb_Gauss))
             PhiHat(1, :) = 4.0_kr * (1.0_kr - Xi%X - Xi%Y - Xi%Z) * Xi%Y
             PhiHat(2, :) = 4.0_kr * Xi%X * Xi%Y
             PhiHat(3, :) = 4.0_kr * (1.0_kr - Xi%X - Xi%Y - Xi%Z) * Xi%X
