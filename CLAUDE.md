@@ -26,6 +26,12 @@ make ThermoElasticity  # second program to keep working
 **`ThermoElasticity`, `vDefP`, `vDefUpa` and `WorkControlled` are currently broken** — do not build or test them, and do not report their failures as regressions. They are not in the default `vDef` target (see the commented-out line in `Makefile`); they only build
 if invoked explicitly.
 
+## Documentation
+
+`make ford` generates the browsable source documentation into `doc/html` (config in `ford.md`),
+creating the `.venv-ford` virtualenv on first use; `make fordclean` removes the output. `make doc`
+is unrelated — it builds the LaTeX user manual `doc/vDef.pdf`.
+
 ## Testing
 
 Standard smoke test — delete the result file first, since vDef will not overwrite an existing one:

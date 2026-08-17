@@ -2,7 +2,7 @@ DIRS: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef Utils
 
 all: $(DIRS)
 
-.PHONY: all $(DIRS)
+.PHONY: all $(DIRS) ford fordclean
 
 $(DIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
@@ -74,6 +74,21 @@ ${PETSC_ARCH}/objs:
 	-@mkdir -p ${PETSC_ARCH}/objs
 ${PETSC_ARCH}/bin:
 	-@mkdir -p ${PETSC_ARCH}/bin
+
+FORD_VENV = ${MEF90_DIR}/.venv-ford
+FORD = ${FORD_VENV}/bin/ford
+
+${FORD}:
+	-@echo "Creating the FORD virtualenv in ${FORD_VENV}"
+	python3 -m venv ${FORD_VENV} || exit 1
+	${FORD_VENV}/bin/pip install --quiet ford --editable ${MEF90_DIR}/doc/doi-link || exit 1
+
+ford: ${FORD}
+	-@echo "Building the source documentation in ${MEF90_DIR}/doc/html"
+	${FORD} ${MEF90_DIR}/ford.md || exit 1
+
+fordclean:
+	-@rm -Rf ${MEF90_DIR}/doc/html
 
 doc: doc/vDef.pdf doc/vDef.tex
 	-@echo "Building documentation"

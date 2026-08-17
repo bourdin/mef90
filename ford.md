@@ -59,6 +59,16 @@ unlinked.
 To rebuild these pages:
 
 ```
+make ford
+```
+
+which creates `.venv-ford` on first use and installs FORD and the `doi_link`
+extension into it. `make fordclean` removes the generated `doc/html`. Note that
+`make doc` is a different target: it builds the LaTeX user manual `doc/vDef.pdf`.
+
+The equivalent by hand is
+
+```
 python3 -m venv .venv-ford && .venv-ford/bin/pip install ford ./doc/doi-link
 .venv-ford/bin/ford ford.md
 ```
