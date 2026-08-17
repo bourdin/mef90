@@ -2,7 +2,7 @@ DIRS: MEF90 m_HeatXfer HeatXfer m_DefMech ThermoElasticity vDef Utils
 
 all: $(DIRS)
 
-.PHONY: all $(DIRS) ford fordclean
+.PHONY: all $(DIRS) ford fordclean fordpublish
 
 $(DIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
@@ -83,6 +83,7 @@ FORD = ${FORD_VENV}/bin/ford
 # place; point PETSC_SRC at the sources when PETSc is a prefix install. The
 # PETSc links are simply left out if neither holds a src directory.
 PETSC_SRC ?= ${PETSC_DIR}
+FORD_PETSC = $(if $(strip ${PETSC_SRC}),--petsc-src ${PETSC_SRC},)
 
 ${FORD}:
 	-@echo "Creating the FORD virtualenv in ${FORD_VENV}"
@@ -92,10 +93,41 @@ ${FORD}:
 ford: ${FORD}
 	-@echo "Building the source documentation in ${MEF90_DIR}/doc/html"
 	${FORD} ${MEF90_DIR}/ford.md || exit 1
-	${MEF90_DIR}/bin/ford-xref ${MEF90_DIR}/doc/html --petsc-src ${PETSC_SRC} || exit 1
+	${MEF90_DIR}/bin/ford-xref ${MEF90_DIR}/doc/html ${FORD_PETSC} || exit 1
 
 fordclean:
 	-@rm -Rf ${MEF90_DIR}/doc/html
+
+# Publishing to GitHub Pages. The generated pages live in their own repository,
+# checked out as an ordinary clone next to this one, so there is nothing to
+# understand beyond `git clone`: look inside MEF90_DOCS at any point and it is
+# just the website, on a branch you can inspect, diff, and push by hand.
+#
+#   git clone ${MEF90_DOCS_URL} ${MEF90_DOCS}    (once)
+#   make fordpublish
+MEF90_DOCS_URL ?= ssh://github.com/bourdin/mef90-doc
+MEF90_DOCS ?= ${MEF90_DIR}/../mef90-doc
+
+# Files belonging to the repository rather than to the generated site, which
+# --delete would otherwise carry off on every publish. CNAME is written by
+# GitHub when a custom domain is set in the Pages settings, and losing it takes
+# mef90.org down with it.
+MEF90_DOCS_KEEP = --exclude .git --exclude CNAME --exclude README.md \
+                  --exclude LICENSE
+
+fordpublish: ford
+	@test -d ${MEF90_DOCS}/.git || { \
+	  echo "No clone at ${MEF90_DOCS}."; \
+	  echo "Create the repository on GitHub, then:"; \
+	  echo "    git clone ${MEF90_DOCS_URL} ${MEF90_DOCS}"; \
+	  exit 1; }
+	cd ${MEF90_DOCS} && git pull --ff-only
+	rsync -a --delete ${MEF90_DOCS_KEEP} ${MEF90_DIR}/doc/html/ ${MEF90_DOCS}/
+	touch ${MEF90_DOCS}/.nojekyll
+	cd ${MEF90_DOCS} && git add -A && \
+	  (git diff --cached --quiet || \
+	   git commit -m "mef90 $$(cd ${MEF90_DIR} && git describe --dirty --always --tags)") && \
+	  git push
 
 doc: doc/vDef.pdf doc/vDef.tex
 	-@echo "Building documentation"
