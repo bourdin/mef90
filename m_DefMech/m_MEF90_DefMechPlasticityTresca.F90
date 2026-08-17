@@ -10,12 +10,9 @@ public :: FHG_TRESCA
 contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_TRESCA"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: Tresca
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_TRESCA(x, f, h, g, myctx) bind(c)

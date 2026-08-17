@@ -12,13 +12,11 @@ public :: MEF90DefMechSplit
 public :: MEF90DefMechSplit_SmoothPositiveSquare
 public :: MEF90DefMechSplit_DSmoothPositiveSquare
 public :: MEF90DefMechSplit_D2SmoothPositiveSquare
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplit: The abstract class used to define an energy split for
 !!!                           handling unilateral contact
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 type, extends(MEF90Object), abstract :: MEF90DefMechSplit
@@ -85,15 +83,13 @@ end interface
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSplit_SmoothPositiveSquare"
-!!!
+!!! author: Blaise Bourdin (2018-2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplit_SmoothPositiveSquare: a low order polynomial C^2 regularization of (max(x,0))**2, defined by
 !!!       0                         if x \le -gamma/2
 !!!       (x+\gamma/2)^3/3/\gamma   if -\gamma/2 < x \le \gamma/2
 !!!       x^2+gamma^2/12            otherwise
-!!!
-!!!  (c) 2018-2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 function MEF90DefMechSplit_SmoothPositiveSquare(x, gamma)
@@ -115,12 +111,10 @@ end function MEF90DefMechSplit_SmoothPositiveSquare
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSplit_DSmoothPositiveSquare"
-!!!
+!!! author: Blaise Bourdin (2018-2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplit_DSmoothPositiveSquare: the first derivative of MEF90_DefMechSplitHD_PenaltyFunction
-!!!
-!!!  (c) 2018-2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 function MEF90DefMechSplit_DSmoothPositiveSquare(x, gamma)
@@ -142,12 +136,10 @@ end function MEF90DefMechSplit_DSmoothPositiveSquare
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSplit_D2SmoothPositiveSquare"
-!!!
+!!! author: Blaise Bourdin (2018-2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplit_D2SmoothPositiveSquare: the second derivative of MEF90_DefMechSplitHD_PenaltyFunction
-!!!
-!!!  (c) 2018-2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 function MEF90DefMechSplit_D2SmoothPositiveSquare(x, gamma)

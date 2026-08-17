@@ -9,12 +9,10 @@ module m_MEF90_DefMech_class
    use, intrinsic :: iso_c_binding
    implicit none(type)
 
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMech_Type: The class holding the state and the options of a defect mechanics problem
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    enum, bind(c)
@@ -266,12 +264,10 @@ module m_MEF90_DefMech_class
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCreate"
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCreate: allocates all the fields of a MEF90DefMech_Type
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCreate(DefMechCtx, dm, MEF90Ctx, prefix, ierr)
@@ -426,12 +422,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechDestroy"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechDestroy: destroys a MEF90DefMech_Type
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechDestroy(DefMech, ierr)
@@ -564,11 +558,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGlobalOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechGlobalOptionsSetFromOptions: reads the problem-wide options of a MEF90DefMech_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechGlobalOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -633,11 +625,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGlobalOptionsView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechGlobalOptionsView: the default viewer for a MEF90DefMechGlobalOptions_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechGlobalOptionsView(self, viewer, ierr)
@@ -697,11 +687,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCellSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCellSetOptionsSetFromOptions: reads the options of a single cell set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCellSetOptionsSetFromOptions(comm, prefix, dim, options, ierr)
@@ -777,11 +765,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCellSetOptionsView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCellSetOptionsView: the default viewer for a MEF90DefMechCellSetOptions_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCellSetOptionsView(self, viewer, ierr)
@@ -832,11 +818,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechFaceSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechFaceSetOptionsSetFromOptions: reads the options of a single face set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechFaceSetOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -879,11 +863,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechFaceSetOptionsView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechFaceSetOptionsView: the default viewer for a MEF90DefMechFaceSetOptions_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechFaceSetOptionsView(self, viewer, ierr)
@@ -915,11 +897,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechVertexSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechVertexSetOptionsSetFromOptions: reads the options of a single vertex set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechVertexSetOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -959,11 +939,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechVertexSetOptionsView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechVertexSetOptionsView: the default viewer for a MEF90DefMechVertexSetOptions_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechVertexSetOptionsView(self, viewer, ierr)
@@ -992,12 +970,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSetFromOptions: initializes a MEF90DefMech_Type from options
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechSetFromOptions(self, ierr)
@@ -1057,11 +1033,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechView: the default viewer for a MEF90DefMech_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechView(self, viewer, ierr)

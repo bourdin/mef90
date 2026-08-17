@@ -21,10 +21,9 @@ module m_MEF90_HookesLawZero
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawZero_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawZero_setFromOptions: initializes a MEF90HookesLawZero from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HookesLawZero_setFromOptions(self, ierr)
@@ -42,10 +41,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawZero_view"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawZero_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90HookesLawZero_View(self, viewer, ierr)

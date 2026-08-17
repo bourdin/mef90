@@ -7,12 +7,9 @@ implicit none(type, external)
 contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_NONE"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: VonMises
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_NONE(x, f, h, g, myctx) bind(c)

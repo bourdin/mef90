@@ -23,11 +23,9 @@ module m_MEF90_MPI
 
 contains
 
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
 !!!
 !!!  MEF90MPIInitialize_Private:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MPIInitialize_Private"
@@ -79,11 +77,9 @@ contains
       ierr = 0
    end subroutine MEF90MPIInitialize_Private
 
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
 !!!
 !!!  MEF90MPIFinalize_Private:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MPIFinalize_Private"

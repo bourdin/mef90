@@ -14,12 +14,10 @@ module m_MEF90_DefMechAT_class
    public :: MEF90DefMechAT_view
    public :: MEF90DefMechAT_setFromOptions
 
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90_DefMechAT_Type: The abstract class used to define a generalized Ambrosio-Tortorelli phase field model
-!!!
-!!!  (c) 2022 Blaise Bourdin bourdin@lsu.edu
-!!!      2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    type, abstract, extends(MEF90Object) :: MEF90DefMechAT_Type
@@ -56,10 +54,9 @@ module m_MEF90_DefMechAT_class
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT_view"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechAT_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT_View(self, viewer, ierr)
       class(MEF90DefMechAT_Type), intent(in)    :: self
@@ -97,12 +94,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechAT_setFromOptions: initializes a MEF90_DefMechAT_Type from options
 !!!                                 subclasses may implement their own setFromOptions if they have additional
 !!!                                 parameters, but it is expected that these will call MEF90DefMechAT_setFromOptions
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT_setFromOptions(self, ierr)
       class(MEF90DefMechAT_Type), intent(inout) :: self

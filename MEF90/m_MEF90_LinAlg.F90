@@ -5,12 +5,10 @@ module m_MEF90_LinAlg_class
    public :: mef90Mat
    public :: mef90Tens4OS
 
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  m_MEF90_LinAlg_class: Starting a OO implementation of the basic classes in m_MEF90_LinAlg
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    type :: mef90Vect
@@ -796,11 +794,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Tens4OS2DXMat2D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  Tens4OS2DXMat2D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function Tens4OS2DXMat2D(T1, M1)
       type(Tens4OS2D), intent(IN)                  :: T1
@@ -812,11 +808,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Tens4OS3DXMat3D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  Tens4OS3DXMat3D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function Tens4OS3DXMat3D(T1, M1)
       type(Tens4OS3D), intent(IN)                  :: T1
@@ -1054,11 +1048,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Mat2DDotMatS2D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  Mat2DDotMatS2D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function Mat2DDotMatS2D(M1, M2)
       type(Mat2D), intent(IN)                      :: M1
@@ -1070,11 +1062,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MatS2DDotMat2D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MatS2DDotMat2D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function MatS2DDotMat2D(M1, M2)
       type(MatS2D), intent(IN)                     :: M1
@@ -1086,11 +1076,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Mat2DDotMatS3D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  Mat3DDotMatS3D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function Mat3DDotMatS3D(M1, M2)
       type(Mat3D), intent(IN)                      :: M1
@@ -1102,11 +1090,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MatS3DDotMat3D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MatS3DDotMat3D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function MatS3DDotMat3D(M1, M2)
       type(MatS3D), intent(IN)                     :: M1
@@ -2237,11 +2223,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "simplexNormal2D"
-   !!!
+   !!! author: Blaise Bourdin (2013, bourdin@lsu.edu)
    !!!
    !!!  simplexNormal2D: Compute the normal to a simplex in 2D
-   !!!
-   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
    !!!
    subroutine simplexNormal2D(Coord, n, ierr)
       type(Vect2D), dimension(:), pointer              :: Coord
@@ -2254,11 +2238,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "simplexNormal3D"
-   !!!
+   !!! author: Blaise Bourdin (2013, bourdin@lsu.edu)
    !!!
    !!!  simplexNormal3D: Compute the normal to a simplex in 3D
-   !!!
-   !!!  (c) 2013 Blaise Bourdin bourdin@lsu.edu
    !!!
    subroutine simplexNormal3D(Coord, n, ierr)
       type(Vect3D), dimension(:), pointer              :: Coord
@@ -2639,11 +2621,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Mat2DMoment"
-!!!
+!!! author: Blaise Bourdin (2019, bourdin@lsu.edu)
 !!!
 !!!  Mat2DMoment: k-th moment of a 2x2 matrix, i.e tr(A^k)
-!!!
-!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function Mat2DMoment(k, A)
@@ -2670,11 +2650,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MatS2DMoment"
-!!!
+!!! author: Blaise Bourdin (2019, bourdin@lsu.edu)
 !!!
 !!!  MatS2DMoment: k-th moment of a 2x2 symmetric matrix, i.e tr(A^k)
-!!!
-!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MatS2DMoment(k, A)
@@ -2701,11 +2679,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Mat3DMoment"
-!!!
+!!! author: Blaise Bourdin (2019, bourdin@lsu.edu)
 !!!
 !!!  Mat3DMoment: k-th moment of a 3x3 matrix, i.e tr(A^k)
-!!!
-!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function Mat3DMoment(k, A)
@@ -2732,11 +2708,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MatS3DMoment"
-!!!
+!!! author: Blaise Bourdin (2019, bourdin@lsu.edu)
 !!!
 !!!  MatS3DMoment: k-th moment of a 3x3 symmetric matrix, i.e tr(A^k)
-!!!
-!!!  (c) 2019 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MatS3DMoment(k, A)

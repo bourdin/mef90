@@ -28,10 +28,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT2_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechAT2_setFromOptions: initializes a MEF90_DefMechAT2_Type from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT2_setFromOptions(self,ierr)
       class(MEF90DefMechAT2_Type), intent(inout) :: self
@@ -47,10 +46,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  aAT2: the "a" function of the standard AT2 model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)          :: self
@@ -61,10 +59,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DaAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DaAT2: the derivative of the "a" function of the standard AT2 model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
@@ -75,10 +72,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2aAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2aAT2: the second derivative of the "a" function of the standard AT2 model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
@@ -89,10 +85,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "wAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  wAT2: the "w" function of the standard AT2 model, i.e. w(\alpha) = \alpha^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
@@ -103,10 +98,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DwAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DwAT2: the derivative of the "w" function of the standard AT2 model, i.e. w(\alpha) = \alpha^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self
@@ -117,10 +111,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2wAT2"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2wAT2: the second derivative of the "w" function of the standard AT2 model, i.e. w(\alpha) = \alpha^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wAT2(self, alpha)
       class(MEF90DefMechAT2_Type), intent(IN)           :: self

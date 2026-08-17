@@ -32,10 +32,9 @@ module m_MEF90_DefMechATLinSoft
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechATLinSoft_Constructor"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechATLinSoft_Constructor: the default constructor for a MEF90_DefMechATLinSoft_Type
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    type(MEF90DefMechATLinSoft_Type) function MEF90DefMechATLinSoft_Constructor(k)
       PetscReal, intent(IN)                                :: k
@@ -49,10 +48,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  aLinSoft: the "a" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
@@ -63,10 +61,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DaLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DaLinSoft: the derivative of the "a" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
@@ -77,10 +74,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2aLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2aLinSoft: the second derivative of the "a" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
@@ -92,10 +88,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "wLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  wLinSoft: the "w" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
@@ -107,10 +102,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DwLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DwLinSoft: the derivative of the "w" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self
@@ -122,10 +116,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2wLinSoft"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2wLinSoft: the second derivative of the "w" function of the LinSoft model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wLinSoft(self, alpha)
       class(MEF90DefMechATLinSoft_Type), intent(IN)     :: self

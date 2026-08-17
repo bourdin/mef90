@@ -74,11 +74,9 @@ module m_MEF90_Materials
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90MaterialsInitialize_Private"
-!!!
+!!! author: Blaise Bourdin (2013-2014, bourdin@lsu.edu)
 !!!
 !!!  MEF90MaterialsInitialize_Private:
-!!!
-!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine MEF90MaterialsInitialize_Private(ierr)
       PetscErrorCode, intent(OUT)          :: ierr
@@ -201,11 +199,9 @@ contains
 !! Overloading linear algebra functions with Hookes Laws.
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DSum"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DSum:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw2DSum(A, B)
@@ -247,11 +243,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw3DSum"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw3DSum:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw3DSum(A, B)
@@ -280,11 +274,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DDiff"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DDiff:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw2DDiff(A, B)
@@ -326,11 +318,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw3DDiff"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw3DDiff:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw3DDiff(A, B)
@@ -359,11 +349,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ScalarXMEF90HookesLaw2D"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  ScalarXMEF90HookesLaw2D:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function ScalarXMEF90HookesLaw2D(t, A)
@@ -393,11 +381,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "ScalarXMEF90HookesLaw3D"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  ScalarXMEF90HookesLaw3D:
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function ScalarXMEF90HookesLaw3D(t, A)
@@ -420,11 +406,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMatS2D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DXMatS2D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw2DXMatS2D(A, X)
@@ -448,11 +432,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMatS3D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DXMatS3D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    function MEF90HookesLaw3DXMatS3D(A, X)
@@ -480,11 +462,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMat2D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DXMat2D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function MEF90HookesLaw2DXMat2D(A, X)
       type(MEF90HookesLaw2D), intent(IN)           :: A
@@ -508,11 +488,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLaw2DXMat3D"
-!!!
+!!! author: Blaise Bourdin (2016, bourdin@lsu.edu)
 !!!
 !!!  MEF90HookesLaw2DXMat3D:
-!!!
-!!!  (c) 2016 Blaise Bourdin bourdin@lsu.edu
 !!!
    function MEF90HookesLaw3DXMat3D(A, X)
       type(MEF90HookesLaw3D), intent(IN)           :: A

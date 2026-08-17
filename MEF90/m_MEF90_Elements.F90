@@ -214,11 +214,9 @@ module m_MEF90_Elements
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ElementsInitialize_Private"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90ElementsInitialize_Private:
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90ElementsInitialize_Private(ierr)
@@ -233,11 +231,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ElementGetType"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90ElementGetType: Return an element given a family and order
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90ElementGetType(elemFamily, order, cellType, elemType, ierr)
@@ -311,11 +307,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ElementGetTypeBoundary"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90ElementGetTypeBoundary: Return an element given a family and order
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
       subroutine MEF90ElementGetTypeBoundary(elemFamily, order, cellType, elemType, ierr)
@@ -377,12 +371,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "Element2DScalInitSet"
-!!!
+!!! author: Blaise Bourdin (2014-2022, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  Element2DScalInitSet:
-!!!
-!!!  (c) 2014-2022 Blaise Bourdin bourdin@lsu.edu
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
       subroutine Element2DScalInitSet(dm, cellIS, dElem, dQuadratureOrder, elemType, ierr)

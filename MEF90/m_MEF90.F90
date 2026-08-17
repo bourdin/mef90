@@ -20,11 +20,9 @@ module m_MEF90
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Initialize"
-!!!
+!!! author: Blaise Bourdin (2014-18, bourdin@lsu.edu)
 !!!
 !!!  MEF90Initialize:
-!!!
-!!!  (c) 2014-18 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90Initialize(comm, ierr)
@@ -80,11 +78,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Finalize"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
 !!!
 !!!  MEF90Finalize:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90Finalize(ierr)

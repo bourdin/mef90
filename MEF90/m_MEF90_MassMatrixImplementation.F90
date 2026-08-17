@@ -13,13 +13,11 @@ private
 public :: MEF90_MassMatrixAssembleSet
 
 contains
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90_MassMatrixAssembleSet: Assemble the contribution of a cell / face / edge set to
 !!!                               the mass matrix associated with the element type elemType
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_MassMatrixAssembleSet"

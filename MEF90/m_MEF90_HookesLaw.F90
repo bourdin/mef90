@@ -38,11 +38,9 @@ module m_MEF90_HookesLaw
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90GetHookesLaw"
-!!!
+!!! author: Blaise Bourdin (2025-2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90GetHookesLaw: Returns a MEF90HookesLaw from set options
-!!!
-!!!  (c) 2025, 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90GetHookesLaw(comm, prefix, dim, HookesLaw, ierr)
       MPIU_Comm, intent(in)                           :: comm

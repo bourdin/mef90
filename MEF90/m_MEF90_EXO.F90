@@ -22,12 +22,10 @@ module m_MEF90_EXO
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxOpenEXO"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxOpenEXO:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2022 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90CtxOpenEXO(MEF90Ctx, Viewer, mode, ierr)
       type(MEF90Ctx_Type), target, intent(IN)                   :: MEF90Ctx
@@ -48,12 +46,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCloseEXO"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxCloseEXO:
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2022      Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90CtxCloseEXO(Viewer, ierr)
       type(tPetscViewer), intent(INOUT)                :: Viewer
@@ -64,13 +60,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOFormat"
-!!!
+!!! author: Blaise Bourdin (2012-2022, bourdin@lsu.edu)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2024, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90EXOFormat:
-!!!
-!!!  (c) 2012-2022 Blaise Bourdin bourdin@lsu.edu
-!!!           2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!           2024 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90EXOFormat(Viewer, nameG, nameC, nameV, time, ierr)
       type(tPetscViewer), intent(IN)                        :: Viewer
@@ -123,12 +117,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXODMView"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90EXODMView:
-!!!
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
    subroutine MEF90EXODMView(dm, Viewer, order, ierr)
       type(tPetscViewer), intent(IN)                      :: Viewer
@@ -148,13 +139,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecView"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2023, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90EXOVecView:
-!!!
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
    subroutine MEF90EXOVecView(v, sf, invSF, Viewer, step, bs, ierr)
       type(tVec), intent(IN)                             :: v
@@ -193,12 +181,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90EXOVecLoad"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90EXOVecLoad:
-!!!
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
    subroutine MEF90EXOVecLoad(v, sf, invSF, Viewer, step, bs, ierr)
       type(tVec), intent(INOUT)                          :: v

@@ -78,12 +78,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechComputeCompositeDamage"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechComputeCompositeDamage: Reconstruct a global damage field by taking the min of all set damage fields
 !!!                                      Use in multi-phase field for I/O, error on altmin etc
-!!!
-!!!  (c) 2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechComputeCompositeDamage(damage, damageSets, ierr)
@@ -101,13 +99,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSetTransients"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSetTransients:
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022    Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechSetTransients(MEF90DefMechCtx, step, time, ierr)
@@ -266,12 +262,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacement"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechOperatorDisplacement: wraps calls to MEF90DefMechOperatorDisplacement from m_MEF90_DefMechAssembly
 !!!                        since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90DefMechOperatorDisplacement(snesTemp, x, residual, PETScCtx, ierr)
@@ -292,12 +286,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacement"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechBilinearFormDisplacement: wraps calls to MEF90DefMechBilinearFormDisplacement from m_MEF90_DefMechAssembly
 !!!                            since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90DefMechBilinearFormDisplacement(snesDispl, x, A, M, PETScCtx, ierr)
@@ -322,8 +314,7 @@ contains
 !!
 !!  MEF90DefMechWork: wraps calls to MEF90DefMechWork from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-22 Blaise Bourdin bourdin@lsu.edu
+!!! author: Blaise Bourdin (2012-22, bourdin@lsu.edu)
 !!!
 
    subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
@@ -344,8 +335,7 @@ contains
 !!
 !!  MEF90DefMechCohesiveEnergy: wraps calls to MEF90DefMechCohesiveEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 
    subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
@@ -366,8 +356,7 @@ contains
 !!
 !!  MEF90DefMechElasticEnergy: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 
    subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
@@ -388,8 +377,7 @@ contains
 !!
 !!  MEF90DefMechPlasticDissipation: wraps calls to MEF90DefMechPlasticDissipation from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Erwan TANNE erwan.tanne@gmail.com
+!!! author: Erwan Tanne (2012-14, erwan.tanne@gmail.com)
 !!!
 
    subroutine MEF90DefMechPlasticDissipation(x, MEF90DefMechCtx, plasticStrainOld, energy, ierr)
@@ -412,8 +400,7 @@ contains
 !!
 !!  MEF90DefMechStress: wraps calls to MEF90DefMechElasticEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 
    subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
@@ -430,11 +417,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCrackVolume"
-!!!
+!!! author: Erwan Tanne (2016, erwan.tanne@gmail.com)
 !!!
 !!!  MEF90DefMechCrackVolume:
-!!!
-!!!  (c) 2016 erwan
 !!!
 
    subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)
@@ -451,12 +436,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechOperatorDamage: wraps calls to MEF90DefMechOperatorDamage from m_MEF90_DefMechAssembly
 !!!                        since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, PETScCtx, ierr)
@@ -477,11 +460,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOGradientDamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOGradientDamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, PETScCtx, ierr)
@@ -502,12 +483,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamage"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechBilinearFormDamage: wraps calls to MEF90DefMechBilinearFormDamage from m_MEF90_DefMechAssembly
 !!!                            since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, PETScCtx, ierr)
@@ -528,11 +507,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOHessianDamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOHessianDamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, PETScCtx, ierr)
@@ -557,8 +534,7 @@ contains
 !!
 !!  MEF90DefMechSurfaceEnergy: wraps calls to MEF90DefMechSurfaceEnergy from m_MEF90_DefMechAssembly
 !!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 
    subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
@@ -575,11 +551,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOObjectiveDamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOObjectiveDamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, PETScCtx, ierr)
@@ -600,12 +574,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechFormatEXO"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022-2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechFormatEXO:
-!!!
-!!!  (c) 2014      Blaise Bourdin bourdin@lsu.edu
-!!!      2022-2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechFormatEXO(MEF90DefMechCtx, time, ierr)
@@ -726,13 +698,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechViewEXO"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechViewEXO: Save all fields in a MEF90DefMech_Type in an exodus file
-!!!
-!!!  (c) 2014 Blaise Bourdin, bourdin@lsu.edu
-!!!      2026 Blaise Bourdin, bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechViewEXO(MEF90DefMechCtx, step, ierr)
@@ -769,12 +739,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCreateSNESDisplacement"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCreateSNESDisplacement:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCreateSNESDisplacement(MEF90DefMechCtx, snesDisplacement, residual, ierr)
@@ -838,12 +806,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCreateSNESDamage"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCreateSNESDamage:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCreateSNESDamage(MEF90DefMechCtx, snesDamage, residual, ierr)
@@ -906,11 +872,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCreateTAODamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCreateTAODamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechCreateTAODamage(MEF90DefMechCtx, taoDamage, residual, ierr)
@@ -974,12 +938,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechUpdateDamageBounds"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechUpdateDamageBounds:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechUpdateDamageBounds(MEF90DefMechCtx, snesDamage, alpha, ierr)
@@ -1017,12 +979,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOUpdateDamageBounds"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOUpdateDamageBounds:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90DefMechTAOUpdateDamageBounds(MEF90DefMechCtx, taoDamage, alpha, ierr)
@@ -1060,12 +1020,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticStrainUpdate"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
 !!!
 !!!  MEF90DefMechPlasticStrainUpdate: wraps calls to MEF90DefMechPlasticStrainUpdate from m_MEF90_DefMechPlasticity
 !!!                        since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr)

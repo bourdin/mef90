@@ -11,11 +11,9 @@ module m_MEF90_HookesLaw_class
    public :: MEF90HookesLaw
    ! public :: MEF90HookesLaw_setFromOptions
 
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLaw: The abstract class used to define a stress-strain relation
-!!!
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    type, abstract, extends(MEF90Object) :: MEF90HookesLaw

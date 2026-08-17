@@ -16,14 +16,12 @@ public MEF90HeatXferOperator, &
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferOperator"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferOperator: Build the operator. When called in SNES, the solution time should always match the target time,
 !!!                         so there is no need for interpolation of the fluxes, external, and boundary values
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022    Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90HeatXferOperator(snesTemp, x, residual, MEF90HeatXferCtx, ierr)
@@ -234,13 +232,11 @@ end subroutine MEF90HeatXferOperator
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferBilinearForm"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferBilinearForm:
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022    Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, MEF90HeatXferCtx, ierr)
@@ -390,12 +386,10 @@ end subroutine MEF90HeatXferBilinearForm
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerEnergy"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXFerEnergy:
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, ierr)
@@ -557,13 +551,11 @@ end subroutine MEF90HeatXFerEnergy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerIFunction"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90HeatXFerIFunction:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, MEF90HeatXferCtx, ierr)
@@ -797,13 +789,11 @@ end subroutine MEF90HeatXFerIFunction
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferIJacobian"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferIJacobian:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, MEF90HeatXferCtx, ierr)

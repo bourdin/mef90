@@ -18,12 +18,10 @@ public :: MEF90L2DotProductSet, MEF90H1DotProductSet, MEF90H1symDotProductSet, M
 #endif
 
 contains
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90L2DotProductSet: Assemble and add the contribution one processor to the L2 dot products of Vec U and V
 !!!                   on a cell / face / edge set, interpolated with element type elemType
-!!!
-!!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90L2DotProductSet"
@@ -85,12 +83,10 @@ subroutine MEF90L2DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
    PetscCall(ISDestroy(setPointIS, ierr))
 end subroutine MEF90L2DotProductSet
 
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90H1DotProductSet: Assemble and add the contribution one processor to the H1 dot products of Vec U and V
 !!!                   on a cell / face / edge set, interpolated with element type elemType
-!!!
-!!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90H1DotProductSet"
@@ -151,12 +147,10 @@ subroutine MEF90H1DotProductSet(myDotProductSet, U, V, setType, setID, elem, ele
    PetscCall(ISDestroy(setPointIS, ierr))
 end subroutine MEF90H1DotProductSet
 
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90H1SymDotProductSet: Assemble and add the contribution one processor to the H1-sym dot products of Vec U and V
 !!!                   on a cell / face / edge set, interpolated with element type elemType
-!!!
-!!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90H1SymDotProductSet"
@@ -212,12 +206,10 @@ subroutine MEF90H1SymDotProductSet(myDotProductSet, U, V, setType, setID, elem, 
    PetscCall(ISDestroy(setPointIS, ierr))
 end subroutine MEF90H1SymDotProductSet
 #endif
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90L2NormSet: Assemble and add the contribution one processor to the L2 norm of a Vect U
 !!!                   on a cell / face / edge set, interpolated with element type elemType
-!!!
-!!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 #undef __FUNCT__
 #define __FUNCT__ "MEF90L2NormSet"

@@ -32,14 +32,13 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDisplacement"
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Erwan Tanne (2012-20, erwan.tanne@gmail.com)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechOperatorDisplacement: Build the operator. When called in SNES, the solution time should always match the target time,
 !!!                                    so there is no need for interpolation of the forces, external, and boundary values
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechOperatorDisplacement(snesDisplacement, displacement, residual, MEF90DefMechCtx, ierr)
@@ -384,13 +383,12 @@ end subroutine MEF90DefMechOperatorDisplacement
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDisplacement"
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Erwan Tanne (2012-20, erwan.tanne@gmail.com)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechBilinearFormDisplacement:
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu,Erwan Tanne erwan.tanne@gmail.com
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechBilinearFormDisplacement(snesDisplacement, displacement, A, M, MEF90DefMechCtx, ierr)
@@ -593,13 +591,11 @@ end subroutine MEF90DefMechBilinearFormDisplacement
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechWork"
-!!!
+!!! author: Blaise Bourdin (2014-2022, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechWork:
-!!!
-!!!  (c) 2014-2022 Blaise Bourdin bourdin@lsu.edu
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechWork(MEF90DefMechCtx, bodyForceWork, boundaryForceWork, ierr)
@@ -758,13 +754,11 @@ end subroutine MEF90DefMechWork
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCohesiveEnergy"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCohesiveEnergy:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechCohesiveEnergy(MEF90DefMechCtx, cohesiveEnergy, ierr)
@@ -847,11 +841,9 @@ end subroutine MEF90DefMechCohesiveEnergy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticDissipation"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  MEF90DefMechPlasticDissipation:
-!!!
-!!!  (c) 2015 Erwan TANNE erwan.tanne@gmail.com
 !!!
 
 subroutine MEF90DefMechPlasticDissipation(MEF90DefMechCtx, plasticStrainOld, energy, ierr)
@@ -864,13 +856,11 @@ end subroutine MEF90DefMechPlasticDissipation
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechElasticEnergy"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechElasticEnergy:
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechElasticEnergy(MEF90DefMechCtx, energy, ierr)
@@ -1027,13 +1017,11 @@ end subroutine MEF90DefMechElasticEnergy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechStress"
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechStress:
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf, marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechStress(MEF90DefMechCtx, stress, ierr)
@@ -1215,14 +1203,13 @@ end subroutine MEF90DefMechStress
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechOperatorDamage"
-!!!
+!!! author: Blaise Bourdin (2012-20, bourdin@lsu.edu)
+!!! author: Erwan Tanne (2012-20, erwan.tanne@gmail.com)
+!!! author: Blaise Bourdin (2022-26, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechOperatorDamage: Build the operator. When called in SNES, the solution time should always match the target time,
 !!!                                    so there is no need for interpolation of the forces, external, and boundary values
-!!!
-!!!  (c) 2012-20 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!      2022-26 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechOperatorDamage(snesDamage, damage, residual, MEF90DefMechCtx, ierr)
@@ -1439,12 +1426,10 @@ end subroutine MEF90DefMechOperatorDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOGradientDamage"
-!!!
+!!! author: Alexis Marboeuf (2012-2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2023, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOGradientDamage:
-!!!
-!!!  (c) 2012-20 2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechTAOGradientDamage(taoDamage, damage, residual, MEF90DefMechCtx, ierr)
@@ -1464,13 +1449,12 @@ end subroutine MEF90DefMechTAOGradientDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechBilinearFormDamage"
-!!!
+!!! author: Blaise Bourdin (2012-19, bourdin@lsu.edu)
+!!! author: Erwan Tanne (2012-19, erwan.tanne@gmail.com)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechBilinearFormDamage:
-!!!
-!!!  (c) 2012-19 Blaise Bourdin bourdin@lsu.edu, Erwan Tanne erwan.tanne@gmail.com
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechBilinearFormDamage(snesDamage, damage, A, M, MEF90DefMechCtx, ierr)
@@ -1655,12 +1639,10 @@ end subroutine MEF90DefMechBilinearFormDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAOHessianDamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2023, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOHessianDamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechTAOHessianDamage(taoDamage, damage, A, M, MEF90DefMechCtx, ierr)
@@ -1680,13 +1662,11 @@ end subroutine MEF90DefMechTAOHessianDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSurfaceEnergy"
-!!!
+!!! author: Blaise Bourdin (2014-2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSurfaceEnergy:
-!!!
-!!!  (c) 2014-2020 Blaise Bourdin bourdin@lsu.edu
-!!!           2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!           2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechSurfaceEnergy(MEF90DefMechCtx, energy, ierr)
@@ -1782,12 +1762,10 @@ end subroutine MEF90DefMechSurfaceEnergy
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechTAObjectiveDamage"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2023, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechTAOObjectiveDamage:
-!!!
-!!!  (c) 2022 Alexis Marboeuf marboeua@mcmaster.ca
-!!!      2023 Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechTAOObjectiveDamage(taoDamage, damage, energy, MEF90DefMechCtx, ierr)
@@ -1827,13 +1805,12 @@ end subroutine MEF90DefMechTAOObjectiveDamage
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechCrackVolume"
-!!!
+!!! author: Erwan Tanne (2016-2021, erwan.tanne@gmail.com)
+!!! author: Blaise Bourdin (2016-2021, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90DefMechCrackVolume:
-!!!
-!!!  (c) 2016-2021 Erwan erwan.tanne@gmail.com, Blaise Bourdin bourdin@lsu.edu
-!!!         2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!         2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechCrackVolume(MEF90DefMechCtx, CrackVolume, ierr)

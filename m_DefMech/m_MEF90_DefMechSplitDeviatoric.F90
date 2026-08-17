@@ -23,11 +23,10 @@ end type MEF90DefMechSplitDeviatoric
 contains
 #undef __FUNCT__
 #define __FUNCT__ "setFromOptionsDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  setFromOptionsDeviatoric: the default constructor for a MEF90DefMechSplitDeviatoric
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine setFromOptionsDeviatoric(self, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(inout) :: self
@@ -51,10 +50,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "viewDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  viewDeviatoric: view a MEF90DefMechSplitDeviatoric
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine viewDeviatoric(self, viewer, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(in)    :: self
@@ -77,11 +75,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "setupDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  setupDeviatoric: the setup routine for a MEF90DefMechSplitDeviatoric, which does nothing since there is no split
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine setupDeviatoric(self, Strain, ierr)
       use m_MEF90
@@ -97,15 +94,13 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "EEDDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  EEDDeviatoric: Compute the positive and negative part of the elastic energy density associated with a strain tensor
 !!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2
 !!!           EEDPlus  = Ae.e/2 - EEDMinus
 !!!  with N = 3 for 3D and N = 2 for 2D, where e is the strain tensor, A is the Hookes law tensor
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine EEDDeviatoric(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(IN) :: self
@@ -129,12 +124,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DEEDDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  DEEDDeviatoric: Compute the directional derivative of the positive and negative part of the elastic energy density in the direction phi at the point defined by the strain tensor
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine DEEDDeviatoric(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(IN) :: self
@@ -156,10 +149,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2EEDDeviatoric"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2EEDDeviatoric: Compute the second derivative of the positive and negative part of the elastic energy density (positive and negative stress)
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine D2EEDDeviatoric(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
       class(MEF90DefMechSplitDeviatoric), intent(IN) :: self

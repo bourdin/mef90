@@ -17,13 +17,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechPlasticStrainUpdate"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
+!!! author: Stella Brach (2017, brach.ste@gmail.com)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechPlasticStrainUpdate:
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!  (c) 2017 Stella Brach : brach.ste@gmail.com
-!!!  (c) 2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90DefMechPlasticStrainUpdate(MEF90DefMechCtx, plasticStrain, x, PlasticStrainOld, plasticStrainPrevious, cumulatedDissipatedPlasticEnergyVariation, cumulatedDissipatedPlasticEnergyOld, ierr)

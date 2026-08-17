@@ -8,11 +8,10 @@ module m_MEF90_baseClass
    private
    public :: MEF90Object
 
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90_baseClass: The base class for all MEF90 classes
 !!!
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 !!!  NOTE FOR CLASSES THAT ARE HANDED TO PETSc AS AN APPLICATION CONTEXT
 !!!
@@ -78,10 +77,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Object_view"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90Object_view: Views a MEF90Object and flagged it as viewed so that it is not viewed multiple times when -verbose is set to a high value
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90Object_view(self, viewer, ierr)
@@ -103,11 +101,10 @@ subroutine MEF90Object_view(self, viewer, ierr)
 ! contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90Object_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90Object_setFromOptions: generic version of the setFromOptions method for all MEF90Objects, which just prints the object if -verbose is set to a high value
 !!!  Can be overridden in classes if they have options to set.
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90Object_setFromOptions(self, ierr)

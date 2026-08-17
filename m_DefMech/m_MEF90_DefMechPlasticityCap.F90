@@ -10,12 +10,9 @@ public :: FHG_CAPMODEL
 contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_CAPMODEL"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: Capmodel
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_CAPMODEL(x, f, h, g, myctx) bind(c)

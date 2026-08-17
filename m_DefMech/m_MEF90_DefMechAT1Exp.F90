@@ -39,10 +39,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT1exp_view"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechAT1exp_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT1exp_View(self,viewer,ierr)
       class(MEF90DefMechAT1exp_Type), intent(in) :: self
@@ -67,10 +66,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechAT1exp_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechAT1exp_setFromOptions: initializes a MEF90_DefMechAT1exp_Type from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechAT1exp_setFromOptions(self,ierr)
       class(MEF90DefMechAT1exp_Type), intent(inout) :: self
@@ -93,10 +91,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  aAT1exp: the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -111,10 +108,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DaAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DaAT1exp: the derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -129,10 +125,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2aAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2aAT1exp: the second derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -147,10 +142,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "wAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  wAT1exp: the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -161,10 +155,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DwAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DwAT1exp: the derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -175,10 +168,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2wAT1exp"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2wAT1exp: the second derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self

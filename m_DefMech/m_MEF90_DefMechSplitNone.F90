@@ -22,11 +22,10 @@ end type MEF90DefMechSplitNone
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSplitNone_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplitNone_setFromOptions: the default constructor for a MEF90DefMechSplitNone
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechSplitNone_setFromOptions(self, ierr)
       class(MEF90DefMechSplitNone), intent(inout) :: self
@@ -46,10 +45,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechSplitNone_view"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechSplitNone_view: view a MEF90DefMechSplitNone
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechSplitNone_view(self, viewer, ierr)
       class(MEF90DefMechSplitNone), intent(in)    :: self
@@ -72,11 +70,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "setupNONE"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  setupNONE: the setup routine for a MEF90DefMechSplitNone, which does nothing since there is no split
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine setupNONE(self, Strain, ierr)
       use m_MEF90
@@ -92,13 +89,12 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "EEDNone"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  EEDNone: Compute the positive and negative part of the elastic energy density associated with a strain tensor
 !!!           without a split, we have EEDPlus  = 1/2 HookesLaw Strain \cdot Strain
 !!!                                    EEDMinus = 0
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine EEDNone(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
       class(MEF90DefMechSplitNone), intent(IN) :: self
@@ -114,15 +110,13 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DEEDNone"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  DEEDNone: Compute the derivative of the positive and negative part of the elastic energy density (positive and negative stress)
 !!!               evaluated at the strain tensor Strain.
 !!!           without a split, we have DEEDPlus  = HookesLaw Strain
 !!!                                    DEEDMinus = 0
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine DEEDNone(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
       class(MEF90DefMechSplitNone), intent(IN) :: self
@@ -137,12 +131,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2EEDNone"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2EEDNone: Compute the second derivative of the positive and negative part of the elastic energy density (positive and negative stress)
 !!!               evaluated at the strain tensor Strain.
 !!!               without a split, D2EEDPlus = HookesLaw, D2EEDMinus = 0
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine D2EEDNone(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
       class(MEF90DefMechSplitNone), intent(IN) :: self

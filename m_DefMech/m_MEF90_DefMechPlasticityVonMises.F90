@@ -12,12 +12,9 @@ public :: FHG_VONMISES1D
 contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_VONMISES"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: VonMises
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_VONMISES(x, f, h, g, myctx) bind(c)
@@ -66,12 +63,9 @@ end subroutine FHG_VONMISES
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_VONMISESPLANETHEORY"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: VonMises
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_VONMISESPLANETHEORY(x, f, h, g, myctx) bind(c)
@@ -159,12 +153,9 @@ end subroutine FHG_VONMISESPLANETHEORY
 
 #undef __FUNCT__
 #define __FUNCT__ "FHG_VONMISES1D"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: VonMises
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_VONMISES1D(x, f, h, g, myctx) bind(c)

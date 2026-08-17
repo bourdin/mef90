@@ -9,12 +9,10 @@ module m_MEF90_HeatXfer_class
    use, intrinsic :: iso_c_binding
    implicit none(type)
 
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXfer_Type: The class holding the state and the options of a heat transfer problem
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    enum, bind(c)
@@ -112,12 +110,10 @@ module m_MEF90_HeatXfer_class
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferCreate"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferCreate: allocates all the fields of a MEF90HeatXfer_Type
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferCreate(HeatXfer, dm, MEF90Ctx, prefix, ierr)
@@ -178,12 +174,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferDestroy"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferDestroy: destroys a MEF90HeatXfer_Type
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferDestroy(HeatXfer, ierr)
@@ -231,11 +225,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferGlobalOptionsSetFromOptions_Private"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferGlobalOptionsSetFromOptions_Private: reads the problem-wide options of a MEF90HeatXfer_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferGlobalOptionsSetFromOptions_Private(comm, prefix, options, ierr)
@@ -260,11 +252,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferCellSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferCellSetOptionsSetFromOptions: reads the options of a single cell set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferCellSetOptionsSetFromOptions(comm, prefix, dim, options, ierr)
@@ -315,11 +305,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferFaceSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferFaceSetOptionsSetFromOptions: reads the options of a single face set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferFaceSetOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -339,11 +327,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferVertexSetOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferVertexSetOptionsSetFromOptions: reads the options of a single vertex set
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferVertexSetOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -360,12 +346,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferSetFromOptions: initializes a MEF90HeatXfer_Type from options
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2026    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferSetFromOptions(self, ierr)
@@ -428,11 +412,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferView: the default viewer for a MEF90HeatXfer_Type
-!!!
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferView(self, viewer, ierr)

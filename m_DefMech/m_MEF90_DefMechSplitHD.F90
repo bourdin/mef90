@@ -23,11 +23,10 @@ end type MEF90DefMechSplitHD
 contains
 #undef __FUNCT__
 #define __FUNCT__ "setFromOptionsHD"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  setFromOptionsHD: the default constructor for a MEF90DefMechSplitHD
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine setFromOptionsHD(self, ierr)
       class(MEF90DefMechSplitHD), intent(inout) :: self
@@ -51,10 +50,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "viewHD"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  viewHD: view a MEF90DefMechSplitHD
-!!!  (c) 2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine viewHD(self, viewer, ierr)
       class(MEF90DefMechSplitHD), intent(in)    :: self
@@ -79,11 +77,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "setupHD"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  setupHD: the setup routine for a MEF90DefMechSplitHD, which does nothing since there is no split
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine setupHD(self, Strain, ierr)
       use m_MEF90
@@ -99,15 +96,13 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "EEDHD"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  EEDHD: Compute the positive and negative part of the elastic energy density associated with a strain tensor
 !!!           EEDMinus = SmoothPositiveSquare(-trace(e)) AI.I/2/N^2
 !!!           EEDPlus  = Ae.e/2 - EEDMinus
 !!!  with N = 3 for 3D and N = 2 for 2D, where e is the strain tensor, A is the Hookes law tensor
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine EEDHD(self, HookesLaw, phi, EEDPlus, EEDMinus, ierr)
       class(MEF90DefMechSplitHD), intent(IN) :: self
@@ -152,12 +147,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DEEDHD"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  DEEDHD: Compute the directional derivative of the positive and negative part of the elastic energy density in the direction phi at the point defined by the strain tensor
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine DEEDHD(self, HookesLaw, phi, DEEDPlus, DEEDMinus, ierr)
       class(MEF90DefMechSplitHD), intent(IN) :: self
@@ -210,10 +203,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2EEDHD"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2EEDHD: Compute the second derivative of the positive and negative part of the elastic energy density (positive and negative stress)
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    subroutine D2EEDHD(self, HookesLaw, phi, psi, D2EEDPlus, D2EEDMinus, ierr)
       class(MEF90DefMechSplitHD), intent(IN) :: self

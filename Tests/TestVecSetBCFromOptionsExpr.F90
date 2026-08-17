@@ -10,11 +10,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "myMEF90VecSetValuesFromOptionsExpr"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  myMEF90VecSetValuesFromOptionsExpr: Fill values of a Vec using expressions passed as petsc options
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine myMEF90VecSetValuesFromOptionsExpr(v, t, ierr)
@@ -133,11 +131,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "myMEF90VecSetBCValuesFromOptionsExpr"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  myMEF90VecSetBCValuesFromOptionsExpr: Fill boundary values of a Vec using expressions passed as petsc options
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine myMEF90VecSetBCValuesFromOptionsExpr(v, t, ierr)

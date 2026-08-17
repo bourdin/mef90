@@ -16,12 +16,10 @@ module m_MEF90_Ctx
    public :: MEF90CtxGetTime
    public :: MEF90CtxGlobalOptionsSetFromOptions
 
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90Ctx_Type: The class holding the MEF90-wide state and options
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2026      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    enum, bind(c)
@@ -88,12 +86,10 @@ module m_MEF90_Ctx
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxCreate"
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxCreate:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90CtxCreate(comm, MEF90Ctx, prefix, ierr)
@@ -153,12 +149,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxDestroy"
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxDestroy:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90CtxDestroy(MEF90Ctx, ierr)
@@ -178,14 +172,12 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxGlobalOptionsSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxGlobalOptionsSetFromOptions: reads the MEF90-wide options.
 !!!      options is intent(inout): whatever it holds on entry is used as the default, so that a
 !!!      caller can override the defaults carried by MEF90CtxGlobalOptions_Type before calling.
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2026      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90CtxGlobalOptionsSetFromOptions(comm, prefix, options, ierr)
@@ -210,12 +202,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxSetFromOptions"
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxSetFromOptions: initializes a MEF90Ctx_Type from options
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2026      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90CtxSetFromOptions(self, ierr)
@@ -233,11 +223,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxView"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CtxView: the default viewer for a MEF90Ctx_Type
-!!!
-!!!  (c) 2026      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90CtxView(self, viewer, ierr)
@@ -275,11 +263,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CtxGetTime"
-!!!
+!!! author: Blaise Bourdin (2012-2014, bourdin@lsu.edu)
 !!!
 !!!  MEF90CtxGetTime:
-!!!
-!!!  (c) 2012-2014 Blaise Bourdin bourdin@lsu.edu
 !!!
 
    subroutine MEF90CtxGetTime(MEF90Ctx, t, ierr)

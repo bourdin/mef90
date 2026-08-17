@@ -27,10 +27,9 @@ module m_MEF90_HookesLawIsotropic2D
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawIsotropic2D_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawIsotropic2D_setFromOptions: initializes a MEF90HookesLawIsotropic2D from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HookesLawIsotropic2D_setFromOptions(self, ierr)
@@ -65,10 +64,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawIsotropic2D_view"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawIsotropic2D_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
 subroutine MEF90HookesLawIsotropic2D_View(self, viewer, ierr)
@@ -173,10 +171,9 @@ module m_MEF90_HookesLawIsotropic3D
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawIsotropic3D_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawIsotropic3D_setFromOptions: initializes a MEF90HookesLawIsotropic3D_type from options
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HookesLawIsotropic3D_setFromOptions(self, ierr)
@@ -204,10 +201,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HookesLawIsotropic3D_view"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HookesLawIsotropic3D_view: the default viewer for a MEF90_DefMechAT_Type
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HookesLawIsotropic3D_View(self, viewer, ierr)

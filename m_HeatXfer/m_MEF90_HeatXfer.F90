@@ -35,13 +35,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferSetTransients"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferSetTransients: Update all transient data (boundary / external temperature and fluxes)
 !!!                              using the proper scaling law
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferSetTransients(MEF90HeatXferCtx, step, time, ierr)
@@ -113,13 +111,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferOperator"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferOperator: wraps calls to MEF90HeatXferOperator from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferOperator(snesTemp, x, residual, PETScCtx, ierr)
@@ -140,13 +136,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferBilinearForm"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferBilinearForm: wraps calls to MEF90HeatXferBilinearForm from m_MEF90_HeatXferAssembly
 !!!                             since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferBilinearForm(snesTemp, x, A, M, PETScCtx, ierr)
@@ -167,13 +161,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerEnergy"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXFerEnergy: wraps calls to MEF90HeatXferEnergy from m_MEF90_HeatXferAssembly
 !!!                       since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXFerEnergy(MEF90HeatXferCtx, energy, bodyWork, surfaceWork, ierr)
@@ -190,13 +182,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXFerIFunction"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXFerIFunction: wraps calls to MEF90HeatXFerIFunction from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXFerIFunction(tempTS, time, x, xdot, F, PETScCtx, ierr)
@@ -218,13 +208,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferIJacobian"
-!!!
+!!! author: Blaise Bourdin (2012-14, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferIJacobian: wraps calls to MEF90HeatXferIJacobian from m_MEF90_HeatXferAssembly
 !!!                         since overloading cannot be used here
-!!!
-!!!  (c) 2012-14 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferIJacobian(tempTS, t, x, xdot, shift, A, M, PETScCtx, ierr)
@@ -247,13 +235,11 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferViewEXO"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferViewEXO:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
-!!!      2022 Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferViewEXO(MEF90HeatXferCtx, step, ierr)
@@ -272,12 +258,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferCreateSNES"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferCreateSNES:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022 Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferCreateSNES(MEF90HeatXferCtx, snesTemp, residual, ierr)
@@ -332,12 +316,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90HeatXferCreateTS"
-!!!
+!!! author: Blaise Bourdin (2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90HeatXferCreateTS:
-!!!
-!!!  (c) 2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022    Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90HeatXferCreateTS(MEF90HeatXferCtx, tsTemp, residual, initialTime, initialStep, ierr)

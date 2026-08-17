@@ -13,12 +13,10 @@ module m_MEF90_Utils
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ISAllGatherMerge"
-!!!
+!!! author: Blaise Bourdin (2013-2014, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90ISAllGatherMerge: Merge all values of an IS, deleting duplicates
-!!!
-!!!  (c) 2013-2014 Blaise Bourdin bourdin@lsu.edu
-!!!      2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90ISAllGatherMerge(Comm, is, ierr)
@@ -89,11 +87,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90StrCount"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90StrCount: counts the number of occurrences of a substring in a string
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    function MEF90StrCount(s, c)
@@ -118,11 +114,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90StrTokenize"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90StrTokenize: Breaks a string into an array of substrings based on a delimiter
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90StrTokenize(str, delim, tokens)

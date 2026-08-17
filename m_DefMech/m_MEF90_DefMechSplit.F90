@@ -33,12 +33,10 @@ character(len=MEF90MXSTRLEN), dimension(6), protected :: MEF90DefMechSplitEnumLi
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGetSplit"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechGetSplit: Return the split object from the cell set options
-!!!
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
-!!!      2026 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechGetSplit(comm, prefix, split, ierr)
       MPIU_Comm, intent(in)                              :: comm

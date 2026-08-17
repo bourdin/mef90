@@ -33,10 +33,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechATKKL_setFromOptions"
-!!!
+!!! author: Blaise Bourdin (2025-26, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechATKKL_setFromOptions: initializes a MEF90_DefMechATKKL_Type from options
-!!!  (c) 2025-26 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechATKKL_setFromOptions(self,ierr)
       class(MEF90DefMechATKKL_Type), intent(inout) :: self
@@ -52,9 +51,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "aKKL"
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  aKKL: the "a" function of the KKL (v2) model,
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function aKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self
@@ -65,9 +64,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DaKKL"
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DaKKL: the derivative of the "a" function of the KKL (v2) model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DaKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self
@@ -78,9 +77,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2aKKL"
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2aKKL: the second derivative of the "a" function of the KKL (v2) model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2aKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self
@@ -91,10 +90,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "wKKL"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  wKKL: the "w" function of the of the KKL (v2) model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function wKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self
@@ -105,10 +103,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "DwKKL"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  DwKKL: the derivative of the "w" function of the KKL (v2) model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function DwKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self
@@ -119,10 +116,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "D2wKKL"
-!!!
+!!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
 !!!  D2wKKL: the second derivative of the "w" function of the KKL (v2) model
-!!!  (c) 2020 Blaise Bourdin bourdin@lsu.edu
 !!!
    PetscReal function D2wKKL(self, alpha)
       class(MEF90DefMechATKKL_Type), intent(IN) :: self

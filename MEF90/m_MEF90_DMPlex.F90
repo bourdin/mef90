@@ -83,12 +83,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DMGetNumSets"
-!!!
+!!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DMGetNumSets: the total number of sets of a given label, over the whole communicator of dm
 !!!                     and not only the ones with a point on the local rank
-!!!
-!!!  (c) 2026      Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DMGetNumSets(dm, labelName, numSet, ierr)
       type(tDM), intent(IN)                    :: dm
@@ -108,14 +106,12 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateLocalVector"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CreateLocalVector: create a Vec associated with a FE space and constraints
 !!!      cell   set BC are obtained from the command line option -cs<set ID>_<name>BC [bool], [bool], ...
 !!!      face   set BC are obtained from the command line option -fs<set ID>_<name>BC [bool], [bool], ...
 !!!      vertex set BC are obtained from the command line option -vs<set ID>_<name>BC [bool], [bool], ...
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90CreateLocalVector(dm, elemFamily, elemOrder, sDim, name, V, ierr)
       type(tDM), intent(IN)                    :: dm
@@ -233,11 +229,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateCellVector"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CreateCellVector: create a Vec for a cell-based vector
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90CreateCellVector(dm, sDim, name, V, ierr)
       type(tDM), intent(IN)                    :: dm
@@ -325,14 +319,12 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateBoundaryLocalVector"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CreateBoundaryLocalVector: create a Vec associated with a FE space over the boundary of a domain (face sets)
 !!!                                  and constraints
 !!!      face   set BC are obtained from the command line option -fs<set ID>_<name>BC [bool], [bool], ...
 !!!      vertex set BC are obtained from the command line option -vs<set ID>_<name>BC [bool], [bool], ...
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90CreateBoundaryLocalVector(dm, elemFamily, elemOrder, sDim, name, V, ierr)
       type(tDM), intent(IN)                    :: dm
@@ -437,11 +429,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CreateBoundaryCellVector"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90CreateBoundaryCellVector: create a Vec for a cell-based vector
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90CreateBoundaryCellVector(dm, sDim, name, V, ierr)
       type(tDM), intent(IN)                    :: dm
@@ -513,11 +503,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecGetClosureSize"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecGetClosureSize: Associates dof to a section
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecGetClosureSize(v, p, clSize, ierr)
@@ -547,11 +535,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SectionAllocateDof"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90SectionAllocateDof: Associates dof to a section
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90SectionAllocateDof(dm, setType, elemType, numComponents, section, ierr)
@@ -579,11 +565,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90_SectionAllocateDofSet"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90SectionAllocateDofSet: Associates dof to a section in a set
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90SectionAllocateDofSet(dm, setType, setID, elemType, numComponents, section, ierr)
@@ -626,11 +610,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90CellSectionCreate"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90CellSectionCreate: create a section with numComponent dof at cells
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90CellSectionCreate(dm, numComponents, section, ierr)
@@ -678,11 +660,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SetupConstraintTableSet"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90SetupConstraintTableSet: Build the contribution of a set to the constraint table
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90SetupConstraintTableSet(dm, section, setType, setID, constraints, table, ierr)
@@ -723,11 +703,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90SectionAllocateConstraint"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90SectionAllocateConstraint: Associates dof to a section
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90SectionAllocateConstraint(dm, table, section, ierr)
@@ -766,11 +744,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecCopySF"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90VecCopySF: rearrange a Vec according to the given SF
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90VecCopySF(vin, vout, sf, ierr)
@@ -791,11 +767,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90IOSFCreate"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90IOSFCreate: sf mapping between local and IO ordering and distribution
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90IOSFCreate(MEF90Ctx, v, liosf, iolsf, ierr)
@@ -836,12 +810,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90FaceSetIOSFCreate"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90FaceSetIOSFCreate: sf mapping between local and IO ordering and distribution for
 !!!                           Vec defined on Face Sets
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90FaceSetIOSFCreate(MEF90Ctx, v, liosf, iolsf, ierr)
@@ -891,12 +863,10 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90ConstraintSFCreate"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90ConstraintSFCreate: sf mapping between local and constraint Vec ordering and distribution
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
-!!!                Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90ConstraintSFCreate(MEF90Ctx, v, vB, sf, invSF, ierr)
@@ -955,11 +925,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecGlobalToLocalConstraint"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecGlobalToLocalConstraint: do a VecGlobaltoLocal then copy constrained values
-!!!
-!!!  (c) 2022      Blaise Bourdin  bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecGlobalToLocalConstraint(g, c, l, ierr)
@@ -991,11 +959,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecCreateIO"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  MEF90VecCreateIO: create IO Vec
-!!!
-!!!  (c) 2022      Alexis Marboeuf  marboeua@mcmaster.ca
 !!!
 
    subroutine MEF90VecCreateIO(v, bs, sf, ierr)
@@ -1018,11 +984,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecSetValuesFromOptions"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecSetValuesFromOptions: Fill values of a Vec using command line options
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecSetValuesFromOptions(v, scalingFactor, ierr)
@@ -1088,11 +1052,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecSetBCValuesFromOptions"
-!!!
+!!! author: Blaise Bourdin (2022, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecSetBCValuesFromOptions: Fill boundary values of a Vec using command line options
-!!!
-!!!  (c) 2022      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecSetBCValuesFromOptions(v, scalingFactor, ierr)
@@ -1169,11 +1131,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecSetValuesFromOptionsExpr"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecSetValuesFromOptionsExpr: Fill values of a Vec using expressions passed as petsc options
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecSetValuesFromOptionsExpr(v, t, ierr)
@@ -1290,11 +1250,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "MEF90VecSetBCValuesFromOptionsExpr"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90VecSetBCValuesFromOptionsExpr: Fill boundary values of a Vec using expressions passed as petsc options
-!!!
-!!!  (c) 2025      Blaise Bourdin bourdin@mcmaster.ca
 !!!
 
    subroutine MEF90VecSetBCValuesFromOptionsExpr(v, t, ierr)
@@ -1424,11 +1382,9 @@ contains
 !! Private functions below
 #undef __FUNCT__
 #define __FUNCT__ "CreateNaturalToIOSF_Private"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  CreateNaturalToIOSF_Private:
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine CreateNaturalToIOSF_Private(MEF90Ctx, dm, sf, ierr)
@@ -1474,11 +1430,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "CreateLocalToCGlobalSF_Private"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  CreateLocalToCGlobalSF_Private:
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine CreateLocalToCGlobalSF_Private(MEF90Ctx, dm, sf, ierr)
@@ -1523,11 +1477,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "CreateCGlobalToLocalSF_Private"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  CreateCGlobalToLocalSF_Private:
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine CreateCGlobalToLocalSF_Private(MEF90Ctx, dm, sf, ierr)
@@ -1620,11 +1572,9 @@ contains
 
 #undef __FUNCT__
 #define __FUNCT__ "CreateSideSF_Private"
-!!!
+!!! author: Alexis Marboeuf (2022, marboeua@mcmaster.ca)
 !!!
 !!!  CreateSideSF_Private:
-!!!
-!!!  (c) 2022      Alexis Marboeuf marboeua@mcmaster.ca
 !!!
 
    subroutine CreateSideSF_Private(MEF90Ctx, dm, sf, invSF, ierr)

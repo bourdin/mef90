@@ -10,12 +10,9 @@ public :: FHG_DRUCKERPRAGERCAPMODEL
 contains
 #undef __FUNCT__
 #define __FUNCT__ "FHG_DRUCKERPRAGERCAPMODEL"
-!!!
+!!! author: Erwan Tanne (2015, erwan.tanne@gmail.com)
 !!!
 !!!  fhg: VonMises
-!!!
-!!!  (c) 2015 Erwan Tanne : erwan.tanne@gmail.com
-!!!
 !!!
 
 subroutine FHG_DRUCKERPRAGERCAPMODEL(x, f, h, g, myctx) bind(c)

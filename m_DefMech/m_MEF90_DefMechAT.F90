@@ -37,11 +37,9 @@ module m_MEF90_DefMechAT
 contains
 #undef __FUNCT__
 #define __FUNCT__ "MEF90DefMechGetATModel"
-!!!
+!!! author: Blaise Bourdin (2025, bourdin@mcmaster.ca)
 !!!
 !!!  MEF90DefMechGetATModel: Return the AT model object from the cell set options
-!!!
-!!!  (c) 2025 Blaise Bourdin bourdin@mcmaster.ca
 !!!
    subroutine MEF90DefMechGetATModel(comm, prefix, dim, ATModel, ierr)
       MPIU_Comm, intent(in) :: comm
