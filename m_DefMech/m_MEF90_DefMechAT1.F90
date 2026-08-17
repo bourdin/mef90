@@ -49,7 +49,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  aAT1: the "a" function of the standard AT1 model, i.e. $a(\alpha) = (1-\alpha)^2$
+!!!  aAT1: the "a" function of the standard AT1 model, i.e. $a(\alpha) = \eta + (1-\eta)(1-\alpha)^2$
 !!!
    PetscReal function aAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self
@@ -63,7 +63,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  DaAT1: the derivative of the "a" function of the standard AT1 model, i.e. a(\alpha) = (1-\alpha)^2
+!!!  DaAT1: the derivative of the "a" function of the standard AT1 model, i.e. $a'(\alpha) = -2(1-\eta)(1-\alpha)$
 !!!
    PetscReal function DaAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self
@@ -77,7 +77,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  D2aAT1: the second derivative of the "a" function of the standard AT1 model, i.e. a(\alpha) = (1-\alpha)^2
+!!!  D2aAT1: the second derivative of the "a" function of the standard AT1 model, i.e. $a''(\alpha) = 2(1-\eta)$
 !!!
    PetscReal function D2aAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self
@@ -91,7 +91,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  wAT1: the "w" function of the standard AT1 model, i.e. w(\alpha) = \alpha
+!!!  wAT1: the "w" function of the standard AT1 model, i.e. $w(\alpha) = \alpha$
 !!!
    PetscReal function wAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self
@@ -105,7 +105,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  DwAT1: the derivative of the "w" function of the standard AT1 model, i.e. w(\alpha) = \alpha
+!!!  DwAT1: the derivative of the "w" function of the standard AT1 model, i.e. $w'(\alpha) = 1$
 !!!
    PetscReal function DwAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self
@@ -119,7 +119,7 @@ contains
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!! author: Blaise Bourdin (2026, bourdin@mcmaster.ca)
 !!!
-!!!  D2wAT1: the second derivative of the "w" function of the standard AT1 model, i.e. w(\alpha) = \alpha
+!!!  D2wAT1: the second derivative of the "w" function of the standard AT1 model, i.e. $w''(\alpha) = 0$
 !!!
    PetscReal function D2wAT1(self, alpha)
       class(MEF90DefMechAT1_Type), intent(IN) :: self

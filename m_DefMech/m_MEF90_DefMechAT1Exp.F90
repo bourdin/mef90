@@ -14,11 +14,11 @@ module m_MEF90_DefMechAT1exp
 !!! AT1exp, a variant of AT1 model with an exponential stiffness interpolation
 !!! function:
 !!!
-!!! a_b(s)  = 1 + (e^{-bs} - 1) / (1 - e^-b) if b /= 0
-!!! a_0(s)  = 1-s
+!!! $a_b(s)  = 1 + (e^{-bs} - 1) / (1 - e^-b)$ if $b /= 0$
+!!! $a_0(s)  = 1-s$
 !!!
-!!! a is convex if b > 1 and
-!!! a_b'(0) = -b / (1-e^{-b}) < -2 if b < 1.5
+!!! $a$ is convex if $b > 1$ and
+!!! $a_b'(0) = -b / (1-e^{-b}) < -2$ if $b < 3/2$
 !!!
    type, extends(MEF90DefMechAT_Type) :: MEF90DefMechAT1exp_Type
       PetscReal :: b = 1.0_kr
@@ -93,7 +93,7 @@ contains
 #define __FUNCT__ "aAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  aAT1exp: the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
+!!!  aAT1exp: the "a" function of the standard AT1exp model
 !!!
    PetscReal function aAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -110,7 +110,7 @@ contains
 #define __FUNCT__ "DaAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  DaAT1exp: the derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
+!!!  DaAT1exp: the derivative of the "a" function of the standard AT1exp model
 !!!
    PetscReal function DaAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -127,7 +127,7 @@ contains
 #define __FUNCT__ "D2aAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  D2aAT1exp: the second derivative of the "a" function of the standard AT1exp model, i.e. a(\alpha) = (1-\alpha)^2
+!!!  D2aAT1exp: the second derivative of the "a" function of the standard AT1exp model
 !!!
    PetscReal function D2aAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -144,7 +144,7 @@ contains
 #define __FUNCT__ "wAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  wAT1exp: the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
+!!!  wAT1exp: the "w" function of the standard AT1exp model, i.e. 
 !!!
    PetscReal function wAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -157,7 +157,7 @@ contains
 #define __FUNCT__ "DwAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  DwAT1exp: the derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
+!!!  DwAT1exp: the derivative of the "w" function of the standard AT1exp model
 !!!
    PetscReal function DwAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
@@ -170,7 +170,7 @@ contains
 #define __FUNCT__ "D2wAT1exp"
 !!! author: Blaise Bourdin (2020, bourdin@lsu.edu)
 !!!
-!!!  D2wAT1exp: the second derivative of the "w" function of the standard AT1exp model, i.e. w(\alpha) = \alpha
+!!!  D2wAT1exp: the second derivative of the "w" function of the standard AT1exp model
 !!!
    PetscReal function D2wAT1exp(self, alpha)
       class(MEF90DefMechAT1exp_Type), intent(IN) :: self
