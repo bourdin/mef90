@@ -14,6 +14,7 @@ preprocess: true
 preprocessor: /opt/homebrew/bin/gcc-16 -traditional-cpp -E -x f95-cpp-input -D__GFORTRAN__
 mathjax_config: doc/mathjax-config.js
 css: doc/user.css
+page_dir: doc/pages
 md_extensions: doi_link
 docmark: >
 predocmark: !!
@@ -39,59 +40,22 @@ graph: false
 search: true
 ---
 
-Documentation for the mef90 / vDef codebase, generated with
-[FORD](https://forddocs.readthedocs.io).
+Documentation for the mef90 / vDef codebase, a Fortran + PETSc reference
+implementation of the variational approach to fracture, generated with
+[FORD](https://forddocs.readthedocs.io) from the sources at
+[github.com/bourdin/mef90](https://github.com/bourdin/mef90).
 
-Doc-comment convention: the `!!!` banner blocks placed immediately *before* a
-module, type, or procedure definition are picked up as its documentation
-(`predocmark: !!`), as are `!!!` comments preceding a declaration. Trailing
-doc comments, if ever needed, use `!>` (`docmark: >`). Comments that must
-*not* appear in the documentation — section headers inside procedure bodies,
-implementation notes — use `!!` or `!`, which FORD ignores.
+Start from **Modules** for the structure of the library, **Derived Types** for
+the context and options objects, or **Procedures** to look up a single routine.
 
-Note on preprocessor templates: several files are compiled multiple times by the
-Makefiles with different macros (`MEF90_DIM=2/3`, `MEF90_ELEMENTTYPE=...`). FORD
-preprocesses each file once, so these pages document a single representative
-instantiation: `MEF90_DIM=3` with `MEF90_ELEMENTTYPE=MEF90Element3DVect`.
-References to the other instantiations (e.g. `*_MEF90Element2DScal`) appear
-unlinked.
+In the source listings, identifiers naming a documented module, type, or
+procedure link to its page, and calls into PETSc link to the corresponding
+manual page on petsc.org.
 
-To rebuild these pages:
+Several files are compiled more than once by the Makefiles with different
+macros, so their pages document one representative instantiation
+(`MEF90_DIM=3`, `MEF90_ELEMENTTYPE=MEF90Element3DVect`); references to the other
+instantiations appear unlinked.
 
-```
-make ford
-```
-
-which creates `.venv-ford` on first use and installs FORD and the `doi_link`
-extension into it. `make fordclean` removes the generated `doc/html`. Note that
-`make doc` is a different target: it builds the LaTeX user manual `doc/vDef.pdf`.
-
-The equivalent by hand is
-
-```
-python3 -m venv .venv-ford && .venv-ford/bin/pip install ford ./doc/doi-link
-.venv-ford/bin/ford ford.md
-```
-
-DOI identifiers written as plain text (`doi:10.xxxx/...`) are linked to
-`https://doi.org/...` automatically by the `doi_link` markdown extension in
-`doc/doi-link/`.
-
-FORD does not cross-reference the source listings it generates, so `make ford`
-finishes by running `bin/ford-xref`, which
-
-  - links each identifier naming a documented module, type, or procedure to its
-    page, and colours it the way Pygments colours a function, class, or
-    namespace. The lexer itself gives user-defined names no colour at all;
-  - links PETSc calls to their manual pages on petsc.org. The section of those
-    URLs is not derivable from the routine name, so it is read out of the PETSc
-    sources exactly as PETSc's own `doc/build_man_pages.py` does it, from
-    `SUBMANSEC`/`MANSEC`. Set `PETSC_SRC` to a PETSc source tree if `PETSC_DIR`
-    is a prefix install; without it the PETSc links are simply left out;
-  - colours the PETSc error-checking macros (`PetscCall`, `SETERRQ`, ...), which
-    are preprocessor macros rather than Fortran keywords and so are invisible to
-    the lexer even though they open nearly every statement in this codebase.
-
-Because Fortran is case insensitive and the listings are only syntax
-highlighted, a local variable that shares a name with an entity is linked too;
-definition sites are left alone so that a procedure does not link to itself.
+For how these pages are written, built, and published, see
+[Maintaining these pages](page/index.html).
