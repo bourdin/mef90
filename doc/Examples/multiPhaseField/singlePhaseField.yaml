@@ -7,8 +7,8 @@ time:
 heatxfer:
   timestepping:
     type: null
-multiPhaseField: false
 defmech:
+  multiPhaseField: false
   timestepping:
     type: quasistatic
   solver:

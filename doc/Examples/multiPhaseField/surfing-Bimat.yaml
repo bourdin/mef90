@@ -4,12 +4,12 @@ time:
   max: 10
   numstep: 101
 
-multiPhaseField: 1
 heatxfer:
   timestepping:
     type: null
 
 defmech:
+  multiPhaseField: 1
   irrevthres: 0
   timestepping:
     type: quasistatic

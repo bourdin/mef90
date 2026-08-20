@@ -154,12 +154,12 @@ module m_MEF90_DefMech_class
       PetscReal                               :: crackPressure = 0.0_kr
       PetscEnum                               :: plasticityType = MEF90DefMech_plasticityTypeNone
       PetscReal, dimension(3)                 :: cohesiveDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
-      PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
-      PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
+      ! PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
+      ! PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal, dimension(3)                 :: displacementLowerBound = [MEF90NINFINITY, MEF90NINFINITY, MEF90NINFINITY]
       PetscReal, dimension(3)                 :: displacementUpperBound = [MEF90INFINITY, MEF90INFINITY, MEF90INFINITY]
-      PetscBool                               :: Has_damageBC = PETSC_FALSE
-      PetscReal                               :: boundaryDamage = 0.0_kr
+      ! PetscBool                               :: Has_damageBC = PETSC_FALSE
+      ! PetscReal                               :: boundaryDamage = 0.0_kr
       PetscBool                               :: CrackVolumeControlled = PETSC_FALSE
       PetscBool                               :: WorkControlled = PETSC_FALSE
       !!! Material properties. linearThermalExpansion is a symmetric matrix, so it is dimension
@@ -173,23 +173,23 @@ module m_MEF90_DefMech_class
    type, extends(MEF90Object) :: MEF90DefMechFaceSetOptions_Type
       PetscReal, dimension(3)                 :: boundaryforce = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal                               :: pressureForce = 0.0_kr
-      PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
-      PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
+      ! PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
+      ! PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal, dimension(3)                 :: displacementLowerBound = [MEF90NINFINITY, MEF90NINFINITY, MEF90NINFINITY]
       PetscReal, dimension(3)                 :: displacementUpperBound = [MEF90INFINITY, MEF90INFINITY, MEF90INFINITY]
-      PetscBool                               :: Has_damageBC = PETSC_FALSE
-      PetscReal                               :: boundaryDamage = 0.0_kr
+      ! PetscBool                               :: Has_damageBC = PETSC_FALSE
+      ! PetscReal                               :: boundaryDamage = 0.0_kr
    contains
       procedure, pass(self) :: view_internal => MEF90DefMechFaceSetOptionsView
    end type MEF90DefMechFaceSetOptions_Type
 
    type, extends(MEF90Object) :: MEF90DefMechVertexSetOptions_Type
-      PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
-      PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
+      ! PetscBool, dimension(3)                 :: Has_displacementBC = [PETSC_FALSE, PETSC_FALSE, PETSC_FALSE]
+      ! PetscReal, dimension(3)                 :: boundaryDisplacement = [0.0_kr, 0.0_kr, 0.0_kr]
       PetscReal, dimension(3)                 :: displacementLowerBound = [MEF90NINFINITY, MEF90NINFINITY, MEF90NINFINITY]
       PetscReal, dimension(3)                 :: displacementUpperBound = [MEF90INFINITY, MEF90INFINITY, MEF90INFINITY]
-      PetscBool                               :: Has_damageBC = PETSC_FALSE
-      PetscReal                               :: boundaryDamage = 0.0_kr
+      ! PetscBool                               :: Has_damageBC = PETSC_FALSE
+      ! PetscReal                               :: boundaryDamage = 0.0_kr
    contains
       procedure, pass(self) :: view_internal => MEF90DefMechVertexSetOptionsView
    end type MEF90DefMechVertexSetOptions_Type
@@ -271,8 +271,8 @@ contains
 !!!
 
    subroutine MEF90DefMechCreate(DefMechCtx, dm, MEF90Ctx, prefix, ierr)
-      !!! DefMech has the target attribute so that DefMech%PETScCtx can be handed over to PETSc as an
-      !!! application context. The actual argument MUST therefore also have the target attribute.
+      !! DefMech has the target attribute so that DefMech%PETScCtx can be handed over to PETSc as an
+      !! application context. The actual argument MUST therefore also have the target attribute.
       type(MEF90DefMech_Type), target, intent(OUT)              :: DefMechCtx
       type(tDM), target, intent(IN)                             :: dm
       type(MEF90Ctx_Type), target, intent(IN)                   :: MEF90Ctx
@@ -602,7 +602,7 @@ contains
          PetscCall(PetscOptionsInt('-defmech_pclag', 'Interval at which the PC is recomputed during alternate minimization', 'mef90DefMech', options%PCLag, options%PCLag, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_SOR_Omega', 'Alterate Minimization over relaxation factor (>0 for limited, <0 for projected)', 'mef90DefMech', options%SOROmega, options%SOROmega, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-defmech_irrevThres', 'Threshold above which irreversibility is enforced (0 for monotonicity, .99 for equality)', 'mef90DefMech', options%irrevthres, options%irrevthres, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsBool('-multiPhaseField', 'Use one damage variable per cell set', 'mef90DefMech', options%multiPhaseField, options%multiPhaseField, PETSC_NULL_BOOL, ierr))
+         PetscCall(PetscOptionsBool('-defmech_multiPhaseField', 'Use one damage variable per cell set', 'mef90DefMech', options%multiPhaseField, options%multiPhaseField, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsEnum('-BT_Type', 'Backtracking type', 'mef90DefMech', MEF90DefMech_BTTypeList, options%BTType, options%BTType, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Interval', 'Interval at which Backtracking is run in inner loop (0 for outer loop)', 'mef90DefMech', options%BTInterval, options%BTInterval, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsInt('-BT_Scope', 'Backtracking scope (0 for unlimited)', 'mef90DefMech', options%BTScope, options%BTScope, PETSC_NULL_BOOL, ierr))
@@ -724,17 +724,11 @@ contains
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-cohesiveDisplacement', '[m] (U): Cohesive displacement value', 'mef90DefMech', options%cohesiveDisplacement, nOpt, PETSC_NULL_BOOL, ierr))
          nOpt = 3
-         PetscCall(PetscOptionsBoolArray('-DisplacementBC', 'Displacement has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_displacementBC, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
-         PetscCall(PetscOptionsRealArray('-boundaryDisplacement', '[m] (U): Displacement boundary value', 'mef90DefMech', options%boundaryDisplacement, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementLowerBound', '[m] (U): Displacement lower bound', 'mef90DefMech', options%displacementLowerBound, nOpt, PETSC_NULL_BOOL, ierr))
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementUpperBound', '[m] (U): Displacement upper bound', 'mef90DefMech', options%displacementUpperBound, nOpt, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsBool('-CrackVolumeControlled', 'Crack Pressure controlled by the crack volume in this block (Y/N)', 'mef90DefMech', options%CrackVolumeControlled, options%CrackVolumeControlled, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsBool('-WorkControlled', 'Force magnitude controlled by its work in this block (Y/N)', 'mef90DefMech', options%WorkControlled, options%WorkControlled, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-cohesiveStiffness', '[N.m^(-4)] (k) cohesive stiffness in Winkler-type models', 'mef90DefMech', options%cohesiveStiffness, options%cohesiveStiffness, PETSC_NULL_BOOL, ierr))
          select type (alpha => options%linearThermalExpansion)
          type is (MatS2D)
@@ -791,14 +785,8 @@ contains
       write (IOBuffer, "('         cohesive displacement: ',3(ES12.5,' '),'stiffness: ',ES12.5,'\n')") &
          self%cohesiveDisplacement, self%cohesiveStiffness
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-         self%Has_displacementBC, self%boundaryDisplacement
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
          self%displacementLowerBound, self%displacementUpperBound
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-         self%Has_damageBC, self%boundaryDamage
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         crack volume controlled / work controlled: ',L1,' / ',L1,'\n')") &
          self%CrackVolumeControlled, self%WorkControlled
@@ -841,15 +829,9 @@ contains
          PetscCall(PetscOptionsRealArray('-boundaryForce', '[N.m^(-2) / N.m^(-1)] (f): boundary force', 'mef90DefMech', options%boundaryForce, nOpt, PETSC_NULL_BOOL, ierr))
          PetscCall(PetscOptionsReal('-pressureForce', 'without unit: internal crack pressure', 'mef90DefMech', options%pressureForce, options%pressureForce, PETSC_NULL_BOOL, ierr))
          nOpt = 3
-         PetscCall(PetscOptionsBoolArray('-DisplacementBC', 'Displacement has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_displacementBC, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
-         PetscCall(PetscOptionsRealArray('-boundaryDisplacement', '[m] (U): Displacement boundary value', 'mef90DefMech', options%boundaryDisplacement, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementLowerBound', '[m] (U): Displacement lower bound', 'mef90DefMech', options%displacementLowerBound, nOpt, PETSC_NULL_BOOL, ierr))
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementUpperBound', '[m] (U): Displacement upper bound', 'mef90DefMech', options%displacementUpperBound, nOpt, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): Damage boundary value', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
@@ -884,14 +866,8 @@ contains
       write (IOBuffer, "('         boundary force: ',3(ES12.5,' '),'pressure force: ',ES12.5,'\n')") &
          self%boundaryForce, self%pressureForce
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-         self%Has_displacementBC, self%boundaryDisplacement
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
          self%displacementLowerBound, self%displacementUpperBound
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-         self%Has_damageBC, self%boundaryDamage
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
    end subroutine MEF90DefMechFaceSetOptionsView
 
@@ -917,15 +893,9 @@ contains
 
       PetscCall(PetscOptionsBegin(comm, prefix, "Options for a MEF90DefMech_Type vertex set", "mef90DefMech", ierr))
          nOpt = 3
-         PetscCall(PetscOptionsBoolArray('-DisplacementBC', 'Displacement has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_displacementBC, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
-         PetscCall(PetscOptionsRealArray('-boundaryDisplacement', '[m] (U): Displacement boundary value', 'mef90DefMech', options%boundaryDisplacement, nOpt, PETSC_NULL_BOOL, ierr))
-         nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementLowerBound', '[m] (U): Displacement lower bound', 'mef90DefMech', options%displacementLowerBound, nOpt, PETSC_NULL_BOOL, ierr))
          nOpt = 3
          PetscCall(PetscOptionsRealArray('-displacementUpperBound', '[m] (U): Displacement upper bound', 'mef90DefMech', options%displacementUpperBound, nOpt, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsBool('-DamageBC', 'Damage has Dirichlet boundary Condition (Y/N)', 'mef90DefMech', options%Has_DamageBC, options%Has_DamageBC, PETSC_NULL_BOOL, ierr))
-         PetscCall(PetscOptionsReal('-boundaryDamage', '[unit-less] (alpha): boundaryDamage', 'mef90DefMech', options%boundaryDamage, options%boundaryDamage, PETSC_NULL_BOOL, ierr))
       PetscCall(PetscOptionsEnd(ierr))
 
       PetscCall(PetscOptionsGetInt(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, "-verbose", verbose, PETSC_NULL_BOOL, ierr))
@@ -957,14 +927,8 @@ contains
 
       write (IOBuffer, "(A,': Options for MEF90DefMechVertexSetOptions_Type\n')") trim(self%prefix)
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         displacement BC: ',3(L1,' '),'value: ',3(ES12.5,' '),'\n')") &
-         self%Has_displacementBC, self%boundaryDisplacement
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
       write (IOBuffer, "('         displacement lower / upper bound: ',3(ES12.5,' '),' / ',3(ES12.5,' '),'\n')") &
          self%displacementLowerBound, self%displacementUpperBound
-      PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
-      write (IOBuffer, "('         damage BC: ',L1,' value: ',ES12.5,'\n')") &
-         self%Has_damageBC, self%boundaryDamage
       PetscCall(PetscViewerASCIIPrintf(viewer, IOBuffer, ierr))
    end subroutine MEF90DefMechVertexSetOptionsView
 

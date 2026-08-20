@@ -1067,17 +1067,18 @@ contains
       PetscInt                                :: set, point, c
       type(tIS)                               :: setIS, pointIS
       PetscInt, dimension(:), pointer         :: setID, pointID
-      character(len=MEF90MXSTRLEN)            :: BCOptionKey, BCValueKey, name
+      character(len=MEF90MXSTRLEN)            :: BCOptionKey, BCValueKey, setName, name
       PetscBool, dimension(:), pointer        :: setBC
-      PetscBool                               :: flg
       PetscInt                                :: dim, numBC, bs, numDofClosure
       PetscReal, dimension(:), pointer        :: BCVal, vArray
       type(tPetscSection)                     :: section
+      MPIU_Comm                               :: comm
 
       PetscCall(VecGetDM(v, dm, ierr))
       PetscCall(PetscObjectGetName(v, name, ierr))
       PetscCall(DMGetLocalSection(dm, section, ierr))
 
+      PetscCall(PetscObjectGetComm(v, comm, ierr))
       PetscCall(DMGetDimension(dm, dim, ierr))
       PetscCall(VecGetBlockSize(v, bs, ierr))
       allocate (setBC(bs))
@@ -1085,22 +1086,25 @@ contains
 
       do setType = 1, size(MEF90SetType)
          PetscCall(DMGetLabelIdIS(dm, MEF90SetLabelName(setType), setIS, ierr))
-         ! PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
+         PetscCall(MEF90ISAllGatherMerge(comm,setIS,ierr))
          if (.not. PetscObjectIsNull(setIS)) then
             PetscCall(ISGetIndices(setIS, setID, ierr))
             do set = 1, size(setID)
                setBC = .false.
+               write(setName, '("-",a2,I4.4)') MEF90SetPrefix(setType), setID(set)
                write (BCOptionKey, '("-",a2,I4.4,"_",a,"BC")') MEF90SetPrefix(setType), setID(set), trim(name)
                numBC = bs
-               PetscCall(PetscOptionsGetBoolArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCOptionKey), setBC, numBC, flg, ierr))
+               !! Get the unit BC value on the set
+               write (BCValueKey, '("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType), setID(set), trim(name)
+               numBC = bs
+               PetscCall(PetscOptionsBegin(comm, "", "Boundary condition for set " // trim(setName), trim(name), ierr))
+                  PetscCall(PetscOptionsBoolArray(trim(BCOptionKey), "", "", setBC, numBC, PETSC_NULL_BOOL, ierr))
+                  PetscCall(PetscOptionsRealArray(trim(BCValueKey), "", "", BCVal, numBC, PETSC_NULL_BOOL, ierr))
+               PetscCall(PetscOptionsEnd(ierr))
                if (any(setBC)) then
-                        !! At least 1 dof has a boundary condition
-                        !! Get the unit BC value on the set
-                  write (BCValueKey, '("-",a2,I4.4,"_Boundary",a)') MEF90SetPrefix(setType), setID(set), trim(name)
-                  numBC = bs
-                  PetscCall(PetscOptionsGetRealArray(PETSC_NULL_OPTIONS, PETSC_NULL_CHARACTER, trim(BCValueKey), BCVal, numBC, flg, ierr))
+                  !! At least 1 dof has a boundary condition
                   PetscCall(DMGetStratumIS(dm, MEF90SetLabelName(setType), setID(set), pointIS, ierr))
-                        !! Set the boundary values on the closure of the current point
+                  !! Set the boundary values on the closure of the current point
                   if (.not. PetscObjectIsNull(pointIS)) then
                      PetscCall(ISGetIndices(pointIS, pointID, ierr))
                      do point = 1, size(pointID)
