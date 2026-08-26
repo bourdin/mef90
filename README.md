@@ -1,3 +1,10 @@
+> ## This repository has moved
+>
+> mef90/vDef is now developed at **https://gitlab.com/blaisebourdin/mef90**.
+>
+> This GitHub copy is archived and no longer updated. Please open issues and merge
+> requests on GitLab. Documentation lives at https://docs.mef90.org.
+
 mef90 / vDef: A reference implementation of the variational approach to fracture,
 as described in:
 
